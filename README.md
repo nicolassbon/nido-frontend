@@ -38,11 +38,31 @@ The app follows a feature-first Angular layout:
 | `src/app/shared/ui/` | Reusable UI components |
 | `src/environments/` | Environment-specific configuration |
 
-## Quick start
+## Local Development Setup
+
+To work on this project locally, ensure you have the backend running first (see `nido-backend/README.md`), as this application will attempt to connect to it.
+
+### 1. Install Dependencies
+Install all required Node.js packages:
 
 ```bash
 npm install
+```
+
+### 2. Run Tests
+Verify the integrity of components and services running the test suite (configured with Vitest):
+
+```bash
+npm run test
+```
+
+### 3. Start the Application
+Spin up the local development server:
+
+```bash
 npm start
 ```
 
-Local app: `http://localhost:4200`
+The application will be available at `http://localhost:4200/`.
+
+It is configured to reach the backend at `http://localhost:8080/` by default via the `environment.development.ts` file.
