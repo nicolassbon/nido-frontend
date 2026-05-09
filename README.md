@@ -1,28 +1,48 @@
 # Nido Frontend
 
-Frontend separado de Nido (Angular 21), integrado por HTTP con `nido-backend`.
+Angular 21 frontend for Nido MVP 1.
 
-## Scripts
+## Role in the architecture
+
+- `nido-frontend` and `nido-backend` are separate repositories.
+- This app integrates with the backend **only through HTTP**.
+- The backend is the source of truth for endpoint and payload definitions.
+
+## Backend contract consumption
+
+This frontend consumes backend endpoints through `environment.apiBaseUrl`.
+
+- Development: `src/environments/environment.development.ts`
+- Production: `src/environments/environment.production.ts`
+
+Current values:
+
+- Development: `http://localhost:8080`
+- Production: `http://backend:8080`
+
+Do not hardcode API URLs outside `src/environments/`.
+
+## MVP contract usage
+
+- `GET /hello` is consumed in `src/app/app.ts`.
+- `POST /household` is part of the backend-owned MVP contract.
+
+## Feature-first structure
+
+The app follows a feature-first Angular layout:
+
+| Path | Responsibility |
+|------|----------------|
+| `src/app/core/` | Cross-cutting concerns (API client/config) |
+| `src/app/features/` | Feature slices |
+| `src/app/shared/ui/` | Reusable UI components |
+| `src/environments/` | Environment-specific configuration |
+
+## Quick start
 
 ```bash
 npm install
 npm start
 ```
 
-App local: `http://localhost:4200`
-
-## Integración HTTP mínima MVP
-
-La app consume `GET /hello` usando `environment.apiBaseUrl`.
-
-- desarrollo: `http://localhost:8080`
-- producción: `http://backend:8080`
-
-No hardcodear URLs fuera de `src/environments/`.
-
-## Tests
-
-```bash
-npm test
-npm run test:ci
-```
+Local app: `http://localhost:4200`
