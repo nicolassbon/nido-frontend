@@ -1,0 +1,91 @@
+:host {
+  display: contents;
+}
+
+.sidebar {
+  width: 230px;
+  height: 100vh;
+  overflow-y: auto;
+  position: sticky;
+  top: 0;
+  background-color: #263F30;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 0.75rem;
+  flex-shrink: 0;
+
+  &__logo {
+    padding: 0 0.5rem 1.75rem;
+
+    img {
+      width: 100%;
+      max-width: 130px;
+      object-fit: contain;
+    }
+  }
+
+  &__nav {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    flex: 1;
+  }
+
+  &__bottom {
+    list-style: none;
+    margin: 0;
+    padding: 0.75rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    border-top: 1px solid rgba(247, 241, 230, 0.12);
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    color: rgba(247, 241, 230, 0.6);
+    text-decoration: none;
+    font-size: 0.8125rem;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    lucide-icon {
+      flex-shrink: 0;
+    }
+
+    &:hover {
+      background-color: #3E5E4A;
+      color: #F7F1E6;
+    }
+
+    &.active {
+      background-color: #3E5E4A;
+      color: #F7F1E6;
+      font-weight: 500;
+    }
+  }
+}
+
+// ── Mobile ──────────────────────────────────────────────
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    height: 100vh;
+    transform: translateX(-100%);
+    transition: transform 0.28s ease;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
+
+    &.open {
+      transform: translateX(0);
+    }
+  }
+}

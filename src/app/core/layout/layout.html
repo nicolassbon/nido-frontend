@@ -1,0 +1,29 @@
+<div class="layout">
+
+  <!-- Sidebar -->
+  <app-nav [class.open]="isMenuOpen()" />
+
+  <!-- Overlay mobile -->
+  @if (isMenuOpen()) {
+    <div class="layout__overlay" (click)="closeMenu()"></div>
+  }
+
+  <!-- Contenido principal -->
+  <div class="layout__main">
+
+    <!-- Header mobile -->
+    <header class="layout__header">
+      <button class="layout__hamburger" (click)="toggleMenu()" aria-label="Abrir menú">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </header>
+
+    <main class="layout__content">
+      <router-outlet />
+    </main>
+
+  </div>
+
+</div>

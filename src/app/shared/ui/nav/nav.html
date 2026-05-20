@@ -1,0 +1,32 @@
+<nav class="sidebar">
+
+  <!-- Logo -->
+  <div class="sidebar__logo">
+    <img src="logo.png" alt="Nido" />
+  </div>
+
+  <!-- Items principales -->
+  <ul class="sidebar__nav">
+    @for (item of mainNavItems; track item.route) {
+      <li>
+        <a [routerLink]="item.route" routerLinkActive="active" class="sidebar__item">
+          <lucide-icon [img]="icons[item.icon]" [size]="18" />
+          <span>{{ item.label }}</span>
+        </a>
+      </li>
+    }
+  </ul>
+
+  <!-- Items de abajo -->
+  <ul class="sidebar__bottom">
+    @for (item of bottomNavItems; track item.route) {
+      <li>
+        <a [routerLink]="item.route" routerLinkActive="active" class="sidebar__item">
+          <lucide-icon [img]="icons[item.icon]" [size]="18" />
+          <span>{{ item.label }}</span>
+        </a>
+      </li>
+    }
+  </ul>
+
+</nav>

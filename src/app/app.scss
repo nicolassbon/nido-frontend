@@ -1,27 +1,4 @@
 :host {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: block;
   height: 100dvh;
-  font-family: system-ui, -apple-system, sans-serif;
-}
-
-.status {
-  font-size: 1.5rem;
-  padding: 1rem 2rem;
-  border-radius: 0.5rem;
-}
-
-.loading {
-  color: #666;
-}
-
-.error {
-  color: #842029;
-  background: #f8d7da;
-}
-
-.success {
-  color: #155724;
-  background: #d4edda;
 }

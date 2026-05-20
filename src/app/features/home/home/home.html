@@ -1,0 +1,83 @@
+<div class="dashboard">
+
+  <!-- Banner de bienvenida -->
+  <section class="dashboard__banner">
+    <div class="dashboard__greeting">
+      <h1>{{ greeting() }}, Luisa.</h1>
+      <p>{{ today() }} &middot; Tu hogar está en buen estado.</p>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <div class="dashboard__stats">
+    @for (stat of stats; track stat.label) {
+      <div class="stat-card">
+        <lucide-icon [name]="stat.icon" [size]="20" class="stat-card__icon" />
+        <span class="stat-card__value">{{ stat.value }}</span>
+        <span class="stat-card__label">{{ stat.label }}</span>
+      </div>
+    }
+  </div>
+
+  <div class="dashboard__body">
+
+    <!-- Columna izquierda -->
+    <div class="dashboard__left">
+
+      <!-- Accesos rápidos -->
+      <section class="dashboard__section">
+        <h2 class="dashboard__section-title">Accesos rápidos</h2>
+        <div class="quick-actions">
+          @for (action of quickActions; track action.route) {
+            <a [routerLink]="action.route" class="quick-action"
+               [style.--accent]="action.accent">
+              <div class="quick-action__icon">
+                <lucide-icon [name]="action.icon" [size]="22" />
+              </div>
+              <span>{{ action.label }}</span>
+            </a>
+          }
+        </div>
+      </section>
+
+      <!-- Tareas pendientes -->
+      <section class="dashboard__section">
+        <div class="dashboard__section-header">
+          <h2 class="dashboard__section-title">Tareas pendientes</h2>
+          <a routerLink="/tareas" class="dashboard__link">
+            Ver todo <lucide-icon name="arrow-right" [size]="14" />
+          </a>
+        </div>
+        <div class="tasks">
+          @for (task of pendingTasks; track task.title) {
+            <div class="task-item">
+              <lucide-icon name="check-square" [size]="16" class="task-item__icon" />
+              <span class="task-item__title">{{ task.title }}</span>
+              <span class="task-item__tag">{{ task.tag }}</span>
+            </div>
+          }
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Columna derecha: Alertas -->
+    <div class="dashboard__right">
+      <section class="dashboard__section">
+        <h2 class="dashboard__section-title">Alertas</h2>
+        <div class="alerts">
+          @for (alert of alerts; track alert.message) {
+            <div class="alert-item alert-item--{{ alert.type }}">
+              <lucide-icon [name]="alert.icon" [size]="18" class="alert-item__icon" />
+              <div class="alert-item__content">
+                <span class="alert-item__message">{{ alert.message }}</span>
+                <span class="alert-item__detail">{{ alert.detail }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    </div>
+
+  </div>
+</div>

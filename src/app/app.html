@@ -1,7 +1,1 @@
-@if (loading()) {
-  <div class="status loading" data-testid="loading">Connecting to server…</div>
-} @else if (error()) {
-  <div class="status error" data-testid="error">{{ error() }}</div>
-} @else {
-  <div class="status success" data-testid="message">{{ message() }}</div>
-}
+<router-outlet />
