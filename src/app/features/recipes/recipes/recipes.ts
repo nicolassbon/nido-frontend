@@ -253,4 +253,47 @@ export class Recipes {
     if (this.sortBy() === 'coincidencia') return 'Mayor coincidencia';
     return 'Ordenar';
   }
+
+  // ── Tailwind class helpers ────────────────────────────────
+  protected difficultyBadgeClass(d: Difficulty): string {
+    const base = 'absolute bottom-2 right-2 px-2.5 py-0.5 rounded-[20px] text-[0.7rem] font-semibold';
+    if (d === 'Fácil')  return `${base} bg-[rgba(62,94,74,0.9)] text-nido-cream`;
+    if (d === 'Medio')  return `${base} bg-[rgba(199,143,90,0.9)] text-white`;
+    return `${base} bg-[rgba(180,70,60,0.9)] text-white`;
+  }
+
+  protected filterChipClass(filter: FilterOption): string {
+    const base = 'px-4 py-[0.4rem] rounded-[20px] border-[1.5px] border-solid font-medium text-[0.8125rem] cursor-pointer transition-all duration-150 inline-flex items-center gap-1.5';
+    return this.activeFilter() === filter
+      ? `${base} bg-nido-green-dark border-nido-green-dark text-nido-cream`
+      : `${base} bg-white border-nido-border text-nido-brown hover:border-nido-green hover:text-nido-green`;
+  }
+
+  protected allergenChipClass(): string {
+    const base = 'px-4 py-[0.4rem] rounded-[20px] border-[1.5px] border-solid font-medium text-[0.8125rem] cursor-pointer transition-all duration-150 inline-flex items-center gap-1.5';
+    return this.excludeAllergens()
+      ? `${base} bg-nido-red border-nido-red text-white`
+      : `${base} bg-white border-nido-border text-nido-brown hover:border-nido-green hover:text-nido-green`;
+  }
+
+  protected ingredientChipClass(selected: boolean): string {
+    const base = 'flex items-center gap-1.5 px-3 py-[0.3rem] rounded-[20px] border-[1.5px] border-solid text-[0.775rem] cursor-pointer transition-all duration-150';
+    return selected
+      ? `${base} bg-nido-green-dark border-nido-green-dark text-nido-cream`
+      : `${base} bg-nido-cream border-nido-border text-nido-brown`;
+  }
+
+  protected sortOptionClass(option: SortOption): string {
+    const base = 'w-full px-4 py-2.5 text-left border-0 bg-transparent text-[0.8375rem] cursor-pointer block hover:bg-nido-cream';
+    return this.sortBy() === option
+      ? `${base} text-nido-gold font-semibold`
+      : `${base} text-nido-green-dark`;
+  }
+
+  protected memberToggleClass(memberId: string): string {
+    const base = 'flex items-center gap-2 px-2.5 py-2 rounded-[10px] border-[1.5px] border-solid cursor-pointer transition-all duration-150 relative w-full';
+    return this.isEatingToday(memberId)
+      ? `${base} bg-white`
+      : `${base} bg-nido-cream border-nido-border`;
+  }
 }

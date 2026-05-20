@@ -1,37 +1,40 @@
-<div class="dashboard">
+<div class="p-6 flex flex-col gap-6 max-w-[1200px]">
 
   <!-- Banner de bienvenida -->
-  <section class="dashboard__banner">
-    <div class="dashboard__greeting">
-      <h1>{{ greeting() }}, Luisa.</h1>
-      <p>{{ today() }} &middot; Tu hogar está en buen estado.</p>
+  <section class="relative overflow-hidden rounded-[14px] px-10 py-8 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_60%,#927357_100%)]">
+    <div class="absolute inset-0 bg-[url('/assets/banner-bg.jpg')] bg-center bg-cover opacity-[0.15]"></div>
+    <div class="relative z-10">
+      <h1 class="text-nido-cream text-[1.75rem] font-bold mb-1">{{ greeting() }}, Luisa.</h1>
+      <p class="text-nido-cream/75 text-sm capitalize">{{ today() }} &middot; Tu hogar está en buen estado.</p>
     </div>
   </section>
 
   <!-- Stats -->
-  <div class="dashboard__stats">
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
     @for (stat of stats; track stat.label) {
-      <div class="stat-card">
-        <lucide-icon [name]="stat.icon" [size]="20" class="stat-card__icon" />
-        <span class="stat-card__value">{{ stat.value }}</span>
-        <span class="stat-card__label">{{ stat.label }}</span>
+      <div class="bg-white rounded-[14px] px-6 py-5 flex flex-col gap-1 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
+        <lucide-icon [name]="stat.icon" [size]="20" class="text-nido-gold mb-1" />
+        <span class="text-2xl font-bold text-nido-green-dark">{{ stat.value }}</span>
+        <span class="text-[0.8rem] text-nido-brown">{{ stat.label }}</span>
       </div>
     }
   </div>
 
-  <div class="dashboard__body">
+  <!-- Body -->
+  <div class="grid grid-cols-1 md:grid-cols-[1fr_340px] gap-6 items-start">
 
     <!-- Columna izquierda -->
-    <div class="dashboard__left">
+    <div class="flex flex-col gap-6">
 
       <!-- Accesos rápidos -->
-      <section class="dashboard__section">
-        <h2 class="dashboard__section-title">Accesos rápidos</h2>
-        <div class="quick-actions">
+      <section class="bg-white rounded-[14px] px-6 py-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
+        <h2 class="text-base font-semibold text-nido-green-dark mb-4">Accesos rápidos</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
           @for (action of quickActions; track action.route) {
-            <a [routerLink]="action.route" class="quick-action"
-               [style.--accent]="action.accent">
-              <div class="quick-action__icon">
+            <a [routerLink]="action.route"
+               class="flex flex-col items-center gap-2 px-2 py-4 rounded-[12px] bg-nido-cream no-underline text-nido-green-dark text-[0.75rem] font-medium text-center transition-[background-color,transform] duration-150 hover:bg-[#ede7da] hover:-translate-y-0.5">
+              <div class="w-11 h-11 rounded-full flex items-center justify-center text-nido-cream"
+                   [style.background]="action.accent">
                 <lucide-icon [name]="action.icon" [size]="22" />
               </div>
               <span>{{ action.label }}</span>
@@ -41,19 +44,19 @@
       </section>
 
       <!-- Tareas pendientes -->
-      <section class="dashboard__section">
-        <div class="dashboard__section-header">
-          <h2 class="dashboard__section-title">Tareas pendientes</h2>
-          <a routerLink="/tareas" class="dashboard__link">
+      <section class="bg-white rounded-[14px] px-6 py-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-base font-semibold text-nido-green-dark">Tareas pendientes</h2>
+          <a routerLink="/tareas" class="flex items-center gap-1 text-[0.8rem] text-nido-gold no-underline font-medium hover:underline">
             Ver todo <lucide-icon name="arrow-right" [size]="14" />
           </a>
         </div>
-        <div class="tasks">
+        <div class="flex flex-col gap-2.5">
           @for (task of pendingTasks; track task.title) {
-            <div class="task-item">
-              <lucide-icon name="check-square" [size]="16" class="task-item__icon" />
-              <span class="task-item__title">{{ task.title }}</span>
-              <span class="task-item__tag">{{ task.tag }}</span>
+            <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-nido-cream">
+              <lucide-icon name="check-square" [size]="16" class="text-nido-green shrink-0" />
+              <span class="flex-1 text-[0.8375rem] text-nido-green-dark">{{ task.title }}</span>
+              <span class="text-[0.7rem] text-nido-brown bg-[rgba(146,115,87,0.12)] px-2 py-0.5 rounded-[20px] whitespace-nowrap">{{ task.tag }}</span>
             </div>
           }
         </div>
@@ -62,16 +65,16 @@
     </div>
 
     <!-- Columna derecha: Alertas -->
-    <div class="dashboard__right">
-      <section class="dashboard__section">
-        <h2 class="dashboard__section-title">Alertas</h2>
-        <div class="alerts">
+    <div class="flex flex-col gap-6">
+      <section class="bg-white rounded-[14px] px-6 py-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
+        <h2 class="text-base font-semibold text-nido-green-dark mb-4">Alertas</h2>
+        <div class="flex flex-col gap-3">
           @for (alert of alerts; track alert.message) {
-            <div class="alert-item alert-item--{{ alert.type }}">
-              <lucide-icon [name]="alert.icon" [size]="18" class="alert-item__icon" />
-              <div class="alert-item__content">
-                <span class="alert-item__message">{{ alert.message }}</span>
-                <span class="alert-item__detail">{{ alert.detail }}</span>
+            <div [class]="alertContainerClass(alert.type)">
+              <lucide-icon [name]="alert.icon" [size]="18" [class]="alertIconClass(alert.type)" />
+              <div class="flex flex-col gap-[0.2rem]">
+                <span class="text-[0.8375rem] font-semibold text-nido-green-dark">{{ alert.message }}</span>
+                <span class="text-[0.775rem] text-nido-brown">{{ alert.detail }}</span>
               </div>
             </div>
           }
@@ -80,4 +83,5 @@
     </div>
 
   </div>
+
 </div>

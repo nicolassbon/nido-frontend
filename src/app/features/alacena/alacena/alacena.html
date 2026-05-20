@@ -1,105 +1,108 @@
-<div class="alacena">
+<div class="p-6 flex flex-col gap-5 max-w-[1200px]">
 
   <!-- Banner -->
-  <section class="alacena__banner">
-    <div class="alacena__banner-text">
-      <h1>Alacena</h1>
-      <p>
+  <section class="relative overflow-hidden rounded-[14px] px-8 py-7 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
+    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=900&h=200&fit=crop')] bg-center bg-cover opacity-[0.12]"></div>
+    <div class="relative z-10">
+      <h1 class="text-nido-cream text-[1.6rem] font-bold">Alacena</h1>
+      <p class="text-nido-cream/70 text-sm mt-0.5">
         {{ products().length }} producto{{ products().length === 1 ? '' : 's' }}
         @if (urgentCount() > 0) {
-          · <span class="alacena__banner-alert">{{ urgentCount() }} requieren atención</span>
+          · <span class="text-[#f4a261] font-semibold">{{ urgentCount() }} requieren atención</span>
         }
       </p>
     </div>
-    <div class="alacena__banner-actions">
-      <button class="alacena__action-btn" (click)="openScanner()">
+    <div class="relative z-10 flex gap-2.5 flex-wrap max-sm:w-full">
+      <button
+        class="flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]"
+        (click)="openScanner()">
         <lucide-icon name="qr-code" [size]="15" />
         Escanear código
       </button>
     </div>
   </section>
 
-  <!-- Filtros de ubicación + buscador -->
-  <div class="alacena__toolbar">
-    <div class="alacena__filter-chips">
+  <!-- Toolbar: filtros + buscador -->
+  <div class="flex items-center justify-between gap-3 flex-wrap max-sm:flex-col max-sm:items-stretch">
+    <div class="flex gap-2 flex-wrap">
       @for (loc of locations; track loc) {
-        <button
-          class="filter-chip"
-          [class.filter-chip--active]="activeLocation() === loc"
-          (click)="activeLocation.set(loc)">
+        <button [class]="locationFilterChipClass(loc)" (click)="activeLocation.set(loc)">
           <lucide-icon [name]="getLocationIcon(loc)" [size]="13" />
           {{ loc }}
         </button>
       }
     </div>
-
-    <div class="alacena__search-wrapper">
-      <lucide-icon name="search" [size]="18" class="alacena__search-icon" />
+    <div class="relative flex items-center min-w-[220px] max-sm:min-w-0">
+      <lucide-icon name="search" [size]="18" class="absolute left-4 text-nido-brown pointer-events-none" />
       <input
-        class="alacena__search"
+        class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-border rounded-[10px] bg-white text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-green placeholder:text-nido-muted"
         type="text"
         placeholder="Buscar producto..."
         [ngModel]="searchQuery()"
         (ngModelChange)="searchQuery.set($event)"
       />
       @if (searchQuery()) {
-        <button class="alacena__search-clear" (click)="searchQuery.set('')">
+        <button
+          class="absolute right-3 bg-transparent border-none text-nido-brown cursor-pointer flex items-center p-1 rounded hover:text-nido-green-dark"
+          (click)="searchQuery.set('')">
           <lucide-icon name="x" [size]="16" />
         </button>
       }
     </div>
   </div>
 
-  <!-- Grid de productos -->
+  <!-- Grid / Empty -->
   @if (filteredProducts().length === 0) {
-    <div class="alacena__empty">
+    <div class="flex flex-col items-center justify-center gap-2 py-16 px-8 text-nido-brown text-center">
       @if (products().length === 0) {
         <lucide-icon name="scan-line" [size]="48" />
-        <p>Tu alacena está vacía.</p>
-        <span class="alacena__empty-hint">Escaneá el código de un producto para empezar.</span>
+        <p class="text-[0.9rem] font-medium">Tu alacena está vacía.</p>
+        <span class="text-[0.8125rem] text-nido-muted">Escaneá el código de un producto para empezar.</span>
       } @else {
         <lucide-icon name="search-x" [size]="48" />
-        <p>Sin resultados para ese filtro.</p>
+        <p class="text-[0.9rem] font-medium">Sin resultados para ese filtro.</p>
       }
     </div>
   } @else {
-    <div class="product-grid">
+    <div class="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-4">
       @for (product of filteredProducts(); track product.id) {
         @let daysLeft = getDaysRemaining(product.expiryDate);
-        <article class="product-card">
-          <div class="product-card__image">
+        <article class="bg-white rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition-[transform,box-shadow] duration-[180ms] cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)] group">
+
+          <div class="relative h-40 overflow-hidden bg-nido-cream">
             @if (product.image) {
-              <img [src]="product.image" [alt]="product.name" loading="lazy" (error)="onImgError($event)" />
+              <img [src]="product.image" [alt]="product.name" loading="lazy" (error)="onImgError($event)"
+                   class="w-full h-full object-contain p-2 box-border transition-transform duration-300 group-hover:scale-[1.04]" />
             } @else {
-              <div class="product-card__placeholder">
+              <div class="w-full h-full flex flex-col items-center justify-center gap-2 p-4 text-nido-gold">
                 <lucide-icon [name]="getLocationIcon(product.location)" [size]="22" />
-                <span>{{ product.name }}</span>
+                <span class="text-[0.8rem] font-semibold text-nido-brown text-center leading-snug line-clamp-3">{{ product.name }}</span>
               </div>
             }
             <span
-              class="product-card__badge"
+              class="absolute top-2 left-2 flex items-center gap-1 px-2.5 py-0.5 rounded-[20px] text-[0.7rem] font-semibold text-white"
               [style.background-color]="getLocationColor(product.location)">
               <lucide-icon [name]="getLocationIcon(product.location)" [size]="11" />
               {{ product.location }}
             </span>
           </div>
-          <div class="product-card__body">
-            <h3 class="product-card__name">{{ product.name }}</h3>
-            <div class="product-card__expiry">
-              <div class="expiry-bar">
-                <div
-                  class="expiry-bar__fill"
-                  [style.width.%]="getExpiryWidth(daysLeft)"
-                  [style.background-color]="getExpiryColor(daysLeft)">
+
+          <div class="px-4 py-3.5 flex flex-col gap-2">
+            <h3 class="text-[0.875rem] font-semibold text-nido-green-dark leading-snug">{{ product.name }}</h3>
+            <div class="flex flex-col gap-1">
+              <div class="h-1 bg-nido-border rounded-[10px] overflow-hidden">
+                <div class="h-full rounded-[10px] transition-[width] duration-[400ms]"
+                     [style.width.%]="getExpiryWidth(daysLeft)"
+                     [style.background-color]="getExpiryColor(daysLeft)">
                 </div>
               </div>
-              <span class="expiry-label" [style.color]="getExpiryColor(daysLeft)">
+              <span class="text-[0.7rem] font-semibold whitespace-nowrap" [style.color]="getExpiryColor(daysLeft)">
                 {{ getExpiryLabel(daysLeft) }}
               </span>
             </div>
-            <div class="product-card__meta">
+            <div class="flex items-center gap-1 text-[0.7rem] font-medium text-nido-gold min-h-4">
               @if (product.quantity > 1) {
-                <span class="product-card__qty">x{{ product.quantity }}</span>
+                <span class="text-[0.7rem] font-bold text-white bg-nido-green rounded-[20px] px-[0.45rem] py-[0.1rem] leading-[1.4]">x{{ product.quantity }}</span>
               }
               @if (product.isOpened) {
                 <lucide-icon name="package-open" [size]="11" />
@@ -110,6 +113,7 @@
               }
             </div>
           </div>
+
         </article>
       }
     </div>
@@ -117,11 +121,12 @@
 
   <!-- ── Modal escáner ──────────────────────────────────── -->
   @if (showScanner()) {
-    <div class="modal-overlay" (click)="closeScanner()">
-      <div class="modal" (click)="$event.stopPropagation()">
+    <div class="fixed inset-0 bg-[rgba(38,63,48,0.5)] flex items-center justify-center z-[100] p-4" (click)="closeScanner()">
+      <div class="bg-white rounded-[14px] w-full max-w-[min(460px,calc(100vw-2rem))] overflow-hidden shadow-[0_8px_32px_rgba(38,63,48,0.18)] max-h-[90dvh] flex flex-col" (click)="$event.stopPropagation()">
 
-        <div class="modal__header">
-          <h2>
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-5 border-b border-nido-border shrink-0">
+          <h2 class="text-base font-bold text-nido-green-dark">
             @switch (scannerStep()) {
               @case ('scanning') { Escanear código de barras }
               @case ('loading')  { Buscando producto... }
@@ -129,50 +134,56 @@
               @case ('error')    { No se pudo cargar }
             }
           </h2>
-          <button class="modal__close" (click)="closeScanner()">
+          <button
+            class="bg-transparent border-none cursor-pointer text-nido-brown flex items-center p-1 rounded transition-[color] duration-150 hover:text-nido-green-dark"
+            (click)="closeScanner()">
             <lucide-icon name="x" [size]="20" />
           </button>
         </div>
 
-        <!-- ── Estado: escaneando ── -->
+        <!-- ── Escaneando ── -->
         @if (scannerStep() === 'scanning') {
-          <div class="modal__body modal__body--scanner">
-            <div class="scanner-viewport">
-              <video #videoRef playsinline muted class="scanner-video"></video>
-              <div class="scanner-frame">
-                <span class="scanner-frame__corner scanner-frame__corner--tl"></span>
-                <span class="scanner-frame__corner scanner-frame__corner--tr"></span>
-                <span class="scanner-frame__corner scanner-frame__corner--bl"></span>
-                <span class="scanner-frame__corner scanner-frame__corner--br"></span>
-                <div class="scanner-line"></div>
+          <div class="flex flex-col items-center gap-4 px-6 pt-4 pb-6 overflow-y-auto">
+            <div class="relative w-full aspect-[4/3] bg-black rounded-[10px] overflow-hidden">
+              <video #videoRef playsinline muted class="w-full h-full object-cover block"></video>
+              <div class="absolute inset-[15%] pointer-events-none">
+                <span class="absolute top-0 left-0 w-[22px] h-[22px] border-nido-cream border-solid border-t-[3px] border-l-[3px] border-r-0 border-b-0 rounded-tl"></span>
+                <span class="absolute top-0 right-0 w-[22px] h-[22px] border-nido-cream border-solid border-t-[3px] border-r-[3px] border-l-0 border-b-0 rounded-tr"></span>
+                <span class="absolute bottom-0 left-0 w-[22px] h-[22px] border-nido-cream border-solid border-b-[3px] border-l-[3px] border-t-0 border-r-0 rounded-bl"></span>
+                <span class="absolute bottom-0 right-0 w-[22px] h-[22px] border-nido-cream border-solid border-b-[3px] border-r-[3px] border-t-0 border-l-0 rounded-br"></span>
+                <div class="absolute left-0 right-0 h-0.5 top-0 bg-gradient-to-r from-transparent via-nido-gold to-transparent animate-[scan_2s_ease-in-out_infinite]"></div>
               </div>
             </div>
-            <p class="scanner-hint">
+            <p class="flex items-center gap-1.5 text-[0.8125rem] text-nido-brown text-center">
               <lucide-icon name="qr-code" [size]="14" />
               Apuntá la cámara al código de barras del producto
             </p>
           </div>
         }
 
-        <!-- ── Estado: cargando ── -->
+        <!-- ── Cargando ── -->
         @if (scannerStep() === 'loading') {
-          <div class="modal__body modal__body--centered">
-            <div class="spinner"></div>
-            <p class="scanner-hint">Buscando información del producto...</p>
+          <div class="flex flex-col items-center gap-4 px-6 py-10 text-center overflow-y-auto">
+            <div class="w-10 h-10 rounded-full border-[3px] border-solid border-nido-border border-t-nido-green animate-[spin_0.75s_linear_infinite]"></div>
+            <p class="text-[0.8125rem] text-nido-brown">Buscando información del producto...</p>
           </div>
         }
 
-        <!-- ── Estado: error ── -->
+        <!-- ── Error ── -->
         @if (scannerStep() === 'error') {
-          <div class="modal__body modal__body--centered">
-            <lucide-icon name="alert-circle" [size]="40" class="error-icon" />
-            <p class="error-message">{{ scannerError() }}</p>
-            <div class="modal__actions modal__actions--centered">
-              <button class="btn-secondary" (click)="retryScanner()">
+          <div class="flex flex-col items-center gap-4 px-6 py-10 text-center overflow-y-auto">
+            <lucide-icon name="alert-circle" [size]="40" class="text-nido-red" />
+            <p class="text-[0.875rem] text-nido-brown max-w-[280px] leading-relaxed">{{ scannerError() }}</p>
+            <div class="flex gap-3 flex-wrap justify-center pt-1">
+              <button
+                class="flex items-center justify-center gap-1.5 py-[0.65rem] px-4 bg-transparent text-nido-brown border-[1.5px] border-solid border-nido-border rounded-lg text-[0.875rem] font-medium cursor-pointer transition-all duration-150 hover:border-nido-brown hover:text-nido-green-dark"
+                (click)="retryScanner()">
                 <lucide-icon name="qr-code" [size]="14" />
                 Volver a escanear
               </button>
-              <button class="btn-primary" (click)="addManually()">
+              <button
+                class="flex items-center justify-center gap-1.5 py-[0.65rem] px-5 bg-nido-green-dark text-nido-cream border-none rounded-lg text-[0.875rem] font-semibold cursor-pointer transition-[background] duration-150 hover:bg-nido-green"
+                (click)="addManually()">
                 <lucide-icon name="plus" [size]="14" />
                 Cargar manualmente
               </button>
@@ -180,48 +191,42 @@
           </div>
         }
 
-        <!-- ── Estado: confirmar ── -->
+        <!-- ── Confirmar ── -->
         @if (scannerStep() === 'confirm') {
-          <div class="modal__body modal__body--form">
+          <div class="flex flex-col gap-[1.125rem] px-6 py-6 overflow-y-auto overflow-x-hidden min-w-0 [&>*]:min-w-0">
 
-            <!-- Producto no encontrado en ninguna DB -->
+            <!-- Producto no encontrado -->
             @if (draft().notFound) {
-              <div class="not-found-banner">
-                <lucide-icon name="search-x" [size]="15" />
+              <div class="flex items-start gap-2 py-3 px-4 bg-[rgba(199,143,90,0.1)] border border-[rgba(199,143,90,0.3)] rounded-lg text-nido-brown text-[0.8125rem] leading-snug">
+                <lucide-icon name="search-x" [size]="15" class="shrink-0 mt-px" />
                 <span>No encontramos este código en nuestra base de datos. Completá los datos del producto.</span>
               </div>
             }
 
-            <!-- Preview imagen / captura de foto -->
-            <div
-              class="confirm-image"
-              [class.confirm-image--empty]="!draft().image"
-              (click)="triggerPhotoInput()">
+            <!-- Imagen / foto -->
+            <div [class]="confirmImageClass()" (click)="triggerPhotoInput()">
               @if (draft().image) {
-                <img [src]="draft().image" [alt]="draft().name" (error)="onImgError($event)" />
-                <div class="confirm-image__retake">
+                <img [src]="draft().image" [alt]="draft().name" (error)="onImgError($event)"
+                     class="w-full h-full object-contain block p-6 box-border" />
+                <div class="absolute bottom-2.5 right-2.5 flex items-center gap-1 px-2.5 py-1 rounded-[20px] bg-[rgba(38,63,48,0.72)] text-white text-[0.72rem] font-semibold pointer-events-none">
                   <lucide-icon name="camera" [size]="13" />
                   Cambiar foto
                 </div>
               } @else {
-                <lucide-icon name="camera" [size]="32" class="confirm-image__icon" />
-                <span class="confirm-image__label">Sacar foto al producto</span>
-                <span class="confirm-image__hint">opcional</span>
+                <lucide-icon name="camera" [size]="32" class="text-nido-muted" />
+                <span class="text-[0.875rem] font-semibold text-nido-brown">Sacar foto al producto</span>
+                <span class="text-[0.75rem] text-nido-muted">opcional</span>
               }
             </div>
-            <input
-              #photoInput
-              type="file"
-              accept="image/*"
-              style="display:none"
-              (change)="onPhotoSelected($event)"
-            />
+            <input #photoInput type="file" accept="image/*" style="display:none" (change)="onPhotoSelected($event)" />
 
             <!-- Nombre -->
-            <div class="field" [class.field--error]="draftErrors()['name']">
-              <label class="field__label">Nombre del producto <span>*</span></label>
+            <div class="flex flex-col gap-1.5 min-w-0">
+              <label class="text-[0.8125rem] font-semibold text-nido-green-dark">
+                Nombre del producto <span class="text-nido-red">*</span>
+              </label>
               <input
-                class="field__input"
+                [class]="fieldInputClass(!!draftErrors()['name'], 'w-full')"
                 type="text"
                 placeholder="Ej: Leche entera"
                 [ngModel]="draft().name"
@@ -229,34 +234,44 @@
                 maxlength="80"
               />
               @if (draftErrors()['name']) {
-                <p class="field__error">{{ draftErrors()['name'] }}</p>
+                <p class="text-[0.775rem] text-nido-red">{{ draftErrors()['name'] }}</p>
               }
             </div>
 
             <!-- Cantidad -->
-            <div class="field">
-              <label class="field__label">Cantidad</label>
-              <div class="qty-stepper">
-                <button type="button" class="qty-btn" (click)="updateQuantity(-1)" [disabled]="draft().quantity <= 1">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Cantidad</label>
+              <div class="flex items-center w-fit border-[1.5px] border-solid border-nido-border rounded-lg overflow-hidden">
+                <button
+                  type="button"
+                  class="flex items-center justify-center w-9 h-9 bg-nido-cream border-none cursor-pointer text-nido-green-dark transition-[background] duration-150 hover:bg-[#ede4d8] disabled:opacity-35 disabled:cursor-default"
+                  (click)="updateQuantity(-1)"
+                  [disabled]="draft().quantity <= 1">
                   <lucide-icon name="minus" [size]="14" />
                 </button>
-                <span class="qty-value">{{ draft().quantity }}</span>
-                <button type="button" class="qty-btn" (click)="updateQuantity(1)">
+                <span class="min-w-[44px] text-center text-[0.9375rem] font-semibold text-nido-green-dark px-1 select-none">{{ draft().quantity }}</span>
+                <button
+                  type="button"
+                  class="flex items-center justify-center w-9 h-9 bg-nido-cream border-none cursor-pointer text-nido-green-dark transition-[background] duration-150 hover:bg-[#ede4d8]"
+                  (click)="updateQuantity(1)">
                   <lucide-icon name="plus" [size]="14" />
                 </button>
               </div>
             </div>
 
             <!-- Ubicación -->
-            <div class="field">
-              <label class="field__label">¿Dónde lo guardás? <span>*</span></label>
-              <div class="location-picker">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[0.8125rem] font-semibold text-nido-green-dark">
+                ¿Dónde lo guardás? <span class="text-nido-red">*</span>
+              </label>
+              <div class="flex gap-2 flex-wrap">
                 @for (loc of productLocations; track loc) {
                   <button
                     type="button"
-                    class="location-option"
-                    [class.location-option--active]="draft().location === loc"
-                    [style.--loc-color]="getLocationColor(loc)"
+                    class="flex-1 min-w-[90px] flex flex-col items-center gap-1.5 py-3 px-2 rounded-[10px] border-[1.5px] border-solid text-[0.8rem] font-medium cursor-pointer transition-all duration-150 border-nido-border"
+                    [style.background]="draft().location === loc ? getLocationColor(loc) : '#fff'"
+                    [style.border-color]="draft().location === loc ? getLocationColor(loc) : null"
+                    [style.color]="draft().location === loc ? '#fff' : '#927357'"
                     (click)="updateDraftField('location', loc)">
                     <lucide-icon [name]="getLocationIcon(loc)" [size]="16" />
                     {{ loc }}
@@ -266,32 +281,28 @@
             </div>
 
             <!-- ¿Cuándo lo compraste? -->
-            <div class="field">
-              <label class="field__label">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[0.8125rem] font-semibold text-nido-green-dark">
                 ¿Cuándo lo compraste?
-                <span class="field__optional">opcional</span>
+                <span class="text-[0.725rem] font-normal text-nido-muted ml-1">opcional</span>
               </label>
-              <div class="day-chips">
-                <button type="button" class="day-chip"
-                        [class.day-chip--active]="draft().daysSincePurchase === 0"
-                        (click)="updateDaysSincePurchase(0)">
+              <div class="flex gap-1.5 flex-wrap">
+                <button type="button" [class]="dayChipClass(draft().daysSincePurchase === 0)" (click)="updateDaysSincePurchase(0)">
                   <lucide-icon name="calendar-check" [size]="12" />
                   Hoy
                 </button>
-                <button type="button" class="day-chip"
-                        [class.day-chip--active]="draft().daysSincePurchase === 1"
-                        (click)="updateDaysSincePurchase(1)">
+                <button type="button" [class]="dayChipClass(draft().daysSincePurchase === 1)" (click)="updateDaysSincePurchase(1)">
                   Ayer
                 </button>
-                <button type="button" class="day-chip"
-                        [class.day-chip--active]="draft().daysSincePurchase >= 2"
+                <button type="button"
+                        [class]="dayChipClass(draft().daysSincePurchase >= 2)"
                         (click)="updateDaysSincePurchase(draft().daysSincePurchase >= 2 ? draft().daysSincePurchase : 2)">
                   Hace más días
                 </button>
               </div>
               @if (draft().daysSincePurchase >= 2) {
                 <input
-                  class="field__input field__input--number"
+                  [class]="fieldInputClass(false, 'max-w-[140px] mt-1.5')"
                   type="number"
                   min="2"
                   max="60"
@@ -303,34 +314,35 @@
             </div>
 
             <!-- ¿Ya está abierto? -->
-            <div class="field">
-              <div class="toggle-row">
-                <div class="toggle-row__label">
-                  <span class="field__label">¿Ya está abierto?</span>
-                  <span class="field__optional">opcional</span>
+            <div class="flex flex-col gap-1.5">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-baseline gap-1">
+                  <span class="text-[0.8125rem] font-semibold text-nido-green-dark">¿Ya está abierto?</span>
+                  <span class="text-[0.725rem] font-normal text-nido-muted">opcional</span>
                 </div>
                 <button
                   type="button"
-                  class="toggle-btn"
-                  [class.toggle-btn--on]="draft().isOpened"
+                  class="flex items-center gap-2 bg-transparent border-none cursor-pointer text-[0.8125rem] font-medium py-1 px-0 shrink-0 transition-[color] duration-150"
+                  [style.color]="draft().isOpened ? '#3E5E4A' : '#927357'"
                   (click)="toggleOpened(!draft().isOpened)">
-                  <span class="toggle-btn__track">
-                    <span class="toggle-btn__thumb"></span>
+                  <span class="w-[38px] h-[22px] rounded-[11px] relative transition-[background] duration-200 shrink-0"
+                        [style.background]="draft().isOpened ? '#3E5E4A' : '#e5ddd0'">
+                    <span class="absolute top-[3px] left-[3px] w-4 h-4 bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.2)] transition-transform duration-200"
+                          [style.transform]="draft().isOpened ? 'translateX(16px)' : 'translateX(0)'">
+                    </span>
                   </span>
                   {{ draft().isOpened ? 'Sí' : 'No' }}
                 </button>
               </div>
 
               @if (draft().isOpened) {
-                <div class="consumed-section">
-                  <span class="field__label field__label--sm">¿Cuánto consumiste aprox.?</span>
-                  <div class="consumed-chips">
+                <div class="flex flex-col gap-2 p-3 bg-[rgba(62,94,74,0.06)] rounded-lg mt-1.5">
+                  <span class="text-[0.775rem] font-medium text-nido-brown">¿Cuánto consumiste aprox.?</span>
+                  <div class="flex gap-1.5 flex-wrap">
                     @for (opt of consumedOptions; track opt.value) {
-                      <button
-                        type="button"
-                        class="consumed-chip"
-                        [class.consumed-chip--active]="draft().consumedPercent === opt.value"
-                        (click)="updateConsumedPercent(opt.value)">
+                      <button type="button"
+                              [class]="dayChipClass(draft().consumedPercent === opt.value)"
+                              (click)="updateConsumedPercent(opt.value)">
                         {{ opt.label }}
                       </button>
                     }
@@ -340,34 +352,40 @@
             </div>
 
             <!-- Vencimiento -->
-            <div class="field" [class.field--error]="draftErrors()['expiryDate']">
-              <label class="field__label">
-                Fecha de vencimiento <span>*</span>
+            <div class="flex flex-col gap-1.5 min-w-0">
+              <label class="text-[0.8125rem] font-semibold text-nido-green-dark">
+                Fecha de vencimiento <span class="text-nido-red">*</span>
               </label>
               <input
-                class="field__input"
+                [class]="fieldInputClass(!!draftErrors()['expiryDate'], 'w-fit max-w-full cursor-pointer [color-scheme:light]')"
                 type="date"
                 [ngModel]="draft().expiryDate"
                 (ngModelChange)="updateDraftField('expiryDate', $event)"
               />
               @if (draftErrors()['expiryDate']) {
-                <p class="field__error">{{ draftErrors()['expiryDate'] }}</p>
+                <p class="text-[0.775rem] text-nido-red">{{ draftErrors()['expiryDate'] }}</p>
               }
               @if (draft().ttlHint) {
-                <p class="field__hint">
-                  <lucide-icon name="calendar-clock" [size]="12" />
+                <p class="flex items-start gap-1.5 text-[0.775rem] text-nido-green bg-[rgba(62,94,74,0.08)] px-2.5 py-[0.4rem] rounded-md leading-snug">
+                  <lucide-icon name="calendar-clock" [size]="12" class="shrink-0 mt-px" />
                   Fecha estimada por categoría · {{ draft().ttlHint }}
                 </p>
               }
             </div>
 
             <!-- Acciones -->
-            <div class="modal__actions">
-              <button type="button" class="btn-secondary" (click)="retryScanner()">
+            <div class="flex gap-3 pt-1 flex-wrap">
+              <button
+                type="button"
+                class="flex items-center justify-center gap-1.5 py-[0.65rem] px-4 bg-transparent text-nido-brown border-[1.5px] border-solid border-nido-border rounded-lg text-[0.875rem] font-medium cursor-pointer transition-all duration-150 hover:border-nido-brown hover:text-nido-green-dark"
+                (click)="retryScanner()">
                 <lucide-icon name="qr-code" [size]="14" />
                 Volver a escanear
               </button>
-              <button type="button" class="btn-primary" (click)="submitProduct()">
+              <button
+                type="button"
+                class="flex-1 flex items-center justify-center gap-1.5 py-[0.65rem] px-5 bg-nido-green-dark text-nido-cream border-none rounded-lg text-[0.875rem] font-semibold cursor-pointer transition-[background] duration-150 hover:bg-nido-green"
+                (click)="submitProduct()">
                 <lucide-icon name="check" [size]="14" />
                 Guardar producto
               </button>

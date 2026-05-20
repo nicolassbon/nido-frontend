@@ -1,12 +1,34 @@
+@import "tailwindcss";
+
+/* ── Design tokens ─────────────────────────────────────── */
+@theme {
+  --color-nido-green-dark:  #263F30;
+  --color-nido-green:       #3E5E4A;
+  --color-nido-gold:        #C78F5A;
+  --color-nido-brown:       #927357;
+  --color-nido-red:         #b44c3c;
+  --color-nido-cream:       #F7F1E6;
+  --color-nido-bg:          #FEFCF8;
+  --color-nido-border:      #e5ddd0;
+  --color-nido-muted:       #b5a898;
+
+  --font-family-sans: system-ui, -apple-system, sans-serif;
+}
+
+/* ── Custom keyframes ─────────────────────────────────── */
+@keyframes scan {
+  0%, 100% { top: 0; }
+  50%       { top: calc(100% - 2px); }
+}
+
+/* ── Base ─────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 html, body {
   height: 100%;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-family-sans);
   background-color: #F7F1E6;
   color: #1a1a1a;
 }

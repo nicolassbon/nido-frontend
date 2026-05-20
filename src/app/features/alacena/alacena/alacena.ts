@@ -490,4 +490,31 @@ export class Alacena {
     const img = event.target as HTMLImageElement;
     if (!img.src.includes('placehold.co')) img.src = PLACEHOLDER_IMAGE;
   }
+
+  // ── Tailwind class helpers ────────────────────────────────
+
+  protected locationFilterChipClass(loc: StorageLocation): string {
+    const base = 'px-4 py-[0.4rem] rounded-[20px] border-[1.5px] border-solid font-medium text-[0.8125rem] cursor-pointer transition-all duration-150 inline-flex items-center gap-1.5';
+    return this.activeLocation() === loc
+      ? `${base} bg-nido-green-dark border-nido-green-dark text-nido-cream`
+      : `${base} bg-white border-nido-border text-nido-brown hover:border-nido-green hover:text-nido-green`;
+  }
+
+  protected confirmImageClass(): string {
+    return this.draft().image
+      ? 'relative w-full h-[220px] shrink-0 rounded-[12px] overflow-hidden bg-nido-cream cursor-pointer transition-opacity duration-150 hover:opacity-95'
+      : 'w-full h-[220px] shrink-0 rounded-[12px] flex flex-col items-center justify-center gap-2 bg-[#faf7f2] border-2 border-dashed border-[#d4c5b0] cursor-pointer transition-opacity duration-150 hover:opacity-95';
+  }
+
+  protected dayChipClass(active: boolean): string {
+    const base = 'inline-flex items-center gap-1 py-[0.35rem] px-3 rounded-[16px] border-[1.5px] border-solid text-[0.775rem] font-medium cursor-pointer transition-all duration-150 whitespace-nowrap';
+    return active
+      ? `${base} bg-nido-green-dark border-nido-green-dark text-nido-cream`
+      : `${base} bg-white border-nido-border text-nido-brown hover:border-nido-green hover:text-nido-green`;
+  }
+
+  protected fieldInputClass(hasError: boolean, extra = ''): string {
+    const base = 'py-[0.65rem] px-[0.875rem] border-[1.5px] border-solid rounded-lg text-[0.875rem] text-nido-green-dark bg-white outline-none transition-[border-color] duration-150 placeholder:text-nido-muted focus:border-nido-green box-border';
+    return `${base} ${hasError ? 'border-nido-red' : 'border-nido-border'}${extra ? ' ' + extra : ''}`;
+  }
 }
