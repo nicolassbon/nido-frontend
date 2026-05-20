@@ -1,22 +1,18 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { TestBed } from '@angular/core/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { appConfig } from '../../../../app.config';
 import { Alacena } from './alacena';
 
 describe('Alacena', () => {
-  let component: Alacena;
-  let fixture: ComponentFixture<Alacena>;
-
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Alacena],
+      providers: [...appConfig.providers, provideHttpClientTesting()],
     }).compileComponents();
-
-    fixture = TestBed.createComponent(Alacena);
-    component = fixture.componentInstance;
-    await fixture.whenStable();
   });
 
   it('should create', () => {
-    expect(component).toBeTruthy();
+    const fixture = TestBed.createComponent(Alacena);
+    expect(fixture.componentInstance).toBeTruthy();
   });
 });

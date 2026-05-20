@@ -1,22 +1,17 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { TestBed } from '@angular/core/testing';
+import { appConfig } from '../../../../app.config';
 import { Nav } from './nav';
 
 describe('Nav', () => {
-  let component: Nav;
-  let fixture: ComponentFixture<Nav>;
-
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Nav],
+      providers: appConfig.providers,
     }).compileComponents();
-
-    fixture = TestBed.createComponent(Nav);
-    component = fixture.componentInstance;
-    await fixture.whenStable();
   });
 
   it('should create', () => {
-    expect(component).toBeTruthy();
+    const fixture = TestBed.createComponent(Nav);
+    expect(fixture.componentInstance).toBeTruthy();
   });
 });
