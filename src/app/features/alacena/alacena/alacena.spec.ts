@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { appConfig } from '../../../../app.config';
+import { appConfig } from '../../../app.config';
 import { Alacena } from './alacena';
 
 describe('Alacena', () => {
