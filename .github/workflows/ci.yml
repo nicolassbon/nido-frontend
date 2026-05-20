@@ -16,7 +16,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20.x' # o '22.x', ajustalo según la versión que usaste localmente
+        node-version: '24.x'
         cache: 'npm'
         
     - name: Install dependencies
