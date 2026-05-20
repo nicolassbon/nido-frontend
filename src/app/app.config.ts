@@ -10,7 +10,11 @@ import {
   ShoppingBasket, ClipboardList, Info,
   Search, Clock, Flame, Star, Shuffle,
   ChevronDown, X, SlidersHorizontal, Pencil,
-  Shield, Check
+  Shield, Check, QrCode, Snowflake, Package,
+  Tag, AlertCircle,
+  // Alacena
+  Scan, ScanLine, SearchX, CalendarClock, CalendarCheck,
+  PackageOpen, LockOpen, Minus,
 } from 'lucide-angular';
 import { routes } from './app.routes';
 
@@ -29,7 +33,11 @@ export const appConfig: ApplicationConfig = {
         AlertTriangle, TrendingUp, ArrowRight,
         ShoppingBasket, ClipboardList, Info,
         Search, Clock, Flame, Star, Shuffle,
-        ChevronDown, X, SlidersHorizontal, Pencil
+        ChevronDown, X, SlidersHorizontal, Pencil,
+        Shield, Check, QrCode, Snowflake, Package,
+        Tag, AlertCircle,
+        Scan, ScanLine, SearchX, CalendarClock, CalendarCheck,
+        PackageOpen, LockOpen, Minus,
       })
     }
   ],
