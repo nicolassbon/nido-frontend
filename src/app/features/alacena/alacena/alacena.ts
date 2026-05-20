@@ -173,15 +173,20 @@ export class Alacena {
   });
 
   // ── Camera ───────────────────────────────────────────────
-  private readonly videoRef       = viewChild<ElementRef<HTMLVideoElement>>('videoRef');
+  private readonly videoRef      = viewChild<ElementRef<HTMLVideoElement>>('videoRef');
+  private readonly photoInputRef = viewChild<ElementRef<HTMLInputElement>>('photoInput');
   private scanControls?: { stop(): void };
   private codeReader?:  BrowserMultiFormatReader;
   private mediaStream?: MediaStream;
   private rafId?:       number;
-  private scannerBusy = false;
+  private scannerBusy  = false;
+  private blobUrl?:     string;
 
   constructor() {
-    this.destroyRef.onDestroy(() => this.stopCamera());
+    this.destroyRef.onDestroy(() => {
+      this.stopCamera();
+      if (this.blobUrl) URL.revokeObjectURL(this.blobUrl);
+    });
 
     effect(() => {
       const video = this.videoRef();
@@ -392,6 +397,18 @@ export class Alacena {
     this.draft.update(d => ({ ...d, quantity: Math.max(1, d.quantity + delta) }));
   }
 
+  protected triggerPhotoInput(): void {
+    this.photoInputRef()?.nativeElement.click();
+  }
+
+  protected onPhotoSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    if (this.blobUrl) URL.revokeObjectURL(this.blobUrl);
+    this.blobUrl = URL.createObjectURL(file);
+    this.draft.update(d => ({ ...d, image: this.blobUrl! }));
+  }
+
   protected submitProduct(): void {
     this.submitted.set(true);
     if (!this.isDraftValid()) return;
@@ -412,7 +429,7 @@ export class Alacena {
       const product: Product = {
         id:               crypto.randomUUID(),
         name:             d.name.trim(),
-        image:            d.image || PLACEHOLDER_IMAGE,
+        image:            d.image,
         location:         d.location,
         expiryDate:       d.expiryDate,
         quantity:         d.quantity,

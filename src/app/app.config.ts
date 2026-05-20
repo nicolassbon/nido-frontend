@@ -14,7 +14,7 @@ import {
   Tag, AlertCircle,
   // Alacena
   Scan, ScanLine, SearchX, CalendarClock, CalendarCheck,
-  PackageOpen, LockOpen, Minus,
+  PackageOpen, LockOpen, Minus, Camera,
 } from 'lucide-angular';
 import { routes } from './app.routes';
 
@@ -37,7 +37,7 @@ export const appConfig: ApplicationConfig = {
         Shield, Check, QrCode, Snowflake, Package,
         Tag, AlertCircle,
         Scan, ScanLine, SearchX, CalendarClock, CalendarCheck,
-        PackageOpen, LockOpen, Minus,
+        PackageOpen, LockOpen, Minus, Camera,
       })
     }
   ],

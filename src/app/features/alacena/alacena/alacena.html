@@ -68,7 +68,14 @@
         @let daysLeft = getDaysRemaining(product.expiryDate);
         <article class="product-card">
           <div class="product-card__image">
-            <img [src]="product.image" [alt]="product.name" loading="lazy" (error)="onImgError($event)" />
+            @if (product.image) {
+              <img [src]="product.image" [alt]="product.name" loading="lazy" (error)="onImgError($event)" />
+            } @else {
+              <div class="product-card__placeholder">
+                <lucide-icon [name]="getLocationIcon(product.location)" [size]="22" />
+                <span>{{ product.name }}</span>
+              </div>
+            }
             <span
               class="product-card__badge"
               [style.background-color]="getLocationColor(product.location)">
@@ -185,12 +192,30 @@
               </div>
             }
 
-            <!-- Preview imagen -->
-            @if (draft().image) {
-              <div class="confirm-image">
+            <!-- Preview imagen / captura de foto -->
+            <div
+              class="confirm-image"
+              [class.confirm-image--empty]="!draft().image"
+              (click)="triggerPhotoInput()">
+              @if (draft().image) {
                 <img [src]="draft().image" [alt]="draft().name" (error)="onImgError($event)" />
-              </div>
-            }
+                <div class="confirm-image__retake">
+                  <lucide-icon name="camera" [size]="13" />
+                  Cambiar foto
+                </div>
+              } @else {
+                <lucide-icon name="camera" [size]="32" class="confirm-image__icon" />
+                <span class="confirm-image__label">Sacar foto al producto</span>
+                <span class="confirm-image__hint">opcional</span>
+              }
+            </div>
+            <input
+              #photoInput
+              type="file"
+              accept="image/*"
+              style="display:none"
+              (change)="onPhotoSelected($event)"
+            />
 
             <!-- Nombre -->
             <div class="field" [class.field--error]="draftErrors()['name']">
