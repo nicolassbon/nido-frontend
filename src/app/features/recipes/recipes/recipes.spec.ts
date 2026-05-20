@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { appConfig } from '../../../../app.config';
+import { appConfig } from '../../../app.config';
 import { Recipes } from './recipes';
 
 describe('Recipes', () => {
