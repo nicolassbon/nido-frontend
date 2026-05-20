@@ -12,7 +12,7 @@ export class Layout {
   protected readonly isMenuOpen = signal(false);
 
   protected toggleMenu(): void {
-    this.isMenuOpen.update(open => !open);
+    this.isMenuOpen.update((open) => !open);
   }
 
   protected closeMenu(): void {

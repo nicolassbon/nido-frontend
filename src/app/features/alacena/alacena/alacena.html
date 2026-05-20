@@ -1,0 +1,358 @@
+<div class="alacena">
+
+  <!-- Banner -->
+  <section class="alacena__banner">
+    <div class="alacena__banner-text">
+      <h1>Alacena</h1>
+      <p>
+        {{ products().length }} producto{{ products().length === 1 ? '' : 's' }}
+        @if (urgentCount() > 0) {
+          · <span class="alacena__banner-alert">{{ urgentCount() }} requieren atención</span>
+        }
+      </p>
+    </div>
+    <div class="alacena__banner-actions">
+      <button class="alacena__action-btn" (click)="openScanner()">
+        <lucide-icon name="qr-code" [size]="15" />
+        Escanear código
+      </button>
+    </div>
+  </section>
+
+  <!-- Filtros de ubicación + buscador -->
+  <div class="alacena__toolbar">
+    <div class="alacena__filter-chips">
+      @for (loc of locations; track loc) {
+        <button
+          class="filter-chip"
+          [class.filter-chip--active]="activeLocation() === loc"
+          (click)="activeLocation.set(loc)">
+          <lucide-icon [name]="getLocationIcon(loc)" [size]="13" />
+          {{ loc }}
+        </button>
+      }
+    </div>
+
+    <div class="alacena__search-wrapper">
+      <lucide-icon name="search" [size]="18" class="alacena__search-icon" />
+      <input
+        class="alacena__search"
+        type="text"
+        placeholder="Buscar producto..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+      />
+      @if (searchQuery()) {
+        <button class="alacena__search-clear" (click)="searchQuery.set('')">
+          <lucide-icon name="x" [size]="16" />
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Grid de productos -->
+  @if (filteredProducts().length === 0) {
+    <div class="alacena__empty">
+      @if (products().length === 0) {
+        <lucide-icon name="scan-line" [size]="48" />
+        <p>Tu alacena está vacía.</p>
+        <span class="alacena__empty-hint">Escaneá el código de un producto para empezar.</span>
+      } @else {
+        <lucide-icon name="search-x" [size]="48" />
+        <p>Sin resultados para ese filtro.</p>
+      }
+    </div>
+  } @else {
+    <div class="product-grid">
+      @for (product of filteredProducts(); track product.id) {
+        @let daysLeft = getDaysRemaining(product.expiryDate);
+        <article class="product-card">
+          <div class="product-card__image">
+            <img [src]="product.image" [alt]="product.name" loading="lazy" (error)="onImgError($event)" />
+            <span
+              class="product-card__badge"
+              [style.background-color]="getLocationColor(product.location)">
+              <lucide-icon [name]="getLocationIcon(product.location)" [size]="11" />
+              {{ product.location }}
+            </span>
+          </div>
+          <div class="product-card__body">
+            <h3 class="product-card__name">{{ product.name }}</h3>
+            <div class="product-card__expiry">
+              <div class="expiry-bar">
+                <div
+                  class="expiry-bar__fill"
+                  [style.width.%]="getExpiryWidth(daysLeft)"
+                  [style.background-color]="getExpiryColor(daysLeft)">
+                </div>
+              </div>
+              <span class="expiry-label" [style.color]="getExpiryColor(daysLeft)">
+                {{ getExpiryLabel(daysLeft) }}
+              </span>
+            </div>
+            <div class="product-card__meta">
+              @if (product.quantity > 1) {
+                <span class="product-card__qty">x{{ product.quantity }}</span>
+              }
+              @if (product.isOpened) {
+                <lucide-icon name="package-open" [size]="11" />
+                Abierto
+                @if (product.remainingPercent !== undefined && product.remainingPercent < 100) {
+                  · {{ getQuantityLabel(product.remainingPercent) }}
+                }
+              }
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+  }
+
+  <!-- ── Modal escáner ──────────────────────────────────── -->
+  @if (showScanner()) {
+    <div class="modal-overlay" (click)="closeScanner()">
+      <div class="modal" (click)="$event.stopPropagation()">
+
+        <div class="modal__header">
+          <h2>
+            @switch (scannerStep()) {
+              @case ('scanning') { Escanear código de barras }
+              @case ('loading')  { Buscando producto... }
+              @case ('confirm')  { Confirmar producto }
+              @case ('error')    { No se pudo cargar }
+            }
+          </h2>
+          <button class="modal__close" (click)="closeScanner()">
+            <lucide-icon name="x" [size]="20" />
+          </button>
+        </div>
+
+        <!-- ── Estado: escaneando ── -->
+        @if (scannerStep() === 'scanning') {
+          <div class="modal__body modal__body--scanner">
+            <div class="scanner-viewport">
+              <video #videoRef playsinline muted class="scanner-video"></video>
+              <div class="scanner-frame">
+                <span class="scanner-frame__corner scanner-frame__corner--tl"></span>
+                <span class="scanner-frame__corner scanner-frame__corner--tr"></span>
+                <span class="scanner-frame__corner scanner-frame__corner--bl"></span>
+                <span class="scanner-frame__corner scanner-frame__corner--br"></span>
+                <div class="scanner-line"></div>
+              </div>
+            </div>
+            <p class="scanner-hint">
+              <lucide-icon name="qr-code" [size]="14" />
+              Apuntá la cámara al código de barras del producto
+            </p>
+          </div>
+        }
+
+        <!-- ── Estado: cargando ── -->
+        @if (scannerStep() === 'loading') {
+          <div class="modal__body modal__body--centered">
+            <div class="spinner"></div>
+            <p class="scanner-hint">Buscando información del producto...</p>
+          </div>
+        }
+
+        <!-- ── Estado: error ── -->
+        @if (scannerStep() === 'error') {
+          <div class="modal__body modal__body--centered">
+            <lucide-icon name="alert-circle" [size]="40" class="error-icon" />
+            <p class="error-message">{{ scannerError() }}</p>
+            <div class="modal__actions modal__actions--centered">
+              <button class="btn-secondary" (click)="retryScanner()">
+                <lucide-icon name="qr-code" [size]="14" />
+                Volver a escanear
+              </button>
+              <button class="btn-primary" (click)="addManually()">
+                <lucide-icon name="plus" [size]="14" />
+                Cargar manualmente
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- ── Estado: confirmar ── -->
+        @if (scannerStep() === 'confirm') {
+          <div class="modal__body modal__body--form">
+
+            <!-- Producto no encontrado en ninguna DB -->
+            @if (draft().notFound) {
+              <div class="not-found-banner">
+                <lucide-icon name="search-x" [size]="15" />
+                <span>No encontramos este código en nuestra base de datos. Completá los datos del producto.</span>
+              </div>
+            }
+
+            <!-- Preview imagen -->
+            @if (draft().image) {
+              <div class="confirm-image">
+                <img [src]="draft().image" [alt]="draft().name" (error)="onImgError($event)" />
+              </div>
+            }
+
+            <!-- Nombre -->
+            <div class="field" [class.field--error]="draftErrors()['name']">
+              <label class="field__label">Nombre del producto <span>*</span></label>
+              <input
+                class="field__input"
+                type="text"
+                placeholder="Ej: Leche entera"
+                [ngModel]="draft().name"
+                (ngModelChange)="updateDraftField('name', $event)"
+                maxlength="80"
+              />
+              @if (draftErrors()['name']) {
+                <p class="field__error">{{ draftErrors()['name'] }}</p>
+              }
+            </div>
+
+            <!-- Cantidad -->
+            <div class="field">
+              <label class="field__label">Cantidad</label>
+              <div class="qty-stepper">
+                <button type="button" class="qty-btn" (click)="updateQuantity(-1)" [disabled]="draft().quantity <= 1">
+                  <lucide-icon name="minus" [size]="14" />
+                </button>
+                <span class="qty-value">{{ draft().quantity }}</span>
+                <button type="button" class="qty-btn" (click)="updateQuantity(1)">
+                  <lucide-icon name="plus" [size]="14" />
+                </button>
+              </div>
+            </div>
+
+            <!-- Ubicación -->
+            <div class="field">
+              <label class="field__label">¿Dónde lo guardás? <span>*</span></label>
+              <div class="location-picker">
+                @for (loc of productLocations; track loc) {
+                  <button
+                    type="button"
+                    class="location-option"
+                    [class.location-option--active]="draft().location === loc"
+                    [style.--loc-color]="getLocationColor(loc)"
+                    (click)="updateDraftField('location', loc)">
+                    <lucide-icon [name]="getLocationIcon(loc)" [size]="16" />
+                    {{ loc }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- ¿Cuándo lo compraste? -->
+            <div class="field">
+              <label class="field__label">
+                ¿Cuándo lo compraste?
+                <span class="field__optional">opcional</span>
+              </label>
+              <div class="day-chips">
+                <button type="button" class="day-chip"
+                        [class.day-chip--active]="draft().daysSincePurchase === 0"
+                        (click)="updateDaysSincePurchase(0)">
+                  <lucide-icon name="calendar-check" [size]="12" />
+                  Hoy
+                </button>
+                <button type="button" class="day-chip"
+                        [class.day-chip--active]="draft().daysSincePurchase === 1"
+                        (click)="updateDaysSincePurchase(1)">
+                  Ayer
+                </button>
+                <button type="button" class="day-chip"
+                        [class.day-chip--active]="draft().daysSincePurchase >= 2"
+                        (click)="updateDaysSincePurchase(draft().daysSincePurchase >= 2 ? draft().daysSincePurchase : 2)">
+                  Hace más días
+                </button>
+              </div>
+              @if (draft().daysSincePurchase >= 2) {
+                <input
+                  class="field__input field__input--number"
+                  type="number"
+                  min="2"
+                  max="60"
+                  placeholder="¿Cuántos días atrás?"
+                  [ngModel]="draft().daysSincePurchase"
+                  (ngModelChange)="updateDaysSincePurchase($event)"
+                />
+              }
+            </div>
+
+            <!-- ¿Ya está abierto? -->
+            <div class="field">
+              <div class="toggle-row">
+                <div class="toggle-row__label">
+                  <span class="field__label">¿Ya está abierto?</span>
+                  <span class="field__optional">opcional</span>
+                </div>
+                <button
+                  type="button"
+                  class="toggle-btn"
+                  [class.toggle-btn--on]="draft().isOpened"
+                  (click)="toggleOpened(!draft().isOpened)">
+                  <span class="toggle-btn__track">
+                    <span class="toggle-btn__thumb"></span>
+                  </span>
+                  {{ draft().isOpened ? 'Sí' : 'No' }}
+                </button>
+              </div>
+
+              @if (draft().isOpened) {
+                <div class="consumed-section">
+                  <span class="field__label field__label--sm">¿Cuánto consumiste aprox.?</span>
+                  <div class="consumed-chips">
+                    @for (opt of consumedOptions; track opt.value) {
+                      <button
+                        type="button"
+                        class="consumed-chip"
+                        [class.consumed-chip--active]="draft().consumedPercent === opt.value"
+                        (click)="updateConsumedPercent(opt.value)">
+                        {{ opt.label }}
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- Vencimiento -->
+            <div class="field" [class.field--error]="draftErrors()['expiryDate']">
+              <label class="field__label">
+                Fecha de vencimiento <span>*</span>
+              </label>
+              <input
+                class="field__input"
+                type="date"
+                [ngModel]="draft().expiryDate"
+                (ngModelChange)="updateDraftField('expiryDate', $event)"
+              />
+              @if (draftErrors()['expiryDate']) {
+                <p class="field__error">{{ draftErrors()['expiryDate'] }}</p>
+              }
+              @if (draft().ttlHint) {
+                <p class="field__hint">
+                  <lucide-icon name="calendar-clock" [size]="12" />
+                  Fecha estimada por categoría · {{ draft().ttlHint }}
+                </p>
+              }
+            </div>
+
+            <!-- Acciones -->
+            <div class="modal__actions">
+              <button type="button" class="btn-secondary" (click)="retryScanner()">
+                <lucide-icon name="qr-code" [size]="14" />
+                Volver a escanear
+              </button>
+              <button type="button" class="btn-primary" (click)="submitProduct()">
+                <lucide-icon name="check" [size]="14" />
+                Guardar producto
+              </button>
+            </div>
+
+          </div>
+        }
+
+      </div>
+    </div>
+  }
+
+</div>
