@@ -92,6 +92,19 @@ export class Home {
     { title: 'Revisar microondas', tag: 'Electrodomésticos' },
   ];
 
+  protected alertContainerClass(type: 'warning' | 'info' | 'success'): string {
+    const base = 'flex items-start gap-3 rounded-[10px] border-l-[3px] border-solid px-4 py-3.5';
+    if (type === 'warning') return `${base} bg-[rgba(199,143,90,0.1)] border-l-nido-gold`;
+    if (type === 'info')    return `${base} bg-[rgba(62,94,74,0.08)] border-l-nido-green`;
+    return `${base} bg-[rgba(38,63,48,0.07)] border-l-nido-green-dark`;
+  }
+
+  protected alertIconClass(type: 'warning' | 'info' | 'success'): string {
+    if (type === 'warning') return 'text-nido-gold';
+    if (type === 'info')    return 'text-nido-green';
+    return 'text-nido-green-dark';
+  }
+
   private buildGreeting(): string {
     const hour = new Date().getHours();
     if (hour < 12) return 'Buenos días';

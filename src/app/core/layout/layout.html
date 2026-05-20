@@ -1,26 +1,32 @@
-<div class="layout">
+<div class="flex h-screen overflow-hidden">
 
   <!-- Sidebar -->
-  <app-nav [class.open]="isMenuOpen()" />
+  <app-nav [isOpen]="isMenuOpen()" />
 
   <!-- Overlay mobile -->
   @if (isMenuOpen()) {
-    <div class="layout__overlay" (click)="closeMenu()"></div>
+    <div
+      class="fixed inset-0 bg-black/40 z-[99] md:hidden"
+      (click)="closeMenu()">
+    </div>
   }
 
   <!-- Contenido principal -->
-  <div class="layout__main">
+  <div class="flex flex-1 flex-col overflow-hidden">
 
     <!-- Header mobile -->
-    <header class="layout__header">
-      <button class="layout__hamburger" (click)="toggleMenu()" aria-label="Abrir menú">
-        <span></span>
-        <span></span>
-        <span></span>
+    <header class="flex items-center px-4 py-3 border-b border-gray-200 bg-white md:hidden">
+      <button
+        class="flex flex-col justify-center gap-[5px] bg-transparent border-none cursor-pointer p-2"
+        (click)="toggleMenu()"
+        aria-label="Abrir menú">
+        <span class="block w-[22px] h-[2px] bg-nido-green-dark rounded-sm"></span>
+        <span class="block w-[22px] h-[2px] bg-nido-green-dark rounded-sm"></span>
+        <span class="block w-[22px] h-[2px] bg-nido-green-dark rounded-sm"></span>
       </button>
     </header>
 
-    <main class="layout__content">
+    <main class="flex-1 overflow-y-auto">
       <router-outlet />
     </main>
 
