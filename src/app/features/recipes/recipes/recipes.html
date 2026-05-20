@@ -1,0 +1,218 @@
+<div class="recipes">
+
+  <!-- Banner -->
+  <section class="recipes__banner">
+    <div class="recipes__banner-text">
+      <h1>Recetas Inteligentes</h1>
+      <p>{{ filteredRecipes().length }} recetas disponibles</p>
+    </div>
+    <button class="recipes__roulette">
+      <lucide-icon name="shuffle" [size]="16" />
+      Ruleta de comidas
+    </button>
+  </section>
+
+  <!-- Buscador -->
+  <div class="recipes__search-wrapper">
+    <lucide-icon name="search" [size]="18" class="recipes__search-icon" />
+    <input
+      class="recipes__search"
+      type="text"
+      placeholder="Buscar receta..."
+      [ngModel]="searchQuery()"
+      (ngModelChange)="searchQuery.set($event)"
+    />
+    @if (searchQuery()) {
+      <button class="recipes__search-clear" (click)="clearSearch()">
+        <lucide-icon name="x" [size]="16" />
+      </button>
+    }
+  </div>
+
+  <!-- Filtros -->
+  <div class="recipes__filters">
+    <div class="recipes__filter-chips">
+      @for (filter of filterOptions; track filter) {
+        <button
+          class="filter-chip"
+          [class.filter-chip--active]="activeFilter() === filter"
+          (click)="setFilter(filter)">
+          {{ filter }}
+        </button>
+      }
+
+      <!-- Toggle alérgenos -->
+      <button
+        class="filter-chip filter-chip--allergen"
+        [class.filter-chip--active]="excludeAllergens()"
+        (click)="toggleAllergens()">
+        <lucide-icon name="shield" [size]="13" />
+        Sin alérgenos
+        @if (excludeAllergens()) {
+          <lucide-icon name="check" [size]="12" />
+        }
+      </button>
+    </div>
+
+    <!-- Sort dropdown -->
+    <div class="recipes__sort">
+      <button class="sort-btn" (click)="showSortDropdown.set(!showSortDropdown())">
+        <lucide-icon name="sliders-horizontal" [size]="15" />
+        {{ getSortLabel() }}
+        <lucide-icon name="chevron-down" [size]="14" />
+      </button>
+      @if (showSortDropdown()) {
+        <div class="sort-dropdown">
+          <button (click)="setSort('default')" [class.active]="sortBy() === 'default'">Por defecto</button>
+          <button (click)="setSort('rating')" [class.active]="sortBy() === 'rating'">Mejor valoradas</button>
+          <button (click)="setSort('coincidencia')" [class.active]="sortBy() === 'coincidencia'">Mayor coincidencia</button>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Cuerpo -->
+  <div class="recipes__body">
+
+    <!-- Grid de recetas -->
+    <div class="recipes__content">
+      @if (filteredRecipes().length === 0) {
+        <div class="recipes__empty">
+          <lucide-icon name="chef-hat" [size]="48" />
+          <p>No encontramos recetas con ese criterio.</p>
+          <button class="recipes__empty-btn" (click)="clearSearch(); setFilter('Todos')">
+            Ver todas las recetas
+          </button>
+        </div>
+      } @else {
+        <div class="recipe-grid">
+          @for (recipe of filteredRecipes(); track recipe.id) {
+            <article class="recipe-card">
+              <div class="recipe-card__image">
+                <img [src]="recipe.image" [alt]="recipe.name" loading="lazy" />
+                <span class="recipe-card__difficulty recipe-card__difficulty--{{ recipe.difficulty.toLowerCase() }}">
+                  {{ recipe.difficulty }}
+                </span>
+              </div>
+              <div class="recipe-card__body">
+                <h3 class="recipe-card__name">{{ recipe.name }}</h3>
+                <div class="recipe-card__rating">
+                  <lucide-icon name="star" [size]="13" class="recipe-card__star" />
+                  <span>{{ recipe.rating }}</span>
+                </div>
+                <div class="recipe-card__meta">
+                  <span class="recipe-card__meta-item">
+                    <lucide-icon name="clock" [size]="13" />
+                    {{ recipe.timeMinutes }} min
+                  </span>
+                  <span class="recipe-card__meta-item">
+                    <lucide-icon name="flame" [size]="13" />
+                    {{ recipe.calories }} kcal
+                  </span>
+                </div>
+
+                <!-- % Disponibilidad -->
+                <div class="recipe-card__availability">
+                  <div class="availability-bar">
+                    <div
+                      class="availability-bar__fill"
+                      [style.width.%]="recipe.availabilityPercent"
+                      [style.background-color]="getAvailabilityColor(recipe.availabilityPercent)">
+                    </div>
+                  </div>
+                  <span class="availability-label"
+                        [style.color]="getAvailabilityColor(recipe.availabilityPercent)">
+                    {{ recipe.availabilityPercent }}% disponible
+                  </span>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Panel derecho -->
+    <aside class="recipes__aside">
+
+      <!-- ¿Quién come hoy? -->
+      <div class="aside-card">
+        <h3 class="aside-card__title">¿Quién come hoy?</h3>
+        <p class="aside-card__subtitle">Las recetas se filtran según sus alérgenos</p>
+        <div class="members-grid">
+          @for (member of householdMembers; track member.id) {
+            <button
+              class="member-toggle"
+              [class.member-toggle--active]="isEatingToday(member.id)"
+              [style.--member-color]="member.color"
+              (click)="toggleEatingToday(member.id)"
+              [title]="member.allergens.length ? 'Alérgico a: ' + member.allergens.join(', ') : 'Sin alérgenos'">
+              <div class="member-toggle__avatar">{{ member.initials }}</div>
+              <span class="member-toggle__name">{{ member.name }}</span>
+              @if (member.allergens.length) {
+                <span class="member-toggle__allergen">
+                  <lucide-icon name="alert-triangle" [size]="10" />
+                </span>
+              }
+            </button>
+          }
+        </div>
+        @if (excludeAllergens()) {
+          <p class="members-allergen-info">
+            <lucide-icon name="shield" [size]="13" />
+            Excluyendo recetas con alérgenos de los presentes
+          </p>
+        }
+      </div>
+
+      <!-- Cocinó con lo que tenés -->
+      <div class="aside-card">
+        <h3 class="aside-card__title">Cocinó con lo que tenés</h3>
+        <p class="aside-card__subtitle">Seleccioná ingredientes de tu alacena</p>
+
+        <div class="ingredient-chips">
+          @for (item of pantryIngredients(); track item.name; let i = $index) {
+            <button
+              class="ingredient-chip"
+              [class.ingredient-chip--active]="item.selected"
+              (click)="toggleIngredient(i)">
+              @if (item.selected) {
+                <lucide-icon name="check-square" [size]="13" />
+              }
+              {{ item.name }}
+            </button>
+          }
+        </div>
+
+        <button class="aside-card__search-btn">
+          <lucide-icon name="search" [size]="15" />
+          Buscar receta
+        </button>
+      </div>
+
+      <!-- Tus ingredientes -->
+      <div class="aside-card">
+        <div class="aside-card__header">
+          <h3 class="aside-card__title">Tus ingredientes</h3>
+          <button class="aside-card__edit">
+            <lucide-icon name="pencil" [size]="13" />
+            Editar
+          </button>
+        </div>
+
+        <ul class="ingredient-list">
+          @for (item of pantryIngredients(); track item.name) {
+            <li class="ingredient-list__item">
+              <lucide-icon name="shopping-basket" [size]="14" class="ingredient-list__icon" />
+              <span class="ingredient-list__name">{{ item.name }}</span>
+              <span class="ingredient-list__amount">{{ item.amount }}</span>
+            </li>
+          }
+        </ul>
+
+        <button class="aside-card__link">Ver todo ({{ pantryIngredients().length }})</button>
+      </div>
+
+    </aside>
+  </div>
+</div>

@@ -7,7 +7,10 @@ import {
   CheckSquare, Calendar, Zap, Bell,
   User, Settings, LogOut, Plus,
   AlertTriangle, TrendingUp, ArrowRight,
-  ShoppingBasket, ClipboardList, Info
+  ShoppingBasket, ClipboardList, Info,
+  Search, Clock, Flame, Star, Shuffle,
+  ChevronDown, X, SlidersHorizontal, Pencil,
+  Shield, Check
 } from 'lucide-angular';
 import { routes } from './app.routes';
 
@@ -24,7 +27,9 @@ export const appConfig: ApplicationConfig = {
         CheckSquare, Calendar, Zap, Bell,
         User, Settings, LogOut, Plus,
         AlertTriangle, TrendingUp, ArrowRight,
-        ShoppingBasket, ClipboardList, Info
+        ShoppingBasket, ClipboardList, Info,
+        Search, Clock, Flame, Star, Shuffle,
+        ChevronDown, X, SlidersHorizontal, Pencil
       })
     }
   ],
