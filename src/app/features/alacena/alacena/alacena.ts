@@ -9,13 +9,16 @@ import {
   untracked,
   DestroyRef,
   NgZone,
+  OnInit,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { of, switchMap } from 'rxjs';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { DecodeHintType } from '@zxing/library';
 import { OpenFoodFactsService } from '../open-food-facts.service';
+import { AlacenaApiService, StockItemResponse } from '../alacena-api.service';
 import { getTtlForCategory, TtlInfo } from '../ttl.config';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -117,10 +120,11 @@ const LOCATION_COLORS: Record<string, string> = {
   templateUrl: './alacena.html',
   styleUrl: './alacena.scss',
 })
-export class Alacena {
-  private readonly offService = inject(OpenFoodFactsService);
-  private readonly destroyRef = inject(DestroyRef);
-  private readonly zone       = inject(NgZone);
+export class Alacena implements OnInit {
+  private readonly offService  = inject(OpenFoodFactsService);
+  private readonly alacenaApi  = inject(AlacenaApiService);
+  private readonly destroyRef  = inject(DestroyRef);
+  private readonly zone        = inject(NgZone);
 
   // ── List & filters ───────────────────────────────────────
   protected readonly activeLocation  = signal<StorageLocation>('Todos');
@@ -130,7 +134,9 @@ export class Alacena {
   protected readonly consumedOptions = CONSUMED_OPTIONS;
   protected readonly today           = toIsoDate(new Date());
 
-  protected readonly products        = signal<Product[]>([]);
+  protected readonly products           = signal<Product[]>([]);
+  protected readonly isLoadingProducts  = signal(false);
+  protected readonly apiError           = signal<string | null>(null);
 
   protected readonly filteredProducts = computed(() => {
     let list = this.products();
@@ -196,6 +202,43 @@ export class Alacena {
         untracked(() => this.stopCamera());
       }
     });
+  }
+
+  // ── Lifecycle ────────────────────────────────────────────
+
+  ngOnInit(): void {
+    this.loadProducts();
+  }
+
+  private loadProducts(): void {
+    this.isLoadingProducts.set(true);
+    this.apiError.set(null);
+    this.alacenaApi.getStock()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: items => {
+          this.products.set(items.map(i => this.toProduct(i)));
+          this.isLoadingProducts.set(false);
+        },
+        error: () => {
+          this.apiError.set('No se pudo cargar el stock. Verificá la conexión.');
+          this.isLoadingProducts.set(false);
+        },
+      });
+  }
+
+  private toProduct(item: StockItemResponse): Product {
+    return {
+      id:               item.id,
+      name:             item.nombre,
+      image:            item.imagen ?? '',
+      location:         item.ubicacion as Exclude<StorageLocation, 'Todos'>,
+      expiryDate:       item.fechaVencimiento ?? '',
+      quantity:         item.cantidad,
+      isOpened:         item.estaAbierto,
+      remainingPercent: 100 - item.porcentajeConsumido,
+      barcode:          item.codigoBarras ?? undefined,
+    };
   }
 
   // ── Camera lifecycle ─────────────────────────────────────
@@ -294,39 +337,55 @@ export class Alacena {
     this.stopCamera();
     this.scannerStep.set('loading');
 
-    this.offService.lookup(barcode).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: product => {
-        const ttl = getTtlForCategory(product.categoriesTags);
-        this.currentTtl.set(ttl);
-
-        // Always populate the draft so "add manually" has whatever data we found
-        this.draft.set({
-          ...makeEmptyDraft(),
-          name:       product.name,
-          image:      product.image,
-          expiryDate: toIsoDate(addDays(new Date(), ttl.days)),
-          ttlHint:    product.name ? ttl.hint : '',
-          notFound:   !product.name,
-          barcode,
-        });
-
-        if (!product.name) {
-          this.scannerStep.set('error');
-          this.scannerError.set(
-            product.foundInDb
-              ? 'Encontramos el código pero el producto no tiene nombre registrado.'
-              : 'Producto no encontrado en ninguna base de datos.',
+    // 1. Check our backend first (instant if the product was scanned before).
+    // 2. Fall back to Open Food Facts cascade if not found in our DB.
+    this.alacenaApi.findProductByBarcode(barcode)
+      .pipe(
+        switchMap(dbProduct => {
+          if (dbProduct?.nombre) {
+            // Already in our DB — use it directly, no external call needed
+            const ttl = getTtlForCategory([]);  // category tags not stored in our DB yet
+            return of({ name: dbProduct.nombre, image: dbProduct.imagen ?? '', ttl, fromDb: true });
+          }
+          // Not in our DB — query Open Food Facts cascade
+          return this.offService.lookup(barcode).pipe(
+            switchMap(p => {
+              const ttl = getTtlForCategory(p.categoriesTags);
+              return of({ name: p.name, image: p.image, ttl, fromDb: p.foundInDb });
+            }),
           );
-          return;
-        }
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: ({ name, image, ttl, fromDb }) => {
+          this.currentTtl.set(ttl);
+          this.draft.set({
+            ...makeEmptyDraft(),
+            name,
+            image,
+            expiryDate: toIsoDate(addDays(new Date(), ttl.days)),
+            ttlHint:    name ? ttl.hint : '',
+            notFound:   !name,
+            barcode,
+          });
 
-        this.scannerStep.set('confirm');
-      },
-      error: () => {
-        this.scannerStep.set('error');
-        this.scannerError.set('Error de conexión. Verificá tu internet e intentá de nuevo.');
-      },
-    });
+          if (!name) {
+            this.scannerStep.set('error');
+            this.scannerError.set(
+              fromDb
+                ? 'Encontramos el código pero el producto no tiene nombre registrado.'
+                : 'Producto no encontrado en ninguna base de datos.',
+            );
+            return;
+          }
+          this.scannerStep.set('confirm');
+        },
+        error: () => {
+          this.scannerStep.set('error');
+          this.scannerError.set('Error de conexión. Verificá tu internet e intentá de nuevo.');
+        },
+      });
   }
 
   // ── Expiry recalculation ─────────────────────────────────
@@ -415,33 +474,67 @@ export class Alacena {
 
     const d = this.draft();
 
-    // If same barcode already in the list, add to its quantity instead of duplicating
-    const existingIdx = d.barcode
-      ? this.products().findIndex(p => p.barcode === d.barcode)
-      : -1;
+    // If same barcode already in the list, increment quantity via PATCH
+    const existing = d.barcode
+      ? this.products().find(p => p.barcode === d.barcode)
+      : undefined;
 
-    if (existingIdx >= 0) {
-      // TODO: PATCH /api/alacena/productos/:id
-      this.products.update(list =>
-        list.map((p, i) => i === existingIdx ? { ...p, quantity: p.quantity + d.quantity } : p),
-      );
+    if (existing) {
+      const newQty = existing.quantity + d.quantity;
+      this.alacenaApi
+        .updateStock(existing.id, { cantidad: newQty })
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: updated => {
+            this.products.update(list =>
+              list.map(p => p.id === existing.id ? this.toProduct(updated) : p),
+            );
+            this.closeScanner();
+          },
+          error: () => {
+            // Optimistic fallback: update locally even if API failed
+            this.products.update(list =>
+              list.map(p => p.id === existing.id ? { ...p, quantity: newQty } : p),
+            );
+            this.closeScanner();
+          },
+        });
     } else {
-      const product: Product = {
-        id:               crypto.randomUUID(),
-        name:             d.name.trim(),
-        image:            d.image,
-        location:         d.location,
-        expiryDate:       d.expiryDate,
-        quantity:         d.quantity,
-        isOpened:         d.isOpened,
-        remainingPercent: 100 - d.consumedPercent,
-        barcode:          d.barcode || undefined,
-      };
-      // TODO: POST /api/alacena/productos
-      this.products.update(list => [...list, product]);
+      this.alacenaApi
+        .createStock({
+          nombre:              d.name.trim(),
+          codigoBarras:        d.barcode || null,
+          imagen:              d.image || null,
+          ubicacion:           d.location,
+          cantidad:            d.quantity,
+          fechaVencimiento:    d.expiryDate || null,
+          estaAbierto:         d.isOpened,
+          porcentajeConsumido: d.consumedPercent,
+        })
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: created => {
+            this.products.update(list => [...list, this.toProduct(created)]);
+            this.closeScanner();
+          },
+          error: () => {
+            // Optimistic fallback: add locally if API fails
+            const product: Product = {
+              id:               crypto.randomUUID(),
+              name:             d.name.trim(),
+              image:            d.image,
+              location:         d.location,
+              expiryDate:       d.expiryDate,
+              quantity:         d.quantity,
+              isOpened:         d.isOpened,
+              remainingPercent: 100 - d.consumedPercent,
+              barcode:          d.barcode || undefined,
+            };
+            this.products.update(list => [...list, product]);
+            this.closeScanner();
+          },
+        });
     }
-
-    this.closeScanner();
   }
 
   // ── Display helpers ──────────────────────────────────────
