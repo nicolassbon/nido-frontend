@@ -1,0 +1,134 @@
+<div class="flex flex-col min-h-screen bg-nido-cream" (click)="closeMenus()">
+
+  <!-- Header -->
+  <header class="bg-nido-green-dark px-6 py-4 flex items-center gap-4">
+
+    <!-- Logo -->
+    <div class="flex items-center gap-2.5 shrink-0">
+      <div class="w-11 h-11 rounded-full flex items-center justify-center font-bold text-[0.9rem] tracking-wide text-white shadow-md [background:radial-gradient(circle,#d4956a_0%,#8b5c38_100%)]">
+        Nido
+      </div>
+    </div>
+
+    <!-- Steps -->
+    <div class="flex items-start flex-1 justify-center">
+      <div class="flex items-start">
+        @for (step of steps; track step.number; let last = $last) {
+
+          <!-- Step -->
+          <div class="flex flex-col items-center gap-1.5">
+            <div [class]="stepCircleClass(step)">
+              @if (step.completed) {
+                <lucide-icon name="check" [size]="15" class="text-nido-green-dark" />
+              } @else {
+                <span class="text-[0.8125rem] font-bold"
+                      [class]="step.active ? 'text-nido-green-dark' : 'text-[rgba(247,241,230,0.45)]'">
+                  {{ step.number }}
+                </span>
+              }
+            </div>
+            <span [class]="stepLabelClass(step)">{{ step.label }}</span>
+          </div>
+
+          <!-- Connector -->
+          @if (!last) {
+            <div class="w-12 h-px mt-4 mx-1"
+                 [class]="step.completed ? 'bg-nido-cream/60' : 'bg-[rgba(247,241,230,0.2)]'">
+            </div>
+          }
+
+        }
+      </div>
+    </div>
+
+  </header>
+
+  <!-- Main -->
+  <main class="flex-1 flex items-center justify-center px-4 py-8">
+
+    <div class="bg-white rounded-2xl shadow-[0_4px_32px_rgba(38,63,48,0.10)] w-full max-w-[580px] px-10 py-10 flex flex-col items-center gap-6">
+
+      <!-- Tagline -->
+      <p class="text-nido-muted italic text-[0.9rem]">Todo conecta, todo fluye.</p>
+
+      <!-- Title -->
+      <div class="flex flex-col items-center gap-1.5 text-center">
+        <h1 class="text-[1.6rem] font-bold text-nido-green-dark m-0">Paso 2: Tu Familia</h1>
+        <p class="text-nido-brown text-[0.875rem] max-w-[320px] leading-relaxed m-0">
+          Agrega a las personas que viven contigo para organizar mejor su hogar
+        </p>
+      </div>
+
+      <!-- Members grid -->
+      <div class="grid grid-cols-4 gap-3 w-full">
+
+        @for (member of sortedMembers(); track member.id) {
+          <div class="relative flex flex-col items-center gap-2 bg-white border border-nido-border rounded-xl p-3 pt-5 shadow-[0_1px_4px_rgba(38,63,48,0.06)]">
+
+            <!-- Menu trigger -->
+            <button
+              class="absolute top-2 right-2 flex items-center bg-transparent border-none cursor-pointer text-nido-muted p-0.5 rounded transition-colors duration-150 hover:text-nido-brown"
+              (click)="toggleMenu(member.id, $event)">
+              <lucide-icon name="ellipsis" [size]="15" />
+            </button>
+
+            <!-- Avatar -->
+            <div class="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-xl shrink-0"
+                 [style.background-color]="member.color">
+              {{ member.initials }}
+            </div>
+
+            <!-- Name & role -->
+            <div class="flex flex-col items-center gap-0.5 text-center">
+              <span class="text-[0.875rem] font-semibold text-nido-green-dark leading-snug">{{ member.name }}</span>
+              <span class="text-[0.75rem] text-nido-brown">{{ member.role }}</span>
+            </div>
+
+            <!-- Dropdown -->
+            @if (openMenuId() === member.id && !member.isCurrentUser) {
+              <div
+                class="absolute top-9 right-2 bg-white border border-nido-border rounded-lg shadow-[0_4px_16px_rgba(38,63,48,0.12)] py-1 z-10 min-w-[120px]"
+                (click)="$event.stopPropagation()">
+                <button
+                  class="w-full text-left px-3 py-2 text-[0.8rem] text-nido-red hover:bg-nido-cream bg-transparent border-none cursor-pointer"
+                  (click)="removeMember(member.id)">
+                  Eliminar
+                </button>
+              </div>
+            }
+
+          </div>
+        }
+
+        <!-- Add member -->
+        <button
+          class="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-nido-border rounded-xl p-3 cursor-pointer bg-transparent min-h-[118px] transition-all duration-150 hover:border-nido-green hover:bg-[rgba(62,94,74,0.04)]"
+          (click)="addMember(); $event.stopPropagation()">
+          <div class="w-10 h-10 rounded-full border-2 border-dashed border-nido-muted flex items-center justify-center text-nido-muted">
+            <lucide-icon name="plus" [size]="18" />
+          </div>
+          <span class="text-[0.75rem] text-nido-brown font-medium text-center leading-tight">Añadir Conviviente</span>
+        </button>
+
+      </div>
+
+      <!-- Actions -->
+      <div class="flex flex-col items-center gap-3 w-full pt-2">
+        <button
+          class="flex items-center gap-2 bg-nido-green-dark text-nido-cream px-10 py-3.5 rounded-full text-[0.9375rem] font-semibold border-none cursor-pointer transition-[background] duration-150 hover:bg-nido-green"
+          (click)="next()">
+          Siguiente
+          <lucide-icon name="arrow-right" [size]="18" />
+        </button>
+        <button
+          class="text-nido-brown text-[0.8375rem] bg-transparent border-none cursor-pointer transition-colors duration-150 hover:text-nido-green-dark hover:underline"
+          (click)="skip()">
+          Saltar por ahora
+        </button>
+      </div>
+
+    </div>
+
+  </main>
+
+</div>

@@ -3,8 +3,10 @@ import { Layout } from './core/layout/layout';
 import { Home } from './features/home/home/home';
 import { Recipes } from './features/recipes/recipes/recipes';
 import { Alacena } from './features/alacena/alacena/alacena';
+import { CreateHousehold } from './features/household/create-household/create-household';
 
 export const routes: Routes = [
+  { path: 'crear-hogar', component: CreateHousehold },
   {
     path: '',
     component: Layout,
