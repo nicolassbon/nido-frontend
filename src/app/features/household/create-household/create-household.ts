@@ -1,5 +1,10 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { HogaresApiService } from '../hogares-api.service';
+import { AuthService } from '../../../core/auth/auth.service';
+
+const MEMBER_COLORS = ['#263F30', '#C78F5A', '#927357', '#5C7A6E', '#8B4513', '#4A7C59'];
 
 interface FamilyMember {
   id: string;
@@ -16,7 +21,11 @@ interface FamilyMember {
   templateUrl: './create-household.html',
   styleUrl: './create-household.scss',
 })
-export class CreateHousehold {
+export class CreateHousehold implements OnInit {
+  private readonly hogaresApi = inject(HogaresApiService);
+  private readonly auth       = inject(AuthService);
+  private readonly router     = inject(Router);
+
   readonly steps = [
     { number: 1, label: 'Tu cuenta',    completed: true,  active: false },
     { number: 2, label: 'Tu hogar',     completed: false, active: true  },
@@ -39,6 +48,32 @@ export class CreateHousehold {
 
   readonly openMenuId = signal<string | null>(null);
 
+  // Invite modal state
+  readonly showInviteModal = signal(false);
+  readonly inviteEmail     = signal('');
+  readonly inviteState     = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
+  readonly inviteErrorMsg  = signal('');
+
+  ngOnInit(): void {
+    this.hogaresApi.getMiembros().subscribe({
+      next: (miembros) => {
+        if (miembros.length === 0) return;
+        const currentUserId = this.auth.getUserId();
+        this.members.set(
+          miembros.map((m, i) => ({
+            id:            m.usuarioId,
+            name:          m.nombre,
+            role:          m.rol,
+            color:         MEMBER_COLORS[i % MEMBER_COLORS.length],
+            initials:      m.nombre[0]?.toUpperCase() ?? '?',
+            isCurrentUser: m.usuarioId === currentUserId,
+          })),
+        );
+      },
+      error: () => { /* keep mock data until auth is wired */ },
+    });
+  }
+
   toggleMenu(id: string, event: MouseEvent): void {
     event.stopPropagation();
     this.openMenuId.update(cur => cur === id ? null : id);
@@ -54,15 +89,35 @@ export class CreateHousehold {
   }
 
   addMember(): void {
-    // TODO: open add-member modal
+    this.inviteEmail.set('');
+    this.inviteState.set('idle');
+    this.inviteErrorMsg.set('');
+    this.showInviteModal.set(true);
+  }
+
+  closeInviteModal(): void {
+    this.showInviteModal.set(false);
+  }
+
+  submitInvite(): void {
+    const email = this.inviteEmail().trim();
+    if (!email) return;
+    this.inviteState.set('loading');
+    this.hogaresApi.invitar(email).subscribe({
+      next: () => this.inviteState.set('success'),
+      error: (err) => {
+        this.inviteErrorMsg.set(err.error?.message ?? 'Error al enviar la invitación.');
+        this.inviteState.set('error');
+      },
+    });
   }
 
   next(): void {
-    // TODO: navigate to step 3
+    this.router.navigate(['/finalizar-hogar']);
   }
 
   skip(): void {
-    // TODO: skip to next step
+    this.router.navigate(['/finalizar-hogar']);
   }
 
   stepCircleClass(step: { completed: boolean; active: boolean }): string {

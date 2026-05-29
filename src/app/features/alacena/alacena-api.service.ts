@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { AuthService } from '../../core/auth/auth.service';
 
 // ── Response / request types (mirror the .NET DTOs) ─────────────────────────
 
@@ -37,8 +38,6 @@ export interface UpdateStockItemRequest {
   fechaVencimiento?:    string | null;
   estaAbierto?:         boolean;
   porcentajeConsumido?: number;
-  // TODO: remove once auth is in place — will come from JWT claims
-  usuarioId: string;
 }
 
 /** Returned by GET /api/productos/barcode/:barcode */
@@ -55,11 +54,12 @@ export interface ProductoApiResponse {
 
 @Injectable({ providedIn: 'root' })
 export class AlacenaApiService {
-  private readonly http      = inject(HttpClient);
-  private readonly base      = environment.apiBaseUrl;
-  // TODO: replace with values from auth context once login is implemented
-  private readonly hogarId   = environment.devHogarId;
-  private readonly usuarioId = environment.devUsuarioId;
+  private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
+  private readonly base = environment.apiBaseUrl;
+
+  private get hogarId():   string { return this.auth.getHogarId()   ?? ''; }
+  private get usuarioId(): string { return this.auth.getUserId()     ?? ''; }
 
   /** Load all stock items for the current household. */
   getStock(): Observable<StockItemResponse[]> {
@@ -101,7 +101,7 @@ export class AlacenaApiService {
   }
 
   /** Update quantity / details of an existing stock entry. */
-  updateStock(id: string, changes: Omit<UpdateStockItemRequest, 'usuarioId'>): Observable<StockItemResponse> {
+  updateStock(id: string, changes: UpdateStockItemRequest): Observable<StockItemResponse> {
     return this.http.patch<StockItemResponse>(
       `${this.base}/api/alacena/productos/${id}`,
       { ...changes, usuarioId: this.usuarioId },

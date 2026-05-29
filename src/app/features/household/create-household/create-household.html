@@ -1,18 +1,16 @@
 <div class="flex flex-col min-h-screen bg-nido-cream" (click)="closeMenus()">
 
   <!-- Header -->
-  <header class="bg-nido-green-dark px-6 py-4 flex items-center gap-4">
+  <header class="relative bg-nido-green-dark px-6 py-4 flex items-center">
 
     <!-- Logo -->
-    <div class="flex items-center gap-2.5 shrink-0">
-      <div class="w-11 h-11 rounded-full flex items-center justify-center font-bold text-[0.9rem] tracking-wide text-white shadow-md [background:radial-gradient(circle,#d4956a_0%,#8b5c38_100%)]">
-        Nido
-      </div>
+    <div class="flex items-center shrink-0">
+      <img src="logo.png" alt="Nido" class="h-9 object-contain" />
     </div>
 
     <!-- Steps -->
-    <div class="flex items-start flex-1 justify-center">
-      <div class="flex items-start">
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div class="pointer-events-auto flex items-start">
         @for (step of steps; track step.number; let last = $last) {
 
           <!-- Step -->
@@ -46,31 +44,33 @@
   <!-- Main -->
   <main class="flex-1 flex items-center justify-center px-4 py-8">
 
-    <div class="bg-white rounded-2xl shadow-[0_4px_32px_rgba(38,63,48,0.10)] w-full max-w-[580px] px-10 py-10 flex flex-col items-center gap-6">
+    <div class="bg-white rounded-2xl shadow-[0_4px_32px_rgba(38,63,48,0.10)] w-full max-w-[740px] px-10 py-10 flex flex-col items-center gap-6">
 
       <!-- Tagline -->
       <p class="text-nido-muted italic text-[0.9rem]">Todo conecta, todo fluye.</p>
 
       <!-- Title -->
       <div class="flex flex-col items-center gap-1.5 text-center">
-        <h1 class="text-[1.6rem] font-bold text-nido-green-dark m-0">Paso 2: Tu Familia</h1>
+        <h1 class="text-[1.6rem] font-bold text-nido-green-dark m-0">Paso 2: Tu hogar</h1>
         <p class="text-nido-brown text-[0.875rem] max-w-[320px] leading-relaxed m-0">
           Agrega a las personas que viven contigo para organizar mejor su hogar
         </p>
       </div>
 
       <!-- Members grid -->
-      <div class="grid grid-cols-4 gap-3 w-full">
+      <div class="flex flex-wrap justify-center gap-3 w-full">
 
         @for (member of sortedMembers(); track member.id) {
-          <div class="relative flex flex-col items-center gap-2 bg-white border border-nido-border rounded-xl p-3 pt-5 shadow-[0_1px_4px_rgba(38,63,48,0.06)]">
+          <div class="relative flex flex-col items-center gap-2 bg-white border border-nido-border rounded-xl p-3 pt-5 shadow-[0_1px_4px_rgba(38,63,48,0.06)] w-[130px]">
 
             <!-- Menu trigger -->
-            <button
-              class="absolute top-2 right-2 flex items-center bg-transparent border-none cursor-pointer text-nido-muted p-0.5 rounded transition-colors duration-150 hover:text-nido-brown"
-              (click)="toggleMenu(member.id, $event)">
-              <lucide-icon name="ellipsis" [size]="15" />
-            </button>
+            @if (!member.isCurrentUser) {
+              <button
+                class="absolute top-2 right-2 flex items-center bg-transparent border-none cursor-pointer text-nido-muted p-0.5 rounded transition-colors duration-150 hover:text-nido-brown"
+                (click)="toggleMenu(member.id, $event)">
+                <lucide-icon name="ellipsis" [size]="15" />
+              </button>
+            }
 
             <!-- Avatar -->
             <div class="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-xl shrink-0"
@@ -102,7 +102,7 @@
 
         <!-- Add member -->
         <button
-          class="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-nido-border rounded-xl p-3 cursor-pointer bg-transparent min-h-[118px] transition-all duration-150 hover:border-nido-green hover:bg-[rgba(62,94,74,0.04)]"
+          class="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-nido-border rounded-xl p-3 cursor-pointer bg-transparent w-[130px] min-h-[118px] transition-all duration-150 hover:border-nido-green hover:bg-[rgba(62,94,74,0.04)]"
           (click)="addMember(); $event.stopPropagation()">
           <div class="w-10 h-10 rounded-full border-2 border-dashed border-nido-muted flex items-center justify-center text-nido-muted">
             <lucide-icon name="plus" [size]="18" />
@@ -132,3 +132,87 @@
   </main>
 
 </div>
+
+<!-- Invite member modal -->
+@if (showInviteModal()) {
+  <div
+    class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4"
+    (click)="closeInviteModal()">
+
+    <div
+      class="bg-white rounded-2xl shadow-[0_8px_40px_rgba(38,63,48,0.18)] w-full max-w-[420px] px-8 py-8 flex flex-col gap-5"
+      (click)="$event.stopPropagation()">
+
+      <!-- Modal header -->
+      <div class="flex items-start justify-between gap-4">
+        <div class="flex flex-col gap-1">
+          <h2 class="text-[1.25rem] font-bold text-nido-green-dark m-0">Invitar conviviente</h2>
+          <p class="text-nido-brown text-[0.8375rem] m-0 leading-relaxed">
+            Ingresá el email de la persona que querés invitar. Le vamos a mandar un link para que pueda unirse a tu hogar.
+          </p>
+        </div>
+        <button
+          class="shrink-0 p-1 bg-transparent border-none cursor-pointer text-nido-muted hover:text-nido-brown transition-colors duration-150 mt-0.5"
+          (click)="closeInviteModal()">
+          <lucide-icon name="x" [size]="18" />
+        </button>
+      </div>
+
+      @if (inviteState() !== 'success') {
+
+        <!-- Email input -->
+        <div class="flex flex-col gap-2">
+          <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Email</label>
+          <input
+            type="email"
+            placeholder="ejemplo@email.com"
+            [value]="inviteEmail()"
+            (input)="inviteEmail.set($any($event.target).value)"
+            [disabled]="inviteState() === 'loading'"
+            class="border border-nido-border rounded-xl px-4 py-3 text-[0.9rem] text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green transition-colors duration-150 disabled:opacity-50"
+          />
+          @if (inviteState() === 'error') {
+            <span class="text-nido-red text-[0.8rem]">{{ inviteErrorMsg() }}</span>
+          }
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-3 justify-end pt-1">
+          <button
+            class="px-5 py-2.5 rounded-full text-[0.875rem] text-nido-brown bg-transparent border border-nido-border cursor-pointer hover:bg-nido-cream transition-colors duration-150"
+            (click)="closeInviteModal()">
+            Cancelar
+          </button>
+          <button
+            [disabled]="!inviteEmail().trim() || inviteState() === 'loading'"
+            (click)="submitInvite()"
+            class="px-6 py-2.5 rounded-full text-[0.875rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ inviteState() === 'loading' ? 'Enviando...' : 'Enviar invitación' }}
+          </button>
+        </div>
+
+      } @else {
+
+        <!-- Success state -->
+        <div class="flex flex-col items-center gap-4 py-4 text-center">
+          <div class="w-16 h-16 rounded-full bg-[rgba(62,94,74,0.08)] flex items-center justify-center">
+            <lucide-icon name="mail-check" [size]="30" class="text-nido-green-dark" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <p class="text-[0.9375rem] font-semibold text-nido-green-dark m-0">¡Invitación enviada!</p>
+            <p class="text-[0.8375rem] text-nido-brown m-0">
+              Le mandamos un email a <strong>{{ inviteEmail() }}</strong> con el link para unirse.
+            </p>
+          </div>
+          <button
+            class="mt-1 px-7 py-2.5 rounded-full text-[0.875rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150"
+            (click)="closeInviteModal()">
+            Cerrar
+          </button>
+        </div>
+
+      }
+
+    </div>
+  </div>
+}
