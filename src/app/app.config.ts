@@ -1,7 +1,25 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { authInterceptor } from './core/auth/auth.interceptor';
 import { provideRouter } from '@angular/router';
 import {
+  LUCIDE_ICONS, LucideIconProvider,
+  House, Refrigerator, ChefHat, Wallet,
+  CheckSquare, Calendar, Zap, Bell,
+  User, Settings, LogOut, Plus,
+  AlertTriangle, TrendingUp, ArrowRight,
+  ShoppingBasket, ClipboardList, Info,
+  Search, Clock, Flame, Star, Shuffle,
+  ChevronDown, X, SlidersHorizontal, Pencil,
+  Shield, Check, QrCode, Snowflake, Package,
+  Tag, AlertCircle,
+  // Alacena
+  Scan, ScanLine, SearchX, CalendarClock, CalendarCheck,
+  PackageOpen, LockOpen, Minus, Camera,
+  // Hogares / invitaciones
+  Ellipsis, MailCheck, MailOpen, CheckCircle, XCircle,
+  // Onboarding step 4
+  Leaf, Target, UtensilsCrossed, Sprout, WheatOff, MilkOff,
   LUCIDE_ICONS,
   LucideIconProvider,
   House,
@@ -60,12 +78,27 @@ import { routes } from './app.routes';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideHttpClient(withFetch()),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     provideRouter(routes),
     {
       provide: LUCIDE_ICONS,
       multi: true,
       useValue: new LucideIconProvider({
+        House, Refrigerator, ChefHat, Wallet,
+        CheckSquare, Calendar, Zap, Bell,
+        User, Settings, LogOut, Plus,
+        AlertTriangle, TrendingUp, ArrowRight,
+        ShoppingBasket, ClipboardList, Info,
+        Search, Clock, Flame, Star, Shuffle,
+        ChevronDown, X, SlidersHorizontal, Pencil,
+        Shield, Check, QrCode, Snowflake, Package,
+        Tag, AlertCircle,
+        Scan, ScanLine, SearchX, CalendarClock, CalendarCheck,
+        PackageOpen, LockOpen, Minus, Camera,
+        Ellipsis, MailCheck, MailOpen, CheckCircle, XCircle,
+        Leaf, Target, UtensilsCrossed, Sprout, WheatOff, MilkOff,
+      })
+    }
         House,
         Refrigerator,
         ChefHat,
