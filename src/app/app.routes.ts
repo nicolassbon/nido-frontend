@@ -6,6 +6,7 @@ import { Alacena } from './features/alacena/alacena/alacena';
 import { CreateHousehold } from './features/household/create-household/create-household';
 import { AcceptInvitation } from './features/household/accept-invitation/accept-invitation';
 import { WellnessStep } from './features/onboarding/wellness-step/wellness-step';
+import { Electrodomesticos } from './features/electrodomesticos/electrodomesticos';
 
 export const routes: Routes = [
   { path: 'crear-hogar',     component: CreateHousehold },
@@ -19,6 +20,7 @@ export const routes: Routes = [
       { path: 'inicio', component: Home },
       { path: 'recetas', component: Recipes },
       { path: 'alacena', component: Alacena },
+      { path: 'electrodomesticos', component: Electrodomesticos },
     ],
   },
   { path: '**', redirectTo: '' },
