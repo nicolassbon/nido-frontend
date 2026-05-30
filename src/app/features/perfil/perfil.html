@@ -1,0 +1,61 @@
+<div class="p-6 flex flex-col gap-6 max-w-[1200px]">
+
+  <div class="flex flex-col">
+
+    <div class="relative w-full h-[120px] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] bg-nido-green-dark overflow-hidden">
+      <img src="assets/banner.jpg" class="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-overlay" alt="">
+      <div class="absolute inset-0 px-8 py-6 flex justify-between items-start z-10">
+        <div class="text-nido-bg">
+          <h1 class="text-2xl font-bold mb-0.5">Mi perfil</h1>
+          <p class="text-xs opacity-90">Administrá tu información y preferencias</p>
+        </div>
+        <button class="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-nido-bg px-4 py-1.5 rounded-[20px] text-xs font-medium flex items-center gap-2 transition cursor-pointer">
+          <lucide-icon name="user-plus" class="w-3.5 h-3.5"></lucide-icon> Invitar familiar
+        </button>
+      </div>
+    </div>
+
+    <div class="flex flex-col md:flex-row items-start md:items-end gap-6 px-8 mt-8 relative z-20">
+
+      <div class="relative shrink-0 inline-block">
+
+<img src="https://img.magnific.com/foto-gratis/retrato-mujer-joven-expresiva_1258-48167.jpg" alt="Luisa" class="w-32 h-32 md:w-[180px] md:h-[180px] rounded-full border-[8px] border-[#F7F1E6] object-cover bg-white shadow-sm">
+  <button class="absolute bottom-[3%] right-[6%] bg-nido-green-dark text-nido-bg p-2 rounded-full hover:opacity-90 transition shadow-md border-[3px] border-nido-cream cursor-pointer flex items-center justify-center">
+    <lucide-icon name="pencil" class="w-3.5 h-3.5"></lucide-icon>
+  </button>
+
+</div>
+
+      <div class="flex flex-col pb-2">
+        <h2 class="text-[3rem] font-bold text-gray-900 mb-2 leading-none">{{ usuario.nombre }}</h2>
+
+        <div class="inline-flex items-center gap-2 bg-white px-5 py-2.5 rounded-full text-[0.9rem] text-nido-green-dark shadow-[0_1px_3px_rgba(0,0,0,0.05)] border border-[#e5ddd0] w-max mb-5">
+        <lucide-icon name="award" class="w-5 h-5"></lucide-icon> Nivel Nido <span class="font-bold">{{ usuario.nivel }}</span>
+      </div>
+
+      <hr class="border-[#e5ddd0] border-t-[1.5px] mb-4 w-full max-w-2xl">
+
+        <div class="flex flex-wrap items-center gap-6 text-[0.8rem] text-nido-brown font-medium">
+          <span class="flex items-center gap-1.5"><lucide-icon name="mail" class="w-3.5 h-3.5"></lucide-icon> {{ usuario.email }}</span>
+          <span class="flex items-center gap-1.5"><lucide-icon name="phone" class="w-3.5 h-3.5"></lucide-icon> {{ usuario.telefono }}</span>
+          <span class="flex items-center gap-1.5"><lucide-icon name="calendar" class="w-3.5 h-3.5"></lucide-icon> Miembro desde {{ usuario.fechaRegistro }}</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <hr class="border-nido-border border-t-[1.5px] opacity-70 my-0">
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+    <app-stat-card icon="check-square" value="48" title="Tareas completadas" subtitle="Seguí así, tu hogar te lo agradece."></app-stat-card>
+    <app-stat-card icon="scan-line" value="126" title="Productos escaneados" subtitle="Llevás un excelente control."></app-stat-card>
+    <app-stat-card icon="trophy" value="12" title="Logros" subtitle="¡Vamos por más!"></app-stat-card>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+    <app-preference-card title="Alergias" icon="wheat-off" [tag]="usuario.alergias"></app-preference-card>
+    <app-preference-card title="No me gusta" icon="ban" [tag]="usuario.noMeGusta"></app-preference-card>
+  </div>
+
+</div>

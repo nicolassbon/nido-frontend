@@ -53,6 +53,15 @@ import {
   Droplet,
   Tv,
   Plug,
+
+  // Perfil
+  UserPlus,
+  Award,
+  Mail,
+  Phone,
+  Trophy,
+  WheatOff,
+  Ban
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
@@ -115,6 +124,15 @@ export const appConfig: ApplicationConfig = {
         Droplet,
         Tv,
         Plug,
+
+        // Perfil
+        UserPlus,
+        Award,
+        Mail,
+        Phone,
+        Trophy,
+        WheatOff,
+        Ban
       }),
     },
   ],
