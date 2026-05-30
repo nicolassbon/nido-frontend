@@ -9,6 +9,7 @@ export interface Electrodomestico {
   nombre: string;
   tipo: string | null;
   estado: string | null;
+  imagenUrl: string | null;
 }
 
 export interface CrearElectrodomesticoRequest {
@@ -16,6 +17,8 @@ export interface CrearElectrodomesticoRequest {
   nombre: string;
   tipo?: string | null;
   estado?: string | null;
+  marca?: string | null;
+  imagenUrl?: string | null;
 }
 
 @Injectable({
