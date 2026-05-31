@@ -13,6 +13,23 @@ export interface CreateProductoRequest {
   usuarioId: string;
 }
 
+export interface ProductManualResponse {
+  stockHogarId: string;
+  productoId: string;
+  nombre: string;
+  categoriaId: string | null;
+  categoriaNombre: string | null;
+  codigoBarras: string | null;
+  imagenUrl: string | null;
+  ubicacion: string;
+  cantidad: number;
+  unidadMedida: string | null;
+  fechaVencimiento: string | null;
+  estaAbierto: boolean;
+  porcentajeConsumido: number;
+}
+
+
 @Injectable({
   providedIn: 'root'
 
@@ -24,4 +41,12 @@ private readonly baseUrl = environment.apiBaseUrl;
 
 createProducto(payload: CreateProductoRequest) {
   return this.http.post(`${this.baseUrl}/productos`, payload);
-}}
+}
+
+getProductManual(hogarId: string) {
+  return this.http.get<ProductManualResponse[]>(
+    `${this.baseUrl}/productos/manual?hogarId=${hogarId}`
+  );
+}
+
+}
