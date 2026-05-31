@@ -1,0 +1,232 @@
+<div class="flex flex-col min-h-screen bg-nido-cream">
+  <header class="relative bg-nido-green-dark px-6 py-3 flex items-center">
+    <div class="flex items-center shrink-0">
+      <img src="logo.png" alt="Nido" class="h-9 object-contain" />
+    </div>
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div class="pointer-events-auto flex items-start">
+        @for (step of steps; track step.number; let last = $last) {
+          <div class="flex flex-col items-center gap-1.5">
+            <div [class]="stepCircleClass(step)">
+              @if (step.completed) {
+                <lucide-icon name="check" [size]="15" class="text-nido-green-dark" />
+              } @else {
+                <span
+                  class="text-[0.8125rem] font-bold"
+                  [class]="step.active ? 'text-nido-green-dark' : 'text-[rgba(247,241,230,0.45)]'"
+                >
+                  {{ step.number }}
+                </span>
+              }
+            </div>
+            <span [class]="stepLabelClass(step)">{{ step.label }}</span>
+          </div>
+          @if (!last) {
+            <div
+              class="w-12 h-px mt-4 mx-1"
+              [class]="step.completed ? 'bg-nido-cream/60' : 'bg-[rgba(247,241,230,0.2)]'"
+            ></div>
+          }
+        }
+      </div>
+    </div>
+  </header>
+  <main class="flex-1 flex items-center justify-center px-4 py-3">
+    <form
+      [formGroup]="form"
+      (ngSubmit)="onSubmit()"
+      class="bg-white rounded-2xl shadow-[0_4px_32px_rgba(38,63,48,0.10)] w-full max-w-[740px] px-10 py-6 flex flex-col items-center gap-4"
+    >
+      <p class="text-nido-muted italic text-[0.9rem] m-0">Todo conecta, todo fluye.</p>
+      <div class="flex flex-col items-center gap-1 text-center">
+        <h1 class="text-[1.6rem] font-bold text-nido-green-dark m-0">Paso 1: Tu Perfil</h1>
+        <p class="text-nido-brown text-[0.875rem] max-w-[340px] leading-relaxed m-0">
+          Contanos un poco sobre vos para empezar a construir tu experiencia personalizada en Nido!
+        </p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 w-full pt-1">
+        <div class="flex flex-col gap-3">
+          <div class="flex flex-col gap-1">
+            <label for="nombre" class="text-[0.8125rem] font-semibold text-nido-green-dark"
+              >Nombre completo</label
+            >
+            <input
+              id="nombre"
+              type="text"
+              formControlName="nombre"
+              placeholder="Ingresá tu nombre"
+              class="border border-nido-border rounded-xl px-4 py-2 text-[0.9rem] text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green transition-colors duration-150"
+            />
+            @if (submitted() && form.get('nombre')?.invalid) {
+              <span class="text-nido-red text-[0.8rem]">El nombre completo es requerido.</span>
+            }
+          </div>
+          <div class="flex flex-col gap-1">
+            <label for="email" class="text-[0.8125rem] font-semibold text-nido-green-dark"
+              >Correo electrónico</label
+            >
+            <input
+              id="email"
+              type="email"
+              formControlName="email"
+              placeholder="ejemplo@email.com"
+              class="border border-nido-border rounded-xl px-4 py-2 text-[0.9rem] text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green transition-colors duration-150"
+            />
+            @if (submitted() && form.get('email')?.invalid) {
+              @if (form.get('email')?.errors?.['required']) {
+                <span class="text-nido-red text-[0.8rem]">El correo electrónico es requerido.</span>
+              } @else if (form.get('email')?.errors?.['email']) {
+                <span class="text-nido-red text-[0.8rem]">Ingresá un formato de email válido.</span>
+              }
+            }
+          </div>
+          <div class="flex flex-col gap-1">
+            <label for="password" class="text-[0.8125rem] font-semibold text-nido-green-dark"
+              >Contraseña</label
+            >
+            <div class="relative w-full">
+              <input
+                id="password"
+                [type]="showPassword() ? 'text' : 'password'"
+                formControlName="password"
+                placeholder="••••••••"
+                class="w-full border border-nido-border rounded-xl pl-4 pr-10 py-2 text-[0.9rem] text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green transition-colors duration-150"
+              />
+              <button
+                type="button"
+                (click)="togglePassword()"
+                class="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer p-0.5 text-nido-muted hover:text-nido-green-dark transition-colors duration-150 flex items-center justify-center"
+              >
+                <lucide-icon [name]="showPassword() ? 'eye-off' : 'eye'" [size]="18" />
+              </button>
+            </div>
+            <span class="text-nido-muted text-[0.72rem] leading-tight"
+              >Mínimo 8 caracteres, una mayúscula y un número</span
+            >
+            @if (submitted() && form.get('password')?.invalid) {
+              @if (form.get('password')?.errors?.['required']) {
+                <span class="text-nido-red text-[0.8rem]">La contraseña es requerida.</span>
+              } @else if (form.get('password')?.errors?.['pattern']) {
+                <span class="text-nido-red text-[0.8rem]"
+                  >Debe tener al menos 8 caracteres, una mayúscula y un número.</span
+                >
+              }
+            }
+          </div>
+          <div class="flex flex-col gap-1">
+            <label for="confirmPassword" class="text-[0.8125rem] font-semibold text-nido-green-dark"
+              >Confirmar contraseña</label
+            >
+            <div class="relative w-full">
+              <input
+                id="confirmPassword"
+                [type]="showConfirmPassword() ? 'text' : 'password'"
+                formControlName="confirmPassword"
+                placeholder="••••••••"
+                class="w-full border border-nido-border rounded-xl pl-4 pr-10 py-2 text-[0.9rem] text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green transition-colors duration-150"
+              />
+              <button
+                type="button"
+                (click)="toggleConfirmPassword()"
+                class="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer p-0.5 text-nido-muted hover:text-nido-green-dark transition-colors duration-150 flex items-center justify-center"
+              >
+                <lucide-icon [name]="showConfirmPassword() ? 'eye-off' : 'eye'" [size]="18" />
+              </button>
+            </div>
+            @if (submitted()) {
+              @if (form.get('confirmPassword')?.errors?.['required']) {
+                <span class="text-nido-red text-[0.8rem]">La confirmación es requerida.</span>
+              } @else if (form.errors?.['passwordMismatch']) {
+                <span class="text-nido-red text-[0.8rem]">Las contraseñas no coinciden.</span>
+              }
+            }
+          </div>
+        </div>
+        <div class="flex flex-col gap-3">
+          <div class="flex flex-col gap-1">
+            <label for="sexo" class="text-[0.8125rem] font-semibold text-nido-green-dark"
+              >Sexo</label
+            >
+            <div class="relative w-full">
+              <select
+                id="sexo"
+                formControlName="sexo"
+                class="w-full border border-nido-border rounded-xl px-4 py-2 text-[0.9rem] text-nido-green-dark bg-white outline-none focus:border-nido-green transition-colors duration-150 cursor-pointer appearance-none"
+              >
+                <option value="" disabled selected>Seleccioná una opción</option>
+                @for (opt of sexoOptions; track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+              <div
+                class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-nido-muted flex items-center"
+              >
+                <lucide-icon name="chevron-down" [size]="18" />
+              </div>
+            </div>
+            @if (submitted() && form.get('sexo')?.invalid) {
+              <span class="text-nido-red text-[0.8rem]">El sexo es requerido.</span>
+            }
+          </div>
+          <div class="flex flex-col gap-1 flex-1">
+            <label class="text-[0.8125rem] font-semibold text-nido-green-dark"
+              >Foto de perfil (Opcional)</label
+            >
+            <div
+              (click)="fileInput.click()"
+              class="flex-1 min-h-[110px] border-2 border-dashed border-nido-border rounded-2xl flex flex-col items-center justify-center gap-2 py-3 px-3 cursor-pointer hover:border-nido-green hover:bg-[rgba(62,94,74,0.02)] transition-all duration-150 relative overflow-hidden"
+            >
+              @if (photoPreview()) {
+                <img
+                  [src]="photoPreview()"
+                  alt="Preview"
+                  class="w-24 h-24 rounded-full object-cover shadow-sm border border-nido-border"
+                />
+                <span class="text-[0.72rem] text-nido-muted">Hacé click para cambiar la foto</span>
+              } @else {
+                <div
+                  class="w-9 h-9 rounded-full bg-nido-cream flex items-center justify-center text-nido-green-dark shrink-0"
+                >
+                  <lucide-icon name="camera" [size]="18" />
+                </div>
+                <div class="flex flex-col items-center gap-0.5 text-center">
+                  <span class="text-[0.8125rem] font-semibold text-nido-green-dark leading-none"
+                    >Subir foto</span
+                  >
+                  <span class="text-[0.7rem] text-nido-muted">JPG, PNG o WebP, máx. 5MB</span>
+                </div>
+              }
+              <input
+                #fileInput
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                class="hidden"
+                (change)="onPhotoSelected($event)"
+              />
+            </div>
+            @if (photoError()) {
+              <span class="text-nido-red text-[0.8rem]">{{ photoError() }}</span>
+            }
+          </div>
+        </div>
+      </div>
+      @if (globalError()) {
+        <span class="text-nido-red text-[0.875rem] text-center w-full font-medium mt-1">{{
+          globalError()
+        }}</span>
+      }
+      <div class="flex flex-col items-center w-full pt-2">
+        <button
+          type="submit"
+          [disabled]="loading()"
+          class="flex items-center gap-2 bg-nido-green-dark text-nido-cream px-10 py-3 rounded-full text-[0.9375rem] font-semibold border-none cursor-pointer transition-all duration-150 hover:bg-nido-green disabled:opacity-70 disabled:cursor-not-allowed"
+        >
+          <span>{{ loading() ? 'Registrando...' : 'Siguiente' }}</span>
+          @if (!loading()) {
+            <lucide-icon name="arrow-right" [size]="18" />
+          }
+        </button>
+      </div>
+    </form>
+  </main>
+</div>
