@@ -14,7 +14,7 @@ import {
   ArrowRight,
 } from 'lucide-angular';
 import { Login } from './login';
-import { AuthService } from '../../../core/auth/auth.service';
+import { AuthService, type GoogleLoginResponse } from '../../../core/auth/auth.service';
 import { GoogleIdentityService } from '../../../core/auth/google-identity.service';
 
 class MockAuthService {
@@ -168,8 +168,8 @@ describe('Login Component', () => {
     expect(mockGoogleIdentityService.prompt).toHaveBeenCalledTimes(1);
   });
 
-  it('should exchange the Google credential with the backend', () => {
-    const mockResponse = {
+  it('should exchange the Google credential with the backend and redirect to home for existing users', () => {
+    const mockResponse: GoogleLoginResponse = {
       usuarioId: 'u-google',
       hogarId: 'h-google',
       accessToken: 'google-token-jwt',
@@ -184,7 +184,23 @@ describe('Login Component', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/']);
   });
 
-  it('should handle Google login failure', () => {
+  it('should redirect new Google users to the onboarding step 2 (/crear-hogar)', () => {
+    const mockResponse: GoogleLoginResponse = {
+      usuarioId: 'u-google-new',
+      hogarId: 'h-google-new',
+      accessToken: 'google-token-jwt-new',
+      isNewUser: true,
+    };
+    mockAuthService.googleLogin.mockReturnValue(of(mockResponse));
+
+    mockGoogleIdentityService.emitCredential('real-google-id-token');
+
+    expect(component.loading()).toBe(false);
+    expect(mockAuthService.googleLogin).toHaveBeenCalledWith('real-google-id-token');
+    expect(router.navigate).toHaveBeenCalledWith(['/crear-hogar']);
+  });
+
+  it('should handle Google login failure and set the global error signal', () => {
     const mockError = { status: 400, message: 'Bad Request' };
     mockAuthService.googleLogin.mockReturnValue(throwError(() => mockError));
 
@@ -192,6 +208,7 @@ describe('Login Component', () => {
 
     expect(component.globalError()).toBe('Error al iniciar sesión con Google.');
     expect(component.loading()).toBe(false);
+    expect(router.navigate).not.toHaveBeenCalled();
   });
 
   it('should show a helpful message when Google login is not ready', () => {
