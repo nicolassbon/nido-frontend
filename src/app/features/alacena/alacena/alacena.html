@@ -19,8 +19,69 @@
         <lucide-icon name="qr-code" [size]="15" />
         Escanear código
       </button>
+       <a
+  routerLink="/agregar-producto"
+  class="flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)] no-underline">
+  <lucide-icon name="plus" [size]="15" />
+  Agregar producto
+</a>
     </div>
   </section>
+
+  <!-- Panel de alertas de vencimiento -->
+  @if (expiringProducts().length > 0) {
+    <section class="rounded-[12px] border border-[rgba(180,76,60,0.25)] bg-[rgba(180,76,60,0.05)] px-5 py-4 flex flex-col gap-3">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2 text-[#b44c3c]">
+          <lucide-icon name="bell" [size]="16" />
+          <span class="text-[0.8375rem] font-semibold">
+            {{ expiringProducts().length }} producto{{ expiringProducts().length === 1 ? '' : 's' }}
+            vence{{ expiringProducts().length === 1 ? '' : 'n' }} en {{ diasAlerta() }} días o menos
+          </span>
+        </div>
+        <button
+          class="flex items-center gap-1 px-3 py-1 rounded-[20px] border border-[rgba(180,76,60,0.3)] bg-transparent text-[#b44c3c] text-[0.75rem] font-medium cursor-pointer transition-[background] duration-150 hover:bg-[rgba(180,76,60,0.1)]"
+          (click)="showAlertSettings.set(!showAlertSettings())">
+          <lucide-icon name="settings" [size]="12" />
+          Configurar
+        </button>
+      </div>
+
+      @if (showAlertSettings()) {
+        <div class="flex items-center gap-2 flex-wrap pt-1 border-t border-[rgba(180,76,60,0.15)]">
+          <span class="text-[0.8rem] text-nido-brown">Alertar cuando queden menos de</span>
+          <input
+            class="w-[64px] py-1.5 px-2 border border-nido-border rounded-lg text-[0.875rem] text-nido-green-dark bg-white outline-none transition-[border-color] duration-150 focus:border-nido-green text-center"
+            type="number"
+            min="1"
+            max="365"
+            [ngModel]="diasAlertaInput()"
+            (ngModelChange)="diasAlertaInput.set(+$event)"
+          />
+          <span class="text-[0.8rem] text-nido-brown">días</span>
+          <button
+            class="flex items-center gap-1 px-3 py-1.5 bg-nido-green-dark text-nido-cream rounded-lg text-[0.8rem] font-semibold border-none cursor-pointer transition-[background] duration-150 hover:bg-nido-green disabled:opacity-50"
+            [disabled]="isSavingPrefs()"
+            (click)="saveDiasAlerta()">
+            <lucide-icon name="check" [size]="12" />
+            Guardar
+          </button>
+        </div>
+      }
+
+      <div class="flex flex-col gap-1.5">
+        @for (p of expiringProducts(); track p.id) {
+          @let daysLeft = getDaysRemaining(p.expiryDate);
+          <div class="flex items-center justify-between gap-2 text-[0.8rem]">
+            <span class="text-nido-green-dark font-medium truncate">{{ p.name }}</span>
+            <span class="shrink-0 font-semibold whitespace-nowrap" [style.color]="getExpiryColor(daysLeft)">
+              {{ getExpiryLabel(daysLeft) }}
+            </span>
+          </div>
+        }
+      </div>
+    </section>
+  }
 
   <!-- Toolbar: filtros + buscador -->
   <div class="flex items-center justify-between gap-3 flex-wrap max-sm:flex-col max-sm:items-stretch">
@@ -237,6 +298,17 @@
                 <p class="text-[0.775rem] text-nido-red">{{ draftErrors()['name'] }}</p>
               }
             </div>
+
+            <!-- Categoría (solo lectura, solo si está disponible) -->
+            @if (draft().category) {
+              <div class="flex items-center gap-2">
+                <span class="text-[0.8125rem] font-semibold text-nido-green-dark">Categoría</span>
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-[20px] bg-[rgba(62,94,74,0.1)] text-nido-green text-[0.775rem] font-medium">
+                  <lucide-icon name="tag" [size]="11" />
+                  {{ draft().category }}
+                </span>
+              </div>
+            }
 
             <!-- Cantidad -->
             <div class="flex flex-col gap-1.5">

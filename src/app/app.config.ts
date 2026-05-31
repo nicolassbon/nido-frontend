@@ -1,5 +1,6 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
+import { authInterceptor } from './core/auth/auth.interceptor';
 import { provideRouter } from '@angular/router';
 import {
   LUCIDE_ICONS,
@@ -38,6 +39,11 @@ import {
   Package,
   Tag,
   AlertCircle,
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  // Alacena
   Scan,
   ScanLine,
   SearchX,
@@ -47,8 +53,20 @@ import {
   LockOpen,
   Minus,
   Camera,
-
-  // Electrodomésticos
+  // Hogares / invitaciones
+  Ellipsis,
+  MailCheck,
+  MailOpen,
+  CheckCircle,
+  XCircle,
+  // Onboarding step 4
+  Leaf,
+  Target,
+  UtensilsCrossed,
+  Sprout,
+  WheatOff,
+  MilkOff,
+  // Electrodomesticos
   Coffee,
   Droplet,
   Tv,
@@ -57,11 +75,15 @@ import {
   // Perfil
   UserPlus,
   Award,
-  Mail,
   Phone,
   Trophy,
-  WheatOff,
-  Ban
+  Ban,
+CookingPot,
+Blend,
+Cog,
+AirVent,
+Square,
+PlugZap,
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
@@ -69,7 +91,7 @@ import { routes } from './app.routes';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideHttpClient(withFetch()),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     provideRouter(routes),
     {
       provide: LUCIDE_ICONS,
@@ -109,6 +131,10 @@ export const appConfig: ApplicationConfig = {
         Package,
         Tag,
         AlertCircle,
+        Eye,
+        EyeOff,
+        Mail,
+        Lock,
         Scan,
         ScanLine,
         SearchX,
@@ -118,8 +144,17 @@ export const appConfig: ApplicationConfig = {
         LockOpen,
         Minus,
         Camera,
-
-        // Electrodomésticos
+        Ellipsis,
+        MailCheck,
+        MailOpen,
+        CheckCircle,
+        XCircle,
+        Leaf,
+        Target,
+        UtensilsCrossed,
+        Sprout,
+        WheatOff,
+        MilkOff,
         Coffee,
         Droplet,
         Tv,
@@ -128,11 +163,15 @@ export const appConfig: ApplicationConfig = {
         // Perfil
         UserPlus,
         Award,
-        Mail,
         Phone,
         Trophy,
-        WheatOff,
-        Ban
+        Ban,
+CookingPot,
+Blend,
+Cog,
+AirVent,
+Square,
+PlugZap,
       }),
     },
   ],

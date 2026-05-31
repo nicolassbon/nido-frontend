@@ -1,6 +1,7 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, ChangeDetectionStrategy, DestroyRef, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   CrearElectrodomesticoRequest,
   Electrodomestico,
@@ -12,12 +13,12 @@ import {
   imports: [FormsModule, LucideAngularModule],
   templateUrl: './electrodomesticos.html',
   styleUrl: './electrodomesticos.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Electrodomesticos {
   private readonly electrodomesticosService = inject(ElectrodomesticosService);
-
-  // Temporal: más adelante esto debería venir del usuario/hogar logueado.
-  private readonly hogarId = '83e0bb2b-8585-469c-86d7-802cddb2434a';
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   protected readonly electrodomesticos = signal<Electrodomestico[]>([]);
   protected readonly loading = signal(false);
@@ -31,10 +32,10 @@ export class Electrodomesticos {
   protected readonly tipos = ['Todos', 'Cocina', 'Lavadero', 'Living', 'Otro'];
 
   protected readonly draft = signal<CrearElectrodomesticoRequest>({
-    hogarId: this.hogarId,
     nombre: '',
     tipo: 'Cocina',
     estado: 'Activo',
+    imagenUrl: null,
   });
 
   protected readonly electrodomesticosFiltrados = computed(() => {
@@ -76,17 +77,20 @@ export class Electrodomesticos {
     this.loading.set(true);
     this.errorMessage.set(null);
 
-    this.electrodomesticosService.getAll().subscribe({
-      next: (response) => {
-        this.electrodomesticos.set(response);
-        this.loading.set(false);
-      },
-      error: (error) => {
-        console.error('Error al cargar electrodomésticos:', error);
-        this.errorMessage.set('No se pudieron cargar los electrodomésticos.');
-        this.loading.set(false);
-      },
-    });
+    this.electrodomesticosService.getAll()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          console.log('Electrodomésticos recibidos:', response);
+          this.electrodomesticos.set(response);
+          this.loading.set(false);
+        },
+        error: (error) => {
+          console.error('Error al cargar electrodomésticos:', error);
+          this.errorMessage.set('No se pudieron cargar los electrodomésticos.');
+          this.loading.set(false);
+        },
+      });
   }
 
   protected abrirModalAgregar(): void {
@@ -107,30 +111,32 @@ export class Electrodomesticos {
     const draft = this.draft();
 
     const request: CrearElectrodomesticoRequest = {
-      hogarId: this.hogarId,
       nombre: draft.nombre.trim(),
       tipo: draft.tipo || 'Otro',
       estado: draft.estado || 'Activo',
+      imagenUrl: draft.imagenUrl?.trim() || null,
     };
 
-    this.electrodomesticosService.add(request).subscribe({
-      next: () => {
-        this.cargarElectrodomesticos();
-        this.cerrarModal();
-      },
-      error: (error) => {
-        console.error('Error al guardar electrodoméstico:', error);
-        this.errorMessage.set('No se pudo guardar el electrodoméstico.');
-      },
-    });
+    this.electrodomesticosService.add(request)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.cargarElectrodomesticos();
+          this.cerrarModal();
+        },
+        error: (error) => {
+          console.error('Error al guardar electrodoméstico:', error);
+          this.errorMessage.set('No se pudo guardar el electrodoméstico.');
+        },
+      });
   }
 
   protected resetFormulario(): void {
     this.draft.set({
-      hogarId: this.hogarId,
       nombre: '',
       tipo: 'Cocina',
       estado: 'Activo',
+      imagenUrl: null,
     });
   }
 
@@ -143,16 +149,43 @@ export class Electrodomesticos {
       : `${base} bg-white text-nido-green-dark border-nido-border hover:bg-nido-cream`;
   }
 
-  protected getIconByTipo(tipo: string | null): string {
-    const map: Record<string, string> = {
-      Cocina: 'coffee',
-      Lavadero: 'droplet',
-      Living: 'tv',
-      Otro: 'plug',
-    };
+ protected getIconByElectrodomestico(nombre: string, tipo: string | null): string {
+  const value = `${nombre} ${tipo ?? ''}`.toLowerCase();
 
-    return map[tipo ?? 'Otro'] ?? 'plug';
+  if (value.includes('heladera') || value.includes('refrigerador') || value.includes('fridge')) {
+    return 'refrigerator';
   }
+
+  if (value.includes('lavarropas') || value.includes('lavadora') || value.includes('washing')) {
+    return 'washing-machine';
+  }
+
+  if (value.includes('tele') || value.includes('tv') || value.includes('televisor')) {
+    return 'tv';
+  }
+
+  if (value.includes('microondas')) {
+    return 'microwave';
+  }
+
+  if (value.includes('cafetera') || value.includes('cafe')) {
+    return 'coffee';
+  }
+
+  if (tipo === 'Cocina') {
+    return 'coffee';
+  }
+
+  if (tipo === 'Lavadero') {
+    return 'droplet';
+  }
+
+  if (tipo === 'Living') {
+    return 'tv';
+  }
+
+  return 'plug';
+}
 
   protected getColorByTipo(tipo: string | null): string {
     const map: Record<string, string> = {

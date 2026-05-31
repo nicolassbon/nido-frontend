@@ -118,18 +118,26 @@
           class="bg-white rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition duration-[180ms] hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)]">
 
           <div class="relative h-40 overflow-hidden bg-nido-cream flex items-center justify-center">
+            @if (item.imagenUrl) {
+            <img
+              class="absolute inset-0 w-full h-full object-cover"
+              [src]="item.imagenUrl"
+              [alt]="item.nombre"
+            />
+            <div class="absolute inset-0 bg-black/10"></div>
+          } @else {
             <div class="flex flex-col items-center justify-center gap-3 text-nido-gold">
               <div
                 class="w-14 h-14 rounded-full flex items-center justify-center text-white"
                 [style.background-color]="getColorByTipo(item.tipo)">
-
-                <lucide-icon [name]="getIconByTipo(item.tipo)" [size]="28" />
+                <lucide-icon [name]="getIconByElectrodomestico(item.nombre, item.tipo)" [size]="28" />
               </div>
 
               <span class="text-[0.85rem] font-semibold text-nido-brown text-center">
                 {{ item.tipo || 'Otro' }}
               </span>
             </div>
+          }
 
             <span
               class="absolute top-3 left-3 flex items-center gap-1 px-3 py-1 rounded-full text-[0.72rem] font-semibold text-white"
@@ -151,11 +159,6 @@
 
                 {{ item.estado || 'Activo' }}
               </span>
-            </div>
-
-            <div class="text-[0.8rem] text-nido-brown">
-              <p class="font-medium">ID del hogar</p>
-              <span class="break-all">{{ item.hogarId }}</span>
             </div>
 
             <div class="flex items-center justify-between gap-2 pt-1">
@@ -243,6 +246,22 @@
               <option value="Necesita mantenimiento">Necesita mantenimiento</option>
               <option value="Fuera de servicio">Fuera de servicio</option>
             </select>
+          </label>
+
+          <!-- URL de imagen -->
+          <label class="block text-[0.85rem] font-semibold text-nido-brown">
+            URL de imagen (opcional)
+
+            <input
+              class="w-full mt-2 px-4 py-3 border-[1.5px] border-nido-border rounded-[12px] outline-none focus:border-nido-green"
+              type="text"
+              placeholder="https://..."
+              [ngModel]="draft().imagenUrl ?? ''"
+              (ngModelChange)="draft.update(d => ({ ...d, imagenUrl: $event }))" />
+
+            <span class="text-[0.75rem] text-nido-muted mt-2 block">
+              Agrega una URL para que se muestre la imagen del electrodoméstico.
+            </span>
           </label>
 
           <div class="flex gap-3 flex-wrap pt-2">

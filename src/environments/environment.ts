@@ -1,6 +1,7 @@
 export const environment = {
   production: false,
   apiBaseUrl: 'http://localhost:8080',
+  googleClientId: '',
   // Temporary placeholders used until auth (JWT) is implemented.
   // Once login exists, hogarId and usuarioId will come from the JWT claims
   // and these values will be replaced by the auth interceptor.

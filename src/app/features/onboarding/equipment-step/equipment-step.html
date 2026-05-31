@@ -1,0 +1,101 @@
+<header class="relative bg-nido-green-dark px-6 py-4 flex items-center">
+
+  <div class="flex items-center shrink-0">
+    <img src="logo.png" alt="Nido" class="h-9 object-contain" />
+  </div>
+
+  <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+    <div class="pointer-events-auto flex items-start">
+      @for (step of steps; track step.number; let last = $last) {
+
+        <div class="flex flex-col items-center gap-1.5">
+          <div [class]="stepCircleClass(step)">
+            @if (step.completed) {
+              <lucide-icon name="check" [size]="15" class="text-nido-green-dark" />
+            } @else {
+              <span class="text-[0.8125rem] font-bold"
+                    [class]="step.active ? 'text-nido-green-dark' : 'text-[rgba(247,241,230,0.45)]'">
+                {{ step.number }}
+              </span>
+            }
+          </div>
+          <span [class]="stepLabelClass(step)">{{ step.label }}</span>
+        </div>
+
+        @if (!last) {
+          <div class="w-12 h-px mt-4 mx-1"
+               [class]="step.completed ? 'bg-nido-cream/60' : 'bg-[rgba(247,241,230,0.2)]'">
+          </div>
+        }
+
+      }
+    </div>
+  </div>
+
+</header>
+<div class="flex flex-col min-h-screen bg-nido-cream">
+  <main class="flex-1 flex items-center justify-center px-4 py-10">
+    <div class="bg-white rounded-2xl shadow-[0_4px_32px_rgba(38,63,48,0.10)] w-full max-w-[820px] px-10 py-10 flex flex-col items-center gap-8">
+
+      <div class="flex flex-col items-center gap-2 text-center">
+        <p class="text-nido-muted italic text-[0.9375rem] m-0">Todo conecta, todo fluye.</p>
+        <h1 class="text-[1.75rem] font-bold text-nido-green-dark m-0">Paso 3: Equipamiento</h1>
+        <p class="text-nido-brown text-[0.9375rem] max-w-[420px] leading-relaxed m-0">
+          Seleccioná todos los electrodomésticos que usan en casa.
+        </p>
+      </div>
+
+      @if (loading()) {
+        <p class="text-nido-muted">Cargando catálogo...</p>
+      } @else {
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 w-full">
+          @for (item of catalogo(); track item.id) {
+          <button
+  type="button"
+  [class]="cardClass(isSelected(item.id))"
+  (click)="toggle(item.id)">
+
+  @if (isSelected(item.id)) {
+    <lucide-icon
+      name="check-circle"
+      [size]="16"
+      class="absolute top-2 right-2 text-nido-cream/85" />
+  }
+
+  <lucide-icon
+    [name]="iconName(item)"
+    [size]="26"
+    [class]="iconClass(isSelected(item.id))" />
+
+  <span class="text-[0.8125rem] font-semibold text-center leading-tight">
+    {{ item.nombre }}
+  </span>
+</button>
+          }
+        </div>
+      }
+
+      @if (error()) {
+        <p class="text-nido-red text-[0.9rem]">{{ error() }}</p>
+      }
+
+      <div class="flex flex-col items-center gap-3">
+        <button
+          class="flex items-center gap-2 bg-nido-green-dark text-nido-cream px-10 py-3.5 rounded-full"
+          [disabled]="saving()"
+          (click)="next()">
+          {{ saving() ? 'Guardando...' : 'Siguiente' }}
+          <lucide-icon name="arrow-right" [size]="18" />
+        </button>
+
+        <button
+          class="text-nido-brown text-[0.875rem] bg-transparent border-none cursor-pointer hover:underline"
+          [disabled]="saving()"
+          (click)="skip()">
+          Saltar por ahora
+        </button>
+      </div>
+
+    </div>
+  </main>
+</div>
