@@ -14,13 +14,16 @@ import {
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { of, switchMap } from 'rxjs';
+import { forkJoin, of, switchMap } from 'rxjs';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { DecodeHintType } from '@zxing/library';
 import { OpenFoodFactsService } from '../open-food-facts.service';
 import { AlacenaApiService, StockItemResponse } from '../alacena-api.service';
 import { PreferenciasApiService } from '../preferencias-api.service';
 import { getTtlForCategory, TtlInfo } from '../ttl.config';
+import { RouterLink } from '@angular/router';
+import { ProductService, ProductManualResponse } from '../../../core/servicios/agregar-producto.service';
+import { environment } from '../../../../environments/environment';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -126,7 +129,7 @@ const LOCATION_COLORS: Record<string, string> = {
 
 @Component({
   selector: 'app-alacena',
-  imports: [LucideAngularModule, FormsModule],
+  imports: [LucideAngularModule, FormsModule, RouterLink],
   templateUrl: './alacena.html',
   styleUrl: './alacena.scss',
 })
@@ -136,6 +139,8 @@ export class Alacena implements OnInit {
   private readonly preferenciasApi = inject(PreferenciasApiService);
   private readonly destroyRef     = inject(DestroyRef);
   private readonly zone           = inject(NgZone);
+  private readonly productService = inject(ProductService);
+
 
   // ── List & filters ───────────────────────────────────────
   protected readonly activeLocation  = signal<StorageLocation>('Todos');
@@ -268,22 +273,34 @@ export class Alacena implements OnInit {
       });
   }
 
-  private loadProducts(): void {
-    this.isLoadingProducts.set(true);
-    this.apiError.set(null);
-    this.alacenaApi.getStock()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: items => {
-          this.products.set(items.map(i => this.toProduct(i)));
-          this.isLoadingProducts.set(false);
-        },
-        error: () => {
-          this.apiError.set('No se pudo cargar el stock. Verificá la conexión.');
-          this.isLoadingProducts.set(false);
-        },
-      });
-  }
+private loadProducts(): void {
+  this.isLoadingProducts.set(true);
+  this.apiError.set(null);
+
+  forkJoin({
+    stock: this.alacenaApi.getStock(),
+    manual: this.productService.getProductManual(environment.devHogarId),
+  })
+    .pipe(takeUntilDestroyed(this.destroyRef))
+    .subscribe({
+      next: ({ stock, manual }) => {
+        const stockProducts = stock.map(item => this.toProduct(item));
+        const manualProducts = manual.map(item => this.toManualProduct(item));
+
+        const merged = [...stockProducts, ...manualProducts].filter(
+          (product, index, list) =>
+            list.findIndex(item => item.id === product.id) === index
+        );
+
+        this.products.set(merged);
+        this.isLoadingProducts.set(false);
+      },
+      error: () => {
+        this.apiError.set('No se pudo cargar el stock. Verificá la conexión.');
+        this.isLoadingProducts.set(false);
+      },
+    });
+}
 
   private toProduct(item: StockItemResponse): Product {
     return {
@@ -298,6 +315,20 @@ export class Alacena implements OnInit {
       barcode:          item.codigoBarras ?? undefined,
     };
   }
+
+  private toManualProduct(item: ProductManualResponse): Product {
+  return {
+    id: item.stockHogarId,
+    name: item.nombre,
+    image: item.imagenUrl ?? '',
+    location: item.ubicacion as Exclude<StorageLocation, 'Todos'>,
+    expiryDate: item.fechaVencimiento ?? '',
+    quantity: item.cantidad,
+    isOpened: item.estaAbierto,
+    remainingPercent: 100 - item.porcentajeConsumido,
+    barcode: item.codigoBarras ?? undefined,
+  };
+}
 
   // ── Camera lifecycle ─────────────────────────────────────
 

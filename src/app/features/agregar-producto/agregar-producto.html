@@ -1,0 +1,21 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <input formControlName="nombre" placeholder="Nombre" />
+
+  <select formControlName="categoriaId">
+    <option value="">Seleccionar categoria</option>
+
+    @for (categoria of categorias; track categoria.id) {
+      <option [value]="categoria.id">
+        {{ categoria.nombre }}
+      </option>
+    }
+  </select>
+
+  <input formControlName="cantidad" type="number" />
+
+  <input formControlName="unidadMedida" placeholder="Unidad (kg, lt, etc)" />
+
+  <input formControlName="fechaVencimiento" type="date" />
+
+  <button type="submit">Guardar</button>
+</form>
