@@ -10,11 +10,13 @@ import { WellnessStep } from './features/onboarding/wellness-step/wellness-step'
 import { Electrodomesticos } from './features/electrodomesticos/electrodomesticos';
 import { Register } from './features/auth/register/register';
 import { Login } from './features/auth/login/login';
+import { EquipmentStep } from './features/onboarding/equipment-step/equipment-step';
 
 export const routes: Routes = [
   { path: 'login',           component: Login },
   { path: 'registro',        component: Register },
   { path: 'crear-hogar',     component: CreateHousehold, canActivate: [authGuard] },
+  { path: 'equipamiento', component: EquipmentStep },
   { path: 'finalizar-hogar', component: WellnessStep, canActivate: [authGuard] },
   { path: 'invitacion',      component: AcceptInvitation },
   {
@@ -27,6 +29,8 @@ export const routes: Routes = [
       { path: 'recetas', component: Recipes },
       { path: 'alacena', component: Alacena },
       { path: 'electrodomesticos', component: Electrodomesticos },
+
+
     ],
   },
   { path: '**', redirectTo: '' },
