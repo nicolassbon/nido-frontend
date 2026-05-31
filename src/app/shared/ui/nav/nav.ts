@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import {
   LucideAngularModule, LucideIconData,
@@ -6,6 +6,7 @@ import {
   CheckSquare, Calendar, Zap, Bell,
   User, Settings, LogOut,
 } from 'lucide-angular';
+import { AuthService } from '../../../core/auth/auth.service';
 
 interface NavItem {
   label: string;
@@ -20,6 +21,8 @@ interface NavItem {
   styleUrl:    './nav.scss',
 })
 export class Nav {
+  private readonly authService = inject(AuthService);
+
   readonly isOpen = input(false);
 
   protected readonly sidebarClass = computed(() => {
@@ -49,8 +52,11 @@ export class Nav {
 
   protected readonly bottomNavItems: NavItem[] = [
     { label: 'Configuración', route: '/configuracion', icon: 'settings' },
-    { label: 'Salir',         route: '/salir',          icon: 'log-out'  },
   ];
+
+  protected logout(): void {
+    this.authService.logout().subscribe();
+  }
 
   protected readonly icons: Record<string, LucideIconData> = {
     'house':        House,
