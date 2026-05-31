@@ -1,6 +1,7 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { AuthService } from '../../../core/auth/auth.service';
 
 interface StatCard {
   value: string;
@@ -34,7 +35,10 @@ interface PendingTask {
   styleUrl: './home.scss',
 })
 export class Home {
+  private readonly authService = inject(AuthService);
+
   protected readonly greeting = signal(this.buildGreeting());
+  protected readonly userName = signal(this.authService.getNombre() ?? 'vos');
   protected readonly today = signal(
     new Date().toLocaleDateString('es-AR', {
       weekday: 'long',

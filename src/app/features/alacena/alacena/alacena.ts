@@ -395,8 +395,6 @@ export class Alacena implements OnInit {
     this.stopCamera();
     this.scannerStep.set('loading');
 
-    // 1. Check our backend first (instant if the product was scanned before).
-    // 2. Fall back to Open Food Facts cascade if not found in our DB.
     this.alacenaApi.findProductByBarcode(barcode)
       .pipe(
         switchMap(dbProduct => {
@@ -532,7 +530,6 @@ export class Alacena implements OnInit {
 
     const d = this.draft();
 
-    // If same barcode already in the list, increment quantity via PATCH
     const existing = d.barcode
       ? this.products().find(p => p.barcode === d.barcode)
       : undefined;
@@ -550,7 +547,6 @@ export class Alacena implements OnInit {
             this.closeScanner();
           },
           error: () => {
-            // Optimistic fallback: update locally even if API failed
             this.products.update(list =>
               list.map(p => p.id === existing.id ? { ...p, quantity: newQty } : p),
             );
@@ -576,7 +572,6 @@ export class Alacena implements OnInit {
             this.closeScanner();
           },
           error: () => {
-            // Optimistic fallback: add locally if API fails
             const product: Product = {
               id:               crypto.randomUUID(),
               name:             d.name.trim(),

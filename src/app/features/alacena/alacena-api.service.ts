@@ -4,8 +4,6 @@ import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
-// ── Response / request types (mirror the .NET DTOs) ─────────────────────────
-
 export interface StockItemResponse {
   id:                  string;
   productoId:          string;
@@ -38,7 +36,6 @@ export interface UpdateStockItemRequest {
   porcentajeConsumido?: number;
 }
 
-/** Returned by GET /api/productos/barcode/:barcode */
 export interface ProductoApiResponse {
   id:              string;
   nombre:          string;
@@ -48,25 +45,17 @@ export interface ProductoApiResponse {
   ttlDias:         number | null;
 }
 
-// ── Service ──────────────────────────────────────────────────────────────────
-
 @Injectable({ providedIn: 'root' })
 export class AlacenaApiService {
   private readonly http = inject(HttpClient);
   private readonly base = environment.apiBaseUrl;
-  // hogarId y usuarioId vienen del JWT (via auth.interceptor) — no se envían en el body
 
-  /** Load all stock items for the current household (hogarId extraído del JWT en el backend). */
   getStock(): Observable<StockItemResponse[]> {
     return this.http
       .get<StockItemResponse[]>(`${this.base}/api/alacena/productos`)
       .pipe(catchError(() => of([])));
   }
 
-  /**
-   * Check our DB for a barcode before calling Open Food Facts.
-   * Returns null on 404 (product not in our DB yet).
-   */
   findProductByBarcode(barcode: string): Observable<ProductoApiResponse | null> {
     return this.http
       .get<ProductoApiResponse>(
@@ -80,7 +69,6 @@ export class AlacenaApiService {
       );
   }
 
-  /** Save a new product + stock entry (hogarId y usuarioId vienen del JWT). */
   createStock(req: CreateStockItemRequest): Observable<StockItemResponse> {
     return this.http.post<StockItemResponse>(
       `${this.base}/api/alacena/productos`,
@@ -88,7 +76,6 @@ export class AlacenaApiService {
     );
   }
 
-  /** Update quantity / details of an existing stock entry (usuarioId viene del JWT). */
   updateStock(id: string, changes: UpdateStockItemRequest): Observable<StockItemResponse> {
     return this.http.patch<StockItemResponse>(
       `${this.base}/api/alacena/productos/${id}`,
@@ -96,7 +83,6 @@ export class AlacenaApiService {
     );
   }
 
-  /** Remove a stock entry. */
   deleteStock(id: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/api/alacena/productos/${id}`);
   }

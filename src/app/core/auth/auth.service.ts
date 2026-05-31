@@ -8,6 +8,7 @@ interface JwtPayload {
   usuarioId: string;
   hogarId: string;
   email: string;
+  nombre: string;
   exp: number;
 }
 
@@ -106,6 +107,9 @@ export class AuthService {
   }
   getEmail(): string | null {
     return this.decodePayload()?.email ?? null;
+  }
+  getNombre(): string | null {
+    return this.decodePayload()?.nombre ?? null;
   }
 
   register(req: RegisterRequest): Observable<RegisterResponse> {
