@@ -1,0 +1,38 @@
+<div class="p-6 max-w-4xl mx-auto">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold mb-2">Editar perfil</h1>
+    <p class="text-sm text-gray-600">Modificá tus datos y guardá cuando termines. Si no querés hacer cambios, cancelá para volver a tu perfil.</p>
+  </div>
+
+  <div *ngIf="isLoading()" class="rounded-xl bg-white p-6 shadow-sm text-gray-700">Cargando datos...</div>
+
+  <div *ngIf="apiError()" class="rounded-xl bg-red-50 border border-red-200 p-6 mb-6 text-red-800">{{ apiError() }}</div>
+
+  <form [formGroup]="form" class="grid gap-6" *ngIf="!isLoading()">
+    <div class="grid gap-2">
+      <label class="font-semibold">Nombre del perfil</label>
+      <input type="text" formControlName="nombre" class="border rounded-xl px-4 py-3" />
+      <p class="text-xs text-gray-500">Este es el nombre con el que te identificarán en los hogares a los que pertenezcas.</p>
+    </div>
+
+      <div class="grid gap-2">
+        <label class="font-semibold">Celular</label>
+        <input type="tel" formControlName="telefono" class="border rounded-xl px-4 py-3" />
+        <p class="text-xs text-gray-500">Cuando deseés que se te envíen notificaciones, lo haremos a este número.</p>
+      </div>
+
+    <div class="grid gap-4">
+      <span class="font-semibold">Sexo</span>
+      <div class="flex flex-wrap gap-3">
+        <button type="button" class="px-4 py-2 rounded-full border" [class.bg-nido-brown]="form.get('sexo')?.value === 'Femenino'" (click)="form.patchValue({ sexo: 'Femenino' })">Femenino</button>
+        <button type="button" class="px-4 py-2 rounded-full border" [class.bg-nido-brown]="form.get('sexo')?.value === 'Masculino'" (click)="form.patchValue({ sexo: 'Masculino' })">Masculino</button>
+        <button type="button" class="px-4 py-2 rounded-full border" [class.bg-nido-brown]="form.get('sexo')?.value === 'Otro'" (click)="form.patchValue({ sexo: 'Otro' })">Otro</button>
+      </div>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-4 pt-4">
+      <button type="button" class="rounded-xl bg-nido-green-dark text-white px-6 py-3 hover:opacity-80 transition shadow-md border-[3px] cursor-pointer" (click)="onSave()" [disabled]="isSaving()">{{ isSaving() ? 'Guardando...' : 'Guardar' }}</button>
+      <button type="button" class="rounded-xl border border-[#3d1f0f] px-6 py-3 text-[#3d1f0f] hover:opacity-80 transition shadow-md border-[3px] cursor-pointer" (click)="onCancel()">Cancelar</button>
+    </div>
+  </form>
+</div>

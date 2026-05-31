@@ -5,6 +5,7 @@ import { Recipes } from './features/recipes/recipes/recipes';
 import { Alacena } from './features/alacena/alacena/alacena';
 import { Electrodomesticos } from './features/electrodomesticos/electrodomesticos';
 import { PerfilComponent } from './features/perfil/perfil';
+import { EditarPerfil } from './features/editar-perfil/editar-perfil';
 
 export const routes: Routes = [
   {
@@ -17,6 +18,7 @@ export const routes: Routes = [
       { path: 'alacena', component: Alacena },
       { path: 'electrodomesticos', component: Electrodomesticos },
       { path: 'perfil', component: PerfilComponent },
+      { path: 'perfil/editar', component: EditarPerfil },
     ],
   },
   { path: '**', redirectTo: '' },
