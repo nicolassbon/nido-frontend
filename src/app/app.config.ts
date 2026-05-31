@@ -67,6 +67,13 @@ import {
   Droplet,
   Tv,
   Plug,
+  Microwave,
+CookingPot,
+Blend,
+Cog,
+AirVent,
+Square,
+PlugZap,
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
@@ -138,6 +145,13 @@ export const appConfig: ApplicationConfig = {
         Droplet,
         Tv,
         Plug,
+        Microwave,
+CookingPot,
+Blend,
+Cog,
+AirVent,
+Square,
+PlugZap,
       }),
     },
   ],

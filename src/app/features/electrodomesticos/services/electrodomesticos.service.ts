@@ -33,6 +33,17 @@ interface ApiElectrodomestico {
   imagenUrl?: string | null;
 }
 
+export interface ElectrodomesticoCatalogo {
+  id: string;
+  nombre: string;
+  tipo: string;
+  icono: string | null;
+  imagenUrl: string | null;
+  orden: number;
+}
+
+
+
 @Injectable({
   providedIn: 'root',
 })
@@ -63,4 +74,10 @@ export class ElectrodomesticosService {
       .post<ApiElectrodomestico>(`${this.apiBaseUrl}/electrodomesticos`, body)
       .pipe(map((item) => this.normalize(item)));
   }
+
+  getCatalogo(): Observable<ElectrodomesticoCatalogo[]> {
+  return this.http.get<ElectrodomesticoCatalogo[]>(
+    `${this.apiBaseUrl}/electrodomesticos/catalogo`
+  );
+}
 }
