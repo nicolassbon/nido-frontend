@@ -20,9 +20,6 @@ export class Electrodomesticos {
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
 
-  // Temporal: más adelante esto debería venir del usuario/hogar logueado.
-  private readonly hogarId = '83e0bb2b-8585-469c-86d7-802cddb2434a';
-
   protected readonly electrodomesticos = signal<Electrodomestico[]>([]);
   protected readonly loading = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
@@ -35,7 +32,6 @@ export class Electrodomesticos {
   protected readonly tipos = ['Todos', 'Cocina', 'Lavadero', 'Living', 'Otro'];
 
   protected readonly draft = signal<CrearElectrodomesticoRequest>({
-    hogarId: this.hogarId,
     nombre: '',
     tipo: 'Cocina',
     estado: 'Activo',
@@ -115,7 +111,6 @@ export class Electrodomesticos {
     const draft = this.draft();
 
     const request: CrearElectrodomesticoRequest = {
-      hogarId: this.hogarId,
       nombre: draft.nombre.trim(),
       tipo: draft.tipo || 'Otro',
       estado: draft.estado || 'Activo',
@@ -138,7 +133,6 @@ export class Electrodomesticos {
 
   protected resetFormulario(): void {
     this.draft.set({
-      hogarId: this.hogarId,
       nombre: '',
       tipo: 'Cocina',
       estado: 'Activo',

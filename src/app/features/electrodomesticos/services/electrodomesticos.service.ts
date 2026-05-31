@@ -14,7 +14,7 @@ export interface Electrodomestico {
 }
 
 export interface CrearElectrodomesticoRequest {
-  hogarId: string;
+  hogarId?: string;
   nombre: string;
   tipo?: string | null;
   estado?: string | null;

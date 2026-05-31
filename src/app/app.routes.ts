@@ -16,7 +16,7 @@ export const routes: Routes = [
   { path: 'login',           component: Login },
   { path: 'registro',        component: Register },
   { path: 'crear-hogar',     component: CreateHousehold, canActivate: [authGuard] },
-  { path: 'equipamiento', component: EquipmentStep },
+  { path: 'equipamiento', component: EquipmentStep, canActivate: [authGuard] },
   { path: 'finalizar-hogar', component: WellnessStep, canActivate: [authGuard] },
   { path: 'invitacion',      component: AcceptInvitation },
   {
