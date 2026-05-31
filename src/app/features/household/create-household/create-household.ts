@@ -113,7 +113,8 @@ export class CreateHousehold implements OnInit {
   }
 
   next(): void {
-    this.router.navigate(['/finalizar-hogar']);
+    this.router.navigate(['/equipamiento']);
+
   }
 
   skip(): void {

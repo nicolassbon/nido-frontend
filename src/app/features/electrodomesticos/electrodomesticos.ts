@@ -39,6 +39,7 @@ export class Electrodomesticos {
     nombre: '',
     tipo: 'Cocina',
     estado: 'Activo',
+    imagenUrl: null,
   });
 
   protected readonly electrodomesticosFiltrados = computed(() => {
@@ -118,6 +119,7 @@ export class Electrodomesticos {
       nombre: draft.nombre.trim(),
       tipo: draft.tipo || 'Otro',
       estado: draft.estado || 'Activo',
+      imagenUrl: draft.imagenUrl?.trim() || null,
     };
 
     this.electrodomesticosService.add(request)
@@ -140,6 +142,7 @@ export class Electrodomesticos {
       nombre: '',
       tipo: 'Cocina',
       estado: 'Activo',
+      imagenUrl: null,
     });
   }
 

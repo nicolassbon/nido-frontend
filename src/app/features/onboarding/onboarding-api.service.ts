@@ -22,6 +22,19 @@ export interface SaveWellnessRequest {
   metaIds: string[];
 }
 
+//equipamiento
+export interface SaveEquipmentRequest {
+  skip: boolean;
+  usuarioId: string | null;
+  hogarId: string | null;
+  equipments: {
+    catalogoId: string | null;
+    nombre: string;
+    tipo: string | null;
+    estado: string | null;
+  }[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class OnboardingApiService {
   private readonly http = inject(HttpClient);
@@ -43,4 +56,8 @@ export class OnboardingApiService {
   saveWellnessStep(body: SaveWellnessRequest): Observable<void> {
     return this.http.patch<void>(`${this.base}/onboarding/step-4`, body);
   }
+
+  saveEquipmentStep(body: SaveEquipmentRequest): Observable<void> {
+  return this.http.patch<void>(`${this.base}/onboarding/step-3`, body);
+}
 }
