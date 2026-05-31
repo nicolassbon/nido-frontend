@@ -51,7 +51,7 @@ export class AgregarProducto {
       usuarioId: this.USUARIO_ID,
     };
 
-    this.productService.createProducto(payload).subscribe({
+    this.productService.createStockHome(payload).subscribe({
       next: (res) => {
         console.log('Producto creado:', res);
         this.form.reset({ cantidad: 1 });
