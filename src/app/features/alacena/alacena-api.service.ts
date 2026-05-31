@@ -3,7 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { AuthService } from '../../core/auth/auth.service';
 
 // ── Response / request types (mirror the .NET DTOs) ─────────────────────────
 
@@ -20,7 +19,6 @@ export interface StockItemResponse {
   porcentajeConsumido: number;
 }
 
-/** Fields the caller provides. hogarId and usuarioId are added by the service. */
 export interface CreateStockItemRequest {
   nombre:              string;
   codigoBarras:        string | null;
@@ -55,18 +53,13 @@ export interface ProductoApiResponse {
 @Injectable({ providedIn: 'root' })
 export class AlacenaApiService {
   private readonly http = inject(HttpClient);
-  private readonly auth = inject(AuthService);
   private readonly base = environment.apiBaseUrl;
+  // hogarId y usuarioId vienen del JWT (via auth.interceptor) — no se envían en el body
 
-  private get hogarId():   string { return this.auth.getHogarId()   ?? ''; }
-  private get usuarioId(): string { return this.auth.getUserId()     ?? ''; }
-
-  /** Load all stock items for the current household. */
+  /** Load all stock items for the current household (hogarId extraído del JWT en el backend). */
   getStock(): Observable<StockItemResponse[]> {
     return this.http
-      .get<StockItemResponse[]>(`${this.base}/api/alacena/productos`, {
-        params: { hogarId: this.hogarId },
-      })
+      .get<StockItemResponse[]>(`${this.base}/api/alacena/productos`)
       .pipe(catchError(() => of([])));
   }
 
@@ -87,24 +80,19 @@ export class AlacenaApiService {
       );
   }
 
-  /** Save a new product + stock entry. */
+  /** Save a new product + stock entry (hogarId y usuarioId vienen del JWT). */
   createStock(req: CreateStockItemRequest): Observable<StockItemResponse> {
     return this.http.post<StockItemResponse>(
       `${this.base}/api/alacena/productos`,
-      {
-        ...req,
-        // TODO: replace with values from JWT claims once auth is implemented
-        hogarId:   this.hogarId,
-        usuarioId: this.usuarioId,
-      },
+      req,
     );
   }
 
-  /** Update quantity / details of an existing stock entry. */
+  /** Update quantity / details of an existing stock entry (usuarioId viene del JWT). */
   updateStock(id: string, changes: UpdateStockItemRequest): Observable<StockItemResponse> {
     return this.http.patch<StockItemResponse>(
       `${this.base}/api/alacena/productos/${id}`,
-      { ...changes, usuarioId: this.usuarioId },
+      changes,
     );
   }
 

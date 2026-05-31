@@ -19,6 +19,7 @@ import { BrowserMultiFormatReader } from '@zxing/browser';
 import { DecodeHintType } from '@zxing/library';
 import { OpenFoodFactsService } from '../open-food-facts.service';
 import { AlacenaApiService, StockItemResponse } from '../alacena-api.service';
+import { PreferenciasApiService } from '../preferencias-api.service';
 import { getTtlForCategory, TtlInfo } from '../ttl.config';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -49,13 +50,14 @@ export interface Product {
 interface ProductDraft {
   name:              string;
   image:             string;
+  category:          string;
   location:          Exclude<StorageLocation, 'Todos'>;
   expiryDate:        string;
   ttlHint:           string;
   isOpened:          boolean;
   daysSincePurchase: number;
   consumedPercent:   number;
-  notFound:          boolean;  // true when barcode scanned but product not in any DB
+  notFound:          boolean;
   quantity:          number;
   barcode:           string;
 }
@@ -76,6 +78,7 @@ function makeEmptyDraft(): ProductDraft {
   return {
     name:              '',
     image:             '',
+    category:          '',
     location:          'Alacena',
     expiryDate:        toIsoDate(addDays(new Date(), 30)),
     ttlHint:           '',
@@ -89,6 +92,13 @@ function makeEmptyDraft(): ProductDraft {
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
+
+function formatCategoryTag(tag: string): string {
+  return tag
+    .replace(/^[a-z]{2}:/, '')
+    .replace(/-/g, ' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
 
 const PLACEHOLDER_IMAGE = 'https://placehold.co/200x200/F7F1E6/927357?text=Sin+imagen';
 
@@ -121,10 +131,11 @@ const LOCATION_COLORS: Record<string, string> = {
   styleUrl: './alacena.scss',
 })
 export class Alacena implements OnInit {
-  private readonly offService  = inject(OpenFoodFactsService);
-  private readonly alacenaApi  = inject(AlacenaApiService);
-  private readonly destroyRef  = inject(DestroyRef);
-  private readonly zone        = inject(NgZone);
+  private readonly offService     = inject(OpenFoodFactsService);
+  private readonly alacenaApi     = inject(AlacenaApiService);
+  private readonly preferenciasApi = inject(PreferenciasApiService);
+  private readonly destroyRef     = inject(DestroyRef);
+  private readonly zone           = inject(NgZone);
 
   // ── List & filters ───────────────────────────────────────
   protected readonly activeLocation  = signal<StorageLocation>('Todos');
@@ -138,6 +149,11 @@ export class Alacena implements OnInit {
   protected readonly isLoadingProducts  = signal(false);
   protected readonly apiError           = signal<string | null>(null);
 
+  protected readonly diasAlerta         = signal(7);
+  protected readonly diasAlertaInput    = signal(7);
+  protected readonly showAlertSettings  = signal(false);
+  protected readonly isSavingPrefs      = signal(false);
+
   protected readonly filteredProducts = computed(() => {
     let list = this.products();
     if (this.activeLocation() !== 'Todos') {
@@ -149,7 +165,19 @@ export class Alacena implements OnInit {
   });
 
   protected readonly urgentCount = computed(() =>
-    this.products().filter(p => this.getDaysRemaining(p.expiryDate) <= 7).length
+    this.products().filter(p => {
+      const days = this.getDaysRemaining(p.expiryDate);
+      return days >= 0 && days <= this.diasAlerta();
+    }).length
+  );
+
+  protected readonly expiringProducts = computed(() =>
+    this.products()
+      .filter(p => {
+        const days = this.getDaysRemaining(p.expiryDate);
+        return days >= 0 && days <= this.diasAlerta();
+      })
+      .sort((a, b) => this.getDaysRemaining(a.expiryDate) - this.getDaysRemaining(b.expiryDate))
   );
 
   // ── Scanner state ────────────────────────────────────────
@@ -208,6 +236,36 @@ export class Alacena implements OnInit {
 
   ngOnInit(): void {
     this.loadProducts();
+    this.loadPreferences();
+  }
+
+  private loadPreferences(): void {
+    this.preferenciasApi.getPreferences()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: prefs => {
+          this.diasAlerta.set(prefs.diasAlerta);
+          this.diasAlertaInput.set(prefs.diasAlerta);
+        },
+      });
+  }
+
+  protected saveDiasAlerta(): void {
+    const dias = Math.max(1, Math.min(365, Math.round(this.diasAlertaInput()) || 7));
+    this.isSavingPrefs.set(true);
+    this.preferenciasApi.updatePreferences(dias)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: prefs => {
+          this.diasAlerta.set(prefs.diasAlerta);
+          this.diasAlertaInput.set(prefs.diasAlerta);
+          this.isSavingPrefs.set(false);
+          this.showAlertSettings.set(false);
+        },
+        error: () => {
+          this.isSavingPrefs.set(false);
+        },
+      });
   }
 
   private loadProducts(): void {
@@ -343,27 +401,27 @@ export class Alacena implements OnInit {
       .pipe(
         switchMap(dbProduct => {
           if (dbProduct?.nombre) {
-            // Already in our DB — use it directly, no external call needed
-            const ttl = getTtlForCategory([]);  // category tags not stored in our DB yet
-            return of({ name: dbProduct.nombre, image: dbProduct.imagen ?? '', ttl, fromDb: true });
+            const ttl = getTtlForCategory([]);
+            return of({ name: dbProduct.nombre, image: dbProduct.imagen ?? '', category: dbProduct.categoriaNombre ?? '', ttl, fromDb: true });
           }
-          // Not in our DB — query Open Food Facts cascade
           return this.offService.lookup(barcode).pipe(
             switchMap(p => {
               const ttl = getTtlForCategory(p.categoriesTags);
-              return of({ name: p.name, image: p.image, ttl, fromDb: p.foundInDb });
+              const category = p.categoriesTags.length > 0 ? formatCategoryTag(p.categoriesTags[0]) : '';
+              return of({ name: p.name, image: p.image, category, ttl, fromDb: p.foundInDb });
             }),
           );
         }),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: ({ name, image, ttl, fromDb }) => {
+        next: ({ name, image, category, ttl, fromDb }) => {
           this.currentTtl.set(ttl);
           this.draft.set({
             ...makeEmptyDraft(),
             name,
             image,
+            category,
             expiryDate: toIsoDate(addDays(new Date(), ttl.days)),
             ttlHint:    name ? ttl.hint : '',
             notFound:   !name,
