@@ -8,23 +8,16 @@ import { CreateHousehold } from './features/household/create-household/create-ho
 import { AcceptInvitation } from './features/household/accept-invitation/accept-invitation';
 import { WellnessStep } from './features/onboarding/wellness-step/wellness-step';
 import { Electrodomesticos } from './features/electrodomesticos/electrodomesticos';
-<<<<<<< HEAD
-import { EquipmentStep } from './features/onboarding/equipment-step/equipment-step';
-
-export const routes: Routes = [
-  { path: 'crear-hogar',     component: CreateHousehold },
-  { path: 'equipamiento', component: EquipmentStep },
-  { path: 'finalizar-hogar', component: WellnessStep },
-=======
 import { Register } from './features/auth/register/register';
 import { Login } from './features/auth/login/login';
+import { EquipmentStep } from './features/onboarding/equipment-step/equipment-step';
 
 export const routes: Routes = [
   { path: 'login',           component: Login },
   { path: 'registro',        component: Register },
   { path: 'crear-hogar',     component: CreateHousehold, canActivate: [authGuard] },
+  { path: 'equipamiento', component: EquipmentStep },
   { path: 'finalizar-hogar', component: WellnessStep, canActivate: [authGuard] },
->>>>>>> origin/dev-frontend
   { path: 'invitacion',      component: AcceptInvitation },
   {
     path: '',
