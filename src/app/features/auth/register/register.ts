@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../../core/auth/auth.service';
 import { validatePhotoFile } from '../../../shared/validators/photo';
@@ -22,6 +22,7 @@ export class Register {
   private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private photoObjectUrl: string | null = null;
 
   constructor() {
@@ -132,7 +133,8 @@ export class Register {
     }).subscribe({
       next: () => {
         this.loading.set(false);
-        this.router.navigate(['/crear-hogar']);
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        returnUrl ? this.router.navigateByUrl(returnUrl) : this.router.navigate(['/crear-hogar']);
       },
       error: (err) => {
         this.loading.set(false);

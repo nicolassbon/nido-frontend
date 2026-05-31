@@ -7,13 +7,20 @@
 
     @switch (state()) {
 
+      @case ('preview-loading') {
+        <div class="flex flex-col items-center gap-4 py-4">
+          <div class="w-10 h-10 rounded-full border-4 border-nido-green-dark/20 border-t-nido-green-dark animate-spin"></div>
+          <p class="text-nido-brown text-[0.9rem] m-0">Verificando invitación...</p>
+        </div>
+      }
+
       @case ('idle') {
         <div class="flex flex-col items-center gap-5">
           <div class="w-16 h-16 rounded-full bg-[rgba(62,94,74,0.08)] flex items-center justify-center">
             <lucide-icon name="mail-open" [size]="32" class="text-nido-green-dark" />
           </div>
           <div class="flex flex-col gap-2">
-            <h1 class="text-[1.5rem] font-bold text-nido-green-dark m-0">¡Te invitaron a un hogar!</h1>
+            <h1 class="text-[1.5rem] font-bold text-nido-green-dark m-0">¡Te invitaron a {{ hogarNombre() }}!</h1>
             <p class="text-nido-brown text-[0.875rem] leading-relaxed m-0 max-w-[380px] mx-auto">
               Aceptá la invitación para unirte y organizar tu hogar junto a tu familia.
             </p>
@@ -23,6 +30,32 @@
             class="px-9 py-3.5 rounded-full text-[0.9375rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150">
             Aceptar invitación
           </button>
+        </div>
+      }
+
+      @case ('unauthenticated') {
+        <div class="flex flex-col items-center gap-5">
+          <div class="w-16 h-16 rounded-full bg-[rgba(62,94,74,0.08)] flex items-center justify-center">
+            <lucide-icon name="mail-open" [size]="32" class="text-nido-green-dark" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <h1 class="text-[1.5rem] font-bold text-nido-green-dark m-0">¡Te invitaron a {{ hogarNombre() }}!</h1>
+            <p class="text-nido-brown text-[0.875rem] leading-relaxed m-0 max-w-[380px] mx-auto">
+              Para aceptar la invitación, iniciá sesión o creá una cuenta.
+            </p>
+          </div>
+          <div class="flex flex-col gap-3 w-full max-w-[280px]">
+            <button
+              (click)="goToLogin()"
+              class="px-9 py-3.5 rounded-full text-[0.9375rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150">
+              Iniciar sesión
+            </button>
+            <button
+              (click)="goToRegister()"
+              class="px-9 py-3.5 rounded-full text-[0.9375rem] font-semibold text-nido-green-dark bg-transparent border-2 border-nido-green-dark cursor-pointer hover:bg-nido-green-dark/5 transition-colors duration-150">
+              Crear cuenta
+            </button>
+          </div>
         </div>
       }
 
