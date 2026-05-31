@@ -10,7 +10,7 @@ import {
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
-import { AuthService } from '../../../core/auth/auth.service';
+import { AuthService, type GoogleLoginResponse } from '../../../core/auth/auth.service';
 import { GoogleIdentityService } from '../../../core/auth/google-identity.service';
 
 @Component({
@@ -116,9 +116,13 @@ export class Login {
     this.loading.set(true);
 
     this.auth.googleLogin(idToken).subscribe({
-      next: () => {
+      next: (response: GoogleLoginResponse) => {
         this.loading.set(false);
-        this.router.navigate(['/']);
+        if (response.isNewUser) {
+          this.router.navigate(['/crear-hogar']);
+        } else {
+          this.router.navigate(['/']);
+        }
       },
       error: () => {
         this.loading.set(false);
