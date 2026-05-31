@@ -13,25 +13,24 @@
       <div class="pointer-events-auto flex items-start">
         @for (step of steps; track step.number; let last = $last) {
 
-          <div class="flex flex-col items-center gap-1.5">
-            <div [class]="stepCircleClass(step)">
-              @if (step.completed) {
-                <lucide-icon name="check" [size]="15" class="text-nido-green-dark" />
-              } @else {
-                <span class="text-[0.8125rem] font-bold"
-                      [class]="step.active ? 'text-nido-green-dark' : 'text-[rgba(247,241,230,0.45)]'">
-                  {{ step.number }}
-                </span>
-              }
-            </div>
-            <span [class]="stepLabelClass(step)">{{ step.label }}</span>
+        <div class="flex flex-col items-center gap-1.5">
+          <div [class]="stepCircleClass(step)">
+            @if (step.completed) {
+            <lucide-icon name="check" [size]="15" class="text-nido-green-dark" />
+            } @else {
+            <span class="text-[0.8125rem] font-bold"
+              [class]="step.active ? 'text-nido-green-dark' : 'text-[rgba(247,241,230,0.45)]'">
+              {{ step.number }}
+            </span>
+            }
           </div>
+          <span [class]="stepLabelClass(step)">{{ step.label }}</span>
+        </div>
 
-          @if (!last) {
-            <div class="w-12 h-px mt-4 mx-1"
-                 [class]="step.completed ? 'bg-nido-cream/60' : 'bg-[rgba(247,241,230,0.2)]'">
-            </div>
-          }
+        @if (!last) {
+        <div class="w-12 h-px mt-4 mx-1" [class]="step.completed ? 'bg-nido-cream/60' : 'bg-[rgba(247,241,230,0.2)]'">
+        </div>
+        }
 
         }
       </div>
@@ -42,7 +41,8 @@
   <!-- ── Main ───────────────────────────────────────────────── -->
   <main class="flex-1 flex items-center justify-center px-4 py-10">
 
-    <div class="bg-white rounded-2xl shadow-[0_4px_32px_rgba(38,63,48,0.10)] w-full max-w-[920px] px-10 py-10 flex flex-col items-center gap-8">
+    <div
+      class="bg-white rounded-2xl shadow-[0_4px_32px_rgba(38,63,48,0.10)] w-full max-w-[920px] px-10 py-10 flex flex-col items-center gap-8">
 
       <!-- Tagline + título -->
       <div class="flex flex-col items-center gap-2 text-center">
@@ -73,24 +73,22 @@
           <!-- Preference cards (2 columns, vertical layout) -->
           <div class="grid grid-cols-2 gap-3">
             @for (pref of preferencias(); track pref.id) {
-              <button [class]="prefCardClass(isPreferenciaSelected(pref.id))"
-                      (click)="togglePreferencia(pref.id)">
-                @if (isPreferenciaSelected(pref.id)) {
-                  <lucide-icon name="check-circle" [size]="15"
-                               class="absolute top-2 right-2 text-nido-cream/70" />
-                }
-                <div [class]="prefIconBgClass(isPreferenciaSelected(pref.id))">
-                  <lucide-icon [name]="getPrefIcon(pref.nombre)" [size]="17"
-                               [class]="prefIconColorClass(isPreferenciaSelected(pref.id))" />
-                </div>
-                <span class="text-[0.875rem] font-semibold leading-snug text-center"
-                      [class]="isPreferenciaSelected(pref.id) ? 'text-nido-cream' : 'text-nido-green-dark'">
-                  {{ pref.nombre }}
-                </span>
-              </button>
+            <button [class]="prefCardClass(isPreferenciaSelected(pref.id))" (click)="togglePreferencia(pref.id)">
+              @if (isPreferenciaSelected(pref.id)) {
+              <lucide-icon name="check-circle" [size]="15" class="absolute top-2 right-2 text-nido-cream/70" />
+              }
+              <div [class]="prefIconBgClass(isPreferenciaSelected(pref.id))">
+                <lucide-icon [name]="getPrefIcon(pref.nombre)" [size]="17"
+                  [class]="prefIconColorClass(isPreferenciaSelected(pref.id))" />
+              </div>
+              <span class="text-[0.875rem] font-semibold leading-snug text-center"
+                [class]="isPreferenciaSelected(pref.id) ? 'text-nido-cream' : 'text-nido-green-dark'">
+                {{ pref.nombre }}
+              </span>
+            </button>
             }
             @if (preferencias().length === 0) {
-              <span class="col-span-2 text-nido-muted text-[0.875rem] italic">Cargando...</span>
+            <span class="col-span-2 text-nido-muted text-[0.875rem] italic">Cargando...</span>
             }
           </div>
 
@@ -114,46 +112,43 @@
           <div class="relative">
             <div class="relative">
               <lucide-icon name="search" [size]="15"
-                           class="absolute left-3 top-1/2 -translate-y-1/2 text-nido-muted pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Buscar alergia..."
-                [value]="alergiaSearch()"
-                (input)="alergiaSearch.set($any($event.target).value)"
-                (focus)="alergiaInputFocused.set(true)"
+                class="absolute left-3 top-1/2 -translate-y-1/2 text-nido-muted pointer-events-none" />
+              <input type="text" placeholder="Buscar alergia..." [value]="alergiaSearch()"
+                (input)="alergiaSearch.set($any($event.target).value)" (focus)="alergiaInputFocused.set(true)"
                 (blur)="onAlergiaBlur()"
-                class="w-full border border-nido-border rounded-xl pl-11 pr-4 py-3 text-[0.9375rem] text-nido-green-dark placeholder:text-nido-muted bg-white outline-none focus:border-nido-green transition-colors duration-150"
-              />
+                class="w-full border border-nido-border rounded-xl pl-11 pr-4 py-3 text-[0.9375rem] text-nido-green-dark placeholder:text-nido-muted bg-white outline-none focus:border-nido-green transition-colors duration-150" />
             </div>
 
             <!-- Dropdown resultados -->
             @if (showAlergiaDropdown()) {
-              <div class="absolute top-full left-0 right-0 mt-1 bg-white border border-nido-border rounded-xl shadow-[0_4px_20px_rgba(38,63,48,0.12)] overflow-hidden z-20 max-h-[200px] overflow-y-auto">
-                @for (alergia of alergiaResults(); track alergia.id) {
-                  <button
-                    class="w-full text-left px-4 py-3 text-[0.9375rem] text-nido-green-dark hover:bg-nido-cream/70 transition-colors duration-100 border-b border-nido-border/40 last:border-0 bg-transparent cursor-pointer"
-                    (click)="addAlergia(alergia)">
-                    {{ alergia.nombre }}
-                  </button>
-                }
-              </div>
+            <div
+              class="absolute top-full left-0 right-0 mt-1 bg-white border border-nido-border rounded-xl shadow-[0_4px_20px_rgba(38,63,48,0.12)] overflow-hidden z-20 max-h-[200px] overflow-y-auto">
+              @for (alergia of alergiaResults(); track alergia.id) {
+              <button
+                class="w-full text-left px-4 py-3 text-[0.9375rem] text-nido-green-dark hover:bg-nido-cream/70 transition-colors duration-100 border-b border-nido-border/40 last:border-0 bg-transparent cursor-pointer"
+                (mousedown)="addAlergia(alergia)">
+                {{ alergia.nombre }}
+              </button>
+              }
+            </div>
             }
           </div>
 
           <!-- Chips seleccionados -->
           <div class="flex flex-wrap gap-2 min-h-[36px]">
             @for (alergia of selectedAlergias(); track alergia.id) {
-              <span class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[0.875rem] font-medium bg-[rgba(180,76,60,0.07)] text-nido-red border border-[rgba(180,76,60,0.18)]">
-                {{ alergia.nombre }}
-                <button
-                  class="inline-flex items-center justify-center bg-transparent border-none cursor-pointer text-nido-red/60 p-0 hover:text-nido-red transition-colors"
-                  (click)="removeAlergia(alergia.id)">
-                  <lucide-icon name="x" [size]="12" />
-                </button>
-              </span>
+            <span
+              class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[0.875rem] font-medium bg-[rgba(180,76,60,0.07)] text-nido-red border border-[rgba(180,76,60,0.18)]">
+              {{ alergia.nombre }}
+              <button
+                class="inline-flex items-center justify-center bg-transparent border-none cursor-pointer text-nido-red/60 p-0 hover:text-nido-red transition-colors"
+                (click)="removeAlergia(alergia.id)">
+                <lucide-icon name="x" [size]="12" />
+              </button>
+            </span>
             }
             @if (selectedAlergias().length === 0) {
-              <span class="text-[0.875rem] text-nido-muted italic">Ninguna seleccionada</span>
+            <span class="text-[0.875rem] text-nido-muted italic">Ninguna seleccionada</span>
             }
           </div>
 
@@ -176,22 +171,21 @@
           <!-- Goal cards -->
           <div class="flex flex-col gap-3">
             @for (meta of metas(); track meta.id) {
-              <button [class]="goalCardClass(isMetaSelected(meta.id))"
-                      (click)="toggleMeta(meta.id)">
-                <div class="flex items-center gap-3">
-                  <div [class]="goalIconBgClass(isMetaSelected(meta.id))">
-                    <lucide-icon [name]="getMetaIcon(meta.nombre)" [size]="20"
-                                 [class]="goalIconColorClass(isMetaSelected(meta.id))" />
-                  </div>
-                  <span class="text-[1rem] font-semibold leading-tight">{{ meta.nombre }}</span>
+            <button [class]="goalCardClass(isMetaSelected(meta.id))" (click)="toggleMeta(meta.id)">
+              <div class="flex items-center gap-3">
+                <div [class]="goalIconBgClass(isMetaSelected(meta.id))">
+                  <lucide-icon [name]="getMetaIcon(meta.nombre)" [size]="20"
+                    [class]="goalIconColorClass(isMetaSelected(meta.id))" />
                 </div>
-                @if (isMetaSelected(meta.id)) {
-                  <lucide-icon name="check-circle" [size]="20" class="text-nido-cream/80 shrink-0" />
-                }
-              </button>
+                <span class="text-[1rem] font-semibold leading-tight">{{ meta.nombre }}</span>
+              </div>
+              @if (isMetaSelected(meta.id)) {
+              <lucide-icon name="check-circle" [size]="20" class="text-nido-cream/80 shrink-0" />
+              }
+            </button>
             }
             @if (metas().length === 0) {
-              <span class="text-nido-muted text-[0.875rem] italic">Cargando...</span>
+            <span class="text-nido-muted text-[0.875rem] italic">Cargando...</span>
             }
           </div>
 
@@ -201,26 +195,24 @@
 
       <!-- Error -->
       @if (saveState() === 'error') {
-        <p class="text-nido-red text-[0.9375rem] text-center m-0">
-          Ocurrió un error al guardar. Intentá de nuevo.
-        </p>
+      <p class="text-nido-red text-[0.9375rem] text-center m-0">
+        Ocurrió un error al guardar. Intentá de nuevo.
+      </p>
       }
 
       <!-- Acciones -->
       <div class="flex flex-col items-center gap-3 w-full pt-2">
         <button
           class="flex items-center gap-2 bg-nido-green-dark text-nido-cream px-10 py-3.5 rounded-full text-[0.9375rem] font-semibold border-none cursor-pointer transition-[background] duration-150 hover:bg-nido-green disabled:opacity-50 disabled:cursor-not-allowed"
-          [disabled]="saveState() === 'saving'"
-          (click)="next()">
+          [disabled]="saveState() === 'saving'" (click)="next()">
           {{ saveState() === 'saving' ? 'Guardando...' : 'Comenzar a usar Nido' }}
           @if (saveState() !== 'saving') {
-            <lucide-icon name="arrow-right" [size]="18" />
+          <lucide-icon name="arrow-right" [size]="18" />
           }
         </button>
         <button
           class="text-nido-brown text-[0.875rem] bg-transparent border-none cursor-pointer transition-colors duration-150 hover:text-nido-green-dark hover:underline disabled:opacity-50"
-          [disabled]="saveState() === 'saving'"
-          (click)="skip()">
+          [disabled]="saveState() === 'saving'" (click)="skip()">
           Saltar por ahora
         </button>
       </div>
