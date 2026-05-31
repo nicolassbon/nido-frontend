@@ -8,6 +8,7 @@ import { CreateHousehold } from './features/household/create-household/create-ho
 import { AcceptInvitation } from './features/household/accept-invitation/accept-invitation';
 import { WellnessStep } from './features/onboarding/wellness-step/wellness-step';
 import { Electrodomesticos } from './features/electrodomesticos/electrodomesticos';
+import { AgregarProducto } from './features/agregar-producto/agregar-producto';
 import { Register } from './features/auth/register/register';
 import { Login } from './features/auth/login/login';
 import { EquipmentStep } from './features/onboarding/equipment-step/equipment-step';
@@ -29,8 +30,7 @@ export const routes: Routes = [
       { path: 'recetas', component: Recipes },
       { path: 'alacena', component: Alacena },
       { path: 'electrodomesticos', component: Electrodomesticos },
-
-
+      { path: 'agregar-producto', component: AgregarProducto },
     ],
   },
   { path: '**', redirectTo: '' },

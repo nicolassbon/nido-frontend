@@ -21,6 +21,7 @@ import { OpenFoodFactsService } from '../open-food-facts.service';
 import { AlacenaApiService, StockItemResponse } from '../alacena-api.service';
 import { PreferenciasApiService } from '../preferencias-api.service';
 import { getTtlForCategory, TtlInfo } from '../ttl.config';
+import { RouterLink } from '@angular/router';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -126,7 +127,7 @@ const LOCATION_COLORS: Record<string, string> = {
 
 @Component({
   selector: 'app-alacena',
-  imports: [LucideAngularModule, FormsModule],
+  imports: [LucideAngularModule, FormsModule, RouterLink],
   templateUrl: './alacena.html',
   styleUrl: './alacena.scss',
 })
