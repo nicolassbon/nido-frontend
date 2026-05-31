@@ -173,13 +173,13 @@ describe('CreateHousehold', () => {
     expect(comp.openMenuId()).toBeNull();
   });
 
-  it('next() y skip() navegan a /finalizar-hogar', () => {
+  it('next() navega a /equipamiento y skip() navega a /finalizar-hogar', () => {
     const fixture = TestBed.createComponent(CreateHousehold);
     const router = TestBed.inject(Router);
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
     fixture.componentInstance.next();
-    expect(navigateSpy).toHaveBeenCalledWith(['/finalizar-hogar']);
+    expect(navigateSpy).toHaveBeenCalledWith(['/equipamiento']);
 
     fixture.componentInstance.skip();
     expect(navigateSpy).toHaveBeenCalledWith(['/finalizar-hogar']);
