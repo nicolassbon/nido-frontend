@@ -96,6 +96,12 @@ export class Register {
     input.value = '';
   }
 
+  onRemovePhoto(event: Event): void {
+    event.stopPropagation();
+    this.clearSelectedPhoto();
+    this.photoError.set(null);
+  }
+
   private clearSelectedPhoto(): void {
     if (this.photoObjectUrl) {
       URL.revokeObjectURL(this.photoObjectUrl);

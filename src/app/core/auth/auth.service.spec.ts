@@ -43,7 +43,7 @@ describe('AuthService', () => {
   });
 
   describe('register', () => {
-    it('should send a JSON POST request when no photo is provided and store the access token on success', () => {
+    it('should send a FormData POST request when no photo is provided and store the access token on success', () => {
       const mockRequest: RegisterRequest = {
         nombre: 'Test User',
         email: 'test@example.com',
@@ -65,12 +65,14 @@ describe('AuthService', () => {
 
       const req = httpMock.expectOne(`${environment.apiBaseUrl}/auth/register`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual({
-        nombre: 'Test User',
-        email: 'test@example.com',
-        password: 'Password123!',
-        sexo: 'Masculino',
-      });
+      expect(req.request.body).toBeInstanceOf(FormData);
+
+      const body = req.request.body as FormData;
+      expect(body.get('nombre')).toBe('Test User');
+      expect(body.get('email')).toBe('test@example.com');
+      expect(body.get('password')).toBe('Password123!');
+      expect(body.get('sexo')).toBe('Masculino');
+      expect(body.get('foto')).toBeNull();
       expect(req.request.withCredentials).toBe(true);
 
       req.flush(mockResponse);

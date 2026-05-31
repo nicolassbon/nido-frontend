@@ -109,26 +109,18 @@ export class AuthService {
   }
 
   register(req: RegisterRequest): Observable<RegisterResponse> {
-    if (req.foto) {
-      const formData = new FormData();
-      formData.append('nombre', req.nombre);
-      formData.append('email', req.email);
-      formData.append('password', req.password);
-      formData.append('sexo', req.sexo);
-      formData.append('foto', req.foto);
+    const formData = new FormData();
+    formData.append('nombre', req.nombre);
+    formData.append('email', req.email);
+    formData.append('password', req.password);
+    formData.append('sexo', req.sexo);
 
-      return this.http
-        .post<RegisterResponse>(`${this.base}/auth/register`, formData, { withCredentials: true })
-        .pipe(tap(res => this.setToken(res.accessToken)));
+    if (req.foto) {
+      formData.append('foto', req.foto);
     }
 
     return this.http
-      .post<RegisterResponse>(`${this.base}/auth/register`, {
-        nombre: req.nombre,
-        email: req.email,
-        password: req.password,
-        sexo: req.sexo,
-      }, { withCredentials: true })
+      .post<RegisterResponse>(`${this.base}/auth/register`, formData, { withCredentials: true })
       .pipe(tap(res => this.setToken(res.accessToken)));
   }
 
