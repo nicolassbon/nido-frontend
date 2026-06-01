@@ -12,19 +12,13 @@ class MockAuthService {
   register = vi.fn();
 }
 
-class MockRouter {
-  navigate = vi.fn();
-}
-
 describe('Register Component', () => {
   let component: Register;
   let fixture: ComponentFixture<Register>;
   let mockAuthService: MockAuthService;
-  let mockRouter: MockRouter;
 
   beforeEach(async () => {
     mockAuthService = new MockAuthService();
-    mockRouter = new MockRouter();
 
     await TestBed.configureTestingModule({
       imports: [Register],
@@ -33,7 +27,6 @@ describe('Register Component', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: mockAuthService },
-        { provide: Router, useValue: mockRouter },
       ],
     }).compileComponents();
 
@@ -115,6 +108,9 @@ describe('Register Component', () => {
   });
 
   it('should update submitted state and trigger register service on submit success', () => {
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
     const mockResponse = {
       usuarioId: 'u-1',
       hogarId: 'h-1',
@@ -140,7 +136,7 @@ describe('Register Component', () => {
       sexo: 'Masculino',
       foto: null,
     });
-    expect(mockRouter.navigate).toHaveBeenCalledWith(['/crear-hogar']);
+    expect(navigateSpy).toHaveBeenCalledWith(['/crear-hogar']);
   });
 
   it('should submit the selected profile photo when present', () => {
