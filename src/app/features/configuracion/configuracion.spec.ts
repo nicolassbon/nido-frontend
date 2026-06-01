@@ -7,6 +7,8 @@ import { vi } from 'vitest';
 import { Configuracion } from './configuracion';
 import { AuthService } from '../../core/auth/auth.service';
 import { PerfilApiService } from '../perfil/perfil-api.service';
+import { PreferenciasApiService } from '../alacena/preferencias-api.service';
+import { HogaresApiService } from '../household/hogares-api.service';
 import { appConfig } from '../../app.config';
 
 describe('Configuracion', () => {
@@ -14,11 +16,17 @@ describe('Configuracion', () => {
   let fixture: ComponentFixture<Configuracion>;
   let mockAuthService: any;
   let mockPerfilApiService: any;
+  let mockPreferenciasApiService: any;
+  let mockHogaresApiService: any;
 
   beforeEach(async () => {
     mockAuthService = {
       changePassword: vi.fn(),
       addPassword: vi.fn(),
+      getNombre: vi.fn().mockReturnValue('Test User'),
+      getEmail: vi.fn().mockReturnValue('test@example.com'),
+      getUserId: vi.fn().mockReturnValue('u-1'),
+      logout: vi.fn().mockReturnValue(of(undefined)),
     };
 
     mockPerfilApiService = {
@@ -30,12 +38,26 @@ describe('Configuracion', () => {
       })),
     };
 
+    mockPreferenciasApiService = {
+      getPreferences: vi.fn().mockReturnValue(of({ diasAlerta: 7 })),
+      updatePreferences: vi.fn().mockReturnValue(of({ diasAlerta: 7 })),
+    };
+
+    mockHogaresApiService = {
+      getMiembros: vi.fn().mockReturnValue(of([
+        { usuarioId: 'u-1', nombre: 'Test User', email: 'test@example.com', rol: 'owner', fotoUrl: null }
+      ])),
+      invitar: vi.fn().mockReturnValue(of({ token: 'mock-token' })),
+    };
+
     await TestBed.configureTestingModule({
       imports: [Configuracion, ReactiveFormsModule, LucideAngularModule],
       providers: [
         ...appConfig.providers,
         { provide: AuthService, useValue: mockAuthService },
         { provide: PerfilApiService, useValue: mockPerfilApiService },
+        { provide: PreferenciasApiService, useValue: mockPreferenciasApiService },
+        { provide: HogaresApiService, useValue: mockHogaresApiService },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
       ],
     }).compileComponents();

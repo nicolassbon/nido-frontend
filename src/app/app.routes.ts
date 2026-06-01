@@ -47,7 +47,6 @@ export const routes: Routes = [
       { path: 'perfil/editar', component: EditarPerfil },
       { path: 'configuracion', component: Configuracion },
       { path: 'agregar-producto', component: AgregarProducto },
-      { path: 'configuracion', component: Configuracion },
     ],
   },
   { path: '**', redirectTo: '' },
