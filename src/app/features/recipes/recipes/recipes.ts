@@ -118,10 +118,31 @@ export class Recipes implements OnInit {
   }
 
   private readonly recipesWithAvailability = computed<RecipeWithAvailability[]>(() => {
+    const pantry = this.pantryIngredients();
     const allergens = this.activeAllergens();
 
+    // Nombres de los ingredientes seleccionados en el panel
+    const selectedNames = pantry
+      .filter(item => item.selected)
+      .map(item => item.name.toLowerCase());
+
+    const hasPantryItems = pantry.length > 0;
+    const hasSelected = selectedNames.length > 0;
+
     return this.allRecipes().map(recipe => {
-      const matched = recipe.ingredients.filter(ingredient => ingredient.inStock).length;
+      const matched = recipe.ingredients.filter(ingredient => {
+        if (hasPantryItems) {
+          // Si la pantry tiene items: usar name matching con los seleccionados
+          // (cubre productos agregados manualmente sin el mismo ProductoId del catálogo)
+          if (!hasSelected) return false; // todo deseleccionado → 0%
+          const ingName = ingredient.name.toLowerCase();
+          return selectedNames.some(pName =>
+            pName.includes(ingName) || ingName.includes(pName)
+          );
+        }
+        // Pantry vacía (sin stock cargado) → usar el flag enStock del backend
+        return ingredient.inStock;
+      }).length;
 
       const availabilityPercent = recipe.ingredients.length === 0
         ? 0

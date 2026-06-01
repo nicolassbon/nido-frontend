@@ -24,13 +24,13 @@ const makeReceta = (
 });
 
 const mockRecetaArroz = makeReceta('r1', 'Arroz con leche', [
-  { id: 'i1', productoId: 'p1', nombre: 'Arroz', productoNombre: 'Arroz', cantidad: 200, unidad: 'g' },
-  { id: 'i2', productoId: 'p2', nombre: 'Leche', productoNombre: 'Leche', cantidad: 500, unidad: 'ml' },
+  { id: 'i1', productoId: 'p1', nombre: 'Arroz', productoNombre: 'Arroz', cantidad: 200, unidad: 'g', enStock: true },
+  { id: 'i2', productoId: 'p2', nombre: 'Leche', productoNombre: 'Leche', cantidad: 500, unidad: 'ml', enStock: false },
 ]);
 
 const mockRecetaPasta = makeReceta('r2', 'Pasta con salsa', [
-  { id: 'i3', productoId: 'p3', nombre: 'Fideos', productoNombre: 'Fideos', cantidad: 200, unidad: 'g' },
-  { id: 'i4', productoId: 'p4', nombre: 'Tomate', productoNombre: 'Tomate', cantidad: 300, unidad: 'g' },
+  { id: 'i3', productoId: 'p3', nombre: 'Fideos', productoNombre: 'Fideos', cantidad: 200, unidad: 'g', enStock: false },
+  { id: 'i4', productoId: 'p4', nombre: 'Tomate', productoNombre: 'Tomate', cantidad: 300, unidad: 'g', enStock: false },
 ]);
 
 const makePantry = (
@@ -105,7 +105,7 @@ describe('Recipes', () => {
 
   // ─── Carga de la alacena ───────────────────────────────────────────────────
 
-  it('debería llamar a getProductManual al cargar', async () => {
+  it('debería llamar a getProductManual al cargar cuando hay hogarId', async () => {
     await setup();
     expect(productSvcMock.getProductManual).toHaveBeenCalled();
   });
@@ -130,21 +130,28 @@ describe('Recipes', () => {
     expect(component['pantryIngredients']()).toHaveLength(0);
   });
 
-  // ─── Cálculo de disponibilidad (matching por nombre) ──────────────────────
+  // ─── Cálculo de disponibilidad (pantry seleccionada + fallback a inStock) ────
 
-  it('debería calcular 50% cuando solo un ingrediente de dos matchea', async () => {
-    await setup([mockRecetaArroz], [arrozPantry]); // alacena tiene Arroz pero no Leche
+  it('debería calcular 50% cuando la pantry tiene Arroz seleccionado (1 de 2 ingredientes)', async () => {
+    // Arroz en pantry → matchea por nombre con ingrediente Arroz → 1/2 = 50%
+    await setup([mockRecetaArroz], [arrozPantry]);
     expect(component['filteredRecipes']()[0].availabilityPercent).toBe(50);
   });
 
-  it('debería calcular 100% cuando todos los ingredientes matchean', async () => {
-    await setup([mockRecetaArroz], [arrozPantry, lechePantry]);
-    expect(component['filteredRecipes']()[0].availabilityPercent).toBe(100);
+  it('debería calcular 0% cuando la pantry tiene Fideos pero la receta pide Arroz y Leche', async () => {
+    await setup([mockRecetaArroz], [fideoPantry]);
+    expect(component['filteredRecipes']()[0].availabilityPercent).toBe(0);
   });
 
-  it('debería calcular 0% cuando ningún ingrediente matchea', async () => {
+  it('debería calcular 0% cuando ningún ingrediente matchea por nombre', async () => {
     await setup([mockRecetaPasta], [arrozPantry]); // Arroz no está en Pasta con salsa
     expect(component['filteredRecipes']()[0].availabilityPercent).toBe(0);
+  });
+
+  it('debería usar inStock del backend cuando la alacena está vacía', async () => {
+    // Sin pantry: usa inStock. mockRecetaArroz tiene Arroz inStock:true → 1/2 = 50%
+    await setup([mockRecetaArroz], []);
+    expect(component['filteredRecipes']()[0].availabilityPercent).toBe(50);
   });
 
   it('debería matchear ingredientes con nombres parciales (fuzzy)', async () => {
@@ -154,10 +161,11 @@ describe('Recipes', () => {
     expect(component['filteredRecipes']()[0].availabilityPercent).toBeGreaterThan(0);
   });
 
-  it('debería excluir ingredientes deseleccionados del cálculo', async () => {
+  it('debería calcular 0% cuando todos los ingredientes de la pantry están deseleccionados', async () => {
     await setup([mockRecetaArroz], [arrozPantry]);
+    expect(component['filteredRecipes']()[0].availabilityPercent).toBe(50);
 
-    component['toggleIngredient'](0); // deselecciona Arroz
+    component['toggleIngredient'](0); // deselecciona Arroz → pantry tiene items pero nada seleccionado → 0%
 
     expect(component['filteredRecipes']()[0].availabilityPercent).toBe(0);
   });
@@ -201,7 +209,7 @@ describe('Recipes', () => {
   });
 
   it('debería ocultar recetas sin coincidencias cuando el filtro está activo', async () => {
-    // Alacena: solo Arroz → Arroz con leche 50%, Pasta con salsa 0%
+    // Arroz con leche: Arroz inStock+seleccionado → 50%. Pasta: 0%
     await setup([mockRecetaArroz, mockRecetaPasta], [arrozPantry]);
     expect(component['filteredRecipes']()).toHaveLength(2);
 
@@ -213,11 +221,16 @@ describe('Recipes', () => {
   });
 
   it('debería ordenar por mayor coincidencia cuando el filtro está activo', async () => {
-    // Alacena: Arroz + Leche + Fideos → Arroz con leche 100%, Pasta con salsa 50%
-    await setup(
-      [mockRecetaArroz, mockRecetaPasta],
-      [arrozPantry, lechePantry, fideoPantry],
-    );
+    // Arroz con leche: Arroz inStock+seleccionado (50%). Pasta: Fideos inStock+seleccionado (50% si agregamos)
+    const receta100 = makeReceta('r1', 'Arroz con leche', [
+      { id: 'i1', productoId: 'p1', nombre: 'Arroz', productoNombre: 'Arroz', cantidad: 200, unidad: 'g', enStock: true },
+      { id: 'i2', productoId: 'p2', nombre: 'Leche', productoNombre: 'Leche', cantidad: 500, unidad: 'ml', enStock: true },
+    ]);
+    const receta50 = makeReceta('r2', 'Pasta con salsa', [
+      { id: 'i3', productoId: 'p3', nombre: 'Fideos', productoNombre: 'Fideos', cantidad: 200, unidad: 'g', enStock: true },
+      { id: 'i4', productoId: 'p4', nombre: 'Tomate', productoNombre: 'Tomate', cantidad: 300, unidad: 'g', enStock: false },
+    ]);
+    await setup([receta100, receta50], [arrozPantry, lechePantry, fideoPantry]);
     component['buscarPorIngredientes']();
 
     const filtered = component['filteredRecipes']();
