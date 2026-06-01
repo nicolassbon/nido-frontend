@@ -1,6 +1,8 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, signal, inject, DestroyRef, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
+import { AlacenaApiService } from '../../alacena/alacena-api.service';
 
 type Difficulty = 'Fácil' | 'Medio' | 'Difícil';
 type FilterOption = 'Todos' | Difficulty;
@@ -47,7 +49,10 @@ interface HouseholdMember {
   templateUrl: './recipes.html',
   styleUrl: './recipes.scss',
 })
-export class Recipes {
+export class Recipes implements OnInit {
+  private readonly alacenaApi = inject(AlacenaApiService);
+  private readonly destroyRef  = inject(DestroyRef);
+
   // ── Estado ──────────────────────────────────────────────
   protected readonly searchQuery = signal('');
   protected readonly activeFilter = signal<FilterOption>('Todos');
@@ -78,16 +83,7 @@ export class Recipes {
   });
 
   // ── Alacena del usuario ──────────────────────────────────
-  protected readonly pantryIngredients = signal<PantryIngredient[]>([
-    { name: 'Garbanzos', amount: '200 gramos', selected: true },
-    { name: 'Leche', amount: '1 litro', selected: true },
-    { name: 'Atún', amount: '50 gramos', selected: true },
-    { name: 'Carne', amount: '1 kilo', selected: true },
-    { name: 'Lechuga', amount: '100 gramos', selected: true },
-    { name: 'Choclo', amount: '50 gramos', selected: true },
-    { name: 'Aceite de oliva', amount: '500 ml', selected: true },
-    { name: 'Ajo', amount: '1 cabeza', selected: true },
-  ]);
+  protected readonly pantryIngredients = signal<PantryIngredient[]>([]);
 
   // ── Recetas mock con ingredientes ────────────────────────
   private readonly allRecipes: Recipe[] = [
@@ -207,6 +203,21 @@ export class Recipes {
 
     return result;
   });
+
+  // ── Lifecycle ────────────────────────────────────────────
+  ngOnInit(): void {
+    this.loadPantry();
+  }
+
+  private loadPantry(): void {
+    this.alacenaApi.getStock()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(stock => {
+        this.pantryIngredients.set(
+          stock.map(item => ({ name: item.nombre, amount: String(item.cantidad), selected: true }))
+        );
+      });
+  }
 
   // ── Acciones ─────────────────────────────────────────────
   protected setFilter(filter: FilterOption): void { this.activeFilter.set(filter); }

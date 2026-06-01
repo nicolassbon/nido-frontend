@@ -12,6 +12,7 @@ import { AgregarProducto } from './features/agregar-producto/agregar-producto';
 import { Register } from './features/auth/register/register';
 import { Login } from './features/auth/login/login';
 import { EquipmentStep } from './features/onboarding/equipment-step/equipment-step';
+import { Configuracion } from './features/configuracion/configuracion/configuracion';
 
 export const routes: Routes = [
   { path: 'login',           component: Login },
@@ -31,6 +32,7 @@ export const routes: Routes = [
       { path: 'alacena', component: Alacena },
       { path: 'electrodomesticos', component: Electrodomesticos },
       { path: 'agregar-producto', component: AgregarProducto },
+      { path: 'configuracion', component: Configuracion },
     ],
   },
   { path: '**', redirectTo: '' },
