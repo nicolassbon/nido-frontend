@@ -52,10 +52,9 @@
 
     <!-- Buscador -->
     <div class="relative flex items-center min-w-[240px] max-sm:min-w-0">
-      <lucide-icon
-        name="search"
-        [size]="18"
-        class="absolute left-3.5 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-nido-brown pointer-events-none" />
+      <span class="absolute inset-y-0 left-3.5 flex w-6 items-center justify-center text-nido-brown pointer-events-none">
+        <lucide-icon name="search" [size]="18" />
+      </span>
 
       <input
         class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-border rounded-[10px] bg-white text-[0.875rem] text-nido-green-dark outline-none focus:border-nido-green placeholder:text-nido-muted"
