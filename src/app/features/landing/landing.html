@@ -3,13 +3,17 @@
   <!-- ── NAV flotante ──────────────────────────────────────────── -->
   <header
     [class.is-scrolled]="scrolled()"
-    class="nav-floating fixed top-3 left-4 right-4 z-50 bg-nido-green-dark rounded-3xl">
-    <div class="px-6 h-[3.75rem] flex items-center justify-between">
+    [class.menu-open]="menuOpen()"
+    class="nav-floating fixed top-3 left-4 right-4 z-50 bg-nido-green-dark rounded-3xl overflow-hidden">
+
+    <!-- Barra principal -->
+    <div class="px-5 h-[3.75rem] flex items-center justify-between gap-3">
 
       <a routerLink="/" class="no-underline shrink-0">
         <img src="logo.png" alt="Nido" class="h-8 w-auto object-contain" />
       </a>
 
+      <!-- Links desktop -->
       <nav class="hidden md:flex items-center gap-8">
         <a href="#inicio"     class="nav-link" [class.active-link]="activeSection() === 'inicio'"     (click)="scrollTo('inicio',     $event)">Inicio</a>
         <a href="#beneficios" class="nav-link" [class.active-link]="activeSection() === 'beneficios'" (click)="scrollTo('beneficios', $event)">Beneficios</a>
@@ -18,11 +22,40 @@
         <a href="#faq"        class="nav-link" [class.active-link]="activeSection() === 'faq'"        (click)="scrollTo('faq',        $event)">FAQ</a>
       </nav>
 
-      <a routerLink="/login"
-         class="hidden sm:inline-flex items-center gap-1.5 bg-nido-gold text-white px-5 py-2 rounded-full text-sm font-medium no-underline hover:opacity-90 transition-opacity">
-        Iniciar sesión
-      </a>
+      <!-- Login desktop + hamburger mobile -->
+      <div class="flex items-center gap-2">
+        <a routerLink="/login"
+           class="hidden md:inline-flex items-center gap-1.5 bg-nido-gold text-white px-5 py-2 rounded-full text-sm font-medium no-underline hover:opacity-90 transition-opacity">
+          Iniciar sesión
+        </a>
+        <button
+          (click)="toggleMenu()"
+          class="md:hidden flex items-center justify-center w-9 h-9 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-all duration-200"
+          [attr.aria-label]="menuOpen() ? 'Cerrar menú' : 'Abrir menú'">
+          <lucide-icon [name]="menuOpen() ? 'x' : 'list'" [size]="20" />
+        </button>
+      </div>
     </div>
+
+    <!-- Panel mobile -->
+    @if (menuOpen()) {
+      <div class="md:hidden mobile-menu border-t border-white/[0.08] px-3 pb-3">
+        <nav class="flex flex-col gap-0.5 pt-2">
+          <a href="#inicio"     class="mobile-nav-link" [class.mobile-nav-link--active]="activeSection() === 'inicio'"     (click)="scrollTo('inicio',     $event)">Inicio</a>
+          <a href="#beneficios" class="mobile-nav-link" [class.mobile-nav-link--active]="activeSection() === 'beneficios'" (click)="scrollTo('beneficios', $event)">Beneficios</a>
+          <a href="#funciones"  class="mobile-nav-link" [class.mobile-nav-link--active]="activeSection() === 'funciones'"  (click)="scrollTo('funciones',  $event)">Módulos</a>
+          <a href="#precios"    class="mobile-nav-link" [class.mobile-nav-link--active]="activeSection() === 'precios'"    (click)="scrollTo('precios',    $event)">Precios</a>
+          <a href="#faq"        class="mobile-nav-link" [class.mobile-nav-link--active]="activeSection() === 'faq'"        (click)="scrollTo('faq',        $event)">FAQ</a>
+        </nav>
+        <div class="mt-2 pt-2 border-t border-white/[0.08]">
+          <a routerLink="/login" (click)="menuOpen.set(false)"
+             class="flex items-center justify-center gap-2 bg-nido-gold text-white px-5 py-2.5 rounded-xl text-sm font-medium no-underline hover:opacity-90 transition-opacity">
+            Iniciar sesión
+          </a>
+        </div>
+      </div>
+    }
+
   </header>
 
   <!-- ── HERO ──────────────────────────────────────────────────── -->
