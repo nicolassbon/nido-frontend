@@ -1,8 +1,10 @@
-import { Component, computed, signal, inject, DestroyRef, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { AlacenaApiService } from '../../alacena/alacena-api.service';
+import { ElectrodomesticosService } from '../../electrodomesticos/services/electrodomesticos.service';
+import { ApiReceta, RecipesApiService } from './services/recipes-api.service';
 
 type Difficulty = 'Fácil' | 'Medio' | 'Difícil';
 type FilterOption = 'Todos' | Difficulty;
@@ -10,7 +12,7 @@ type SortOption = 'default' | 'rating' | 'coincidencia';
 
 interface RecipeIngredient {
   name: string;
-  allergenType?: string; // 'Gluten' | 'Mariscos' | 'Maní' | etc.
+  allergenType?: string;
 }
 
 interface Recipe {
@@ -22,11 +24,13 @@ interface Recipe {
   timeMinutes: number;
   calories: number;
   ingredients: RecipeIngredient[];
+  requiredAppliances: string[];
 }
 
 interface RecipeWithAvailability extends Recipe {
   availabilityPercent: number;
   hasAllergen: boolean;
+  hasMissingAppliance: boolean;
 }
 
 interface PantryIngredient {
@@ -43,6 +47,12 @@ interface HouseholdMember {
   allergens: string[];
 }
 
+const APPLIANCE_KEYWORDS = [
+  'freidora', 'microondas', 'horno', 'batidora',
+  'licuadora', 'tostadora', 'cafetera', 'waflera',
+  'sandwichera', 'procesadora', 'vaporera', 'airfryer',
+];
+
 @Component({
   selector: 'app-recipes',
   imports: [LucideAngularModule, FormsModule],
@@ -50,20 +60,20 @@ interface HouseholdMember {
   styleUrl: './recipes.scss',
 })
 export class Recipes implements OnInit {
-  private readonly alacenaApi = inject(AlacenaApiService);
-  private readonly destroyRef  = inject(DestroyRef);
+  private readonly recipesApi        = inject(RecipesApiService);
+  private readonly alacenaApi        = inject(AlacenaApiService);
+  private readonly electrodomesticos = inject(ElectrodomesticosService);
+  private readonly destroyRef        = inject(DestroyRef);
 
-  // ── Estado ──────────────────────────────────────────────
-  protected readonly searchQuery = signal('');
-  protected readonly activeFilter = signal<FilterOption>('Todos');
-  protected readonly sortBy = signal<SortOption>('default');
-  protected readonly showSortDropdown = signal(false);
-  protected readonly excludeAllergens = signal(false);
+  protected readonly searchQuery        = signal('');
+  protected readonly activeFilter       = signal<FilterOption>('Todos');
+  protected readonly sortBy             = signal<SortOption>('default');
+  protected readonly showSortDropdown   = signal(false);
+  protected readonly excludeAllergens   = signal(false);
+  protected readonly excludeMissingAppliances = signal(false);
 
-  // ── Filtros ──────────────────────────────────────────────
   protected readonly filterOptions: FilterOption[] = ['Todos', 'Fácil', 'Medio', 'Difícil'];
 
-  // ── Integrantes del hogar ────────────────────────────────
   protected readonly householdMembers: HouseholdMember[] = [
     { id: 'm1', name: 'Luisa', initials: 'LU', color: '#3E5E4A', allergens: [] },
     { id: 'm2', name: 'Marco', initials: 'MA', color: '#C78F5A', allergens: ['Gluten'] },
@@ -71,142 +81,37 @@ export class Recipes implements OnInit {
     { id: 'm4', name: 'Juan', initials: 'JU', color: '#263F30', allergens: [] },
   ];
 
-  // ── Quién come hoy (todos por defecto) ───────────────────
   protected readonly eatingToday = signal<Set<string>>(
-    new Set(this.householdMembers.map(m => m.id))
+    new Set(this.householdMembers.map(member => member.id))
   );
 
-  // ── Alérgenos activos según quién come hoy ───────────────
   private readonly activeAllergens = computed(() => {
-    const eating = this.householdMembers.filter(m => this.eatingToday().has(m.id));
-    return [...new Set(eating.flatMap(m => m.allergens))];
+    const eating = this.householdMembers.filter(member => this.eatingToday().has(member.id));
+    return [...new Set(eating.flatMap(member => member.allergens))];
   });
 
-  // ── Alacena del usuario ──────────────────────────────────
-  protected readonly pantryIngredients = signal<PantryIngredient[]>([]);
+  protected readonly pantryIngredients  = signal<PantryIngredient[]>([]);
+  private readonly allRecipes           = signal<Recipe[]>([]);
+  private readonly userApplianceNames   = signal<string[]>([]);
 
-  // ── Recetas mock con ingredientes ────────────────────────
-  private readonly allRecipes: Recipe[] = [
-    {
-      id: '1', name: 'Muslos de pollo en freidora de aire',
-      image: 'https://images.unsplash.com/photo-1598103442097-8b74394b95c1?w=400&h=250&fit=crop',
-      rating: 4.9, difficulty: 'Medio', timeMinutes: 30, calories: 420,
-      ingredients: [
-        { name: 'Pollo' }, { name: 'Aceite de oliva' },
-        { name: 'Ajo' }, { name: 'Especias' },
-      ],
-    },
-    {
-      id: '2', name: 'Pan de ajo',
-      image: 'https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?w=400&h=250&fit=crop',
-      rating: 4.5, difficulty: 'Fácil', timeMinutes: 25, calories: 200,
-      ingredients: [
-        { name: 'Pan', allergenType: 'Gluten' }, { name: 'Ajo' },
-        { name: 'Aceite de oliva' }, { name: 'Perejil' },
-      ],
-    },
-    {
-      id: '3', name: 'Entraña de ternera',
-      image: 'https://images.unsplash.com/photo-1558030006-450675393462?w=400&h=250&fit=crop',
-      rating: 5.0, difficulty: 'Difícil', timeMinutes: 30, calories: 320,
-      ingredients: [
-        { name: 'Carne' }, { name: 'Sal' }, { name: 'Aceite de oliva' },
-      ],
-    },
-    {
-      id: '4', name: 'Tiramisú italiano',
-      image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400&h=250&fit=crop',
-      rating: 4.0, difficulty: 'Fácil', timeMinutes: 30, calories: 350,
-      ingredients: [
-        { name: 'Harina', allergenType: 'Gluten' }, { name: 'Leche' },
-        { name: 'Huevos' }, { name: 'Café' },
-      ],
-    },
-    {
-      id: '5', name: 'Pasta con pollo a la crema',
-      image: 'https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?w=400&h=250&fit=crop',
-      rating: 4.7, difficulty: 'Medio', timeMinutes: 40, calories: 510,
-      ingredients: [
-        { name: 'Pasta', allergenType: 'Gluten' }, { name: 'Pollo' },
-        { name: 'Leche' }, { name: 'Ajo' },
-      ],
-    },
-    {
-      id: '6', name: 'Ensalada mediterránea',
-      image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=250&fit=crop',
-      rating: 4.3, difficulty: 'Fácil', timeMinutes: 15, calories: 180,
-      ingredients: [
-        { name: 'Lechuga' }, { name: 'Garbanzos' },
-        { name: 'Aceite de oliva' }, { name: 'Atún' },
-      ],
-    },
-    {
-      id: '7', name: 'Risotto de hongos',
-      image: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=400&h=250&fit=crop',
-      rating: 4.8, difficulty: 'Difícil', timeMinutes: 50, calories: 430,
-      ingredients: [
-        { name: 'Arroz' }, { name: 'Hongos' },
-        { name: 'Leche' }, { name: 'Ajo' },
-      ],
-    },
-    {
-      id: '8', name: 'Cazuela de mariscos',
-      image: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=400&h=250&fit=crop',
-      rating: 4.6, difficulty: 'Medio', timeMinutes: 35, calories: 390,
-      ingredients: [
-        { name: 'Mariscos', allergenType: 'Mariscos' }, { name: 'Carne' },
-        { name: 'Choclo' }, { name: 'Aceite de oliva' },
-      ],
-    },
-  ];
-
-  // ── Computed: recetas con disponibilidad y alérgenos ─────
-  private readonly recipesWithAvailability = computed<RecipeWithAvailability[]>(() => {
-    const pantryNames = this.pantryIngredients().map(i => i.name.toLowerCase());
-    const allergens = this.activeAllergens();
-
-    return this.allRecipes.map(recipe => {
-      const matched = recipe.ingredients.filter(i =>
-        pantryNames.some(p => p.includes(i.name.toLowerCase()) || i.name.toLowerCase().includes(p))
-      ).length;
-
-      const availabilityPercent = Math.round((matched / recipe.ingredients.length) * 100);
-
-      const hasAllergen = recipe.ingredients.some(i =>
-        i.allergenType && allergens.some(a =>
-          a.toLowerCase() === i.allergenType!.toLowerCase()
-        )
-      );
-
-      return { ...recipe, availabilityPercent, hasAllergen };
-    });
-  });
-
-  // ── Computed: recetas filtradas y ordenadas ───────────────
-  protected readonly filteredRecipes = computed(() => {
-    let result = [...this.recipesWithAvailability()];
-
-    if (this.activeFilter() !== 'Todos') {
-      result = result.filter(r => r.difficulty === this.activeFilter());
-    }
-
-    const q = this.searchQuery().trim().toLowerCase();
-    if (q) result = result.filter(r => r.name.toLowerCase().includes(q));
-
-    if (this.excludeAllergens()) result = result.filter(r => !r.hasAllergen);
-
-    if (this.sortBy() === 'rating') {
-      result.sort((a, b) => b.rating - a.rating);
-    } else if (this.sortBy() === 'coincidencia') {
-      result.sort((a, b) => b.availabilityPercent - a.availabilityPercent);
-    }
-
-    return result;
-  });
-
-  // ── Lifecycle ────────────────────────────────────────────
   ngOnInit(): void {
+    this.loadRecipes();
     this.loadPantry();
+    this.loadAppliances();
+  }
+
+  private loadRecipes(): void {
+    this.recipesApi.getAll()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: recetas => this.allRecipes.set(
+          recetas.map(r => ({
+            ...this.toRecipe(r),
+            requiredAppliances: this.extractRequiredAppliances(r.nombre),
+          }))
+        ),
+        error: () => {},
+      });
   }
 
   private loadPantry(): void {
@@ -219,15 +124,102 @@ export class Recipes implements OnInit {
       });
   }
 
-  // ── Acciones ─────────────────────────────────────────────
-  protected setFilter(filter: FilterOption): void { this.activeFilter.set(filter); }
+  private loadAppliances(): void {
+    this.electrodomesticos.getAll()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(items => {
+        this.userApplianceNames.set(
+          items.map(e => e.nombre.toLowerCase())
+        );
+      });
+  }
+
+  private extractRequiredAppliances(recipeName: string): string[] {
+    const lower = recipeName.toLowerCase();
+    return APPLIANCE_KEYWORDS.filter(keyword => lower.includes(keyword));
+  }
+
+  private readonly recipesWithAvailability = computed<RecipeWithAvailability[]>(() => {
+    const pantryNames = this.pantryIngredients()
+      .filter(item => item.selected)
+      .map(item => item.name.toLowerCase());
+
+    const allergens       = this.activeAllergens();
+    const userAppliances  = this.userApplianceNames();
+
+    return this.allRecipes().map(recipe => {
+      const matched = recipe.ingredients.filter(ingredient =>
+        pantryNames.some(pantryName =>
+          pantryName.includes(ingredient.name.toLowerCase()) ||
+          ingredient.name.toLowerCase().includes(pantryName)
+        )
+      ).length;
+
+      const availabilityPercent = recipe.ingredients.length === 0
+        ? 0
+        : Math.round((matched / recipe.ingredients.length) * 100);
+
+      const hasAllergen = recipe.ingredients.some(ingredient =>
+        ingredient.allergenType &&
+        allergens.some(allergen =>
+          allergen.toLowerCase() === ingredient.allergenType!.toLowerCase()
+        )
+      );
+
+      const hasMissingAppliance = recipe.requiredAppliances.length > 0 &&
+        recipe.requiredAppliances.some(required =>
+          !userAppliances.some(owned => owned.includes(required))
+        );
+
+      return { ...recipe, availabilityPercent, hasAllergen, hasMissingAppliance };
+    });
+  });
+
+  protected readonly filteredRecipes = computed(() => {
+    let result = [...this.recipesWithAvailability()];
+
+    if (this.activeFilter() !== 'Todos') {
+      result = result.filter(recipe => recipe.difficulty === this.activeFilter());
+    }
+
+    const query = this.searchQuery().trim().toLowerCase();
+    if (query) {
+      result = result.filter(recipe => recipe.name.toLowerCase().includes(query));
+    }
+
+    if (this.excludeAllergens()) {
+      result = result.filter(recipe => !recipe.hasAllergen);
+    }
+
+    if (this.excludeMissingAppliances()) {
+      result = result.filter(recipe => !recipe.hasMissingAppliance);
+    }
+
+    if (this.sortBy() === 'rating') {
+      result.sort((a, b) => b.rating - a.rating);
+    } else if (this.sortBy() === 'coincidencia') {
+      result.sort((a, b) => b.availabilityPercent - a.availabilityPercent);
+    }
+
+    return result;
+  });
+
+  protected setFilter(filter: FilterOption): void {
+    this.activeFilter.set(filter);
+  }
 
   protected setSort(sort: SortOption): void {
     this.sortBy.set(sort);
     this.showSortDropdown.set(false);
   }
 
-  protected toggleAllergens(): void { this.excludeAllergens.update(v => !v); }
+  protected toggleAllergens(): void {
+    this.excludeAllergens.update(value => !value);
+  }
+
+  protected toggleMissingAppliances(): void {
+    this.excludeMissingAppliances.update(value => !value);
+  }
 
   protected toggleEatingToday(memberId: string): void {
     this.eatingToday.update(set => {
@@ -247,10 +239,12 @@ export class Recipes implements OnInit {
     );
   }
 
-  protected clearSearch(): void { this.searchQuery.set(''); }
+  protected clearSearch(): void {
+    this.searchQuery.set('');
+  }
 
   protected get selectedIngredients(): PantryIngredient[] {
-    return this.pantryIngredients().filter(i => i.selected);
+    return this.pantryIngredients().filter(item => item.selected);
   }
 
   protected getAvailabilityColor(percent: number): string {
@@ -265,11 +259,10 @@ export class Recipes implements OnInit {
     return 'Ordenar';
   }
 
-  // ── Tailwind class helpers ────────────────────────────────
-  protected difficultyBadgeClass(d: Difficulty): string {
+  protected difficultyBadgeClass(difficulty: Difficulty): string {
     const base = 'absolute bottom-2 right-2 px-2.5 py-0.5 rounded-[20px] text-[0.7rem] font-semibold';
-    if (d === 'Fácil')  return `${base} bg-[rgba(62,94,74,0.9)] text-nido-cream`;
-    if (d === 'Medio')  return `${base} bg-[rgba(199,143,90,0.9)] text-white`;
+    if (difficulty === 'Fácil') return `${base} bg-[rgba(62,94,74,0.9)] text-nido-cream`;
+    if (difficulty === 'Medio') return `${base} bg-[rgba(199,143,90,0.9)] text-white`;
     return `${base} bg-[rgba(180,70,60,0.9)] text-white`;
   }
 
@@ -284,6 +277,13 @@ export class Recipes implements OnInit {
     const base = 'px-4 py-[0.4rem] rounded-[20px] border-[1.5px] border-solid font-medium text-[0.8125rem] cursor-pointer transition-all duration-150 inline-flex items-center gap-1.5';
     return this.excludeAllergens()
       ? `${base} bg-nido-red border-nido-red text-white`
+      : `${base} bg-white border-nido-border text-nido-brown hover:border-nido-green hover:text-nido-green`;
+  }
+
+  protected applianceChipClass(): string {
+    const base = 'px-4 py-[0.4rem] rounded-[20px] border-[1.5px] border-solid font-medium text-[0.8125rem] cursor-pointer transition-all duration-150 inline-flex items-center gap-1.5';
+    return this.excludeMissingAppliances()
+      ? `${base} bg-nido-green-dark border-nido-green-dark text-nido-cream`
       : `${base} bg-white border-nido-border text-nido-brown hover:border-nido-green hover:text-nido-green`;
   }
 
@@ -306,5 +306,29 @@ export class Recipes implements OnInit {
     return this.isEatingToday(memberId)
       ? `${base} bg-white`
       : `${base} bg-nido-cream border-nido-border`;
+  }
+
+  // ── Métodos de la compañera — sin modificar ───────────────
+  private toRecipe(receta: ApiReceta): Recipe {
+    return {
+      id: receta.id,
+      name: receta.nombre,
+      image: receta.imagenUrl ?? 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=250&fit=crop',
+      rating: 4.5,
+      difficulty: this.mapDifficulty(receta.dificultad),
+      timeMinutes: receta.tiempoCoccionMin ?? 0,
+      calories: Math.round(receta.calorias ?? 0),
+      ingredients: receta.ingredientes.map(ingrediente => ({
+        name: ingrediente.productoNombre || ingrediente.nombre,
+      })),
+      requiredAppliances: [],
+    };
+  }
+
+  private mapDifficulty(value: string | null): Difficulty {
+    const normalized = value?.trim().toLowerCase();
+    if (normalized === 'facil' || normalized === 'fácil') return 'Fácil';
+    if (normalized === 'dificil' || normalized === 'difícil') return 'Difícil';
+    return 'Medio';
   }
 }
