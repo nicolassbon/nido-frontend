@@ -1,6 +1,8 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { switchMap, timer } from 'rxjs';
 import { HogaresApiService } from '../hogares-api.service';
 import { AuthService } from '../../../core/auth/auth.service';
 
@@ -12,6 +14,7 @@ interface FamilyMember {
   role: string;
   color: string;
   initials: string;
+  fotoUrl?: string | null;
   isCurrentUser?: boolean;
 }
 
@@ -21,7 +24,7 @@ interface FamilyMember {
   templateUrl: './create-household.html',
   styleUrl: './create-household.scss',
 })
-export class CreateHousehold implements OnInit {
+export class CreateHousehold {
   private readonly hogaresApi = inject(HogaresApiService);
   private readonly auth       = inject(AuthService);
   private readonly router     = inject(Router);
@@ -54,11 +57,14 @@ export class CreateHousehold implements OnInit {
   readonly inviteState     = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
   readonly inviteErrorMsg  = signal('');
 
-  ngOnInit(): void {
-    this.hogaresApi.getMiembros().subscribe({
+  constructor() {
+    const currentUserId = this.auth.getUserId();
+    timer(0, 5000).pipe(
+      switchMap(() => this.hogaresApi.getMiembros()),
+      takeUntilDestroyed(),
+    ).subscribe({
       next: (miembros) => {
         if (miembros.length === 0) return;
-        const currentUserId = this.auth.getUserId();
         this.members.set(
           miembros.map((m, i) => ({
             id:            m.usuarioId,
@@ -66,13 +72,15 @@ export class CreateHousehold implements OnInit {
             role:          m.rol,
             color:         MEMBER_COLORS[i % MEMBER_COLORS.length],
             initials:      m.nombre[0]?.toUpperCase() ?? '?',
+            fotoUrl:       m.fotoUrl,
             isCurrentUser: m.usuarioId === currentUserId,
           })),
         );
       },
-      error: () => { /* keep mock data until auth is wired */ },
+      error: () => {},
     });
   }
+
 
   toggleMenu(id: string, event: MouseEvent): void {
     event.stopPropagation();
@@ -84,8 +92,10 @@ export class CreateHousehold implements OnInit {
   }
 
   removeMember(id: string): void {
-    this.members.update(list => list.filter(m => m.id !== id));
     this.openMenuId.set(null);
+    this.hogaresApi.removeMiembro(id).subscribe({
+      next: () => this.members.update(list => list.filter(m => m.id !== id)),
+    });
   }
 
   addMember(): void {

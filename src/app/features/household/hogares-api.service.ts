@@ -17,6 +17,12 @@ export interface AceptarInvitacionResponse {
   accessToken: string;
 }
 
+export interface InvitacionPreviewResponse {
+  hogarNombre:   string;
+  emailInvitado: string | null;
+  expiraEn:      string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class HogaresApiService {
   private readonly http = inject(HttpClient);
@@ -28,6 +34,14 @@ export class HogaresApiService {
 
   invitar(emailInvitado: string): Observable<{ token: string }> {
     return this.http.post<{ token: string }>(`${this.base}/hogares/invitar`, { emailInvitado });
+  }
+
+  getInvitacionPreview(token: string): Observable<InvitacionPreviewResponse> {
+    return this.http.get<InvitacionPreviewResponse>(`${this.base}/hogares/invitaciones/${token}`);
+  }
+
+  removeMiembro(usuarioId: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/hogares/miembros/${usuarioId}`);
   }
 
   aceptarInvitacion(token: string): Observable<AceptarInvitacionResponse> {
