@@ -2,6 +2,8 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { ApiReceta, RecipesApiService } from './services/recipes-api.service';
+import { ProductService } from '../../../core/servicios/agregar-producto.service';
+import { AuthService } from '../../../core/auth/auth.service';
 
 type Difficulty = 'Fácil' | 'Medio' | 'Difícil';
 type FilterOption = 'Todos' | Difficulty;
@@ -50,12 +52,15 @@ interface HouseholdMember {
 })
 export class Recipes implements OnInit {
   private readonly recipesApi = inject(RecipesApiService);
+  private readonly productService = inject(ProductService);
+  private readonly authService = inject(AuthService);
 
   protected readonly searchQuery = signal('');
   protected readonly activeFilter = signal<FilterOption>('Todos');
   protected readonly sortBy = signal<SortOption>('default');
   protected readonly showSortDropdown = signal(false);
   protected readonly excludeAllergens = signal(false);
+  protected readonly filterByIngredients = signal(false);
 
   protected readonly filterOptions: FilterOption[] = ['Todos', 'Fácil', 'Medio', 'Difícil'];
 
@@ -75,16 +80,7 @@ export class Recipes implements OnInit {
     return [...new Set(eating.flatMap(member => member.allergens))];
   });
 
-  protected readonly pantryIngredients = signal<PantryIngredient[]>([
-    { name: 'Garbanzos', amount: '200 gramos', selected: true },
-    { name: 'Leche', amount: '1 litro', selected: true },
-    { name: 'Atún', amount: '50 gramos', selected: true },
-    { name: 'Carne', amount: '1 kilo', selected: true },
-    { name: 'Lechuga', amount: '100 gramos', selected: true },
-    { name: 'Choclo', amount: '50 gramos', selected: true },
-    { name: 'Aceite de oliva', amount: '500 ml', selected: true },
-    { name: 'Ajo', amount: '1 cabeza', selected: true },
-  ]);
+  protected readonly pantryIngredients = signal<PantryIngredient[]>([]);
 
   private readonly allRecipes = signal<Recipe[]>([]);
 
@@ -97,6 +93,24 @@ export class Recipes implements OnInit {
         console.error('Error cargando recetas', error);
       },
     });
+
+    const hogarId = this.authService.getHogarId();
+    if (hogarId) {
+      this.productService.getProductManual(hogarId).subscribe({
+        next: items => {
+          this.pantryIngredients.set(
+            items.map(item => ({
+              name: item.nombre,
+              amount: `${item.cantidad}`,
+              selected: true,
+            }))
+          );
+        },
+        error: error => {
+          console.error('Error cargando alacena', error);
+        },
+      });
+    }
   }
 
   private readonly recipesWithAvailability = computed<RecipeWithAvailability[]>(() => {
@@ -145,9 +159,15 @@ export class Recipes implements OnInit {
       result = result.filter(recipe => !recipe.hasAllergen);
     }
 
+    if (this.filterByIngredients()) {
+      result = result.filter(recipe => recipe.availabilityPercent > 0);
+    }
+
     if (this.sortBy() === 'rating') {
       result.sort((a, b) => b.rating - a.rating);
     } else if (this.sortBy() === 'coincidencia') {
+      result.sort((a, b) => b.availabilityPercent - a.availabilityPercent);
+    } else if (this.filterByIngredients()) {
       result.sort((a, b) => b.availabilityPercent - a.availabilityPercent);
     }
 
@@ -183,6 +203,17 @@ export class Recipes implements OnInit {
     this.pantryIngredients.update(items =>
       items.map((item, i) => i === index ? { ...item, selected: !item.selected } : item)
     );
+  }
+
+  protected buscarPorIngredientes(): void {
+    this.filterByIngredients.set(true);
+    if (this.sortBy() === 'default') {
+      this.sortBy.set('coincidencia');
+    }
+  }
+
+  protected limpiarFiltroPorIngredientes(): void {
+    this.filterByIngredients.set(false);
   }
 
   protected clearSearch(): void {
@@ -264,10 +295,8 @@ export class Recipes implements OnInit {
 
   private mapDifficulty(value: string | null): Difficulty {
     const normalized = value?.trim().toLowerCase();
-
     if (normalized === 'facil' || normalized === 'fácil') return 'Fácil';
     if (normalized === 'dificil' || normalized === 'difícil') return 'Difícil';
-
     return 'Medio';
   }
 }
