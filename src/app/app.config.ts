@@ -81,22 +81,21 @@ import {
   Tv,
   Plug,
 
-  // Perfil
+  // Perfil / Configuracion
   UserPlus,
   Award,
   Phone,
   Trophy,
   Ban,
-CookingPot,
-Blend,
-Cog,
-AirVent,
-Square,
-PlugZap,
-  // Configuracion
   Users,
-  UserPlus,
   Trash2,
+  CookingPot,
+  Blend,
+  Cog,
+  AirVent,
+  Square,
+  PlugZap,
+  ShoppingCart,
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
@@ -182,21 +181,21 @@ export const appConfig: ApplicationConfig = {
         Tv,
         Plug,
 
-        // Perfil
+        // Perfil / Configuracion
         UserPlus,
         Award,
         Phone,
         Trophy,
         Ban,
-CookingPot,
-Blend,
-Cog,
-AirVent,
-Square,
-PlugZap,
-  Users,
-  UserPlus,
-  Trash2,
+        Users,
+        Trash2,
+        CookingPot,
+        Blend,
+        Cog,
+        AirVent,
+        Square,
+        PlugZap,
+        ShoppingCart,
       }),
     },
   ],

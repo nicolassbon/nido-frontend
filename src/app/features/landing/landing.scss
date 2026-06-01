@@ -117,7 +117,7 @@
 /*
   Secuencia de animaciones: cada elemento entra desde abajo
   con el mismo keyframe (hero-enter) — dirección uniforme.
-  Los delays crean la cascada visual: badge → title → sub → CTAs → social → widget → pill.
+  Los delays crean la cascada visual: badge → title → sub → CTAs → social.
 */
 .hero-badge   { animation: hero-enter 0.70s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
 .hero-title   { font-size: clamp(2rem, 3.5vw, 2.375rem);
@@ -125,9 +125,6 @@
 .hero-sub     { animation: hero-enter 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.36s both; }
 .hero-cta     { animation: hero-enter 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.50s both; }
 .hero-social  { animation: hero-enter 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.63s both; }
-.hero-preview { animation: hero-enter 1.05s cubic-bezier(0.16, 1, 0.3, 1) 0.78s both; }
-/* Pill: mismo keyframe, delay mayor — aparece como el último detalle del widget */
-.hero-notif   { animation: hero-enter 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.95s both; }
 
 @keyframes hero-enter {
   from { opacity: 0; transform: translateY(20px); }
@@ -207,19 +204,6 @@
   15%  { opacity: 1; }
   80%  { opacity: 0.6; }
   100% { top: 65%; opacity: 0; }
-}
-
-/* Preview widgets en el hero */
-.preview-card {
-  box-shadow:
-    0 24px 60px rgba(0, 0, 0, 0.32),
-    0 4px 14px rgba(0, 0, 0, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-
-  &:hover {
-    transform: translateY(-3px);
-  }
 }
 
 /* ── Feature strip ─────────────────────────────────────────── */

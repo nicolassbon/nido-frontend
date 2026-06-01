@@ -3,7 +3,7 @@
   <!-- ── NAV flotante ──────────────────────────────────────────── -->
   <header
     [class.is-scrolled]="scrolled()"
-    class="nav-floating fixed top-3 left-4 right-4 z-50 bg-nido-green-dark rounded-2xl">
+    class="nav-floating fixed top-3 left-4 right-4 z-50 bg-nido-green-dark rounded-3xl">
     <div class="px-6 h-[3.75rem] flex items-center justify-between">
 
       <a routerLink="/" class="no-underline shrink-0">
@@ -37,17 +37,11 @@
     <div class="absolute inset-0 hero-grain pointer-events-none"></div>
     <div class="hero-content-glow absolute pointer-events-none" aria-hidden="true"></div>
 
-    <!--
-      Layout: flex row dentro del mismo contenedor max-w-7xl.
-      Texto (izquierda) y widget (derecha) comparten el mismo eje
-      horizontal → ningún elemento flota fuera del grid de contenido.
-      El espacio entre columnas lo llena la foto del hero.
-    -->
     <div class="relative z-10 w-full max-w-7xl mx-auto px-8 pt-24 pb-16">
-      <div class="flex flex-col xl:flex-row xl:items-start xl:justify-between">
+      <div class="flex flex-col">
 
-        <!-- ── Columna izquierda: copy ──────────────────────────────── -->
-        <div class="xl:flex-1 xl:pr-8">
+        <!-- ── Copy ──────────────────────────────────────────────────── -->
+        <div class="xl:max-w-[600px]">
 
           <!-- Badge — ancla conceptual, no repite el título -->
           <div class="hero-badge inline-flex items-center gap-2.5 bg-white/[0.08] border border-white/[0.16] rounded-full px-4 py-1.5 mb-7 backdrop-blur-sm">
@@ -110,77 +104,6 @@
             </div>
           </div>
 
-        </div>
-
-        <!-- ── Columna derecha: widget preview (solo xl) ───────────── -->
-        <div class="hero-preview hidden xl:flex flex-col gap-3 w-[292px] shrink-0">
-
-          <!--
-            Pill alineado al borde izquierdo del widget (sin margen extra).
-            Animación: hero-enter (from-bottom) igual que todos los demás.
-          -->
-          <div class="hero-notif self-start inline-flex items-center gap-2.5 bg-white/[0.1] backdrop-blur-xl border border-white/[0.14] rounded-full px-3.5 py-[0.4375rem]">
-            <div class="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style="background:rgba(180,76,60,0.75)">
-              <lucide-icon name="bell" [size]="9" class="text-white" />
-            </div>
-            <span class="text-white/75 text-[0.6875rem] font-medium">Yogur vence mañana</span>
-            <span class="w-[5px] h-[5px] rounded-full shrink-0 pulse-dot" style="background:#e57373"></span>
-          </div>
-
-          <!-- Widget alacena -->
-          <div class="preview-card bg-white/[0.09] backdrop-blur-xl border border-white/[0.12] rounded-[18px] p-4">
-
-            <div class="flex items-center gap-2 mb-3.5">
-              <div class="w-6 h-6 rounded-[6px] bg-nido-green/40 flex items-center justify-center">
-                <lucide-icon name="refrigerator" [size]="12" class="text-nido-cream" />
-              </div>
-              <span class="text-white/50 text-[0.655rem] font-bold tracking-widest uppercase">Mi Alacena</span>
-              <!-- /38 neutro — "14 items" es info, no alerta -->
-              <span class="ml-auto text-white/38 text-[0.65rem] font-medium">14 items</span>
-            </div>
-
-            <div class="flex flex-col gap-1.5">
-              <div class="flex items-center gap-2.5 px-2.5 py-2 rounded-[10px] bg-white/[0.07]">
-                <div class="w-7 h-7 rounded-[7px] shrink-0" style="background:linear-gradient(135deg,rgba(199,143,90,0.3),rgba(199,143,90,0.12))"></div>
-                <div class="flex-1 min-w-0">
-                  <!-- /90 nombre del producto — alta jerarquía -->
-                  <p class="text-white/90 text-[0.74rem] font-medium truncate">Harina 000</p>
-                  <!-- /35 metadata — baja jerarquía pero legible -->
-                  <p class="text-white/35 text-[0.635rem]">500 g · Alacena</p>
-                </div>
-                <!-- Dorado = única señal de alerta en el widget -->
-                <span class="text-nido-gold text-[0.635rem] font-semibold shrink-0">3 días</span>
-              </div>
-              <div class="flex items-center gap-2.5 px-2.5 py-2 rounded-[10px] bg-white/[0.07]">
-                <div class="w-7 h-7 rounded-[7px] shrink-0" style="background:linear-gradient(135deg,rgba(62,94,74,0.4),rgba(62,94,74,0.15))"></div>
-                <div class="flex-1 min-w-0">
-                  <p class="text-white/90 text-[0.74rem] font-medium truncate">Leche entera</p>
-                  <p class="text-white/35 text-[0.635rem]">1 L · Heladera</p>
-                </div>
-                <lucide-icon name="check" [size]="11" class="text-nido-green shrink-0" />
-              </div>
-            </div>
-
-            <!-- Footer: receta sugerida — la conexión alacena→receta en 1 línea -->
-            <div class="mt-3 pt-3 border-t border-white/[0.07]">
-              <div class="flex items-center gap-2.5">
-                <div class="w-6 h-6 rounded-[6px] bg-nido-gold/35 flex items-center justify-center shrink-0">
-                  <lucide-icon name="chef-hat" [size]="11" class="text-nido-cream" />
-                </div>
-                <div class="flex-1 min-w-0">
-                  <p class="text-white/65 text-[0.7rem] font-medium">Pasta al pomodoro</p>
-                  <div class="flex items-center gap-1.5 mt-0.5">
-                    <!-- h-[3px] — pixel entero, rendering consistente entre browsers -->
-                    <div class="flex-1 h-[3px] rounded-full bg-white/10">
-                      <div class="h-full rounded-full bg-nido-green" style="width:85%"></div>
-                    </div>
-                    <span class="text-nido-green text-[0.6rem] font-bold shrink-0">85%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
         </div>
 
       </div>
@@ -849,7 +772,7 @@
   </section>
 
   <!-- ── CTA FINAL ─────────────────────────────────────────────── -->
-  <section class="cta-section py-28 px-6 text-center relative overflow-hidden">
+  <section class="cta-section py-40 px-6 text-center relative overflow-hidden">
     <div class="cta-glow absolute inset-0 pointer-events-none"></div>
     <div class="absolute -top-32 -left-32 w-80 h-80 rounded-full bg-nido-gold/[0.06] blur-3xl pointer-events-none"></div>
     <div class="absolute -bottom-32 -right-32 w-80 h-80 rounded-full bg-[rgba(62,94,74,0.1)] blur-3xl pointer-events-none"></div>
@@ -876,42 +799,10 @@
   </section>
 
   <!-- ── FOOTER ─────────────────────────────────────────────────── -->
-  <footer id="contacto" class="bg-nido-green-dark border-t border-white/[0.07] pt-14 pb-8 px-6">
-    <div class="max-w-7xl mx-auto">
-      <!-- Top -->
-      <div class="flex flex-col md:flex-row justify-between gap-10 mb-10 pb-10 border-b border-white/[0.07]">
-        <div class="max-w-[280px]">
-          <a routerLink="/" class="no-underline block mb-4">
-            <img src="logo.png" alt="Nido" class="h-8 w-auto object-contain opacity-85" />
-          </a>
-          <p class="text-nido-cream/30 text-[0.8375rem] leading-relaxed">
-            La app de gestión del hogar que conecta tu alacena, recetas y electrodomésticos en un solo lugar.
-          </p>
-        </div>
-        <div class="flex gap-14 flex-wrap">
-          <div>
-            <p class="text-nido-cream/40 text-[0.72rem] font-bold tracking-widest uppercase mb-4">Navegación</p>
-            <div class="flex flex-col gap-3">
-              <a href="#inicio"     class="footer-link" (click)="scrollTo('inicio',     $event)">Inicio</a>
-              <a href="#beneficios" class="footer-link" (click)="scrollTo('beneficios', $event)">Beneficios</a>
-              <a href="#funciones"  class="footer-link" (click)="scrollTo('funciones',  $event)">Módulos</a>
-              <a href="#faq"        class="footer-link" (click)="scrollTo('faq',        $event)">Preguntas frecuentes</a>
-            </div>
-          </div>
-          <div>
-            <p class="text-nido-cream/40 text-[0.72rem] font-bold tracking-widest uppercase mb-4">Cuenta</p>
-            <div class="flex flex-col gap-3">
-              <a routerLink="/login"    class="footer-link">Iniciar sesión</a>
-              <a routerLink="/registro" class="footer-link">Crear cuenta gratis</a>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- Bottom -->
-      <p class="text-nido-cream/20 text-[0.775rem] text-center">
-        © 2025 Nido · Trabajo Práctico Integrador · Universidad
-      </p>
-    </div>
+  <footer id="contacto" class="bg-nido-green-dark py-8 px-6">
+    <p class="text-nido-cream/20 text-[0.75rem] text-center">
+      © 2025 Nido · Trabajo Práctico Integrador · Universidad
+    </p>
   </footer>
 
 </div>
