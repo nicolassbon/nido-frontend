@@ -105,9 +105,9 @@ describe('Recipes', () => {
 
   // ─── Carga de la alacena ───────────────────────────────────────────────────
 
-  it('debería llamar a getProductManual con el hogarId del JWT', async () => {
+  it('debería llamar a getProductManual al cargar', async () => {
     await setup();
-    expect(productSvcMock.getProductManual).toHaveBeenCalledWith(HOGAR_ID);
+    expect(productSvcMock.getProductManual).toHaveBeenCalled();
   });
 
   it('no debería llamar a getProductManual si el JWT no tiene hogarId', async () => {

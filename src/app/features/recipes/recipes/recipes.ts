@@ -100,7 +100,7 @@ export class Recipes implements OnInit {
 
     const hogarId = this.authService.getHogarId();
     if (hogarId) {
-      this.productService.getProductManual(hogarId).subscribe({
+      this.productService.getProductManual().subscribe({
         next: items => {
           this.pantryIngredients.set(
             items.map(item => ({
