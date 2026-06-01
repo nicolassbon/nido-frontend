@@ -80,7 +80,13 @@ import {
   Droplet,
   Tv,
   Plug,
-  Microwave,
+
+  // Perfil
+  UserPlus,
+  Award,
+  Phone,
+  Trophy,
+  Ban,
 CookingPot,
 Blend,
 Cog,
@@ -171,7 +177,13 @@ export const appConfig: ApplicationConfig = {
         Droplet,
         Tv,
         Plug,
-        Microwave,
+
+        // Perfil
+        UserPlus,
+        Award,
+        Phone,
+        Trophy,
+        Ban,
 CookingPot,
 Blend,
 Cog,
