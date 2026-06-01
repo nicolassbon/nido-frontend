@@ -3,6 +3,7 @@ import { authChildGuard, authGuard } from './core/guards/auth';
 import { Layout } from './core/layout/layout';
 import { Home } from './features/home/home/home';
 import { Recipes } from './features/recipes/recipes/recipes';
+import { RecipeDetail } from './features/recipes/recipe-detail/recipe-detail';
 import { Alacena } from './features/alacena/alacena/alacena';
 import { CreateHousehold } from './features/household/create-household/create-household';
 import { AcceptInvitation } from './features/household/accept-invitation/accept-invitation';
@@ -28,6 +29,7 @@ export const routes: Routes = [
       { path: '', redirectTo: 'inicio', pathMatch: 'full' },
       { path: 'inicio', component: Home },
       { path: 'recetas', component: Recipes },
+      { path: 'recetas/:id', component: RecipeDetail },
       { path: 'alacena', component: Alacena },
       { path: 'electrodomesticos', component: Electrodomesticos },
       { path: 'agregar-producto', component: AgregarProducto },

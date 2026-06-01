@@ -1,1 +1,182 @@
-<p>recipe-detail works!</p>
+<div class="recipe-page">
+  <button type="button" class="back-button" (click)="goBack()">
+    <lucide-icon name="arrow-left" [size]="18" />
+    Volver al inventario
+  </button>
+
+  @if (loading()) {
+    <section class="state-card">
+      <lucide-icon name="loader" [size]="38" class="spin" />
+      <p>Cargando receta...</p>
+    </section>
+  }
+
+  @if (errorMessage()) {
+    <section class="state-card state-card--error">
+      <lucide-icon name="alert-circle" [size]="36" />
+      <p>{{ errorMessage() }}</p>
+    </section>
+  }
+
+  @if (recipe() && !loading() && !errorMessage()) {
+    @let r = recipe()!;
+    <div class="recipe-layout">
+      <main class="recipe-main">
+        <section class="hero-card">
+          <div class="recipe-photo">
+            @if (imageUrl() && !imageFailed()) {
+              <img [src]="imageUrl()!" [alt]="r.nombre" (error)="onImageError()" />
+            } @else {
+              <div class="photo-empty">
+                <lucide-icon name="image-off" [size]="52" />
+              </div>
+            }
+          </div>
+
+          <div class="hero-content">
+            <div>
+              <h1>{{ r.nombre }}</h1>
+              @if (r.descripcion) {
+                <p class="description">{{ r.descripcion }}</p>
+              }
+            </div>
+
+            <div class="recipe-facts">
+              <div class="fact">
+                <span class="fact-icon"><lucide-icon name="clock" [size]="22" /></span>
+                <span>
+                  <small>Tiempo</small>
+                  <strong>{{ r.tiempoCoccionMin || '-' }} min</strong>
+                </span>
+              </div>
+
+              <div class="fact">
+                <span class="fact-icon"><lucide-icon name="chef-hat" [size]="22" /></span>
+                <span>
+                  <small>Dificultad</small>
+                  <strong>{{ displayDifficulty(r.dificultad) }}</strong>
+                </span>
+              </div>
+
+              <div class="fact">
+                <span class="fact-icon"><lucide-icon name="flame" [size]="22" /></span>
+                <span>
+                  <small>Calorias</small>
+                  <strong>{{ formatNutrition(r.calorias) }} kcal</strong>
+                  <em>por porcion</em>
+                </span>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button type="button" class="primary-action">
+                <lucide-icon name="play" [size]="16" />
+                Iniciar coccion
+              </button>
+              <button type="button" class="secondary-action">
+                <lucide-icon name="bookmark" [size]="16" />
+                Guardar receta
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="content-card steps-card">
+          <header class="section-heading">
+            <span class="heading-icon"><lucide-icon name="list" [size]="22" /></span>
+            <h2>Pasos de preparacion</h2>
+          </header>
+
+          @if (r.pasos && r.pasos.length > 0) {
+            <ol class="steps-list">
+              @for (paso of r.pasos; track paso.id) {
+                <li>
+                  <span>{{ paso.orden }}</span>
+                  <p>{{ paso.descripcion }}</p>
+                </li>
+              }
+            </ol>
+          } @else {
+            <p class="empty-copy">Todavia no hay pasos cargados para esta receta.</p>
+          }
+        </section>
+      </main>
+
+      <aside class="recipe-sidebar">
+        <section class="content-card ingredients-card">
+          <header class="section-heading section-heading--between">
+            <span class="title-wrap">
+              <span class="heading-icon"><lucide-icon name="package" [size]="21" /></span>
+              <h2>Ingredientes</h2>
+            </span>
+            <small>{{ r.ingredientes.length }} ingredientes</small>
+          </header>
+
+          <ul class="ingredients-list">
+            @for (ingrediente of r.ingredientes; track ingrediente.id) {
+              <li>
+                <span class="ingredient-name">{{ ingrediente.productoNombre || ingrediente.nombre }}</span>
+                <span class="ingredient-amount">{{ formatAmount(ingrediente.cantidad, ingrediente.unidad) }}</span>
+                @if (ingrediente.enStock) {
+                  <span class="ingredient-status ingredient-status--ok">
+                    <lucide-icon name="check" [size]="12" />
+                    En stock
+                  </span>
+                } @else {
+                  <span class="ingredient-status ingredient-status--missing">
+                    <lucide-icon name="alert-circle" [size]="12" />
+                    Falta
+                  </span>
+                }
+              </li>
+            }
+          </ul>
+        </section>
+
+        <section class="content-card nutrition-card">
+          <header class="section-heading section-heading--between">
+            <span class="title-wrap">
+              <span class="heading-icon"><lucide-icon name="chart-pie" [size]="21" /></span>
+              <h2>Informacion nutricional</h2>
+            </span>
+            <small>Por porcion</small>
+          </header>
+
+          <div class="nutrition-grid">
+            <div>
+              <lucide-icon name="flame" [size]="22" />
+              <strong>{{ formatNutrition(r.calorias) }}</strong>
+              <small>kcal</small>
+            </div>
+            <div>
+              <lucide-icon name="utensils-crossed" [size]="22" />
+              <strong>{{ formatNutrition(r.proteinas) }} g</strong>
+              <small>Proteinas</small>
+            </div>
+            <div>
+              <lucide-icon name="sprout" [size]="22" />
+              <strong>{{ formatNutrition(r.carbohidratos) }} g</strong>
+              <small>Carbohidratos</small>
+            </div>
+            <div>
+              <lucide-icon name="droplet" [size]="22" />
+              <strong>{{ formatNutrition(r.grasas) }} g</strong>
+              <small>Grasas</small>
+            </div>
+          </div>
+        </section>
+
+        <section class="tip-card">
+          <lucide-icon name="lightbulb" [size]="34" />
+          <div>
+            <h2>Consejo Nido</h2>
+            <p>
+              Tienes {{ availableIngredients() }} de {{ r.ingredientes.length }} ingredientes en casa.
+              Revisa los faltantes antes de empezar.
+            </p>
+          </div>
+        </section>
+      </aside>
+    </div>
+  }
+</div>

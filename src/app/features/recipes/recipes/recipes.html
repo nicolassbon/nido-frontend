@@ -84,7 +84,8 @@
       } @else {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           @for (recipe of filteredRecipes(); track recipe.id) {
-            <article class="bg-white rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition-[transform,box-shadow] duration-[180ms] cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)] group">
+            <article (click)="navigateToRecipe(recipe.id)"
+                     class="bg-white rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition-[transform,box-shadow] duration-[180ms] cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)] group">
 
               <!-- Imagen -->
               <div class="relative h-40 overflow-hidden">
@@ -126,6 +127,13 @@
                     {{ recipe.availabilityPercent }}% disponible
                   </span>
                 </div>
+
+                <!-- Ver Detalle Button -->
+                <a [routerLink]="['/recetas', recipe.id]" (click)="$event.stopPropagation()"
+                   class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 bg-nido-green-dark text-nido-cream rounded-[8px] text-[0.8rem] font-medium cursor-pointer transition-[background] duration-150 hover:bg-nido-green">
+                  <lucide-icon name="eye" [size]="14" />
+                  Ver detalle
+                </a>
               </div>
 
             </article>

@@ -10,6 +10,18 @@ export interface ApiRecetaIngrediente {
   productoNombre: string;
   cantidad: number | null;
   unidad: string | null;
+  enStock: boolean;
+}
+
+export interface ApiRecetaPaso {
+  id: string;
+  orden: number;
+  descripcion: string;
+}
+
+export interface ApiRecetaElectrodomestico {
+  id: string;
+  tipoRequerido: string | null;
 }
 
 export interface ApiReceta {
@@ -26,6 +38,8 @@ export interface ApiReceta {
   carbohidratos: number | null;
   grasas: number | null;
   ingredientes: ApiRecetaIngrediente[];
+  pasos?: ApiRecetaPaso[];
+  electrodomesticos?: ApiRecetaElectrodomestico[];
 }
 
 @Injectable({
@@ -37,5 +51,9 @@ export class RecipesApiService {
 
   getAll(): Observable<ApiReceta[]> {
     return this.http.get<ApiReceta[]>(`${this.base}/recetas`);
+  }
+
+  getById(id: string): Observable<ApiReceta> {
+    return this.http.get<ApiReceta>(`${this.base}/recetas/${id}`);
   }
 }
