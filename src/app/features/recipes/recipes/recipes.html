@@ -5,7 +5,12 @@
     <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=900&h=200&fit=crop')] bg-center bg-cover opacity-[0.15]"></div>
     <div class="relative z-10">
       <h1 class="text-nido-cream text-[1.6rem] font-bold">Recetas Inteligentes</h1>
-      <p class="text-nido-cream/70 text-sm mt-0.5">{{ filteredRecipes().length }} recetas disponibles</p>
+      <p class="text-nido-cream/70 text-sm mt-0.5">
+      {{ filteredRecipes().length }} recetas disponibles
+      @if (filterByIngredients()) {
+        · <span class="text-nido-cream font-medium">filtrando por tu alacena</span>
+      }
+    </p>
     </div>
     <button class="relative z-10 flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]">
       <lucide-icon name="shuffle" [size]="16" />
@@ -193,10 +198,21 @@
             </button>
           }
         </div>
-        <button class="w-full flex items-center justify-center gap-2 mt-3.5 py-2.5 bg-nido-green-dark text-nido-cream border-none rounded-lg text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 hover:bg-nido-green">
-          <lucide-icon name="search" [size]="15" />
-          Buscar receta
-        </button>
+        @if (filterByIngredients()) {
+          <button
+            class="w-full flex items-center justify-center gap-2 mt-3.5 py-2.5 bg-nido-red text-white border-none rounded-lg text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 hover:opacity-90"
+            (click)="limpiarFiltroPorIngredientes()">
+            <lucide-icon name="x" [size]="15" />
+            Limpiar filtro
+          </button>
+        } @else {
+          <button
+            class="w-full flex items-center justify-center gap-2 mt-3.5 py-2.5 bg-nido-green-dark text-nido-cream border-none rounded-lg text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 hover:bg-nido-green"
+            (click)="buscarPorIngredientes()">
+            <lucide-icon name="search" [size]="15" />
+            Buscar receta
+          </button>
+        }
       </div>
 
       <!-- Tus ingredientes -->
