@@ -5,6 +5,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import { switchMap, timer } from 'rxjs';
 import { HogaresApiService } from '../hogares-api.service';
 import { AuthService } from '../../../core/auth/auth.service';
+import { OnboardingApiService } from '../../onboarding/onboarding-api.service';
 
 const MEMBER_COLORS = ['#263F30', '#B48B6A', '#927357', '#5C7A6E', '#8B4513', '#4A7C59'];
 
@@ -25,22 +26,19 @@ interface FamilyMember {
   styleUrl: './create-household.scss',
 })
 export class CreateHousehold {
-  private readonly hogaresApi = inject(HogaresApiService);
-  private readonly auth       = inject(AuthService);
-  private readonly router     = inject(Router);
+  private readonly hogaresApi    = inject(HogaresApiService);
+  private readonly onboardingApi = inject(OnboardingApiService);
+  private readonly auth          = inject(AuthService);
+  private readonly router        = inject(Router);
 
   readonly steps = [
     { number: 1, label: 'Tu cuenta',    completed: true,  active: false },
     { number: 2, label: 'Tu hogar',     completed: false, active: true  },
-    { number: 3, label: 'Preferencias', completed: false, active: false },
+    { number: 3, label: 'Equipamiento', completed: false, active: false },
     { number: 4, label: 'Finalizar',    completed: false, active: false },
   ];
 
-  readonly members = signal<FamilyMember[]>([
-    { id: '1', name: 'Nico',  role: 'Tú',      color: '#263F30', initials: 'N', isCurrentUser: true },
-    { id: '2', name: 'Abi',   role: 'Pareja',  color: '#B48B6A', initials: 'A' },
-    { id: '3', name: 'Lauti', role: 'Hermano', color: '#927357', initials: 'L' },
-  ]);
+  readonly members = signal<FamilyMember[]>([]);
 
   readonly sortedMembers = computed(() => {
     const list = this.members();
@@ -51,14 +49,27 @@ export class CreateHousehold {
 
   readonly openMenuId = signal<string | null>(null);
 
-  // Invite modal state
   readonly showInviteModal = signal(false);
   readonly inviteEmail     = signal('');
   readonly inviteState     = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
   readonly inviteErrorMsg  = signal('');
+  readonly saving          = signal(false);
+  readonly saveErrorMsg    = signal('');
 
   constructor() {
     const currentUserId = this.auth.getUserId();
+    const currentUserName = this.auth.getNombre() ?? 'Tú';
+    this.members.set([
+      {
+        id: currentUserId ?? 'current-user',
+        name: currentUserName,
+        role: 'Tú',
+        color: MEMBER_COLORS[0],
+        initials: currentUserName[0]?.toUpperCase() ?? '?',
+        isCurrentUser: true,
+      },
+    ]);
+
     timer(0, 5000).pipe(
       switchMap(() => this.hogaresApi.getMiembros()),
       takeUntilDestroyed(),
@@ -112,6 +123,7 @@ export class CreateHousehold {
   submitInvite(): void {
     const email = this.inviteEmail().trim();
     if (!email) return;
+
     this.inviteState.set('loading');
     this.hogaresApi.invitar(email).subscribe({
       next: () => this.inviteState.set('success'),
@@ -123,12 +135,31 @@ export class CreateHousehold {
   }
 
   next(): void {
-    this.router.navigate(['/equipamiento']);
-
+    this.saveHouseholdStep(false, '/equipamiento');
   }
 
   skip(): void {
-    this.router.navigate(['/finalizar-hogar']);
+    this.saveHouseholdStep(true, '/equipamiento');
+  }
+
+  private saveHouseholdStep(skip: boolean, route: string): void {
+    if (this.saving()) return;
+
+    this.saving.set(true);
+    this.saveErrorMsg.set('');
+
+    this.onboardingApi.saveHouseholdStep({
+      skip,
+      usuarioId: this.auth.getUserId(),
+      hogarId: this.auth.getHogarId(),
+      members: [],
+    }).subscribe({
+      next: () => this.router.navigate([route]),
+      error: () => {
+        this.saveErrorMsg.set('No pudimos guardar los datos de tu hogar. Intentá de nuevo.');
+        this.saving.set(false);
+      },
+    });
   }
 
   stepCircleClass(step: { completed: boolean; active: boolean }): string {

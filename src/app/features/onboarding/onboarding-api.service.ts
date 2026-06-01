@@ -22,6 +22,16 @@ export interface SaveWellnessRequest {
   metaIds: string[];
 }
 
+export interface SaveHouseholdRequest {
+  skip: boolean;
+  usuarioId: string | null;
+  hogarId: string | null;
+  members: {
+    nombre: string;
+    rol: string | null;
+  }[];
+}
+
 //equipamiento
 export interface SaveEquipmentRequest {
   skip: boolean;
@@ -51,6 +61,10 @@ export class OnboardingApiService {
 
   getMetas(): Observable<MetaCatalogo[]> {
     return this.http.get<MetaCatalogo[]>(`${this.base}/onboarding/metas`);
+  }
+
+  saveHouseholdStep(body: SaveHouseholdRequest): Observable<void> {
+    return this.http.patch<void>(`${this.base}/onboarding/step-2`, body);
   }
 
   saveWellnessStep(body: SaveWellnessRequest): Observable<void> {

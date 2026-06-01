@@ -53,7 +53,7 @@
       <div class="flex flex-col items-center gap-1.5 text-center">
         <h1 class="text-[1.6rem] font-bold text-nido-green-dark m-0">Paso 2: Tu hogar</h1>
         <p class="text-nido-brown text-[0.875rem] max-w-[320px] leading-relaxed m-0">
-          Agrega a las personas que viven contigo para organizar mejor su hogar
+          Invitá a las personas que viven con vos para organizar mejor el hogar.
         </p>
       </div>
 
@@ -121,15 +121,20 @@
       <div class="flex flex-col items-center gap-3 w-full pt-2">
         <button
           class="flex items-center gap-2 bg-nido-green-dark text-nido-cream px-10 py-3.5 rounded-full text-[0.9375rem] font-semibold border-none cursor-pointer transition-[background] duration-150 hover:bg-nido-green"
+          [disabled]="saving()"
           (click)="next()">
-          Siguiente
+          {{ saving() ? 'Guardando...' : 'Siguiente' }}
           <lucide-icon name="arrow-right" [size]="18" />
         </button>
         <button
           class="text-nido-brown text-[0.8375rem] bg-transparent border-none cursor-pointer transition-colors duration-150 hover:text-nido-green-dark hover:underline"
+          [disabled]="saving()"
           (click)="skip()">
           Saltar por ahora
         </button>
+        @if (saveErrorMsg()) {
+          <span class="text-nido-red text-[0.8375rem] text-center">{{ saveErrorMsg() }}</span>
+        }
       </div>
 
     </div>
@@ -164,8 +169,6 @@
       </div>
 
       @if (inviteState() !== 'success') {
-
-        <!-- Email input -->
         <div class="flex flex-col gap-2">
           <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Email</label>
           <input
@@ -181,7 +184,6 @@
           }
         </div>
 
-        <!-- Actions -->
         <div class="flex gap-3 justify-end pt-1">
           <button
             class="px-5 py-2.5 rounded-full text-[0.875rem] text-nido-brown bg-transparent border border-nido-border cursor-pointer hover:bg-nido-cream transition-colors duration-150"
@@ -195,10 +197,7 @@
             {{ inviteState() === 'loading' ? 'Enviando...' : 'Enviar invitación' }}
           </button>
         </div>
-
       } @else {
-
-        <!-- Success state -->
         <div class="flex flex-col items-center gap-4 py-4 text-center">
           <div class="w-16 h-16 rounded-full bg-[rgba(62,94,74,0.08)] flex items-center justify-center">
             <lucide-icon name="mail-check" [size]="30" class="text-nido-green-dark" />
@@ -215,8 +214,7 @@
             Cerrar
           </button>
         </div>
-
-      }
+        }
 
     </div>
   </div>
