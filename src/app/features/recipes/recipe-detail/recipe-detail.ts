@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { environment } from '../../../../environments/environment';
@@ -25,10 +25,15 @@ export class RecipeDetail {
   protected readonly router       = inject(Router);
   private readonly destroyRef     = inject(DestroyRef);
 
-  protected readonly recipe       = signal<ApiReceta | null>(null);
-  protected readonly loading      = signal(false);
-  protected readonly errorMessage = signal<string | null>(null);
-  protected readonly imageFailed  = signal(false);
+  protected readonly recipe           = signal<ApiReceta | null>(null);
+  protected readonly loading          = signal(false);
+  protected readonly errorMessage     = signal<string | null>(null);
+  protected readonly imageFailed      = signal(false);
+
+  // Modal de confirmación para cocinar
+  protected readonly showCookModal    = signal(false);
+  protected readonly cookingState     = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
+  protected readonly vecesCocinada    = signal<number>(0);
 
   // Nombres de la alacena del usuario (para name-matching como fallback)
   private readonly pantryNames    = signal<string[]>([]);
@@ -93,12 +98,44 @@ export class RecipeDetail {
       .subscribe({
         next: receta => {
           this.recipe.set(receta);
+          this.vecesCocinada.set(receta.vecesCocinada ?? 0);
           this.loading.set(false);
         },
         error: error => {
           console.error('Error cargando detalle de receta:', error);
           this.errorMessage.set('No se pudo cargar la receta. Por favor, intenta mas tarde.');
           this.loading.set(false);
+        },
+      });
+  }
+
+  protected abrirModalCocinar(): void {
+    this.cookingState.set('idle');
+    this.showCookModal.set(true);
+  }
+
+  protected cerrarModalCocinar(): void {
+    if (this.cookingState() === 'loading') return;
+    this.showCookModal.set(false);
+    this.cookingState.set('idle');
+  }
+
+  protected confirmarCocinar(): void {
+    const receta = this.recipe();
+    if (!receta || this.cookingState() === 'loading') return;
+
+    this.cookingState.set('loading');
+
+    this.recipesService
+      .cocinar(receta.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.vecesCocinada.set(res.vecesCocinada);
+          this.cookingState.set('success');
+        },
+        error: () => {
+          this.cookingState.set('error');
         },
       });
   }

@@ -26,6 +26,7 @@ interface Recipe {
   timeMinutes: number;
   calories: number;
   ingredients: RecipeIngredient[];
+  vecesCocinada: number;
 }
 
 interface RecipeWithAvailability extends Recipe {
@@ -303,6 +304,7 @@ export class Recipes implements OnInit {
       difficulty: this.mapDifficulty(receta.dificultad),
       timeMinutes: receta.tiempoCoccionMin ?? 0,
       calories: Math.round(receta.calorias ?? 0),
+      vecesCocinada: receta.vecesCocinada ?? 0,
       ingredients: receta.ingredientes.map(ingrediente => ({
         name: ingrediente.productoNombre || ingrediente.nombre,
         inStock: ingrediente.enStock,

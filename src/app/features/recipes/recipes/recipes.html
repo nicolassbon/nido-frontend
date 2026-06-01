@@ -119,6 +119,15 @@
                   </span>
                 </div>
 
+                @if (recipe.vecesCocinada > 0) {
+                  <div class="flex items-center gap-1 mt-0.5">
+                    <lucide-icon name="chef-hat" [size]="12" class="text-nido-brown" />
+                    <span class="text-[0.72rem] text-nido-brown">
+                      Cocinada {{ recipe.vecesCocinada }} {{ recipe.vecesCocinada === 1 ? 'vez' : 'veces' }}
+                    </span>
+                  </div>
+                }
+
                 <!-- % Disponibilidad -->
                 <div class="flex items-center gap-2 mt-1.5">
                   <div class="flex-1 h-1 bg-nido-border rounded-[10px] overflow-hidden">

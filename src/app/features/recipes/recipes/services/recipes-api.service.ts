@@ -40,6 +40,13 @@ export interface ApiReceta {
   ingredientes: ApiRecetaIngrediente[];
   pasos?: ApiRecetaPaso[];
   electrodomesticos?: ApiRecetaElectrodomestico[];
+  // Agregado cuando el backend implemente el contador (US-14)
+  vecesCocinada?: number;
+}
+
+export interface CocinarRecetaResponse {
+  recetaId: string;
+  vecesCocinada: number;
 }
 
 @Injectable({
@@ -55,5 +62,10 @@ export class RecipesApiService {
 
   getById(id: string): Observable<ApiReceta> {
     return this.http.get<ApiReceta>(`${this.base}/recetas/${id}`);
+  }
+
+  /** POST /recetas/{id}/cocinar — endpoint a implementar por el backend (US-14) */
+  cocinar(id: string): Observable<CocinarRecetaResponse> {
+    return this.http.post<CocinarRecetaResponse>(`${this.base}/recetas/${id}/cocinar`, {});
   }
 }

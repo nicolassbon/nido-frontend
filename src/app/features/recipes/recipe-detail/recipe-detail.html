@@ -69,15 +69,22 @@
             </div>
 
             <div class="actions">
-              <button type="button" class="primary-action">
+              <button type="button" class="primary-action" (click)="abrirModalCocinar()">
                 <lucide-icon name="play" [size]="16" />
-                Iniciar coccion
+                Cocinar receta
               </button>
               <button type="button" class="secondary-action">
                 <lucide-icon name="bookmark" [size]="16" />
                 Guardar receta
               </button>
             </div>
+
+            @if (vecesCocinada() > 0) {
+              <div class="flex items-center gap-1.5 mt-1 text-[0.775rem] text-nido-brown">
+                <lucide-icon name="chef-hat" [size]="13" />
+                Cocinada {{ vecesCocinada() }} {{ vecesCocinada() === 1 ? 'vez' : 'veces' }}
+              </div>
+            }
           </div>
         </section>
 
@@ -191,5 +198,120 @@
         </section>
       </aside>
     </div>
+    <!-- Modal confirmación cocinar -->
+    @if (showCookModal()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+           (click)="cerrarModalCocinar()">
+        <div class="bg-white rounded-[16px] w-full max-w-[460px] shadow-[0_8px_32px_rgba(0,0,0,0.18)] overflow-hidden"
+             (click)="$event.stopPropagation()">
+
+          <!-- Header del modal -->
+          <div class="px-6 py-5 border-b border-nido-border/40 flex items-start justify-between gap-3">
+            <div>
+              <h2 class="text-[1.05rem] font-bold text-nido-green-dark">¿Confirmar cocción?</h2>
+              <p class="text-[0.8125rem] text-nido-brown mt-0.5">{{ r.nombre }}</p>
+            </div>
+            <button class="bg-transparent border-none cursor-pointer text-nido-brown hover:text-nido-green-dark p-1 mt-0.5"
+                    (click)="cerrarModalCocinar()">
+              <lucide-icon name="x" [size]="18" />
+            </button>
+          </div>
+
+          <!-- Estado: idle / loading / success / error -->
+          @if (cookingState() === 'idle' || cookingState() === 'loading') {
+            <div class="px-6 py-4">
+              <p class="text-[0.8125rem] text-nido-brown mb-3">
+                Los siguientes ingredientes se descontarán de tu alacena:
+              </p>
+              <ul class="list-none m-0 p-0 max-h-[220px] overflow-y-auto flex flex-col gap-1.5">
+                @for (ing of r.ingredientes; track ing.id) {
+                  <li class="flex items-center gap-2.5 py-1.5 border-b border-nido-border/30 last:border-b-0">
+                    @if (isDisponible()(ing)) {
+                      <lucide-icon name="check-circle" [size]="15" class="text-nido-green shrink-0" />
+                    } @else {
+                      <lucide-icon name="alert-circle" [size]="15" class="text-nido-gold shrink-0" />
+                    }
+                    <span class="flex-1 text-[0.8375rem] text-nido-green-dark">
+                      {{ ing.productoNombre || ing.nombre }}
+                    </span>
+                    @if (formatAmount(ing.cantidad, ing.unidad)) {
+                      <span class="text-[0.775rem] text-nido-brown shrink-0">{{ formatAmount(ing.cantidad, ing.unidad) }}</span>
+                    }
+                  </li>
+                }
+              </ul>
+              @if (missingIngredients().length > 0) {
+                <p class="text-[0.775rem] text-nido-gold mt-3 flex items-center gap-1.5">
+                  <lucide-icon name="alert-triangle" [size]="13" />
+                  {{ missingIngredients().length }} ingrediente{{ missingIngredients().length !== 1 ? 's' : '' }} no están en tu alacena y no se descontarán.
+                </p>
+              }
+            </div>
+
+            <div class="px-6 pb-5 flex gap-3">
+              <button
+                class="flex-1 py-2.5 border border-nido-border rounded-lg bg-white text-nido-brown text-[0.875rem] font-medium cursor-pointer hover:bg-nido-cream transition-colors duration-150"
+                [disabled]="cookingState() === 'loading'"
+                (click)="cerrarModalCocinar()">
+                Cancelar
+              </button>
+              <button
+                class="flex-1 py-2.5 border-none rounded-lg bg-nido-green-dark text-nido-cream text-[0.875rem] font-medium cursor-pointer hover:bg-nido-green transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-60"
+                [disabled]="cookingState() === 'loading'"
+                (click)="confirmarCocinar()">
+                @if (cookingState() === 'loading') {
+                  <lucide-icon name="loader" [size]="16" class="spin" />
+                  Guardando...
+                } @else {
+                  <lucide-icon name="chef-hat" [size]="16" />
+                  Confirmar cocción
+                }
+              </button>
+            </div>
+          }
+
+          @if (cookingState() === 'success') {
+            <div class="px-6 py-8 flex flex-col items-center gap-3 text-center">
+              <div class="w-14 h-14 rounded-full bg-[rgba(62,94,74,0.12)] flex items-center justify-center">
+                <lucide-icon name="check-circle" [size]="32" class="text-nido-green-dark" />
+              </div>
+              <div>
+                <p class="text-nido-green-dark font-semibold text-[1rem]">¡Receta cocinada!</p>
+                <p class="text-nido-brown text-[0.8125rem] mt-1">Los ingredientes fueron descontados de tu alacena.</p>
+                @if (vecesCocinada() > 0) {
+                  <p class="text-nido-brown text-[0.8125rem] mt-0.5">
+                    Esta receta fue cocinada {{ vecesCocinada() }} {{ vecesCocinada() === 1 ? 'vez' : 'veces' }}.
+                  </p>
+                }
+              </div>
+              <button
+                class="mt-2 px-6 py-2.5 border-none rounded-lg bg-nido-green-dark text-nido-cream text-[0.875rem] font-medium cursor-pointer hover:bg-nido-green transition-colors duration-150"
+                (click)="cerrarModalCocinar()">
+                Cerrar
+              </button>
+            </div>
+          }
+
+          @if (cookingState() === 'error') {
+            <div class="px-6 py-8 flex flex-col items-center gap-3 text-center">
+              <div class="w-14 h-14 rounded-full bg-[rgba(180,76,60,0.1)] flex items-center justify-center">
+                <lucide-icon name="alert-circle" [size]="32" class="text-nido-red" />
+              </div>
+              <div>
+                <p class="text-nido-green-dark font-semibold text-[1rem]">No se pudo registrar</p>
+                <p class="text-nido-brown text-[0.8125rem] mt-1">El endpoint aún no está disponible. Tu compañero lo implementará en US-14.</p>
+              </div>
+              <button
+                class="mt-2 px-6 py-2.5 border-none rounded-lg bg-nido-green-dark text-nido-cream text-[0.875rem] font-medium cursor-pointer hover:bg-nido-green transition-colors duration-150"
+                (click)="cerrarModalCocinar()">
+                Cerrar
+              </button>
+            </div>
+          }
+
+        </div>
+      </div>
+    }
+
   }
 </div>
