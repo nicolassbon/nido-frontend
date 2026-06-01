@@ -1,9 +1,10 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { PerfilApiService } from '../perfil/perfil-api.service';
+import { validatePhotoFile } from '../../shared/validators/photo';
 
 @Component({
   selector: 'app-editar-perfil',
@@ -15,17 +16,26 @@ export class EditarPerfil implements OnInit {
   private readonly perfilApi = inject(PerfilApiService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
+  private photoObjectUrl: string | null = null;
+
+  constructor() {
+    this.destroyRef.onDestroy(() => this.clearSelectedPhoto());
+  }
 
   protected readonly form = this.fb.nonNullable.group({
     nombre: ['', Validators.required],
-    email: ['', [Validators.required, Validators.email]],
-    telefono: ['', Validators.required],
-    sexo: ['Femenino', Validators.required],
+    telefono: [''],
+    sexo: ['', Validators.required],
   });
 
   protected readonly apiError = signal<string | null>(null);
   protected readonly isLoading = signal(true);
   protected readonly isSaving = signal(false);
+  protected readonly fotoUrl = signal<string | null>(null);
+  protected readonly photoPreview = signal<string | null>(null);
+  protected readonly selectedPhoto = signal<File | null>(null);
+  protected readonly photoError = signal<string | null>(null);
 
   ngOnInit(): void {
     this.loadProfile();
@@ -42,6 +52,7 @@ export class EditarPerfil implements OnInit {
           telefono: profile.telefono ?? '',
           sexo: profile.sexo ?? 'Otro',
         });
+        this.fotoUrl.set(profile.fotoUrl ?? null);
         this.isLoading.set(false);
       },
       error: () => {
@@ -49,6 +60,48 @@ export class EditarPerfil implements OnInit {
         this.isLoading.set(false);
       },
     });
+  }
+
+  protected onPhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+
+    if (!file) {
+      return;
+    }
+
+    this.photoError.set(null);
+
+    const photoValidationError = validatePhotoFile(file);
+
+    if (photoValidationError) {
+      this.clearSelectedPhoto();
+      this.photoError.set(photoValidationError);
+      input.value = '';
+      return;
+    }
+
+    this.clearSelectedPhoto();
+    this.selectedPhoto.set(file);
+    this.photoObjectUrl = URL.createObjectURL(file);
+    this.photoPreview.set(this.photoObjectUrl);
+    input.value = '';
+  }
+
+  protected onRemovePhoto(event: Event): void {
+    event.stopPropagation();
+    this.clearSelectedPhoto();
+    this.photoError.set(null);
+  }
+
+  private clearSelectedPhoto(): void {
+    if (this.photoObjectUrl) {
+      URL.revokeObjectURL(this.photoObjectUrl);
+      this.photoObjectUrl = null;
+    }
+
+    this.selectedPhoto.set(null);
+    this.photoPreview.set(null);
   }
 
   protected onSave(): void {
@@ -60,7 +113,9 @@ export class EditarPerfil implements OnInit {
     this.apiError.set(null);
     this.isSaving.set(true);
 
-    this.perfilApi.updateProfile(this.form.value).subscribe({
+    const { nombre, sexo, telefono } = this.form.getRawValue();
+
+    this.perfilApi.updateProfile(nombre, sexo, telefono, this.selectedPhoto()).subscribe({
       next: () => this.router.navigate(['/perfil']),
       error: () => {
         this.apiError.set('No se pudo guardar los cambios en el perfil. Intentá nuevamente más tarde.');
@@ -71,5 +126,12 @@ export class EditarPerfil implements OnInit {
 
   protected onCancel(): void {
     this.router.navigate(['/perfil']);
+  }
+
+  protected onImgError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (!img.src.includes('/images/default-avatar.png')) {
+      img.src = '/images/default-avatar.png';
+    }
   }
 }

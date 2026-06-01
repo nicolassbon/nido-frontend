@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { LucideAngularModule } from "lucide-angular";
 
 @Component({
@@ -11,4 +11,5 @@ export class PreferenceCard {
   @Input() title: string = '';
   @Input() icon: string = '';
   @Input() tag: string[] = [];
+  @Output() editClick = new EventEmitter<void>();
 }

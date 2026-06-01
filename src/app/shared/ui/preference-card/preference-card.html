@@ -13,7 +13,7 @@
     }
   </div>
 
-  <button class="mt-auto self-start bg-transparent border border-nido-muted rounded-full px-3 py-1 text-nido-muted text-[0.75rem] flex items-center gap-1.5 hover:bg-nido-cream hover:text-nido-green-dark transition-colors cursor-pointer">
+  <button (click)="editClick.emit()" class="mt-auto self-start bg-transparent border border-nido-muted rounded-full px-3 py-1 text-nido-muted text-[0.75rem] flex items-center gap-1.5 hover:bg-nido-cream hover:text-nido-green-dark transition-colors cursor-pointer">
     <span>> Editar {{ title }}</span>
   </button>
 

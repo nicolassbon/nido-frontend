@@ -8,17 +8,19 @@ export interface PerfilApiResponse {
   email: string;
   telefono: string;
   sexo: 'Femenino' | 'Masculino' | 'Otro' | string;
+  fotoStorageKey?: string;
+  fotoUrl?: string;
   fechaRegistro?: string;
   nivel?: string;
   alergias?: string[];
-  noMeGusta?: string[];
+  alimentacion?: string[];
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class PerfilApiService {
-  private readonly endpoint = `${environment.apiBaseUrl}/api/usuarios/me`;
+  private readonly endpoint = `${environment.apiBaseUrl}/api/perfiles`;
 
   constructor(private readonly http: HttpClient) {}
 
@@ -26,7 +28,20 @@ export class PerfilApiService {
     return this.http.get<PerfilApiResponse>(this.endpoint);
   }
 
-  updateProfile(payload: Partial<PerfilApiResponse>): Observable<PerfilApiResponse> {
-    return this.http.put<PerfilApiResponse>(this.endpoint, payload);
+  updateProfile(nombre: string, sexo: string, telefono: string, foto: File | null): Observable<PerfilApiResponse> {
+    const formData = new FormData();
+    formData.append('nombre', nombre);
+    formData.append('sexo', sexo);
+    if (telefono) {
+      formData.append('telefono', telefono);
+    }
+    if (foto) {
+      formData.append('foto', foto);
+    }
+    return this.http.put<PerfilApiResponse>(this.endpoint, formData);
+  }
+
+  updateRestricciones(tipo: string, restriccionIds: string[]): Observable<any> {
+    return this.http.put(`${this.endpoint}/restricciones`, { tipo, restriccionIds });
   }
 }
