@@ -1,11 +1,17 @@
-<div class="p-6 flex flex-col gap-5 max-w-[1200px]">
+<div class="p-6 flex flex-col gap-5 max-w-[1200px] mx-auto">
 
-  <!-- Banner -->
   <section class="relative overflow-hidden rounded-[14px] px-8 py-7 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
     <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=900&h=200&fit=crop')] bg-center bg-cover opacity-[0.15]"></div>
     <div class="relative z-10">
       <h1 class="text-nido-cream text-[1.6rem] font-bold">Recetas Inteligentes</h1>
-      <p class="text-nido-cream/70 text-sm mt-0.5">{{ filteredRecipes().length }} recetas disponibles</p>
+      @if (!recipeDetail()) {
+        <p class="text-nido-cream/70 text-sm mt-0.5">{{ filteredRecipes().length }} recetas disponibles</p>
+      } @else {
+        <button (click)="recipeDetail.set(null)" class="mt-1 flex items-center gap-1.5 text-nido-cream/80 hover:text-nido-cream text-xs font-medium bg-transparent border-none cursor-pointer">
+          <lucide-icon name="arrow-left" [size]="14" />
+          Volver al listado
+        </button>
+      }
     </div>
     <button class="relative z-10 flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]">
       <lucide-icon name="shuffle" [size]="16" />
@@ -13,7 +19,6 @@
     </button>
   </section>
 
-  <!-- Buscador -->
   <div class="relative flex items-center">
     <lucide-icon name="search" [size]="18" class="absolute left-4 text-nido-brown pointer-events-none" />
     <input
@@ -30,191 +35,148 @@
     }
   </div>
 
-  <!-- Filtros -->
-  <div class="flex items-center justify-between gap-3 flex-wrap">
-    <div class="flex gap-2 flex-wrap">
-      @for (filter of filterOptions; track filter) {
-        <button [class]="filterChipClass(filter)" (click)="setFilter(filter)">
-          {{ filter }}
-        </button>
-      }
-      <button [class]="allergenChipClass()" (click)="toggleAllergens()">
-        <lucide-icon name="shield" [size]="13" />
-        Sin alérgenos
-        @if (excludeAllergens()) {
-          <lucide-icon name="check" [size]="12" />
-        }
-      </button>
-    </div>
+  @if (recipeDetail(); as recipe) {
+    
+    <section class="relative overflow-hidden rounded-[14px] px-8 py-10 flex flex-col justify-end min-h-[200px] [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)] animate-fade-in">
+      <div class="absolute inset-0 bg-center bg-cover opacity-[0.25]" [style.background-image]="'url(' + recipe.imagenUrl + ')'"></div>
+      <div class="relative z-10 flex flex-col gap-2">
+        <span class="flex items-center gap-1 w-fit px-3 py-1 bg-nido-cream/20 border border-nido-cream/30 text-nido-cream text-[0.75rem] font-semibold rounded-full">
+          <lucide-icon name="clock" [size]="13" />
+          {{ recipe.readyInMinutes }} min de preparación
+        </span>
+        <h1 class="text-nido-cream text-[2rem] font-bold leading-tight">{{ recipe.titulo }}</h1>
+      </div>
+    </section>
 
-    <!-- Sort -->
-    <div class="relative">
-      <button
-        class="flex items-center gap-1.5 px-3.5 py-[0.4rem] rounded-[20px] border-[1.5px] border-solid border-nido-border bg-white text-nido-brown text-[0.8125rem] font-medium cursor-pointer whitespace-nowrap hover:border-nido-green hover:text-nido-green"
-        (click)="showSortDropdown.set(!showSortDropdown())">
-        <lucide-icon name="sliders-horizontal" [size]="15" />
-        {{ getSortLabel() }}
-        <lucide-icon name="chevron-down" [size]="14" />
-      </button>
-      @if (showSortDropdown()) {
-        <div class="absolute top-[calc(100%+6px)] right-0 bg-white border border-nido-border rounded-[10px] shadow-[0_4px_16px_rgba(38,63,48,0.12)] overflow-hidden z-10 min-w-[180px]">
-          <button [class]="sortOptionClass('default')"       (click)="setSort('default')">Por defecto</button>
-          <button [class]="sortOptionClass('rating')"        (click)="setSort('rating')">Mejor valoradas</button>
-          <button [class]="sortOptionClass('coincidencia')"  (click)="setSort('coincidencia')">Mayor coincidencia</button>
+    <div class="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-6 items-start">
+      
+      <main class="flex flex-col gap-5">
+        <div class="bg-white rounded-[14px] p-6 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
+          <h2 class="text-[1.1rem] font-semibold text-nido-green-dark mb-2 flex items-center gap-2">
+            <lucide-icon name="book-open" [size]="18" class="text-nido-green" />
+            Sobre este plato
+          </h2>
+          <p class="text-[0.875rem] text-nido-brown leading-relaxed" [innerHTML]="recipe.summary"></p>
         </div>
-      }
-    </div>
-  </div>
 
-  <!-- Cuerpo -->
-  <div class="grid grid-cols-1 md:grid-cols-[1fr_290px] gap-6 items-start">
-
-    <!-- Grid de recetas -->
-    <div>
-      @if (filteredRecipes().length === 0) {
-        <div class="flex flex-col items-center justify-center gap-3 py-16 px-8 text-nido-brown text-center">
-          <lucide-icon name="chef-hat" [size]="48" />
-          <p class="text-[0.9rem]">No encontramos recetas con ese criterio.</p>
-          <button
-            class="mt-2 px-5 py-2 bg-nido-green-dark text-nido-cream border-none rounded-[20px] text-[0.8rem] cursor-pointer hover:bg-nido-green"
-            (click)="clearSearch(); setFilter('Todos')">
-            Ver todas las recetas
-          </button>
+        <div class="bg-white rounded-[14px] p-6 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
+          <h2 class="text-[1.1rem] font-semibold text-nido-green-dark mb-4 flex items-center gap-2">
+            <lucide-icon name="chef-hat" [size]="18" class="text-nido-green" />
+            Instrucciones de preparación
+          </h2>
+          <ol class="list-none flex flex-col gap-4">
+            @for (paso of recipe.instrucciones; track $index) {
+              <li class="flex gap-4 items-start pb-4 border-b border-solid border-nido-border last:border-none last:pb-0">
+                <div class="w-7 h-7 bg-nido-green-dark text-nido-cream font-bold text-[0.8rem] rounded-full flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+                  {{ $index + 1 }}
+                </div>
+                <p class="text-[0.875rem] text-nido-green-dark leading-relaxed flex-1 pt-0.5">
+                  {{ paso.replace('Paso ' + ($index + 1) + ': ', '') }}
+                </p>
+              </li>
+            }
+          </ol>
         </div>
-      } @else {
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          @for (recipe of filteredRecipes(); track recipe.id) {
-            <article class="bg-white rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition-[transform,box-shadow] duration-[180ms] cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)] group">
+      </main>
 
-              <!-- Imagen -->
-              <div class="relative h-40 overflow-hidden">
-                <img [src]="recipe.image" [alt]="recipe.name" loading="lazy"
-                     class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
-                <span [class]="difficultyBadgeClass(recipe.difficulty)">{{ recipe.difficulty }}</span>
-              </div>
-
-              <!-- Info -->
-              <div class="px-4 py-3.5 flex flex-col gap-1.5">
-                <h3 class="text-[0.875rem] font-semibold text-nido-green-dark leading-snug">{{ recipe.name }}</h3>
-
-                <div class="flex items-center gap-1.5 text-[0.8rem] text-nido-green-dark font-medium">
-                  <lucide-icon name="star" [size]="13" class="text-nido-gold" />
-                  <span>{{ recipe.rating }}</span>
-                </div>
-
-                <div class="flex gap-3.5 mt-0.5">
-                  <span class="flex items-center gap-1 text-[0.775rem] text-nido-brown">
-                    <lucide-icon name="clock" [size]="13" />
-                    {{ recipe.timeMinutes }} min
-                  </span>
-                  <span class="flex items-center gap-1 text-[0.775rem] text-nido-brown">
-                    <lucide-icon name="flame" [size]="13" />
-                    {{ recipe.calories }} kcal
-                  </span>
-                </div>
-
-                <!-- % Disponibilidad -->
-                <div class="flex items-center gap-2 mt-1.5">
-                  <div class="flex-1 h-1 bg-nido-border rounded-[10px] overflow-hidden">
-                    <div class="h-full rounded-[10px] transition-[width] duration-[400ms]"
-                         [style.width.%]="recipe.availabilityPercent"
-                         [style.background-color]="getAvailabilityColor(recipe.availabilityPercent)">
-                    </div>
-                  </div>
-                  <span class="text-[0.7rem] font-semibold whitespace-nowrap"
-                        [style.color]="getAvailabilityColor(recipe.availabilityPercent)">
-                    {{ recipe.availabilityPercent }}% disponible
-                  </span>
-                </div>
-              </div>
-
-            </article>
-          }
+      <aside class="flex flex-col gap-4 sticky top-5">
+        <div class="bg-white rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-solid border-nido-border">
+          <img [src]="recipe.imagenUrl" [alt]="recipe.titulo" class="w-full h-56 object-cover" />
         </div>
-      }
-    </div>
 
-    <!-- Panel lateral -->
-    <aside class="flex flex-col gap-4">
-
-      <!-- ¿Quién come hoy? -->
-      <div class="bg-white rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
-        <h3 class="text-[0.9375rem] font-semibold text-nido-green-dark mb-1">¿Quién come hoy?</h3>
-        <p class="text-[0.775rem] text-nido-brown mb-3.5">Las recetas se filtran según sus alérgenos</p>
-        <div class="grid grid-cols-2 gap-2 mb-2">
-          @for (member of householdMembers; track member.id) {
-            <button
-              [class]="memberToggleClass(member.id)"
-              [style.border-color]="isEatingToday(member.id) ? member.color : null"
-              (click)="toggleEatingToday(member.id)"
-              [title]="member.allergens.length ? 'Alérgico a: ' + member.allergens.join(', ') : 'Sin alérgenos'">
-              <div class="w-7 h-7 rounded-full text-[0.65rem] font-bold flex items-center justify-center shrink-0 transition-[background] duration-150"
-                   [style.background]="isEatingToday(member.id) ? member.color : '#e5ddd0'"
-                   [style.color]="isEatingToday(member.id) ? '#fff' : '#927357'">
-                {{ member.initials }}
-              </div>
-              <span class="text-[0.8rem] font-medium flex-1 text-left transition-[color] duration-150"
-                    [style.color]="isEatingToday(member.id) ? '#263F30' : '#927357'">
-                {{ member.name }}
-              </span>
-              @if (member.allergens.length) {
-                <span class="text-nido-gold"><lucide-icon name="alert-triangle" [size]="10" /></span>
+        <div class="bg-white rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
+          <h3 class="text-[1rem] font-semibold text-nido-green-dark mb-1 flex items-center gap-2">
+            <lucide-icon name="shopping-basket" [size]="18" class="text-nido-green" />
+            Ingredientes requeridos
+          </h3>
+          <p class="text-[0.75rem] text-nido-brown mb-4">Lista completa para tu alacena</p>
+          <ul class="list-none flex flex-col gap-2.5">
+            @for (ingrediente of recipe.ingredientes; track ingrediente) {
+              @if (ingrediente.startsWith('[') && ingrediente.endsWith(']')) {
+                <li class="text-[0.775rem] font-bold text-nido-green bg-nido-border/40 px-2 py-1 rounded mt-3 mb-1 uppercase tracking-wider">
+                  {{ ingrediente.replace('[', '').replace(']', '') }}
+                </li>
+              } @else if (ingrediente.trim() && !ingrediente.includes('————')) {
+                <li class="flex items-start gap-2.5 text-[0.85rem] text-nido-green-dark py-0.5">
+                  <lucide-icon name="check-square" [size]="14" class="text-nido-green shrink-0 mt-0.5" />
+                  <span class="leading-tight">{{ ingrediente }}</span>
+                </li>
               }
-            </button>
-          }
+            }
+          </ul>
         </div>
-        @if (excludeAllergens()) {
-          <p class="flex items-center gap-1.5 text-[0.75rem] text-nido-green bg-[rgba(62,94,74,0.08)] px-2.5 py-[0.4rem] rounded-md mt-1">
-            <lucide-icon name="shield" [size]="13" />
-            Excluyendo recetas con alérgenos de los presentes
-          </p>
+        
+        <button (click)="recipeDetail.set(null)" class="w-full py-2.5 bg-nido-brown text-nido-cream border-none rounded-lg text-[0.825rem] font-medium cursor-pointer hover:bg-nido-green-dark transition-colors">
+          Volver al buscador
+        </button>
+      </aside>
+    </div>
+
+  } @else {
+    
+    <div class="flex items-center justify-between gap-3 flex-wrap">
+      <div class="flex gap-2 flex-wrap">
+        @for (filter of filterOptions; track filter) {
+          <button [class]="filterChipClass(filter)" (click)="setFilter(filter)">
+            {{ filter }}
+          </button>
+        }
+        <button [class]="allergenChipClass()" (click)="toggleAllergens()">
+          <lucide-icon name="shield" [size]="13" />
+          Sin alérgenos
+          @if (excludeAllergens()) {
+            <lucide-icon name="check" [size]="12" />
+          }
+        </button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-[1fr_290px] gap-6 items-start">
+      
+      <div>
+        @if (filteredRecipes().length === 0) {
+          <div class="flex flex-col items-center justify-center gap-3 py-16 px-8 text-nido-brown text-center bg-white rounded-[14px]">
+            <lucide-icon name="chef-hat" [size]="48" />
+            <p class="text-[0.9rem]">No encontramos recetas con ese criterio.</p>
+          </div>
+        } @else {
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            @for (recipe of filteredRecipes(); track recipe.id) {
+              <article (click)="goToDetail(recipe.id)" class="bg-white rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition-[transform,box-shadow] duration-[180ms] cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)] group">
+                <div class="relative h-40 overflow-hidden">
+                  <img [src]="recipe.imagenUrl" [alt]="recipe.titulo" loading="lazy"
+                       class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
+                </div>
+                <div class="px-4 py-4 flex flex-col gap-1">
+                  <h3 class="text-[0.875rem] font-semibold text-nido-green-dark leading-snug line-clamp-2 min-h-[40px]">
+                    {{ recipe.titulo }}
+                  </h3>
+                  <p class="text-[0.75rem] text-nido-brown mt-2 pt-2 border-t border-solid border-nido-border/40 flex items-center justify-between">
+                    <span>ID: #{{ recipe.id }}</span>
+                    <span class="text-nido-green font-medium group-hover:underline">Ver receta →</span>
+                  </p>
+                </div>
+              </article>
+            }
+          </div>
         }
       </div>
 
-      <!-- Cocinó con lo que tenés -->
-      <div class="bg-white rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
-        <h3 class="text-[0.9375rem] font-semibold text-nido-green-dark mb-1">Cocinó con lo que tenés</h3>
-        <p class="text-[0.775rem] text-nido-brown mb-3.5">Seleccioná ingredientes de tu alacena</p>
-        <div class="flex flex-wrap gap-2">
-          @for (item of pantryIngredients(); track item.name; let i = $index) {
-            <button [class]="ingredientChipClass(item.selected)" (click)="toggleIngredient(i)">
-              @if (item.selected) {
-                <lucide-icon name="check-square" [size]="13" />
-              }
-              {{ item.name }}
-            </button>
-          }
+      <aside class="flex flex-col gap-4">
+        <div class="bg-white rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
+          <h3 class="text-[0.9375rem] font-semibold text-nido-green-dark mb-1">¿Quién come hoy?</h3>
+          <p class="text-[0.775rem] text-nido-brown mb-3.5">Filtro de alérgenos por integrantes</p>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            @for (member of householdMembers; track member.id) {
+              <button [class]="memberToggleClass(member.id)" (click)="toggleEatingToday(member.id)">
+                <span class="text-[0.8rem] font-medium text-left">{{ member.name }}</span>
+              </button>
+            }
+          </div>
         </div>
-        <button class="w-full flex items-center justify-center gap-2 mt-3.5 py-2.5 bg-nido-green-dark text-nido-cream border-none rounded-lg text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 hover:bg-nido-green">
-          <lucide-icon name="search" [size]="15" />
-          Buscar receta
-        </button>
-      </div>
+      </aside>
 
-      <!-- Tus ingredientes -->
-      <div class="bg-white rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
-        <div class="flex items-center justify-between mb-3.5">
-          <h3 class="text-[0.9375rem] font-semibold text-nido-green-dark">Tus ingredientes</h3>
-          <button class="flex items-center gap-1 bg-transparent border-none text-nido-gold text-[0.775rem] font-medium cursor-pointer hover:underline">
-            <lucide-icon name="pencil" [size]="13" />
-            Editar
-          </button>
-        </div>
-        <ul class="list-none flex flex-col gap-2">
-          @for (item of pantryIngredients(); track item.name) {
-            <li class="flex items-center gap-2 text-[0.8125rem]">
-              <lucide-icon name="shopping-basket" [size]="14" class="text-nido-green shrink-0" />
-              <span class="flex-1 text-nido-green-dark">{{ item.name }}</span>
-              <span class="text-nido-brown text-[0.775rem]">{{ item.amount }}</span>
-            </li>
-          }
-        </ul>
-        <button class="w-full mt-3 bg-transparent border-none text-nido-gold text-[0.8rem] font-medium cursor-pointer text-center block hover:underline">
-          Ver todo ({{ pantryIngredients().length }})
-        </button>
-      </div>
-
-    </aside>
-  </div>
+    </div>
+  }
 
 </div>

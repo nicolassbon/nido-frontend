@@ -1,6 +1,7 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, signal, inject, effect } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
+import { HttpClient } from '@angular/common/http'; // Inyectamos el cliente HTTP nativo
 
 type Difficulty = 'Fácil' | 'Medio' | 'Difícil';
 type FilterOption = 'Todos' | Difficulty;
@@ -8,7 +9,25 @@ type SortOption = 'default' | 'rating' | 'coincidencia';
 
 interface RecipeIngredient {
   name: string;
-  allergenType?: string; // 'Gluten' | 'Mariscos' | 'Maní' | etc.
+  allergenType?: string;
+}
+
+// Interfaz para la lista del buscador de C#
+interface RecetaDto {
+  id: number;
+  titulo: string;
+  imagenUrl: string;
+}
+
+// Interfaz para el detalle completo que viene de C#
+export interface RecetaDetalleDto {
+  id: number;
+  titulo: string;
+  imagenUrl: string;
+  readyInMinutes: number;
+  summary: string;
+  ingredientes: string[];
+  instrucciones: string[];
 }
 
 interface Recipe {
@@ -48,14 +67,25 @@ interface HouseholdMember {
   styleUrl: './recipes.scss',
 })
 export class Recipes {
-  // ── Estado ──────────────────────────────────────────────
+  // Inyección del HttpClient de Angular moderno
+  private readonly http = inject(HttpClient);
+  // URL base de tu backend corriendo en el puerto 8080 de Docker
+  private readonly apiUrl = 'http://localhost:8080/api/recetas';
+
+  // ── Estado General ────────────────────────────────────────
   protected readonly searchQuery = signal('');
   protected readonly activeFilter = signal<FilterOption>('Todos');
   protected readonly sortBy = signal<SortOption>('default');
   protected readonly showSortDropdown = signal(false);
   protected readonly excludeAllergens = signal(false);
 
-  // ── Filtros ──────────────────────────────────────────────
+  // ── Estado Nuevo para la Conexión con C# ──────────────────
+  // Recetas externas que vienen de Spoonacular
+  private readonly apiRecipes = signal<RecetaDto[]>([]);
+  // Receta seleccionada en detalle
+  protected readonly recipeDetail = signal<RecetaDetalleDto | null>(null);
+
+  // ── Filtros Estáticos ────────────────────────────────────
   protected readonly filterOptions: FilterOption[] = ['Todos', 'Fácil', 'Medio', 'Difícil'];
 
   // ── Integrantes del hogar ────────────────────────────────
@@ -66,18 +96,15 @@ export class Recipes {
     { id: 'm4', name: 'Juan', initials: 'JU', color: '#263F30', allergens: [] },
   ];
 
-  // ── Quién come hoy (todos por defecto) ───────────────────
   protected readonly eatingToday = signal<Set<string>>(
     new Set(this.householdMembers.map(m => m.id))
   );
 
-  // ── Alérgenos activos según quién come hoy ───────────────
   private readonly activeAllergens = computed(() => {
     const eating = this.householdMembers.filter(m => this.eatingToday().has(m.id));
     return [...new Set(eating.flatMap(m => m.allergens))];
   });
 
-  // ── Alacena del usuario ──────────────────────────────────
   protected readonly pantryIngredients = signal<PantryIngredient[]>([
     { name: 'Garbanzos', amount: '200 gramos', selected: true },
     { name: 'Leche', amount: '1 litro', selected: true },
@@ -89,134 +116,119 @@ export class Recipes {
     { name: 'Ajo', amount: '1 cabeza', selected: true },
   ]);
 
-  // ── Recetas mock con ingredientes ────────────────────────
+  // ── Recetas mock de respaldo ─────────────────────────────
   private readonly allRecipes: Recipe[] = [
     {
       id: '1', name: 'Muslos de pollo en freidora de aire',
       image: 'https://images.unsplash.com/photo-1598103442097-8b74394b95c1?w=400&h=250&fit=crop',
       rating: 4.9, difficulty: 'Medio', timeMinutes: 30, calories: 420,
-      ingredients: [
-        { name: 'Pollo' }, { name: 'Aceite de oliva' },
-        { name: 'Ajo' }, { name: 'Especias' },
-      ],
+      ingredients: [{ name: 'Pollo' }, { name: 'Aceite de oliva' }, { name: 'Ajo' }, { name: 'Especias' }],
     },
     {
       id: '2', name: 'Pan de ajo',
       image: 'https://images.unsplash.com/photo-1573140247632-f8fd74997d5c?w=400&h=250&fit=crop',
       rating: 4.5, difficulty: 'Fácil', timeMinutes: 25, calories: 200,
-      ingredients: [
-        { name: 'Pan', allergenType: 'Gluten' }, { name: 'Ajo' },
-        { name: 'Aceite de oliva' }, { name: 'Perejil' },
-      ],
+      ingredients: [{ name: 'Pan', allergenType: 'Gluten' }, { name: 'Ajo' }, { name: 'Aceite de oliva' }, { name: 'Perejil' }],
     },
     {
       id: '3', name: 'Entraña de ternera',
       image: 'https://images.unsplash.com/photo-1558030006-450675393462?w=400&h=250&fit=crop',
       rating: 5.0, difficulty: 'Difícil', timeMinutes: 30, calories: 320,
-      ingredients: [
-        { name: 'Carne' }, { name: 'Sal' }, { name: 'Aceite de oliva' },
-      ],
+      ingredients: [{ name: 'Carne' }, { name: 'Sal' }, { name: 'Aceite de oliva' }],
     },
     {
       id: '4', name: 'Tiramisú italiano',
       image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=400&h=250&fit=crop',
       rating: 4.0, difficulty: 'Fácil', timeMinutes: 30, calories: 350,
-      ingredients: [
-        { name: 'Harina', allergenType: 'Gluten' }, { name: 'Leche' },
-        { name: 'Huevos' }, { name: 'Café' },
-      ],
+      ingredients: [{ name: 'Harina', allergenType: 'Gluten' }, { name: 'Leche' }, { name: 'Huevos' }, { name: 'Café' }],
     },
     {
       id: '5', name: 'Pasta con pollo a la crema',
       image: 'https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?w=400&h=250&fit=crop',
       rating: 4.7, difficulty: 'Medio', timeMinutes: 40, calories: 510,
-      ingredients: [
-        { name: 'Pasta', allergenType: 'Gluten' }, { name: 'Pollo' },
-        { name: 'Leche' }, { name: 'Ajo' },
-      ],
+      ingredients: [{ name: 'Pasta', allergenType: 'Gluten' }, { name: 'Pollo' }, { name: 'Leche' }, { name: 'Ajo' }],
     },
     {
       id: '6', name: 'Ensalada mediterránea',
       image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=250&fit=crop',
       rating: 4.3, difficulty: 'Fácil', timeMinutes: 15, calories: 180,
-      ingredients: [
-        { name: 'Lechuga' }, { name: 'Garbanzos' },
-        { name: 'Aceite de oliva' }, { name: 'Atún' },
-      ],
-    },
-    {
-      id: '7', name: 'Risotto de hongos',
-      image: 'https://images.unsplash.com/photo-1476124369491-e7addf5db371?w=400&h=250&fit=crop',
-      rating: 4.8, difficulty: 'Difícil', timeMinutes: 50, calories: 430,
-      ingredients: [
-        { name: 'Arroz' }, { name: 'Hongos' },
-        { name: 'Leche' }, { name: 'Ajo' },
-      ],
-    },
-    {
-      id: '8', name: 'Cazuela de mariscos',
-      image: 'https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=400&h=250&fit=crop',
-      rating: 4.6, difficulty: 'Medio', timeMinutes: 35, calories: 390,
-      ingredients: [
-        { name: 'Mariscos', allergenType: 'Mariscos' }, { name: 'Carne' },
-        { name: 'Choclo' }, { name: 'Aceite de oliva' },
-      ],
+      ingredients: [{ name: 'Lechuga' }, { name: 'Garbanzos' }, { name: 'Aceite de oliva' }, { name: 'Atún' }],
     },
   ];
 
-  // ── Computed: recetas con disponibilidad y alérgenos ─────
-  private readonly recipesWithAvailability = computed<RecipeWithAvailability[]>(() => {
+  constructor() {
+    // Escucha de forma reactiva cada cambio en la caja de búsqueda para pegarle a C# sin apretar botones
+    effect(() => {
+      const query = this.searchQuery().trim();
+      if (query.length > 2) {
+        this.http.get<RecetaDto[]>(`${this.apiUrl}/buscar?q=${query}`).subscribe({
+          next: (res) => this.apiRecipes.set(res),
+          error: () => this.apiRecipes.set([])
+        });
+      } else if (query.length === 0) {
+        this.apiRecipes.set([]); // Si vacían el input, limpiamos la lista externa
+      }
+    });
+  }
+
+  // ── Computed: Integración inteligente de Grillas ────────────────────────
+  protected readonly filteredRecipes = computed(() => {
+    const queryBusqueda = this.searchQuery().trim();
+
+    // CASO A: Si el usuario está buscando algo, mostramos los datos de Spoonacular
+    if (queryBusqueda.length > 0) {
+      return this.apiRecipes();
+    }
+
+    // CASO B: Si el input está vacío, mostramos tus recetas mock locales originales
     const pantryNames = this.pantryIngredients().map(i => i.name.toLowerCase());
     const allergens = this.activeAllergens();
 
-    return this.allRecipes.map(recipe => {
+    let localResult = this.allRecipes.map(recipe => {
       const matched = recipe.ingredients.filter(i =>
         pantryNames.some(p => p.includes(i.name.toLowerCase()) || i.name.toLowerCase().includes(p))
       ).length;
-
       const availabilityPercent = Math.round((matched / recipe.ingredients.length) * 100);
-
       const hasAllergen = recipe.ingredients.some(i =>
-        i.allergenType && allergens.some(a =>
-          a.toLowerCase() === i.allergenType!.toLowerCase()
-        )
+        i.allergenType && allergens.some(a => a.toLowerCase() === i.allergenType!.toLowerCase())
       );
-
       return { ...recipe, availabilityPercent, hasAllergen };
     });
-  });
-
-  // ── Computed: recetas filtradas y ordenadas ───────────────
-  protected readonly filteredRecipes = computed(() => {
-    let result = [...this.recipesWithAvailability()];
 
     if (this.activeFilter() !== 'Todos') {
-      result = result.filter(r => r.difficulty === this.activeFilter());
+      localResult = localResult.filter(r => r.difficulty === this.activeFilter());
+    }
+    if (this.excludeAllergens()) {
+      localResult = localResult.filter(r => !(r as any).hasAllergen);
     }
 
-    const q = this.searchQuery().trim().toLowerCase();
-    if (q) result = result.filter(r => r.name.toLowerCase().includes(q));
-
-    if (this.excludeAllergens()) result = result.filter(r => !r.hasAllergen);
-
-    if (this.sortBy() === 'rating') {
-      result.sort((a, b) => b.rating - a.rating);
-    } else if (this.sortBy() === 'coincidencia') {
-      result.sort((a, b) => b.availabilityPercent - a.availabilityPercent);
-    }
-
-    return result;
+    // Adaptamos las propiedades locales al formato de tu nuevo html unificado (titulo, imagenUrl)
+    return localResult.map(r => ({
+      id: Number(r.id),
+      titulo: r.name,
+      imagenUrl: r.image
+    }));
   });
 
-  // ── Acciones ─────────────────────────────────────────────
-  protected setFilter(filter: FilterOption): void { this.activeFilter.set(filter); }
+  // ── Acción para ir al Detalle Completo ──────────────────────────────
+  protected goToDetail(id: number): void {
+    // Metemos un objeto temporal vacío para activar el Spinner de carga del HTML
+    this.recipeDetail.set({ id } as any);
 
-  protected setSort(sort: SortOption): void {
-    this.sortBy.set(sort);
-    this.showSortDropdown.set(false);
+    // Le pegamos al endpoint de C# por ID: /api/recetas/{id}
+    this.http.get<RecetaDetalleDto>(`${this.apiUrl}/${id}`).subscribe({
+      next: (res) => this.recipeDetail.set(res),
+      error: () => this.recipeDetail.set(null)
+    });
   }
 
+  // ── Métodos originales heredados ───────────────────────────────────
+  protected setFilter(filter: FilterOption): void { this.activeFilter.set(filter); }
+  protected setSort(sort: SortOption): void { this.sortBy.set(sort); this.showSortDropdown.set(false); }
   protected toggleAllergens(): void { this.excludeAllergens.update(v => !v); }
+  protected clearSearch(): void { this.searchQuery.set(''); this.apiRecipes.set([]); }
+  protected isEatingToday(memberId: string): boolean { return this.eatingToday().has(memberId); }
+  protected get selectedIngredients(): PantryIngredient[] { return this.pantryIngredients().filter(i => i.selected); }
 
   protected toggleEatingToday(memberId: string): void {
     this.eatingToday.update(set => {
@@ -226,20 +238,10 @@ export class Recipes {
     });
   }
 
-  protected isEatingToday(memberId: string): boolean {
-    return this.eatingToday().has(memberId);
-  }
-
   protected toggleIngredient(index: number): void {
     this.pantryIngredients.update(items =>
       items.map((item, i) => i === index ? { ...item, selected: !item.selected } : item)
     );
-  }
-
-  protected clearSearch(): void { this.searchQuery.set(''); }
-
-  protected get selectedIngredients(): PantryIngredient[] {
-    return this.pantryIngredients().filter(i => i.selected);
   }
 
   protected getAvailabilityColor(percent: number): string {
@@ -254,7 +256,6 @@ export class Recipes {
     return 'Ordenar';
   }
 
-  // ── Tailwind class helpers ────────────────────────────────
   protected difficultyBadgeClass(d: Difficulty): string {
     const base = 'absolute bottom-2 right-2 px-2.5 py-0.5 rounded-[20px] text-[0.7rem] font-semibold';
     if (d === 'Fácil')  return `${base} bg-[rgba(62,94,74,0.9)] text-nido-cream`;
@@ -285,15 +286,11 @@ export class Recipes {
 
   protected sortOptionClass(option: SortOption): string {
     const base = 'w-full px-4 py-2.5 text-left border-0 bg-transparent text-[0.8375rem] cursor-pointer block hover:bg-nido-cream';
-    return this.sortBy() === option
-      ? `${base} text-nido-gold font-semibold`
-      : `${base} text-nido-green-dark`;
+    return this.sortBy() === option ? `${base} text-nido-gold font-semibold` : `${base} text-nido-green-dark`;
   }
 
   protected memberToggleClass(memberId: string): string {
     const base = 'flex items-center gap-2 px-2.5 py-2 rounded-[10px] border-[1.5px] border-solid cursor-pointer transition-all duration-150 relative w-full';
-    return this.isEatingToday(memberId)
-      ? `${base} bg-white`
-      : `${base} bg-nido-cream border-nido-border`;
+    return this.isEatingToday(memberId) ? `${base} bg-white` : `${base} bg-nido-cream border-nido-border`;
   }
 }
