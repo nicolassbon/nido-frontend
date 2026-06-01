@@ -97,6 +97,77 @@ describe('AuthService', () => {
     });
   });
 
+  describe('password management', () => {
+    it('forgotPassword should send a POST request with email to /auth/forgot-password', () => {
+      const email = 'test@example.com';
+      const expectedResponse = { message: 'If an account exists for that email, you will receive instructions.' };
+
+      service.forgotPassword(email).subscribe((res) => {
+        expect(res).toEqual(expectedResponse);
+      });
+
+      const req = httpMock.expectOne(`${environment.apiBaseUrl}/auth/forgot-password`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({ email });
+      req.flush(expectedResponse);
+    });
+
+    it('resetPassword should send a POST request with token and passwords to /auth/reset-password', () => {
+      const resetReq = {
+        token: 'valid-token',
+        newPassword: 'Password123!',
+        newPasswordConfirmation: 'Password123!',
+      };
+      const expectedResponse = { message: 'Password reset successful.' };
+
+      service.resetPassword(resetReq).subscribe((res) => {
+        expect(res).toEqual(expectedResponse);
+      });
+
+      const req = httpMock.expectOne(`${environment.apiBaseUrl}/auth/reset-password`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual(resetReq);
+      req.flush(expectedResponse);
+    });
+
+    it('changePassword should send a POST request with credentials to /auth/change-password', () => {
+      const changeReq = {
+        currentPassword: 'OldPassword123!',
+        newPassword: 'NewPassword123!',
+        newPasswordConfirmation: 'NewPassword123!',
+      };
+      const expectedResponse = { message: 'Password updated.' };
+
+      service.changePassword(changeReq).subscribe((res) => {
+        expect(res).toEqual(expectedResponse);
+      });
+
+      const req = httpMock.expectOne(`${environment.apiBaseUrl}/auth/change-password`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual(changeReq);
+      expect(req.request.withCredentials).toBe(true);
+      req.flush(expectedResponse);
+    });
+
+    it('addPassword should send a POST request to /auth/add-password', () => {
+      const addReq = {
+        newPassword: 'Password123!',
+        newPasswordConfirmation: 'Password123!',
+      };
+      const expectedResponse = { message: 'Password added.' };
+
+      service.addPassword(addReq).subscribe((res) => {
+        expect(res).toEqual(expectedResponse);
+      });
+
+      const req = httpMock.expectOne(`${environment.apiBaseUrl}/auth/add-password`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual(addReq);
+      expect(req.request.withCredentials).toBe(true);
+      req.flush(expectedResponse);
+    });
+  });
+
   describe('isAuthenticated', () => {
     it('returns true for a token with a future expiration date', () => {
       service.setToken(createToken({ exp: Math.floor(Date.now() / 1000) + 60 }));

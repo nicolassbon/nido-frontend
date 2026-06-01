@@ -61,6 +61,22 @@ describe('OnboardingApiService', () => {
     req.flush(mock);
   });
 
+  it('saveHouseholdStep() PATCHea /onboarding/step-2 con el body completo', () => {
+    const body = {
+      skip: false,
+      usuarioId: 'u1',
+      hogarId: 'h1',
+      members: [{ nombre: 'Abi', rol: 'Pareja' }],
+    };
+
+    service.saveHouseholdStep(body).subscribe();
+
+    const req = http.expectOne(`${environment.apiBaseUrl}/onboarding/step-2`);
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual(body);
+    req.flush(null);
+  });
+
   it('saveWellnessStep() PATCHea /onboarding/step-4 con el body completo', () => {
     const body = {
       skip: false,

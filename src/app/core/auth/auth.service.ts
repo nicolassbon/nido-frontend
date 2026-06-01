@@ -39,6 +39,27 @@ export interface RegisterResponse {
   accessToken: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+  newPasswordConfirmation: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  newPasswordConfirmation: string;
+}
+
+export interface AddPasswordRequest {
+  newPassword: string;
+  newPasswordConfirmation: string;
+}
+
 const TOKEN_KEY = 'accessToken';
 
 function decodeBase64Url(value: string): string {
@@ -126,6 +147,22 @@ export class AuthService {
     return this.http
       .post<RegisterResponse>(`${this.base}/auth/register`, formData, { withCredentials: true })
       .pipe(tap(res => this.setToken(res.accessToken)));
+  }
+
+  forgotPassword(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.base}/auth/forgot-password`, { email });
+  }
+
+  resetPassword(req: ResetPasswordRequest): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.base}/auth/reset-password`, req);
+  }
+
+  changePassword(req: ChangePasswordRequest): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.base}/auth/change-password`, req, { withCredentials: true });
+  }
+
+  addPassword(req: AddPasswordRequest): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.base}/auth/add-password`, req, { withCredentials: true });
   }
 
   login(email: string, password: string): Observable<LoginResponse> {
