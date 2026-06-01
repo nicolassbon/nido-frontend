@@ -34,7 +34,7 @@ export class CreateHousehold {
   readonly steps = [
     { number: 1, label: 'Tu cuenta',    completed: true,  active: false },
     { number: 2, label: 'Tu hogar',     completed: false, active: true  },
-    { number: 3, label: 'Preferencias', completed: false, active: false },
+    { number: 3, label: 'Equipamiento', completed: false, active: false },
     { number: 4, label: 'Finalizar',    completed: false, active: false },
   ];
 
