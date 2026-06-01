@@ -15,12 +15,18 @@ const defaultApiResponse = { hogarId: 'h1', hogarNombre: 'Casa Test', accessToke
 
 describe('AcceptInvitation', () => {
   describe('cuando hay token en la URL', () => {
-    let mockApi: { aceptarInvitacion: ReturnType<typeof vi.fn> };
-    let mockAuth: { setToken: ReturnType<typeof vi.fn> };
+    let mockApi: {
+      aceptarInvitacion: ReturnType<typeof vi.fn>;
+      getInvitacionPreview: ReturnType<typeof vi.fn>;
+    };
+    let mockAuth: { setToken: ReturnType<typeof vi.fn>; isAuthenticated: ReturnType<typeof vi.fn> };
 
     beforeEach(async () => {
-      mockApi = { aceptarInvitacion: vi.fn().mockReturnValue(of(defaultApiResponse)) };
-      mockAuth = { setToken: vi.fn() };
+      mockApi = {
+        aceptarInvitacion: vi.fn().mockReturnValue(of(defaultApiResponse)),
+        getInvitacionPreview: vi.fn().mockReturnValue(of({ hogarNombre: 'Casa Test', emailInvitado: null, expiraEn: null })),
+      };
+      mockAuth = { setToken: vi.fn(), isAuthenticated: vi.fn().mockReturnValue(true) };
 
       await TestBed.configureTestingModule({
         imports: [AcceptInvitation],
@@ -61,7 +67,7 @@ describe('AcceptInvitation', () => {
         expect(fixture.componentInstance.state()).toBe('success');
 
         await vi.advanceTimersByTimeAsync(2500);
-        expect(navigateSpy).toHaveBeenCalledWith(['/']);
+        expect(navigateSpy).toHaveBeenCalledWith(['/inicio']);
       } finally {
         vi.useRealTimers();
       }
@@ -69,7 +75,7 @@ describe('AcceptInvitation', () => {
 
     it('accept() muestra el estado error con el mensaje del servidor', () => {
       mockApi.aceptarInvitacion.mockReturnValue(
-        throwError(() => ({ error: { message: 'Token expirado' } })),
+        throwError(() => ({ error: { detail: 'Token expirado' } })),
       );
       const fixture = TestBed.createComponent(AcceptInvitation);
       fixture.detectChanges();

@@ -11,6 +11,7 @@ describe('CreateHousehold', () => {
   let mockApi: {
     getMiembros: ReturnType<typeof vi.fn>;
     invitar: ReturnType<typeof vi.fn>;
+    removeMiembro: ReturnType<typeof vi.fn>;
   };
   let mockAuth: { getUserId: ReturnType<typeof vi.fn> };
 
@@ -18,6 +19,7 @@ describe('CreateHousehold', () => {
     mockApi = {
       getMiembros: vi.fn().mockReturnValue(of([])),
       invitar: vi.fn().mockReturnValue(of({ token: 'inv-tok' })),
+      removeMiembro: vi.fn().mockReturnValue(of(null)),
     };
     mockAuth = { getUserId: vi.fn().mockReturnValue(null) };
 
@@ -42,7 +44,7 @@ describe('CreateHousehold', () => {
     expect(sorted[0].isCurrentUser).toBe(true);
   });
 
-  it('ngOnInit() reemplaza los miembros cuando la API devuelve datos', () => {
+  it('ngOnInit() reemplaza los miembros cuando la API devuelve datos', async () => {
     mockApi.getMiembros.mockReturnValue(
       of([
         { usuarioId: 'u1', nombre: 'María', email: 'maria@test.com', rol: 'admin', fotoUrl: null },
@@ -51,14 +53,21 @@ describe('CreateHousehold', () => {
     );
     mockAuth.getUserId.mockReturnValue('u1');
 
-    const fixture = TestBed.createComponent(CreateHousehold);
-    fixture.detectChanges();
+    vi.useFakeTimers();
+    try {
+      const fixture = TestBed.createComponent(CreateHousehold);
+      fixture.detectChanges();
 
-    const members = fixture.componentInstance.members();
-    expect(members).toHaveLength(2);
-    expect(members[0].name).toBe('María');
-    expect(members[0].isCurrentUser).toBe(true);
-    expect(members[1].isCurrentUser).toBe(false);
+      vi.advanceTimersByTime(1);
+
+      const members = fixture.componentInstance.members();
+      expect(members).toHaveLength(2);
+      expect(members[0].name).toBe('María');
+      expect(members[0].isCurrentUser).toBe(true);
+      expect(members[1].isCurrentUser).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('ngOnInit() conserva los datos mock cuando la API devuelve lista vacía', () => {

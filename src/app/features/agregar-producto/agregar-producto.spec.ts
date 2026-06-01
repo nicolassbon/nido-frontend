@@ -1,4 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { appConfig } from '../../app.config';
 
 import { AgregarProducto } from './agregar-producto';
 
@@ -9,6 +12,11 @@ describe('AgregarProducto', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AgregarProducto],
+      providers: [
+        ...appConfig.providers,
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(AgregarProducto);
