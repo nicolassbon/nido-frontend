@@ -94,7 +94,7 @@
       }
     </div>
     <div class="relative flex items-center min-w-[220px] max-sm:min-w-0">
-      <lucide-icon name="search" [size]="18" class="absolute left-4 text-nido-brown pointer-events-none" />
+      <lucide-icon name="search" [size]="18" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-nido-brown pointer-events-none" />
       <input
         class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-border rounded-[10px] bg-white text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-green placeholder:text-nido-muted"
         type="text"
@@ -104,7 +104,7 @@
       />
       @if (searchQuery()) {
         <button
-          class="absolute right-3 bg-transparent border-none text-nido-brown cursor-pointer flex items-center p-1 rounded hover:text-nido-green-dark"
+          class="absolute right-2.5 top-1/2 -translate-y-1/2 h-8 w-8 bg-transparent border-none text-nido-brown cursor-pointer flex items-center justify-center rounded hover:text-nido-green-dark"
           (click)="searchQuery.set('')">
           <lucide-icon name="x" [size]="16" />
         </button>
@@ -259,7 +259,7 @@
 
             <!-- Producto no encontrado -->
             @if (draft().notFound) {
-              <div class="flex items-start gap-2 py-3 px-4 bg-[rgba(199,143,90,0.1)] border border-[rgba(199,143,90,0.3)] rounded-lg text-nido-brown text-[0.8125rem] leading-snug">
+              <div class="flex items-start gap-2 py-3 px-4 bg-nido-gold/10 border border-nido-gold/30 rounded-lg text-nido-brown text-[0.8125rem] leading-snug">
                 <lucide-icon name="search-x" [size]="15" class="shrink-0 mt-px" />
                 <span>No encontramos este código en nuestra base de datos. Completá los datos del producto.</span>
               </div>

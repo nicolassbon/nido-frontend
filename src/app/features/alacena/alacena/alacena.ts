@@ -128,7 +128,7 @@ const LOCATION_ICONS: Record<string, string> = {
 };
 
 const LOCATION_COLORS: Record<string, string> = {
-  Alacena:  '#C78F5A',
+  Alacena:  '#B48B6A',
   Freezer:  '#3E5E4A',
   Heladera: '#927357',
 };
@@ -641,7 +641,7 @@ private loadProducts(): void {
   protected getExpiryColor(days: number): string {
     if (days <  0)  return '#b44c3c';
     if (days <= 7)  return '#b44c3c';
-    if (days <= 15) return '#C78F5A';
+    if (days <= 15) return '#B48B6A';
     if (days <= 30) return '#927357';
     return '#ccc5bb';
   }

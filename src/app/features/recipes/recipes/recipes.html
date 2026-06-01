@@ -4,7 +4,7 @@
   <section class="relative overflow-hidden rounded-[14px] px-8 py-7 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
     <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=900&h=200&fit=crop')] bg-center bg-cover opacity-[0.15]"></div>
     <div class="relative z-10">
-      <h1 class="text-nido-cream text-[1.6rem] font-bold">Recetas Inteligentes</h1>
+      <h1 class="text-nido-cream text-[1.6rem] font-bold">Recetas inteligentes</h1>
       <p class="text-nido-cream/70 text-sm mt-0.5">
       {{ filteredRecipes().length }} recetas disponibles
       @if (filterByIngredients()) {
@@ -20,7 +20,7 @@
 
   <!-- Buscador -->
   <div class="relative flex items-center">
-    <lucide-icon name="search" [size]="18" class="absolute left-4 text-nido-brown pointer-events-none" />
+    <lucide-icon name="search" [size]="18" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-nido-brown pointer-events-none" />
     <input
       class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-border rounded-[10px] bg-white text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-green placeholder:text-nido-muted"
       type="text"
@@ -29,7 +29,7 @@
       (ngModelChange)="searchQuery.set($event)"
     />
     @if (searchQuery()) {
-      <button class="absolute right-3 bg-transparent border-none text-nido-brown cursor-pointer flex items-center p-1 rounded hover:text-nido-green-dark" (click)="clearSearch()">
+      <button class="absolute right-2.5 top-1/2 -translate-y-1/2 h-8 w-8 bg-transparent border-none text-nido-brown cursor-pointer flex items-center justify-center rounded hover:text-nido-green-dark" (click)="clearSearch()">
         <lucide-icon name="x" [size]="16" />
       </button>
     }

@@ -71,7 +71,7 @@ export class Recipes implements OnInit {
 
   protected readonly householdMembers: HouseholdMember[] = [
     { id: 'm1', name: 'Luisa', initials: 'LU', color: '#3E5E4A', allergens: [] },
-    { id: 'm2', name: 'Marco', initials: 'MA', color: '#C78F5A', allergens: ['Gluten'] },
+    { id: 'm2', name: 'Marco', initials: 'MA', color: '#B48B6A', allergens: ['Gluten'] },
     { id: 'm3', name: 'Sofia', initials: 'SO', color: '#927357', allergens: ['Mariscos'] },
     { id: 'm4', name: 'Juan', initials: 'JU', color: '#263F30', allergens: [] },
   ];
@@ -243,7 +243,7 @@ export class Recipes implements OnInit {
 
   protected getAvailabilityColor(percent: number): string {
     if (percent >= 75) return '#3E5E4A';
-    if (percent >= 50) return '#C78F5A';
+    if (percent >= 50) return '#B48B6A';
     return '#b44c3c';
   }
 
@@ -256,7 +256,7 @@ export class Recipes implements OnInit {
   protected difficultyBadgeClass(difficulty: Difficulty): string {
     const base = 'absolute bottom-2 right-2 px-2.5 py-0.5 rounded-[20px] text-[0.7rem] font-semibold';
     if (difficulty === 'Fácil') return `${base} bg-[rgba(62,94,74,0.9)] text-nido-cream`;
-    if (difficulty === 'Medio') return `${base} bg-[rgba(199,143,90,0.9)] text-white`;
+    if (difficulty === 'Medio') return `${base} bg-nido-gold/90 text-white`;
     return `${base} bg-[rgba(180,70,60,0.9)] text-white`;
   }
 
