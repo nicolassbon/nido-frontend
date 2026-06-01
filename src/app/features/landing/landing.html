@@ -11,11 +11,11 @@
       </a>
 
       <nav class="hidden md:flex items-center gap-8">
-        <a href="#inicio"     class="nav-link" [class.active-link]="activeSection() === 'inicio'">Inicio</a>
-        <a href="#beneficios" class="nav-link" [class.active-link]="activeSection() === 'beneficios'">Beneficios</a>
-        <a href="#funciones"  class="nav-link" [class.active-link]="activeSection() === 'funciones'">Módulos</a>
-        <a href="#precios"    class="nav-link" [class.active-link]="activeSection() === 'precios'">Precios</a>
-        <a href="#faq"        class="nav-link" [class.active-link]="activeSection() === 'faq'">FAQ</a>
+        <a href="#inicio"     class="nav-link" [class.active-link]="activeSection() === 'inicio'"     (click)="scrollTo('inicio',     $event)">Inicio</a>
+        <a href="#beneficios" class="nav-link" [class.active-link]="activeSection() === 'beneficios'" (click)="scrollTo('beneficios', $event)">Beneficios</a>
+        <a href="#funciones"  class="nav-link" [class.active-link]="activeSection() === 'funciones'"  (click)="scrollTo('funciones',  $event)">Módulos</a>
+        <a href="#precios"    class="nav-link" [class.active-link]="activeSection() === 'precios'"    (click)="scrollTo('precios',    $event)">Precios</a>
+        <a href="#faq"        class="nav-link" [class.active-link]="activeSection() === 'faq'"        (click)="scrollTo('faq',        $event)">FAQ</a>
       </nav>
 
       <a routerLink="/login"
@@ -73,7 +73,7 @@
               Comenzá gratis
               <lucide-icon name="arrow-right" [size]="16" />
             </a>
-            <a href="#beneficios"
+            <a href="#beneficios" (click)="scrollTo('beneficios', $event)"
                class="inline-flex items-center gap-2 border border-white/[0.22] text-white/70 px-6 py-3 rounded-full text-[0.9375rem] no-underline hover:bg-white/[0.08] hover:text-white transition-all duration-200">
               Ver cómo funciona
             </a>
@@ -892,10 +892,10 @@
           <div>
             <p class="text-nido-cream/40 text-[0.72rem] font-bold tracking-widest uppercase mb-4">Navegación</p>
             <div class="flex flex-col gap-3">
-              <a href="#inicio"     class="footer-link">Inicio</a>
-              <a href="#beneficios" class="footer-link">Beneficios</a>
-              <a href="#funciones"  class="footer-link">Módulos</a>
-              <a href="#faq"        class="footer-link">Preguntas frecuentes</a>
+              <a href="#inicio"     class="footer-link" (click)="scrollTo('inicio',     $event)">Inicio</a>
+              <a href="#beneficios" class="footer-link" (click)="scrollTo('beneficios', $event)">Beneficios</a>
+              <a href="#funciones"  class="footer-link" (click)="scrollTo('funciones',  $event)">Módulos</a>
+              <a href="#faq"        class="footer-link" (click)="scrollTo('faq',        $event)">Preguntas frecuentes</a>
             </div>
           </div>
           <div>

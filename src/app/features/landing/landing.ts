@@ -67,4 +67,9 @@ export class Landing {
   toggleFaq(index: number): void {
     this.activeFaq.update(current => current === index ? null : index);
   }
+
+  scrollTo(id: string, event: Event): void {
+    event.preventDefault();
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  }
 }
