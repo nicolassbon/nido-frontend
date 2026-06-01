@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -14,6 +14,8 @@ export interface PerfilApiResponse {
   nivel?: string;
   alergias?: string[];
   alimentacion?: string[];
+  hasPassword?: boolean;
+  hasGoogleLinked?: boolean;
 }
 
 @Injectable({
@@ -21,8 +23,7 @@ export interface PerfilApiResponse {
 })
 export class PerfilApiService {
   private readonly endpoint = `${environment.apiBaseUrl}/api/perfiles`;
-
-  constructor(private readonly http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   getProfile(): Observable<PerfilApiResponse> {
     return this.http.get<PerfilApiResponse>(this.endpoint);

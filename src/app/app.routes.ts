@@ -16,10 +16,15 @@ import { AgregarProducto } from './features/agregar-producto/agregar-producto';
 import { Register } from './features/auth/register/register';
 import { Login } from './features/auth/login/login';
 import { EquipmentStep } from './features/onboarding/equipment-step/equipment-step';
+import { ForgotPassword } from './features/auth/forgot-password/forgot-password';
+import { ResetPassword } from './features/auth/reset-password/reset-password';
+import { Configuracion } from './features/configuracion/configuracion';
 
 export const routes: Routes = [
   { path: 'login',           component: Login },
   { path: 'registro',        component: Register },
+  { path: 'olvidaste-contrasena', component: ForgotPassword },
+  { path: 'restablecer-contrasena', component: ResetPassword },
   { path: 'crear-hogar',     component: CreateHousehold, canActivate: [authGuard] },
   { path: 'equipamiento', component: EquipmentStep, canActivate: [authGuard] },
   { path: 'finalizar-hogar', component: WellnessStep, canActivate: [authGuard] },
@@ -38,6 +43,7 @@ export const routes: Routes = [
       { path: 'electrodomesticos', component: Electrodomesticos },
       { path: 'perfil', component: PerfilComponent },
       { path: 'perfil/editar', component: EditarPerfil },
+      { path: 'configuracion', component: Configuracion },
       { path: 'agregar-producto', component: AgregarProducto },
     ],
   },

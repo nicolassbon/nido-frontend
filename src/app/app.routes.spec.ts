@@ -15,4 +15,10 @@ describe('app routes', () => {
   it('protects layout children with the child auth guard', () => {
     expect(routes.find((route) => route.path === '')?.canActivateChild).toEqual([authChildGuard]);
   });
+
+  it('renders configuracion inside the authenticated layout shell', () => {
+    const layoutRoute = routes.find((route) => route.path === '');
+    expect(layoutRoute?.children?.some((route) => route.path === 'configuracion')).toBe(true);
+    expect(routes.find((route) => route.path === 'configuracion')).toBeUndefined();
+  });
 });
