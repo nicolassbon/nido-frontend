@@ -9,6 +9,7 @@ import {
   Refrigerator,
   ChefHat,
   Wallet,
+  ShoppingCart,
   CheckSquare,
   Calendar,
   Zap,
@@ -80,6 +81,9 @@ import {
   Droplet,
   Tv,
   Plug,
+  Microwave,
+  Trash2,
+  WashingMachine,
 
   // Perfil / Configuracion
   UserPlus,
@@ -113,6 +117,7 @@ export const appConfig: ApplicationConfig = {
         Refrigerator,
         ChefHat,
         Wallet,
+        ShoppingCart,
         CheckSquare,
         Calendar,
         Zap,
@@ -180,6 +185,9 @@ export const appConfig: ApplicationConfig = {
         Droplet,
         Tv,
         Plug,
+        Microwave,
+        Trash2,
+        WashingMachine,
 
         // Perfil / Configuracion
         UserPlus,
