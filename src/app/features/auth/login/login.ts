@@ -8,7 +8,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { AuthService, type GoogleLoginResponse } from '../../../core/auth/auth.service';
 import { GoogleIdentityService } from '../../../core/auth/google-identity.service';
@@ -24,6 +24,7 @@ export class Login {
   private readonly auth = inject(AuthService);
   private readonly googleIdentity = inject(GoogleIdentityService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly googleButtonHost = viewChild<ElementRef<HTMLElement>>('googleButtonHost');
 
   readonly showPassword = signal(false);
@@ -61,7 +62,8 @@ export class Login {
     this.auth.login(email, password).subscribe({
       next: () => {
         this.loading.set(false);
-        this.router.navigate(['/']);
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        returnUrl ? this.router.navigateByUrl(returnUrl) : this.router.navigate(['/']);
       },
       error: (err) => {
         this.loading.set(false);
@@ -118,7 +120,10 @@ export class Login {
     this.auth.googleLogin(idToken).subscribe({
       next: (response: GoogleLoginResponse) => {
         this.loading.set(false);
-        if (response.isNewUser) {
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        if (returnUrl) {
+          this.router.navigateByUrl(returnUrl);
+        } else if (response.isNewUser) {
           this.router.navigate(['/crear-hogar']);
         } else {
           this.router.navigate(['/']);

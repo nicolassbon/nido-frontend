@@ -3,11 +3,11 @@ import { Component, inject } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ProductService } from '../../core/servicios/agregar-producto.service';
 import { environment } from '../../../environments/environment';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
-  selector: 'app-agregar-producto',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule],
   templateUrl: './agregar-producto.html',
   styleUrl: './agregar-producto.scss',
 })
@@ -16,8 +16,8 @@ export class AgregarProducto {
   private readonly productService = inject(ProductService);
   private readonly router = inject(Router);
 
-  private readonly HOGAR_ID = environment.devHogarId;
-  private readonly USUARIO_ID = environment.devUsuarioId;
+  protected isSaving = false;
+  protected errorMessage = '';
 
   protected readonly categorias = [
     { id: '33333333-3333-3333-3333-333333333333', nombre: 'General' },
@@ -27,9 +27,26 @@ export class AgregarProducto {
     { id: '77777777-7777-7777-7777-777777777777', nombre: 'Despensa' },
   ];
 
+  protected readonly unidadesMedida = [
+    'unidad',
+    'gr',
+    'kg',
+    'ml',
+    'lt',
+    'cdita',
+    'cda',
+  ];
+
+  protected readonly ubicaciones = [
+    'Alacena',
+    'Freezer',
+    'Heladera',
+  ];
+
   form = this.fb.group({
     nombre: ['', Validators.required],
     categoriaId: ['', Validators.required],
+    ubicacion: ['Alacena', Validators.required],
     cantidad: [1, Validators.required],
     unidadMedida: ['', Validators.required],
     fechaVencimiento: [''],
@@ -41,24 +58,29 @@ export class AgregarProducto {
       return;
     }
 
+    this.isSaving = true;
+    this.errorMessage = '';
+
     const payload = {
       nombre: this.form.value.nombre!,
       categoriaId: this.form.value.categoriaId!,
+      ubicacion: this.form.value.ubicacion!,
       cantidad: this.form.value.cantidad!,
       unidadMedida: this.form.value.unidadMedida!,
       fechaVencimiento: this.form.value.fechaVencimiento || undefined,
-      hogarId: this.HOGAR_ID,
-      usuarioId: this.USUARIO_ID,
     };
 
-    this.productService.createProducto(payload).subscribe({
+    this.productService.createStockHome(payload).subscribe({
       next: (res) => {
         console.log('Producto creado:', res);
-        this.form.reset({ cantidad: 1 });
+        this.form.reset({ cantidad: 1, ubicacion: 'Alacena' });
+        this.isSaving = false;
         this.router.navigate(['/alacena']);
       },
       error: (err) => {
         console.error('Error:', err);
+        this.errorMessage = 'No se pudo guardar el producto.';
+        this.isSaving = false;
       },
     });
   }

@@ -3,14 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
 
-export interface CreateProductoRequest {
+export interface CreateStockHomeRequest {
   nombre: string;
   categoriaId: string;
+  ubicacion: string;
   cantidad: number;
   unidadMedida: string;
   fechaVencimiento?: string;
-  hogarId: string;
-  usuarioId: string;
 }
 
 export interface ProductManualResponse {
@@ -39,13 +38,13 @@ export class ProductService {
 private readonly baseUrl = environment.apiBaseUrl;
   constructor(private http: HttpClient) {}
 
-createProducto(payload: CreateProductoRequest) {
+createStockHome(payload: CreateStockHomeRequest) {
   return this.http.post(`${this.baseUrl}/productos`, payload);
 }
 
-getProductManual(hogarId: string) {
+getProductManual(hogarId?: string) {
   return this.http.get<ProductManualResponse[]>(
-    `${this.baseUrl}/productos/manual?hogarId=${hogarId}`
+    `${this.baseUrl}/productos/manual`
   );
 }
 
