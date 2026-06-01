@@ -1,6 +1,8 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { environment } from '../../../../environments/environment';
 import { ApiReceta, RecipesApiService } from './services/recipes-api.service';
 import { ProductService } from '../../../core/servicios/agregar-producto.service';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -11,6 +13,7 @@ type SortOption = 'default' | 'rating' | 'coincidencia';
 
 interface RecipeIngredient {
   name: string;
+  inStock: boolean;
   allergenType?: string;
 }
 
@@ -46,12 +49,13 @@ interface HouseholdMember {
 
 @Component({
   selector: 'app-recipes',
-  imports: [LucideAngularModule, FormsModule],
+  imports: [LucideAngularModule, FormsModule, RouterModule],
   templateUrl: './recipes.html',
   styleUrl: './recipes.scss',
 })
 export class Recipes implements OnInit {
   private readonly recipesApi = inject(RecipesApiService);
+  private readonly router = inject(Router);
   private readonly productService = inject(ProductService);
   private readonly authService = inject(AuthService);
 
@@ -114,19 +118,10 @@ export class Recipes implements OnInit {
   }
 
   private readonly recipesWithAvailability = computed<RecipeWithAvailability[]>(() => {
-    const pantryNames = this.pantryIngredients()
-      .filter(item => item.selected)
-      .map(item => item.name.toLowerCase());
-
     const allergens = this.activeAllergens();
 
     return this.allRecipes().map(recipe => {
-      const matched = recipe.ingredients.filter(ingredient =>
-        pantryNames.some(pantryName =>
-          pantryName.includes(ingredient.name.toLowerCase()) ||
-          ingredient.name.toLowerCase().includes(pantryName)
-        )
-      ).length;
+      const matched = recipe.ingredients.filter(ingredient => ingredient.inStock).length;
 
       const availabilityPercent = recipe.ingredients.length === 0
         ? 0
@@ -282,13 +277,14 @@ export class Recipes implements OnInit {
     return {
       id: receta.id,
       name: receta.nombre,
-      image: receta.imagenUrl ?? 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=250&fit=crop',
+      image: this.resolveImageUrl(receta.imagenUrl) ?? 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=250&fit=crop',
       rating: 4.5,
       difficulty: this.mapDifficulty(receta.dificultad),
       timeMinutes: receta.tiempoCoccionMin ?? 0,
       calories: Math.round(receta.calorias ?? 0),
       ingredients: receta.ingredientes.map(ingrediente => ({
         name: ingrediente.productoNombre || ingrediente.nombre,
+        inStock: ingrediente.enStock,
       })),
     };
   }
@@ -298,5 +294,24 @@ export class Recipes implements OnInit {
     if (normalized === 'facil' || normalized === 'fácil') return 'Fácil';
     if (normalized === 'dificil' || normalized === 'difícil') return 'Difícil';
     return 'Medio';
+  }
+
+  protected navigateToRecipe(id: string): void {
+    this.router.navigate(['/recetas', id]);
+  }
+
+  private resolveImageUrl(url: string | null): string | null {
+    if (!url) {
+      return null;
+    }
+
+    if (/^(https?:)?\/\//i.test(url) || /^(data|blob):/i.test(url)) {
+      return url;
+    }
+
+    const baseUrl = environment.apiBaseUrl.replace(/\/$/, '');
+    const path = url.startsWith('/') ? url : `/${url}`;
+
+    return `${baseUrl}${path}`;
   }
 }
