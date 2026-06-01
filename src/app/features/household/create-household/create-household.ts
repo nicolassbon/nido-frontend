@@ -6,7 +6,7 @@ import { switchMap, timer } from 'rxjs';
 import { HogaresApiService } from '../hogares-api.service';
 import { AuthService } from '../../../core/auth/auth.service';
 
-const MEMBER_COLORS = ['#263F30', '#C78F5A', '#927357', '#5C7A6E', '#8B4513', '#4A7C59'];
+const MEMBER_COLORS = ['#263F30', '#B48B6A', '#927357', '#5C7A6E', '#8B4513', '#4A7C59'];
 
 interface FamilyMember {
   id: string;
@@ -38,7 +38,7 @@ export class CreateHousehold {
 
   readonly members = signal<FamilyMember[]>([
     { id: '1', name: 'Nico',  role: 'Tú',      color: '#263F30', initials: 'N', isCurrentUser: true },
-    { id: '2', name: 'Abi',   role: 'Pareja',  color: '#C78F5A', initials: 'A' },
+    { id: '2', name: 'Abi',   role: 'Pareja',  color: '#B48B6A', initials: 'A' },
     { id: '3', name: 'Lauti', role: 'Hermano', color: '#927357', initials: 'L' },
   ]);
 
