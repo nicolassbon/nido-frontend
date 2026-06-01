@@ -12,7 +12,8 @@
   --color-nido-border:      #e5ddd0;
   --color-nido-muted:       #b5a898;
 
-  --font-family-sans: system-ui, -apple-system, sans-serif;
+  --font-family-sans: 'Roboto', system-ui, sans-serif;
+  --font-family-display: 'Comfortaa', cursive;
 }
 
 /* ── Custom keyframes ─────────────────────────────────── */
@@ -31,4 +32,5 @@ html, body {
   font-family: var(--font-family-sans);
   background-color: #F7F1E6;
   color: #1a1a1a;
+  scroll-behavior: smooth;
 }

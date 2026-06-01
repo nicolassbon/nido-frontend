@@ -78,6 +78,10 @@ Cog,
 AirVent,
 Square,
 PlugZap,
+  // Configuracion
+  Users,
+  UserPlus,
+  Trash2,
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
@@ -160,6 +164,9 @@ Cog,
 AirVent,
 Square,
 PlugZap,
+  Users,
+  UserPlus,
+  Trash2,
       }),
     },
   ],

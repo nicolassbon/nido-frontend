@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authChildGuard, authGuard } from './core/guards/auth';
+import { authChildGuard, authGuard, guestGuard } from './core/guards/auth';
 import { Layout } from './core/layout/layout';
 import { Home } from './features/home/home/home';
 import { Recipes } from './features/recipes/recipes/recipes';
@@ -13,8 +13,10 @@ import { Register } from './features/auth/register/register';
 import { Login } from './features/auth/login/login';
 import { EquipmentStep } from './features/onboarding/equipment-step/equipment-step';
 import { Configuracion } from './features/configuracion/configuracion/configuracion';
+import { Landing } from './features/landing/landing';
 
 export const routes: Routes = [
+  { path: '', component: Landing, pathMatch: 'full', canActivate: [guestGuard] },
   { path: 'login',           component: Login },
   { path: 'registro',        component: Register },
   { path: 'crear-hogar',     component: CreateHousehold, canActivate: [authGuard] },

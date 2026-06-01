@@ -45,6 +45,13 @@
           <lucide-icon name="check" [size]="12" />
         }
       </button>
+      <button [class]="applianceChipClass()" (click)="toggleMissingAppliances()">
+        <lucide-icon name="zap" [size]="13" />
+        Con mis electrodomésticos
+        @if (excludeMissingAppliances()) {
+          <lucide-icon name="check" [size]="12" />
+        }
+      </button>
     </div>
 
     <!-- Sort -->
@@ -126,6 +133,16 @@
                     {{ recipe.availabilityPercent }}% disponible
                   </span>
                 </div>
+
+                <!-- Advertencia: falta electrodoméstico -->
+                @if (recipe.hasMissingAppliance) {
+                  <div class="flex items-center gap-1.5 mt-1.5 px-2.5 py-1.5 rounded-[8px] bg-[rgba(180,76,60,0.07)] border border-[rgba(180,76,60,0.2)]">
+                    <lucide-icon name="zap" [size]="12" class="text-nido-red shrink-0" />
+                    <span class="text-[0.7rem] font-medium text-nido-red leading-snug">
+                      Requiere electrodoméstico no disponible
+                    </span>
+                  </div>
+                }
               </div>
 
             </article>

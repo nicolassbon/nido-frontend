@@ -5,6 +5,7 @@ import { ProductService } from '../../core/servicios/agregar-producto.service';
 import { environment } from '../../../environments/environment';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule],
@@ -15,9 +16,10 @@ export class AgregarProducto {
   private readonly fb = inject(FormBuilder);
   private readonly productService = inject(ProductService);
   private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
 
-  private readonly HOGAR_ID = environment.devHogarId;
-  private readonly USUARIO_ID = environment.devUsuarioId;
+  private get HOGAR_ID(): string { return this.authService.getHogarId() ?? environment.devHogarId; }
+  private get USUARIO_ID(): string { return this.authService.getUserId() ?? environment.devUsuarioId; }
 
   protected isSaving = false;
   protected errorMessage = '';

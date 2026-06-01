@@ -1,0 +1,247 @@
+:host {
+  display: block;
+}
+
+/* ── Tipografía de display ─────────────────────────────────── */
+:host h1,
+:host h2,
+:host h3 {
+  font-family: 'Comfortaa', cursive;
+}
+
+/* ── Nav flotante ──────────────────────────────────────────── */
+.nav-floating {
+  box-shadow: 0 2px 16px rgba(38, 63, 48, 0.18);
+  transition: box-shadow 0.35s ease, background-color 0.35s ease;
+}
+
+.nav-floating.is-scrolled {
+  box-shadow:
+    0 4px 32px rgba(38, 63, 48, 0.28),
+    0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.nav-link {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: color 0.2s;
+  position: relative;
+  padding-bottom: 2px;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 1.5px;
+    background: #fff;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.25s ease;
+  }
+
+  &:hover {
+    color: #fff;
+    &::after { transform: scaleX(1); }
+  }
+}
+
+.active-link {
+  color: #fff;
+  font-weight: 600;
+  &::after { transform: scaleX(1); }
+}
+
+/* ── Hero ──────────────────────────────────────────────────── */
+.hero-gradient {
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.88) 0%,
+    rgba(0, 0, 0, 0.52) 38%,
+    rgba(0, 0, 0, 0.10) 100%
+  );
+}
+
+.hero-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  opacity: 1;
+}
+
+/* Entrada del hero */
+.hero-badge {
+  animation: hero-enter 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+.hero-title {
+  font-size: clamp(2.125rem, 5vw, 3rem);
+  animation: hero-enter 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
+}
+.hero-sub {
+  animation: hero-enter 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.42s both;
+}
+.hero-cta {
+  animation: hero-enter 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.58s both;
+}
+
+@keyframes hero-enter {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Pulso del dot en el badge */
+.pulse-dot {
+  animation: pulse 2.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.55; transform: scale(0.75); }
+}
+
+/* ── Feature strip ─────────────────────────────────────────── */
+.feature-strip {
+  border-top: 3px solid transparent;
+  border-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    #c78f5a44 25%,
+    #3e5e4a55 50%,
+    #c78f5a44 75%,
+    transparent 100%
+  ) 1;
+  box-shadow: 0 1px 4px rgba(38, 63, 48, 0.05);
+}
+
+.feature-icon {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+
+.feature-item:hover .feature-icon {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(38, 63, 48, 0.22);
+}
+
+/* ── Elementos de sección reutilizables ────────────────────── */
+.section-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #c78f5a;
+  margin-bottom: 0.5rem;
+}
+
+.section-eyebrow-light {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(247, 241, 230, 0.55);
+}
+
+.section-title {
+  font-size: clamp(1.625rem, 3.5vw, 2.125rem);
+  font-weight: 700;
+  color: #263f30;
+  line-height: 1.25;
+}
+
+/* ── Scroll reveal (CSS-driven, sin JS) ────────────────────── */
+@supports (animation-timeline: view()) {
+  .reveal-section {
+    animation: reveal-up linear both;
+    animation-timeline: view();
+    animation-range: entry 5% entry 30%;
+  }
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── How it works – línea conectora ────────────────────────── */
+.steps-grid {
+  .steps-connector {
+    position: absolute;
+    top: 2.375rem; /* centro del ícono (5rem / 2 - 1px) */
+    left: calc(100% / 6);
+    right: calc(100% / 6);
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(199, 143, 90, 0.35) 20%,
+      rgba(199, 143, 90, 0.35) 80%,
+      transparent 100%
+    );
+    pointer-events: none;
+  }
+}
+
+.step-badge {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  background: radial-gradient(ellipse at 40% 40%, #fefcf8 60%, #f0e8db 100%);
+}
+.step-badge:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 8px 24px rgba(199, 143, 90, 0.18);
+}
+
+.step-number {
+  box-shadow: 0 2px 8px rgba(199, 143, 90, 0.4);
+}
+
+/* ── Módulos ───────────────────────────────────────────────── */
+.modules-section {
+  background-color: #fefcf8;
+  background-image:
+    radial-gradient(circle, rgba(38, 63, 48, 0.045) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.module-card {
+  box-shadow: 0 2px 12px rgba(38, 63, 48, 0.07);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 16px 40px rgba(38, 63, 48, 0.13);
+
+    .module-icon {
+      transform: scale(1.08);
+    }
+  }
+}
+
+.module-icon {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.module-feature {
+  transition: color 0.2s;
+  &:hover { color: #3e5e4a; }
+}
+
+/* ── CTA ───────────────────────────────────────────────────── */
+.cta-section {
+  background: linear-gradient(140deg, #1e3328 0%, #263f30 40%, #3e5e4a 70%, #7a5c40 100%);
+}
+
+.cta-glow {
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 60%, rgba(199, 143, 90, 0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 30%, rgba(62, 94, 74, 0.2) 0%, transparent 70%);
+}
