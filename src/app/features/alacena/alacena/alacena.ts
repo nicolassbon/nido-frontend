@@ -287,7 +287,7 @@ private loadProducts(): void {
 
   forkJoin({
     stock: this.alacenaApi.getStock(),
-    manual: this.productService.getProductManual(environment.devHogarId),
+    manual: this.productService.getProductManual(),
   })
     .pipe(takeUntilDestroyed(this.destroyRef))
     .subscribe({
