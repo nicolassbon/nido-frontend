@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 export interface CreateStockHomeRequest {
   nombre: string;
   categoriaId: string;
+  ubicacion: string;
   cantidad: number;
   unidadMedida: string;
   fechaVencimiento?: string;

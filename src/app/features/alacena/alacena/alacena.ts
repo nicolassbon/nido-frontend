@@ -96,6 +96,14 @@ function makeEmptyDraft(): ProductDraft {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
+function resolveImageUrl(imageUrl: string | null | undefined): string {
+  if (!imageUrl) return '';
+  if (/^(https?:|data:|blob:)/i.test(imageUrl)) return imageUrl;
+
+  const normalizedPath = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+  return `${environment.apiBaseUrl}${normalizedPath}`;
+}
+
 function formatCategoryTag(tag: string): string {
   return tag
     .replace(/^[a-z]{2}:/, '')
@@ -306,7 +314,7 @@ private loadProducts(): void {
     return {
       id:               item.id,
       name:             item.nombre,
-      image:            item.imagen ?? '',
+      image:            resolveImageUrl(item.imagen),
       location:         item.ubicacion as Exclude<StorageLocation, 'Todos'>,
       expiryDate:       item.fechaVencimiento ?? '',
       quantity:         item.cantidad,
@@ -320,7 +328,7 @@ private loadProducts(): void {
   return {
     id: item.stockHogarId,
     name: item.nombre,
-    image: item.imagenUrl ?? '',
+    image: resolveImageUrl(item.imagenUrl),
     location: item.ubicacion as Exclude<StorageLocation, 'Todos'>,
     expiryDate: item.fechaVencimiento ?? '',
     quantity: item.cantidad,
