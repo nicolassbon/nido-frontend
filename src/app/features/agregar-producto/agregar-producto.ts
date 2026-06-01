@@ -18,9 +18,6 @@ export class AgregarProducto {
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
 
-  private get HOGAR_ID(): string { return this.authService.getHogarId() ?? environment.devHogarId; }
-  private get USUARIO_ID(): string { return this.authService.getUserId() ?? environment.devUsuarioId; }
-
   protected isSaving = false;
   protected errorMessage = '';
 
@@ -73,8 +70,6 @@ export class AgregarProducto {
       cantidad: this.form.value.cantidad!,
       unidadMedida: this.form.value.unidadMedida!,
       fechaVencimiento: this.form.value.fechaVencimiento || undefined,
-      hogarId: this.HOGAR_ID,
-      usuarioId: this.USUARIO_ID,
     };
 
     this.productService.createStockHome(payload).subscribe({

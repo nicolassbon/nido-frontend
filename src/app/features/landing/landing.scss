@@ -9,6 +9,21 @@
   font-family: 'Comfortaa', cursive;
 }
 
+/* ── Texto con gradiente ────────────────────────────────────── */
+.text-hero-accent {
+  background: linear-gradient(90deg, #faf5ec 0%, #e8c08a 55%, #faf5ec 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-accent-gradient {
+  background: linear-gradient(115deg, #3e5e4a 0%, #c78f5a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 /* ── Nav flotante ──────────────────────────────────────────── */
 .nav-floating {
   box-shadow: 0 2px 16px rgba(38, 63, 48, 0.18);
@@ -55,53 +70,156 @@
 }
 
 /* ── Hero ──────────────────────────────────────────────────── */
+
+/* Gradiente principal: negro profundo abajo, difuminado arriba */
 .hero-gradient {
   background: linear-gradient(
     to top,
-    rgba(0, 0, 0, 0.88) 0%,
-    rgba(0, 0, 0, 0.52) 38%,
-    rgba(0, 0, 0, 0.10) 100%
+    rgba(0, 0, 0, 0.92) 0%,
+    rgba(0, 0, 0, 0.60) 38%,
+    rgba(0, 0, 0, 0.18) 68%,
+    transparent 100%
+  );
+}
+
+/* Tinte de marca: verde Nido sutil, ancla visualmente la foto */
+.hero-brand-wash {
+  background: linear-gradient(
+    135deg,
+    rgba(38, 63, 48, 0.32) 0%,
+    rgba(38, 63, 48, 0.10) 45%,
+    rgba(199, 143, 90, 0.06) 100%
   );
 }
 
 .hero-grain {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.032'/%3E%3C/svg%3E");
   opacity: 1;
 }
 
-/* Entrada del hero */
-.hero-badge {
-  animation: hero-enter 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
-}
-.hero-title {
-  font-size: clamp(2.125rem, 5vw, 3rem);
-  animation: hero-enter 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
-}
-.hero-sub {
-  animation: hero-enter 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.42s both;
-}
-.hero-cta {
-  animation: hero-enter 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.58s both;
+/*
+  Halo radial detrás del bloque de texto.
+  Con el nuevo flex-row layout, el texto ocupa el tercio izquierdo
+  del contenedor → el glow cubre esa zona sin derramarse.
+*/
+.hero-content-glow {
+  left: -6%;
+  top: 10%;
+  width: 50%;
+  height: 80%;
+  background: radial-gradient(
+    ellipse at 25% 50%,
+    rgba(38, 63, 48, 0.20) 0%,
+    transparent 65%
+  );
 }
 
+/*
+  Secuencia de animaciones: cada elemento entra desde abajo
+  con el mismo keyframe (hero-enter) — dirección uniforme.
+  Los delays crean la cascada visual: badge → title → sub → CTAs → social → widget → pill.
+*/
+.hero-badge   { animation: hero-enter 0.70s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
+.hero-title   { font-size: clamp(2rem, 3.5vw, 2.375rem);
+                animation: hero-enter 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
+.hero-sub     { animation: hero-enter 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.36s both; }
+.hero-cta     { animation: hero-enter 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.50s both; }
+.hero-social  { animation: hero-enter 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.63s both; }
+.hero-preview { animation: hero-enter 1.05s cubic-bezier(0.16, 1, 0.3, 1) 0.78s both; }
+/* Pill: mismo keyframe, delay mayor — aparece como el último detalle del widget */
+.hero-notif   { animation: hero-enter 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.95s both; }
+
 @keyframes hero-enter {
-  from {
-    opacity: 0;
-    transform: translateY(22px);
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* CTA primary hover */
+.cta-primary {
+  transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 32px rgba(199, 143, 90, 0.52);
   }
-  to {
-    opacity: 1;
+  &:active {
     transform: translateY(0);
   }
 }
 
-/* Pulso del dot en el badge */
+/* Social proof avatars */
+.social-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.social-avatar--more {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(6px);
+}
+
+/* Pulso del dot en el badge y notificaciones */
 .pulse-dot {
   animation: pulse 2.5s ease-in-out infinite;
 }
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.55; transform: scale(0.75); }
+  50%       { opacity: 0.45; transform: scale(0.65); }
+}
+
+/* Scroll indicator — track animado */
+.scroll-indicator {
+  animation: fade-in 1.4s ease 1.5s both;
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.scroll-track {
+  width: 2px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.scroll-thumb {
+  width: 100%;
+  height: 40%;
+  background: rgba(255, 255, 255, 0.38);
+  border-radius: 2px;
+  position: absolute;
+  top: 0;
+  animation: scroll-slide 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes scroll-slide {
+  0%   { top: 0%; opacity: 0; }
+  15%  { opacity: 1; }
+  80%  { opacity: 0.6; }
+  100% { top: 65%; opacity: 0; }
+}
+
+/* Preview widgets en el hero */
+.preview-card {
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.32),
+    0 4px 14px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &:hover {
+    transform: translateY(-3px);
+  }
 }
 
 /* ── Feature strip ─────────────────────────────────────────── */
@@ -110,9 +228,9 @@
   border-image: linear-gradient(
     90deg,
     transparent 0%,
-    #c78f5a44 25%,
-    #3e5e4a55 50%,
-    #c78f5a44 75%,
+    rgba(199, 143, 90, 0.35) 25%,
+    rgba(62, 94, 74, 0.4) 50%,
+    rgba(199, 143, 90, 0.35) 75%,
     transparent 100%
   ) 1;
   box-shadow: 0 1px 4px rgba(38, 63, 48, 0.05);
@@ -123,26 +241,46 @@
 }
 
 .feature-item:hover .feature-icon {
-  transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(38, 63, 48, 0.22);
+  transform: scale(1.1) translateY(-2px);
+  box-shadow: 0 8px 24px rgba(38, 63, 48, 0.28);
+}
+
+/* ── Stats ─────────────────────────────────────────────────── */
+.stat-item {
+  .stat-number {
+    font-family: 'Comfortaa', cursive;
+    font-size: clamp(2.25rem, 4vw, 3.125rem);
+    font-weight: 700;
+    color: #f7f1e6;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+    color: rgba(247, 241, 230, 0.38);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
 }
 
 /* ── Elementos de sección reutilizables ────────────────────── */
 .section-eyebrow {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.13em;
   color: #c78f5a;
   margin-bottom: 0.5rem;
 }
 
 .section-eyebrow-light {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: rgba(247, 241, 230, 0.55);
+  letter-spacing: 0.13em;
+  color: rgba(247, 241, 230, 0.5);
 }
 
 .section-title {
@@ -152,7 +290,7 @@
   line-height: 1.25;
 }
 
-/* ── Scroll reveal (CSS-driven, sin JS) ────────────────────── */
+/* ── Scroll reveal (CSS-driven) ────────────────────────────── */
 @supports (animation-timeline: view()) {
   .reveal-section {
     animation: reveal-up linear both;
@@ -162,53 +300,115 @@
 }
 
 @keyframes reveal-up {
-  from {
-    opacity: 0;
-    transform: translateY(28px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── How it works – línea conectora ────────────────────────── */
+/* ── Steps ─────────────────────────────────────────────────── */
+
+/*
+  z-index: 0 en el grid crea un stacking context aislado.
+  Esto garantiza que z-index: -1 en .steps-track quede confinado
+  dentro del grid y nunca pise el contenido de los steps.
+*/
 .steps-grid {
-  .steps-connector {
-    position: absolute;
-    top: 2.375rem; /* centro del ícono (5rem / 2 - 1px) */
-    left: calc(100% / 6);
-    right: calc(100% / 6);
-    height: 1px;
-    background: linear-gradient(
-      to right,
-      transparent 0%,
-      rgba(199, 143, 90, 0.35) 20%,
-      rgba(199, 143, 90, 0.35) 80%,
-      transparent 100%
-    );
-    pointer-events: none;
+  z-index: 0;
+}
+
+/*
+  Línea conectora decorativa.
+  top: 2.25rem = pt-4 (1rem) + mitad de h-10 (1.25rem) → centro exacto de los iconos.
+  z-index: -1 → siempre detrás de todo el contenido del grid.
+  La línea queda visible sobre el fondo de la sección (bg-nido-cream)
+  porque el grid no tiene background propio.
+*/
+.steps-track {
+  position: absolute;
+  top: 2.25rem;
+  left: calc(100% / 6);
+  right: calc(100% / 6);
+  height: 1px;
+  z-index: -1;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(38, 63, 48, 0.13) 12%,
+    rgba(38, 63, 48, 0.13) 88%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Divisor vertical entre pasos */
+.step-item {
+  &:not(:last-child) {
+    border-right: 1px solid rgba(38, 63, 48, 0.07);
+  }
+
+  @media (max-width: 767px) {
+    &:not(:last-child) {
+      border-right: none;
+      border-bottom: 1px solid rgba(38, 63, 48, 0.07);
+    }
   }
 }
 
-.step-badge {
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
-  background: radial-gradient(ellipse at 40% 40%, #fefcf8 60%, #f0e8db 100%);
-}
-.step-badge:hover {
-  transform: translateY(-4px) scale(1.05);
-  box-shadow: 0 8px 24px rgba(199, 143, 90, 0.18);
+/* Número decorativo de fondo */
+.step-deco-number {
+  position: absolute;
+  top: -0.75rem;
+  right: 1.25rem;
+  font-family: 'Comfortaa', cursive;
+  font-size: clamp(4.5rem, 7vw, 6.5rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: rgba(38, 63, 48, 0.048);
+  pointer-events: none;
+  user-select: none;
 }
 
-.step-number {
-  box-shadow: 0 2px 8px rgba(199, 143, 90, 0.4);
+/* Pill de paso */
+.step-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #3e5e4a;
+  background: rgba(38, 63, 48, 0.07);
+  padding: 0.2375rem 0.7rem;
+  border-radius: 100px;
+}
+
+.step-pill--gold {
+  color: #9a5e2e;
+  background: rgba(199, 143, 90, 0.11);
+}
+
+/* ── App Showcase ──────────────────────────────────────────── */
+.showcase-visual {
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.showcase-block:hover .showcase-visual {
+  transform: translateY(-6px) rotate(0.3deg);
+}
+
+.showcase-frame {
+  transition: box-shadow 0.35s ease;
+
+  &:hover {
+    box-shadow: 0 20px 60px rgba(38, 63, 48, 0.14);
+  }
 }
 
 /* ── Módulos ───────────────────────────────────────────────── */
 .modules-section {
   background-color: #fefcf8;
   background-image:
-    radial-gradient(circle, rgba(38, 63, 48, 0.045) 1px, transparent 1px);
+    radial-gradient(circle, rgba(38, 63, 48, 0.042) 1px, transparent 1px);
   background-size: 28px 28px;
 }
 
@@ -218,7 +418,7 @@
 
   &:hover {
     transform: translateY(-5px);
-    box-shadow: 0 16px 40px rgba(38, 63, 48, 0.13);
+    box-shadow: 0 18px 44px rgba(38, 63, 48, 0.13);
 
     .module-icon {
       transform: scale(1.08);
@@ -235,13 +435,226 @@
   &:hover { color: #3e5e4a; }
 }
 
+/* ── Testimoniales ─────────────────────────────────────────── */
+.testimonial-card {
+  box-shadow: 0 2px 12px rgba(38, 63, 48, 0.06);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 14px 36px rgba(38, 63, 48, 0.1);
+  }
+}
+
+.testimonial-quote {
+  position: absolute;
+  top: 8px;
+  right: 18px;
+  font-size: 5.5rem;
+  font-family: Georgia, 'Times New Roman', serif;
+  color: rgba(199, 143, 90, 0.11);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── FAQ ───────────────────────────────────────────────────── */
+.faq-item {
+  background: #fff;
+  border: 1.5px solid #e5ddd0;
+  border-radius: 13px;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &.is-open {
+    border-color: rgba(199, 143, 90, 0.38);
+    box-shadow: 0 4px 16px rgba(199, 143, 90, 0.07);
+  }
+}
+
+.faq-question {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.125rem 1.25rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  color: #263f30;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: color 0.2s;
+
+  &:hover { color: #3e5e4a; }
+}
+
+.faq-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+
+  .is-open & {
+    max-height: 220px;
+  }
+}
+
+.faq-answer {
+  padding: 0 1.25rem 1.25rem;
+  color: #927357;
+  font-size: 0.875rem;
+  line-height: 1.75;
+}
+
 /* ── CTA ───────────────────────────────────────────────────── */
 .cta-section {
   background: linear-gradient(140deg, #1e3328 0%, #263f30 40%, #3e5e4a 70%, #7a5c40 100%);
 }
 
+.cta-title {
+  font-size: clamp(1.875rem, 4vw, 2.75rem);
+}
+
 .cta-glow {
   background:
-    radial-gradient(ellipse 60% 50% at 20% 60%, rgba(199, 143, 90, 0.12) 0%, transparent 70%),
-    radial-gradient(ellipse 50% 40% at 80% 30%, rgba(62, 94, 74, 0.2) 0%, transparent 70%);
+    radial-gradient(ellipse 60% 50% at 20% 60%, rgba(199, 143, 90, 0.11) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 30%, rgba(62, 94, 74, 0.18) 0%, transparent 70%);
+}
+
+/* ── Pricing ───────────────────────────────────────────────── */
+.pricing-card {
+  background: #fff;
+  border: 1.5px solid #e5ddd0;
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 2px 12px rgba(38, 63, 48, 0.06);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 14px 36px rgba(38, 63, 48, 0.1);
+  }
+
+  &--featured {
+    background: #263f30;
+    border-color: transparent;
+    box-shadow: 0 8px 36px rgba(38, 63, 48, 0.22);
+
+    &:hover {
+      transform: translateY(-7px);
+      box-shadow: 0 22px 52px rgba(38, 63, 48, 0.28);
+    }
+  }
+}
+
+.pricing-badge {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #c78f5a;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  padding: 0.3rem 1rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(199, 143, 90, 0.35);
+}
+
+.pricing-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  .pricing-card:hover & { transform: scale(1.08); }
+}
+
+.pricing-name {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.pricing-amount {
+  font-family: 'Comfortaa', cursive;
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.pricing-features {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin-bottom: 0;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-size: 0.8375rem;
+    color: #927357;
+  }
+
+  &--featured li {
+    color: rgba(247, 241, 230, 0.6);
+  }
+}
+
+/* ── Convivientes Banner ───────────────────────────────────── */
+.convivientes-banner {
+  background: linear-gradient(135deg, #263f30 0%, #3e5e4a 60%, #4a6b54 100%);
+  box-shadow:
+    0 4px 24px rgba(38, 63, 48, 0.22),
+    0 1px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    right: -40px;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(199, 143, 90, 0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -60px;
+    left: 10%;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(247, 241, 230, 0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+}
+
+/* ── Footer ────────────────────────────────────────────────── */
+.footer-link {
+  color: rgba(247, 241, 230, 0.38);
+  text-decoration: none;
+  font-size: 0.8375rem;
+  transition: color 0.2s;
+
+  &:hover {
+    color: rgba(247, 241, 230, 0.78);
+  }
 }

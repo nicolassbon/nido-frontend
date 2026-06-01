@@ -5,7 +5,12 @@
     <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=900&h=200&fit=crop')] bg-center bg-cover opacity-[0.15]"></div>
     <div class="relative z-10">
       <h1 class="text-nido-cream text-[1.6rem] font-bold">Recetas Inteligentes</h1>
-      <p class="text-nido-cream/70 text-sm mt-0.5">{{ filteredRecipes().length }} recetas disponibles</p>
+      <p class="text-nido-cream/70 text-sm mt-0.5">
+      {{ filteredRecipes().length }} recetas disponibles
+      @if (filterByIngredients()) {
+        · <span class="text-nido-cream font-medium">filtrando por tu alacena</span>
+      }
+    </p>
     </div>
     <button class="relative z-10 flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]">
       <lucide-icon name="shuffle" [size]="16" />
@@ -91,7 +96,8 @@
       } @else {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           @for (recipe of filteredRecipes(); track recipe.id) {
-            <article class="bg-white rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition-[transform,box-shadow] duration-[180ms] cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)] group">
+            <article (click)="navigateToRecipe(recipe.id)"
+                     class="bg-white rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition-[transform,box-shadow] duration-[180ms] cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)] group">
 
               <!-- Imagen -->
               <div class="relative h-40 overflow-hidden">
@@ -120,6 +126,15 @@
                   </span>
                 </div>
 
+                @if (recipe.vecesCocinada > 0) {
+                  <div class="flex items-center gap-1 mt-0.5">
+                    <lucide-icon name="chef-hat" [size]="12" class="text-nido-brown" />
+                    <span class="text-[0.72rem] text-nido-brown">
+                      Cocinada {{ recipe.vecesCocinada }} {{ recipe.vecesCocinada === 1 ? 'vez' : 'veces' }}
+                    </span>
+                  </div>
+                }
+
                 <!-- % Disponibilidad -->
                 <div class="flex items-center gap-2 mt-1.5">
                   <div class="flex-1 h-1 bg-nido-border rounded-[10px] overflow-hidden">
@@ -143,6 +158,13 @@
                     </span>
                   </div>
                 }
+
+                <!-- Ver Detalle Button -->
+                <a [routerLink]="['/recetas', recipe.id]" (click)="$event.stopPropagation()"
+                   class="mt-3.5 inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 bg-nido-green-dark text-nido-cream rounded-[8px] text-[0.8rem] font-medium cursor-pointer transition-[background] duration-150 hover:bg-nido-green">
+                  <lucide-icon name="eye" [size]="14" />
+                  Ver detalle
+                </a>
               </div>
 
             </article>
@@ -202,10 +224,21 @@
             </button>
           }
         </div>
-        <button class="w-full flex items-center justify-center gap-2 mt-3.5 py-2.5 bg-nido-green-dark text-nido-cream border-none rounded-lg text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 hover:bg-nido-green">
-          <lucide-icon name="search" [size]="15" />
-          Buscar receta
-        </button>
+        @if (filterByIngredients()) {
+          <button
+            class="w-full flex items-center justify-center gap-2 mt-3.5 py-2.5 bg-nido-red text-white border-none rounded-lg text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 hover:opacity-90"
+            (click)="limpiarFiltroPorIngredientes()">
+            <lucide-icon name="x" [size]="15" />
+            Limpiar filtro
+          </button>
+        } @else {
+          <button
+            class="w-full flex items-center justify-center gap-2 mt-3.5 py-2.5 bg-nido-green-dark text-nido-cream border-none rounded-lg text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 hover:bg-nido-green"
+            (click)="buscarPorIngredientes()">
+            <lucide-icon name="search" [size]="15" />
+            Buscar receta
+          </button>
+        }
       </div>
 
       <!-- Tus ingredientes -->

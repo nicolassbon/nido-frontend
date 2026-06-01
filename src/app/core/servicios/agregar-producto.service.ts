@@ -10,8 +10,6 @@ export interface CreateStockHomeRequest {
   cantidad: number;
   unidadMedida: string;
   fechaVencimiento?: string;
-  hogarId: string;
-  usuarioId: string;
 }
 
 export interface ProductManualResponse {
@@ -44,9 +42,9 @@ createStockHome(payload: CreateStockHomeRequest) {
   return this.http.post(`${this.baseUrl}/productos`, payload);
 }
 
-getProductManual(hogarId: string) {
+getProductManual(hogarId?: string) {
   return this.http.get<ProductManualResponse[]>(
-    `${this.baseUrl}/productos/manual?hogarId=${hogarId}`
+    `${this.baseUrl}/productos/manual`
   );
 }
 

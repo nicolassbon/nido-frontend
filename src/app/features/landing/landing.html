@@ -11,10 +11,11 @@
       </a>
 
       <nav class="hidden md:flex items-center gap-8">
-        <a href="#inicio"     class="nav-link active-link">Inicio</a>
-        <a href="#beneficios" class="nav-link">Beneficios</a>
-        <a href="#funciones"  class="nav-link">Funciones</a>
-        <a href="#contacto"   class="nav-link">Contacto</a>
+        <a href="#inicio"     class="nav-link" [class.active-link]="activeSection() === 'inicio'">Inicio</a>
+        <a href="#beneficios" class="nav-link" [class.active-link]="activeSection() === 'beneficios'">Beneficios</a>
+        <a href="#funciones"  class="nav-link" [class.active-link]="activeSection() === 'funciones'">Módulos</a>
+        <a href="#precios"    class="nav-link" [class.active-link]="activeSection() === 'precios'">Precios</a>
+        <a href="#faq"        class="nav-link" [class.active-link]="activeSection() === 'faq'">FAQ</a>
       </nav>
 
       <a routerLink="/login"
@@ -26,47 +27,173 @@
 
   <!-- ── HERO ──────────────────────────────────────────────────── -->
   <section id="inicio"
-    class="hero-section relative flex items-end rounded-b-[2.5rem] overflow-hidden"
+    class="hero-section relative flex items-center rounded-b-[2.5rem] overflow-hidden"
     [style.background-image]="heroBg"
-    style="min-height: 82vh; background-size: cover; background-position: center;">
+    style="min-height: 96vh; background-size: cover; background-position: center;">
 
-    <!-- Gradiente -->
+    <!-- Overlays apilados — profundidad controlada -->
     <div class="absolute inset-0 hero-gradient"></div>
-    <!-- Grano sutil -->
+    <div class="absolute inset-0 hero-brand-wash"></div>
     <div class="absolute inset-0 hero-grain pointer-events-none"></div>
+    <div class="hero-content-glow absolute pointer-events-none" aria-hidden="true"></div>
 
-    <div class="relative z-10 w-full max-w-7xl mx-auto px-8 pb-16 pt-10">
+    <!--
+      Layout: flex row dentro del mismo contenedor max-w-7xl.
+      Texto (izquierda) y widget (derecha) comparten el mismo eje
+      horizontal → ningún elemento flota fuera del grid de contenido.
+      El espacio entre columnas lo llena la foto del hero.
+    -->
+    <div class="relative z-10 w-full max-w-7xl mx-auto px-8 pt-24 pb-16">
+      <div class="flex flex-col xl:flex-row xl:items-start xl:justify-between">
 
-      <!-- Badge / pill -->
-      <div class="hero-badge inline-flex items-center gap-2.5 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 mb-6 backdrop-blur-sm">
-        <span class="w-1.5 h-1.5 rounded-full bg-nido-gold pulse-dot"></span>
-        <span class="text-white/80 text-[0.8125rem] font-medium tracking-wide">Todo conecta, todo fluye</span>
-      </div>
+        <!-- ── Columna izquierda: copy ──────────────────────────────── -->
+        <div class="xl:flex-1 xl:pr-8">
 
-      <!-- Título -->
-      <h1 class="hero-title text-white font-bold leading-[1.15] mb-5">
-        Gestioná tu hogar<br>con inteligencia<br class="sm:hidden"> y armonía
-      </h1>
+          <!-- Badge — ancla conceptual, no repite el título -->
+          <div class="hero-badge inline-flex items-center gap-2.5 bg-white/[0.08] border border-white/[0.16] rounded-full px-4 py-1.5 mb-7 backdrop-blur-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-nido-gold pulse-dot"></span>
+            <span class="text-white/75 text-[0.8125rem] font-medium tracking-wide">Tu hogar, inteligente desde hoy</span>
+          </div>
 
-      <!-- Subtítulo -->
-      <p class="hero-sub text-white/70 text-[0.9375rem] leading-relaxed mb-8 max-w-[420px]">
-        Nido reúne tu alacena, recetas y electrodomésticos en un solo lugar.<br>
-        Organizá, planificá y vivís mejor, en familia.
-      </p>
+          <!-- Título: 2 líneas — "Gestioná tu hogar" / "con inteligencia y armonía" -->
+          <h1 class="hero-title text-white font-bold leading-[1.11] mb-5">
+            Gestioná tu hogar<br>con <span class="text-hero-accent">inteligencia</span> y armonía
+          </h1>
 
-      <!-- CTAs -->
-      <div class="hero-cta flex items-center gap-4 flex-wrap">
-        <a routerLink="/registro"
-           class="inline-flex items-center gap-2 bg-nido-gold text-white px-7 py-3 rounded-full text-[0.9375rem] font-semibold no-underline hover:opacity-90 transition-opacity shadow-[0_4px_20px_rgba(199,143,90,0.4)]">
-          Comenzá gratis
-          <lucide-icon name="arrow-right" [size]="16" />
-        </a>
-        <a href="#beneficios"
-           class="inline-flex items-center gap-2 border border-white/30 text-white/80 px-6 py-3 rounded-full text-[0.9375rem] no-underline hover:bg-white/10 hover:text-white transition-all duration-200">
-          Ver cómo funciona
-        </a>
+          <!-- Subtítulo: 1 oración, 2 líneas ideales a 440px, /60 legible -->
+          <p class="hero-sub text-white/60 text-[0.9375rem] leading-[1.72] mb-9 max-w-[440px]">
+            Alacena, recetas, tareas y finanzas del hogar en un solo lugar,
+            para toda la familia.
+          </p>
+
+          <!-- CTAs: py-3 = 46px de alto estándar para 15px de tipo -->
+          <div class="hero-cta flex items-center gap-4 flex-wrap mb-9">
+            <a routerLink="/registro"
+               class="cta-primary inline-flex items-center gap-2 bg-nido-gold text-white px-7 py-3 rounded-full text-[0.9375rem] font-semibold no-underline shadow-[0_4px_20px_rgba(199,143,90,0.44)]">
+              Comenzá gratis
+              <lucide-icon name="arrow-right" [size]="16" />
+            </a>
+            <a href="#beneficios"
+               class="inline-flex items-center gap-2 border border-white/[0.22] text-white/70 px-6 py-3 rounded-full text-[0.9375rem] no-underline hover:bg-white/[0.08] hover:text-white transition-all duration-200">
+              Ver cómo funciona
+            </a>
+          </div>
+
+          <!-- Social proof: avatares + divider visible + estrellas legibles -->
+          <div class="hero-social flex items-center gap-3.5">
+            <div class="flex -space-x-2.5">
+              <div class="social-avatar" style="background:rgba(199,143,90,0.52)">
+                <lucide-icon name="user" [size]="12" class="text-white/75" />
+              </div>
+              <div class="social-avatar" style="background:rgba(62,94,74,0.62)">
+                <lucide-icon name="user" [size]="12" class="text-white/75" />
+              </div>
+              <div class="social-avatar" style="background:rgba(146,115,87,0.52)">
+                <lucide-icon name="user" [size]="12" class="text-white/75" />
+              </div>
+              <div class="social-avatar social-avatar--more">
+                <span class="text-white/55 text-[0.625rem] font-bold leading-none">+</span>
+              </div>
+            </div>
+            <!-- Divider /22 = visible sin competir -->
+            <div class="h-4 w-px bg-white/[0.22]"></div>
+            <div>
+              <!-- Estrellas 11px — perceptibles a golpe de vista -->
+              <div class="flex items-center gap-0.5 mb-1">
+                <lucide-icon name="star" [size]="11" class="text-nido-gold" />
+                <lucide-icon name="star" [size]="11" class="text-nido-gold" />
+                <lucide-icon name="star" [size]="11" class="text-nido-gold" />
+                <lucide-icon name="star" [size]="11" class="text-nido-gold" />
+                <lucide-icon name="star" [size]="11" class="text-nido-gold" />
+              </div>
+              <p class="text-white/40 text-[0.7125rem] leading-none">Más de 200 hogares organizados</p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ── Columna derecha: widget preview (solo xl) ───────────── -->
+        <div class="hero-preview hidden xl:flex flex-col gap-3 w-[292px] shrink-0">
+
+          <!--
+            Pill alineado al borde izquierdo del widget (sin margen extra).
+            Animación: hero-enter (from-bottom) igual que todos los demás.
+          -->
+          <div class="hero-notif self-start inline-flex items-center gap-2.5 bg-white/[0.1] backdrop-blur-xl border border-white/[0.14] rounded-full px-3.5 py-[0.4375rem]">
+            <div class="w-5 h-5 rounded-full flex items-center justify-center shrink-0" style="background:rgba(180,76,60,0.75)">
+              <lucide-icon name="bell" [size]="9" class="text-white" />
+            </div>
+            <span class="text-white/75 text-[0.6875rem] font-medium">Yogur vence mañana</span>
+            <span class="w-[5px] h-[5px] rounded-full shrink-0 pulse-dot" style="background:#e57373"></span>
+          </div>
+
+          <!-- Widget alacena -->
+          <div class="preview-card bg-white/[0.09] backdrop-blur-xl border border-white/[0.12] rounded-[18px] p-4">
+
+            <div class="flex items-center gap-2 mb-3.5">
+              <div class="w-6 h-6 rounded-[6px] bg-nido-green/40 flex items-center justify-center">
+                <lucide-icon name="refrigerator" [size]="12" class="text-nido-cream" />
+              </div>
+              <span class="text-white/50 text-[0.655rem] font-bold tracking-widest uppercase">Mi Alacena</span>
+              <!-- /38 neutro — "14 items" es info, no alerta -->
+              <span class="ml-auto text-white/38 text-[0.65rem] font-medium">14 items</span>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <div class="flex items-center gap-2.5 px-2.5 py-2 rounded-[10px] bg-white/[0.07]">
+                <div class="w-7 h-7 rounded-[7px] shrink-0" style="background:linear-gradient(135deg,rgba(199,143,90,0.3),rgba(199,143,90,0.12))"></div>
+                <div class="flex-1 min-w-0">
+                  <!-- /90 nombre del producto — alta jerarquía -->
+                  <p class="text-white/90 text-[0.74rem] font-medium truncate">Harina 000</p>
+                  <!-- /35 metadata — baja jerarquía pero legible -->
+                  <p class="text-white/35 text-[0.635rem]">500 g · Alacena</p>
+                </div>
+                <!-- Dorado = única señal de alerta en el widget -->
+                <span class="text-nido-gold text-[0.635rem] font-semibold shrink-0">3 días</span>
+              </div>
+              <div class="flex items-center gap-2.5 px-2.5 py-2 rounded-[10px] bg-white/[0.07]">
+                <div class="w-7 h-7 rounded-[7px] shrink-0" style="background:linear-gradient(135deg,rgba(62,94,74,0.4),rgba(62,94,74,0.15))"></div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-white/90 text-[0.74rem] font-medium truncate">Leche entera</p>
+                  <p class="text-white/35 text-[0.635rem]">1 L · Heladera</p>
+                </div>
+                <lucide-icon name="check" [size]="11" class="text-nido-green shrink-0" />
+              </div>
+            </div>
+
+            <!-- Footer: receta sugerida — la conexión alacena→receta en 1 línea -->
+            <div class="mt-3 pt-3 border-t border-white/[0.07]">
+              <div class="flex items-center gap-2.5">
+                <div class="w-6 h-6 rounded-[6px] bg-nido-gold/35 flex items-center justify-center shrink-0">
+                  <lucide-icon name="chef-hat" [size]="11" class="text-nido-cream" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-white/65 text-[0.7rem] font-medium">Pasta al pomodoro</p>
+                  <div class="flex items-center gap-1.5 mt-0.5">
+                    <!-- h-[3px] — pixel entero, rendering consistente entre browsers -->
+                    <div class="flex-1 h-[3px] rounded-full bg-white/10">
+                      <div class="h-full rounded-full bg-nido-green" style="width:85%"></div>
+                    </div>
+                    <span class="text-nido-green text-[0.6rem] font-bold shrink-0">85%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
       </div>
     </div>
+
+    <!-- Scroll indicator — hidden en mobile para no solapar -->
+    <div class="scroll-indicator hidden sm:flex absolute bottom-7 left-1/2 -translate-x-1/2 z-10 flex-col items-center gap-2.5">
+      <span class="text-white/22 text-[0.625rem] tracking-[0.2em] uppercase font-semibold">Scroll</span>
+      <div class="scroll-track">
+        <div class="scroll-thumb"></div>
+      </div>
+    </div>
+
   </section>
 
   <!-- ── FEATURE STRIP ─────────────────────────────────────────── -->
@@ -74,121 +201,307 @@
     <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-nido-border">
 
       <div class="feature-item flex items-center gap-5 px-10 py-9">
-        <div class="feature-icon w-14 h-14 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0">
+        <div class="feature-icon w-14 h-14 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0 shadow-[0_4px_16px_rgba(38,63,48,0.22)]">
           <lucide-icon name="refrigerator" [size]="22" class="text-nido-cream" />
         </div>
         <div>
-          <h3 class="font-bold text-nido-green-dark text-[0.9375rem] mb-1">Inventario</h3>
+          <h3 class="font-bold text-nido-green-dark text-[0.9375rem] mb-1">Inventario inteligente</h3>
           <p class="text-nido-brown text-[0.8125rem] leading-relaxed">
-            Control total de tu alacena. Sabé qué tenés, dónde está y cuándo vence.
+            Sabé qué tenés, dónde está y cuándo vence, en tiempo real.
           </p>
         </div>
       </div>
 
       <div class="feature-item flex items-center gap-5 px-10 py-9">
-        <div class="feature-icon w-14 h-14 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0">
+        <div class="feature-icon w-14 h-14 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0 shadow-[0_4px_16px_rgba(38,63,48,0.22)]">
           <lucide-icon name="chef-hat" [size]="22" class="text-nido-cream" />
         </div>
         <div>
-          <h3 class="font-bold text-nido-green-dark text-[0.9375rem] mb-1">Recetas</h3>
+          <h3 class="font-bold text-nido-green-dark text-[0.9375rem] mb-1">Recetas personalizadas</h3>
           <p class="text-nido-brown text-[0.8125rem] leading-relaxed">
-            Descubrí qué cocinar con lo que ya tenés. Filtros por alérgenos y electrodomésticos.
+            Descubrí qué cocinar con lo que ya tenés. Filtros inteligentes incluidos.
           </p>
         </div>
       </div>
 
       <div class="feature-item flex items-center gap-5 px-10 py-9">
-        <div class="feature-icon w-14 h-14 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0">
-          <lucide-icon name="zap" [size]="22" class="text-nido-cream" />
+        <div class="feature-icon w-14 h-14 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0 shadow-[0_4px_16px_rgba(38,63,48,0.22)]">
+          <lucide-icon name="users" [size]="22" class="text-nido-cream" />
         </div>
         <div>
-          <h3 class="font-bold text-nido-green-dark text-[0.9375rem] mb-1">Todo integrado</h3>
+          <h3 class="font-bold text-nido-green-dark text-[0.9375rem] mb-1">Toda la familia</h3>
           <p class="text-nido-brown text-[0.8125rem] leading-relaxed">
-            Cada módulo habla con los demás. Un hogar realmente conectado, en tiempo real.
+            Cada miembro con su perfil. El hogar sincronizado al instante.
           </p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ── TRUST BAR ─────────────────────────────────────────────── -->
-  <div class="bg-nido-bg border-t border-nido-border py-5">
-    <div class="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-y-5 px-8 md:divide-x md:divide-nido-border">
-      <div class="flex items-center gap-3 md:px-6 first:pl-0">
-        <lucide-icon name="shield" [size]="16" class="text-nido-green shrink-0" />
-        <div>
-          <p class="text-[0.8125rem] font-semibold text-nido-green-dark">Seguro y privado</p>
-          <p class="text-[0.75rem] text-nido-muted">Tu información protegida</p>
-        </div>
+  <!-- ── STATS ─────────────────────────────────────────────────── -->
+  <section class="stats-section bg-nido-green-dark py-16 px-6">
+    <div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10">
+      <div class="stat-item reveal-section text-center">
+        <p class="stat-number">+500</p>
+        <p class="stat-label">productos organizados</p>
       </div>
-      <div class="flex items-center gap-3 md:px-6">
-        <lucide-icon name="bell" [size]="16" class="text-nido-green shrink-0" />
-        <div>
-          <p class="text-[0.8125rem] font-semibold text-nido-green-dark">Alertas inteligentes</p>
-          <p class="text-[0.75rem] text-nido-muted">Nunca más se te olvida nada</p>
-        </div>
+      <div class="stat-item reveal-section text-center">
+        <p class="stat-number">+1.000</p>
+        <p class="stat-label">recetas disponibles</p>
       </div>
-      <div class="flex items-center gap-3 md:px-6">
-        <lucide-icon name="user" [size]="16" class="text-nido-green shrink-0" />
-        <div>
-          <p class="text-[0.8125rem] font-semibold text-nido-green-dark">Multi-usuario</p>
-          <p class="text-[0.75rem] text-nido-muted">Toda la familia sincronizada</p>
-        </div>
+      <div class="stat-item reveal-section text-center">
+        <p class="stat-number">7+</p>
+        <p class="stat-label">módulos conectados</p>
       </div>
-      <div class="flex items-center gap-3 md:px-6">
-        <lucide-icon name="check-square" [size]="16" class="text-nido-green shrink-0" />
-        <div>
-          <p class="text-[0.8125rem] font-semibold text-nido-green-dark">Fácil de usar</p>
-          <p class="text-[0.75rem] text-nido-muted">Sin curva de aprendizaje</p>
-        </div>
+      <div class="stat-item reveal-section text-center">
+        <p class="stat-number">3</p>
+        <p class="stat-label">planes disponibles</p>
       </div>
     </div>
-  </div>
+  </section>
 
   <!-- ── CÓMO FUNCIONA ─────────────────────────────────────────── -->
-  <section id="beneficios" class="bg-white py-24 px-6">
-    <div class="max-w-7xl mx-auto">
+  <section id="beneficios" class="bg-nido-cream py-28 px-6">
+    <div class="max-w-6xl mx-auto">
 
-      <div class="reveal-section text-center mb-16">
+      <div class="reveal-section text-center mb-20">
         <p class="section-eyebrow">¿Cómo funciona?</p>
-        <h2 class="section-title">Tres pasos para tener tu<br>hogar bajo control</h2>
+        <h2 class="section-title">Tres pasos para tener tu<br>hogar bajo <span class="text-accent-gradient">control</span></h2>
       </div>
 
-      <div class="steps-grid reveal-section relative grid grid-cols-1 md:grid-cols-3 gap-12">
-        <!-- Línea conectora (solo desktop) -->
-        <div class="steps-connector hidden md:block"></div>
+      <div class="steps-grid relative grid grid-cols-1 md:grid-cols-3">
 
-        <div class="flex flex-col items-center text-center">
-          <div class="step-badge relative w-[5rem] h-[5rem] rounded-full bg-nido-cream border-2 border-nido-gold/40 flex items-center justify-center mb-6 shrink-0">
-            <lucide-icon name="scan-line" [size]="26" class="text-nido-green-dark" />
-            <span class="step-number absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full bg-nido-gold text-white text-[0.7rem] font-bold flex items-center justify-center">1</span>
+        <!-- Línea conectora desktop -->
+        <div class="steps-track hidden md:block" aria-hidden="true"></div>
+
+        <!-- Paso 01 -->
+        <div class="step-item reveal-section relative px-8 pt-4 pb-10">
+          <div class="step-deco-number" aria-hidden="true">01</div>
+          <div class="relative z-10">
+            <div class="flex items-center gap-3 mb-5">
+              <div class="w-10 h-10 rounded-xl bg-nido-green-dark flex items-center justify-center shrink-0 shadow-[0_4px_14px_rgba(38,63,48,0.2)]">
+                <lucide-icon name="scan-line" [size]="17" class="text-nido-cream" />
+              </div>
+              <span class="step-pill">Paso 01</span>
+            </div>
+            <h3 class="font-bold text-nido-green-dark text-[1.0625rem] mb-3 leading-snug">Escaneá tus productos</h3>
+            <p class="text-nido-muted text-[0.875rem] leading-[1.72]">
+              Usá la cámara para escanear el código de barras. Nido lo reconoce y lo agrega automáticamente a tu alacena.
+            </p>
           </div>
-          <h3 class="font-semibold text-nido-green-dark text-[1rem] mb-3">Escaneá tus productos</h3>
-          <p class="text-nido-brown text-[0.875rem] leading-relaxed max-w-[260px]">
-            Usá la cámara para escanear códigos de barras. Nido reconoce el producto y sugiere la fecha de vencimiento automáticamente.
-          </p>
         </div>
 
-        <div class="flex flex-col items-center text-center">
-          <div class="step-badge relative w-[5rem] h-[5rem] rounded-full bg-nido-cream border-2 border-nido-gold/40 flex items-center justify-center mb-6 shrink-0">
-            <lucide-icon name="house" [size]="26" class="text-nido-green-dark" />
-            <span class="step-number absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full bg-nido-gold text-white text-[0.7rem] font-bold flex items-center justify-center">2</span>
+        <!-- Paso 02 -->
+        <div class="step-item step-item--mid reveal-section relative px-8 pt-4 pb-10">
+          <div class="step-deco-number" aria-hidden="true">02</div>
+          <div class="relative z-10">
+            <div class="flex items-center gap-3 mb-5">
+              <div class="w-10 h-10 rounded-xl bg-nido-gold flex items-center justify-center shrink-0 shadow-[0_4px_14px_rgba(199,143,90,0.24)]">
+                <lucide-icon name="house" [size]="17" class="text-white" />
+              </div>
+              <span class="step-pill step-pill--gold">Paso 02</span>
+            </div>
+            <h3 class="font-bold text-nido-green-dark text-[1.0625rem] mb-3 leading-snug">Organizá tu hogar</h3>
+            <p class="text-nido-muted text-[0.875rem] leading-[1.72]">
+              Alacena, electrodomésticos y gastos en un solo lugar. Toda la familia sincronizada al instante.
+            </p>
           </div>
-          <h3 class="font-semibold text-nido-green-dark text-[1rem] mb-3">Organizá tu hogar</h3>
-          <p class="text-nido-brown text-[0.875rem] leading-relaxed max-w-[260px]">
-            Visualizá alacena, electrodomésticos y gastos desde un panel único. Invitá a tu familia y coordiná en tiempo real.
-          </p>
         </div>
 
-        <div class="flex flex-col items-center text-center">
-          <div class="step-badge relative w-[5rem] h-[5rem] rounded-full bg-nido-cream border-2 border-nido-gold/40 flex items-center justify-center mb-6 shrink-0">
-            <lucide-icon name="chef-hat" [size]="26" class="text-nido-green-dark" />
-            <span class="step-number absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full bg-nido-gold text-white text-[0.7rem] font-bold flex items-center justify-center">3</span>
+        <!-- Paso 03 -->
+        <div class="step-item reveal-section relative px-8 pt-4 pb-10">
+          <div class="step-deco-number" aria-hidden="true">03</div>
+          <div class="relative z-10">
+            <div class="flex items-center gap-3 mb-5">
+              <div class="w-10 h-10 rounded-xl bg-nido-green-dark flex items-center justify-center shrink-0 shadow-[0_4px_14px_rgba(38,63,48,0.2)]">
+                <lucide-icon name="chef-hat" [size]="17" class="text-nido-cream" />
+              </div>
+              <span class="step-pill">Paso 03</span>
+            </div>
+            <h3 class="font-bold text-nido-green-dark text-[1.0625rem] mb-3 leading-snug">Cocinás con lo que tenés</h3>
+            <p class="text-nido-muted text-[0.875rem] leading-[1.72]">
+              Recibís recetas sugeridas según tu alacena real. Con filtros por alérgenos y electrodomésticos disponibles.
+            </p>
           </div>
-          <h3 class="font-semibold text-nido-green-dark text-[1rem] mb-3">Cocinás con lo que tenés</h3>
-          <p class="text-nido-brown text-[0.875rem] leading-relaxed max-w-[260px]">
-            Recibí sugerencias de recetas basadas en tu alacena real. Filtrá por alérgenos, dificultad y electrodomésticos disponibles.
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── APP SHOWCASE ──────────────────────────────────────────── -->
+  <section class="showcase-section py-24 px-6 bg-nido-bg">
+    <div class="max-w-7xl mx-auto">
+
+      <div class="reveal-section text-center mb-20">
+        <p class="section-eyebrow">El producto</p>
+        <h2 class="section-title">Una app pensada para<br>la vida <span class="text-accent-gradient">real</span></h2>
+      </div>
+
+      <!-- Bloque 1: Alacena -->
+      <div class="showcase-block reveal-section flex flex-col lg:flex-row items-center gap-16 mb-24">
+        <div class="showcase-visual lg:w-1/2 shrink-0 w-full">
+          <div class="showcase-frame bg-white rounded-[22px] shadow-[0_6px_32px_rgba(38,63,48,0.09)] overflow-hidden border border-nido-border">
+            <div class="px-5 py-4 border-b border-nido-border flex items-center justify-between">
+              <div>
+                <h3 class="text-nido-green-dark font-bold text-[0.9375rem]">Mi Alacena</h3>
+                <p class="text-nido-muted text-[0.74rem]">14 productos · 2 por vencer</p>
+              </div>
+              <div class="flex gap-2">
+                <div class="w-8 h-8 rounded-[8px] bg-nido-cream border border-nido-border flex items-center justify-center">
+                  <lucide-icon name="scan-line" [size]="14" class="text-nido-green" />
+                </div>
+                <div class="w-8 h-8 rounded-[8px] bg-nido-green-dark flex items-center justify-center">
+                  <lucide-icon name="plus" [size]="14" class="text-nido-cream" />
+                </div>
+              </div>
+            </div>
+            <div class="divide-y divide-nido-border/40">
+              <div class="px-5 py-3.5 flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-[10px] bg-[rgba(199,143,90,0.09)] flex items-center justify-center shrink-0">
+                  <lucide-icon name="package" [size]="16" class="text-nido-gold" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-nido-green-dark text-[0.8375rem] font-medium">Harina 000</p>
+                  <p class="text-nido-muted text-[0.74rem]">500 g · Alacena</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-nido-gold text-[0.72rem] font-semibold">Vence en 3 días</p>
+                  <div class="w-16 h-[3px] bg-nido-border rounded-full overflow-hidden mt-1 ml-auto">
+                    <div class="h-full w-[25%] bg-nido-gold rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="px-5 py-3.5 flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-[10px] bg-[rgba(62,94,74,0.07)] flex items-center justify-center shrink-0">
+                  <lucide-icon name="package" [size]="16" class="text-nido-green" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-nido-green-dark text-[0.8375rem] font-medium">Leche entera</p>
+                  <p class="text-nido-muted text-[0.74rem]">1 L · Heladera</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-nido-green text-[0.72rem] font-semibold">OK · 12 días</p>
+                  <div class="w-16 h-[3px] bg-nido-border rounded-full overflow-hidden mt-1 ml-auto">
+                    <div class="h-full w-[82%] bg-nido-green rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="px-5 py-3.5 flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-[10px] bg-[rgba(146,115,87,0.07)] flex items-center justify-center shrink-0">
+                  <lucide-icon name="package" [size]="16" class="text-nido-brown" />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-nido-green-dark text-[0.8375rem] font-medium">Salsa de tomate</p>
+                  <p class="text-nido-muted text-[0.74rem]">340 g · Alacena</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-nido-green text-[0.72rem] font-semibold">OK · 45 días</p>
+                  <div class="w-16 h-[3px] bg-nido-border rounded-full overflow-hidden mt-1 ml-auto">
+                    <div class="h-full w-[95%] bg-nido-green rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="lg:w-1/2">
+          <p class="section-eyebrow">Alacena inteligente</p>
+          <h3 class="section-title mb-4">Sabé qué tenés antes<br>de ir al super</h3>
+          <p class="text-nido-brown text-[0.9375rem] leading-relaxed mb-7">
+            Registrá tus productos escaneando el código de barras o manualmente. Nido te avisa cuándo algo está por vencer y mantiene el stock actualizado para todos los miembros del hogar.
           </p>
+          <ul class="flex flex-col gap-3.5">
+            <li class="flex items-start gap-3">
+              <div class="w-5 h-5 rounded-full bg-nido-green/12 flex items-center justify-center shrink-0 mt-0.5">
+                <lucide-icon name="check" [size]="11" class="text-nido-green" />
+              </div>
+              <span class="text-nido-brown text-[0.875rem] leading-snug">Escaneo por código de barras con reconocimiento automático</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="w-5 h-5 rounded-full bg-nido-green/12 flex items-center justify-center shrink-0 mt-0.5">
+                <lucide-icon name="check" [size]="11" class="text-nido-green" />
+              </div>
+              <span class="text-nido-brown text-[0.875rem] leading-snug">Alertas de vencimiento con código de colores configurable</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="w-5 h-5 rounded-full bg-nido-green/12 flex items-center justify-center shrink-0 mt-0.5">
+                <lucide-icon name="check" [size]="11" class="text-nido-green" />
+              </div>
+              <span class="text-nido-brown text-[0.875rem] leading-snug">Stock visible y editable para todo el hogar en tiempo real</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Bloque 2: Recetas (invertido) -->
+      <div class="showcase-block reveal-section flex flex-col lg:flex-row-reverse items-center gap-16">
+        <div class="showcase-visual lg:w-1/2 shrink-0 w-full">
+          <div class="showcase-frame bg-white rounded-[22px] shadow-[0_6px_32px_rgba(38,63,48,0.09)] overflow-hidden border border-nido-border">
+            <div class="px-5 py-4 border-b border-nido-border">
+              <h3 class="text-nido-green-dark font-bold text-[0.9375rem]">Recetas Inteligentes</h3>
+              <p class="text-nido-muted text-[0.74rem]">48 recetas · filtrando por tu alacena</p>
+            </div>
+            <div class="p-4 grid grid-cols-2 gap-3">
+              <div class="rounded-[12px] overflow-hidden border border-nido-border">
+                <div class="h-16 bg-gradient-to-br from-[rgba(199,143,90,0.15)] to-[rgba(62,94,74,0.15)]"></div>
+                <div class="px-2.5 py-2">
+                  <p class="text-nido-green-dark text-[0.775rem] font-semibold mb-1.5">Pasta al pomodoro</p>
+                  <div class="flex items-center gap-1 mb-2">
+                    <lucide-icon name="clock" [size]="10" class="text-nido-brown" />
+                    <span class="text-nido-brown text-[0.65rem]">25 min</span>
+                    <span class="ml-auto text-[0.62rem] font-semibold bg-[rgba(62,94,74,0.09)] text-nido-green px-1.5 py-0.5 rounded-full">Fácil</span>
+                  </div>
+                  <div class="h-[3px] bg-nido-border rounded-full overflow-hidden mb-0.5">
+                    <div class="h-full bg-nido-green rounded-full" style="width:85%"></div>
+                  </div>
+                  <span class="text-nido-green text-[0.63rem] font-semibold">85% disponible</span>
+                </div>
+              </div>
+              <div class="rounded-[12px] overflow-hidden border border-nido-border">
+                <div class="h-16 bg-gradient-to-br from-[rgba(146,115,87,0.15)] to-[rgba(199,143,90,0.15)]"></div>
+                <div class="px-2.5 py-2">
+                  <p class="text-nido-green-dark text-[0.775rem] font-semibold mb-1.5">Tarta de verduras</p>
+                  <div class="flex items-center gap-1 mb-2">
+                    <lucide-icon name="clock" [size]="10" class="text-nido-brown" />
+                    <span class="text-nido-brown text-[0.65rem]">40 min</span>
+                    <span class="ml-auto text-[0.62rem] font-semibold bg-[rgba(199,143,90,0.1)] text-nido-gold px-1.5 py-0.5 rounded-full">Medio</span>
+                  </div>
+                  <div class="h-[3px] bg-nido-border rounded-full overflow-hidden mb-0.5">
+                    <div class="h-full bg-nido-gold rounded-full" style="width:62%"></div>
+                  </div>
+                  <span class="text-nido-gold text-[0.63rem] font-semibold">62% disponible</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="lg:w-1/2">
+          <p class="section-eyebrow">Recetas inteligentes</p>
+          <h3 class="section-title mb-4">Cocinás con lo que<br><span class="text-accent-gradient">tenés hoy</span></h3>
+          <p class="text-nido-brown text-[0.9375rem] leading-relaxed mb-7">
+            Nido cruza tu alacena con el catálogo de recetas y te muestra qué podés preparar ahora mismo. Filtrá por quiénes comen hoy, sus alérgenos y los electrodomésticos disponibles.
+          </p>
+          <ul class="flex flex-col gap-3.5">
+            <li class="flex items-start gap-3">
+              <div class="w-5 h-5 rounded-full bg-nido-green/12 flex items-center justify-center shrink-0 mt-0.5">
+                <lucide-icon name="check" [size]="11" class="text-nido-green" />
+              </div>
+              <span class="text-nido-brown text-[0.875rem] leading-snug">Porcentaje de disponibilidad en tiempo real con tu stock</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="w-5 h-5 rounded-full bg-nido-green/12 flex items-center justify-center shrink-0 mt-0.5">
+                <lucide-icon name="check" [size]="11" class="text-nido-green" />
+              </div>
+              <span class="text-nido-brown text-[0.875rem] leading-snug">Filtros por alérgenos de los miembros que comen hoy</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <div class="w-5 h-5 rounded-full bg-nido-green/12 flex items-center justify-center shrink-0 mt-0.5">
+                <lucide-icon name="check" [size]="11" class="text-nido-green" />
+              </div>
+              <span class="text-nido-brown text-[0.875rem] leading-snug">Ruleta de comidas para cuando no se te ocurre nada</span>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
@@ -200,10 +513,14 @@
 
       <div class="reveal-section text-center mb-16">
         <p class="section-eyebrow">Módulos</p>
-        <h2 class="section-title">Todo lo que tu hogar necesita</h2>
+        <h2 class="section-title">Todo lo que tu hogar necesita,<br>en un solo lugar</h2>
+        <p class="text-nido-brown text-[0.9375rem] mt-3 max-w-[480px] mx-auto leading-relaxed">
+          Más de 7 módulos completamente integrados. Todos comparten datos entre sí para que tu hogar funcione como uno solo.
+        </p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Módulos principales -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
 
         <div class="module-card reveal-section bg-white rounded-[18px] overflow-hidden">
           <div class="h-[3px] bg-nido-green"></div>
@@ -217,16 +534,13 @@
             </p>
             <ul class="flex flex-col gap-2.5">
               <li class="module-feature flex items-center gap-2.5 text-[0.8125rem] text-nido-brown">
-                <lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" />
-                Escaneo por código de barras
+                <lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /> Escaneo por código de barras
               </li>
               <li class="module-feature flex items-center gap-2.5 text-[0.8125rem] text-nido-brown">
-                <lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" />
-                Alertas de vencimiento configurables
+                <lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /> Alertas de vencimiento configurables
               </li>
               <li class="module-feature flex items-center gap-2.5 text-[0.8125rem] text-nido-brown">
-                <lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" />
-                Stock en tiempo real para todo el hogar
+                <lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /> Stock compartido con el hogar
               </li>
             </ul>
           </div>
@@ -244,16 +558,13 @@
             </p>
             <ul class="flex flex-col gap-2.5">
               <li class="module-feature flex items-center gap-2.5 text-[0.8125rem] text-nido-brown">
-                <lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" />
-                Cruce automático con tu alacena
+                <lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /> Cruce automático con tu alacena
               </li>
               <li class="module-feature flex items-center gap-2.5 text-[0.8125rem] text-nido-brown">
-                <lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" />
-                Filtros por alérgenos del grupo
+                <lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /> Filtros por alérgenos del grupo
               </li>
               <li class="module-feature flex items-center gap-2.5 text-[0.8125rem] text-nido-brown">
-                <lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" />
-                Ruleta aleatoria de comidas
+                <lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /> Ruleta aleatoria de comidas
               </li>
             </ul>
           </div>
@@ -267,22 +578,155 @@
             </div>
             <h3 class="font-bold text-nido-green-dark text-[1.0625rem] mb-2.5">Electrodomésticos</h3>
             <p class="text-nido-brown text-[0.875rem] leading-relaxed mb-6">
-              Registrá tu equipamiento del hogar y usalo para filtrar recetas. Nunca más sugerencias que no podés preparar.
+              Registrá tu equipamiento y usalo para filtrar recetas. Nunca más sugerencias que no podés preparar.
             </p>
             <ul class="flex flex-col gap-2.5">
               <li class="module-feature flex items-center gap-2.5 text-[0.8125rem] text-nido-brown">
-                <lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" />
-                Catálogo completo de equipamiento
+                <lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /> Catálogo completo de equipamiento
               </li>
               <li class="module-feature flex items-center gap-2.5 text-[0.8125rem] text-nido-brown">
-                <lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" />
-                Integrado con las recetas
+                <lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /> Integrado con las recetas
               </li>
               <li class="module-feature flex items-center gap-2.5 text-[0.8125rem] text-nido-brown">
-                <lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" />
-                Control de estado del equipo
+                <lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /> Control de estado del equipo
               </li>
             </ul>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Módulos adicionales (compact) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 reveal-section">
+
+        <div class="compact-module bg-white rounded-[14px] p-4.5 flex items-center gap-3.5 border border-nido-border shadow-[0_1px_6px_rgba(38,63,48,0.06)] hover:shadow-[0_6px_20px_rgba(38,63,48,0.1)] hover:-translate-y-[3px] transition-all duration-200">
+          <div class="w-10 h-10 rounded-[10px] bg-[rgba(62,94,74,0.08)] flex items-center justify-center shrink-0">
+            <lucide-icon name="calendar" [size]="19" class="text-nido-green" />
+          </div>
+          <div>
+            <p class="text-nido-green-dark font-semibold text-[0.875rem]">Planificador</p>
+            <p class="text-nido-muted text-[0.775rem] mt-0.5">Organizá la semana de comidas</p>
+          </div>
+        </div>
+
+        <div class="compact-module bg-white rounded-[14px] p-4.5 flex items-center gap-3.5 border border-nido-border shadow-[0_1px_6px_rgba(38,63,48,0.06)] hover:shadow-[0_6px_20px_rgba(38,63,48,0.1)] hover:-translate-y-[3px] transition-all duration-200">
+          <div class="w-10 h-10 rounded-[10px] bg-[rgba(199,143,90,0.08)] flex items-center justify-center shrink-0">
+            <lucide-icon name="shopping-basket" [size]="19" class="text-nido-gold" />
+          </div>
+          <div>
+            <p class="text-nido-green-dark font-semibold text-[0.875rem]">Compras inteligentes</p>
+            <p class="text-nido-muted text-[0.775rem] mt-0.5">Lista generada desde tu alacena</p>
+          </div>
+        </div>
+
+        <div class="compact-module bg-white rounded-[14px] p-4.5 flex items-center gap-3.5 border border-nido-border shadow-[0_1px_6px_rgba(38,63,48,0.06)] hover:shadow-[0_6px_20px_rgba(38,63,48,0.1)] hover:-translate-y-[3px] transition-all duration-200">
+          <div class="w-10 h-10 rounded-[10px] bg-[rgba(146,115,87,0.08)] flex items-center justify-center shrink-0">
+            <lucide-icon name="check-square" [size]="19" class="text-nido-brown" />
+          </div>
+          <div>
+            <p class="text-nido-green-dark font-semibold text-[0.875rem]">Tareas del hogar</p>
+            <p class="text-nido-muted text-[0.775rem] mt-0.5">Asigná y seguí las tareas del día</p>
+          </div>
+        </div>
+
+        <div class="compact-module bg-white rounded-[14px] p-4.5 flex items-center gap-3.5 border border-nido-border shadow-[0_1px_6px_rgba(38,63,48,0.06)] hover:shadow-[0_6px_20px_rgba(38,63,48,0.1)] hover:-translate-y-[3px] transition-all duration-200">
+          <div class="w-10 h-10 rounded-[10px] bg-[rgba(62,94,74,0.08)] flex items-center justify-center shrink-0">
+            <lucide-icon name="wallet" [size]="19" class="text-nido-green" />
+          </div>
+          <div>
+            <p class="text-nido-green-dark font-semibold text-[0.875rem]">Finanzas del hogar</p>
+            <p class="text-nido-muted text-[0.775rem] mt-0.5">Gastos compartidos entre convivientes</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Banner convivientes -->
+      <div class="convivientes-banner reveal-section mt-6 rounded-[18px] px-8 py-6 flex flex-col sm:flex-row items-center gap-5 justify-between">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center shrink-0">
+            <lucide-icon name="users" [size]="22" class="text-nido-cream" />
+          </div>
+          <div>
+            <h3 class="text-nido-cream font-bold text-[1.0625rem] mb-0.5">Invitá a todos tus convivientes</h3>
+            <p class="text-nido-cream/60 text-[0.875rem]">Cada miembro tiene su perfil, sus alérgenos y sus preferencias. El hogar siempre sincronizado.</p>
+          </div>
+        </div>
+        <a routerLink="/registro"
+           class="shrink-0 inline-flex items-center gap-2 bg-white/15 border border-white/25 text-nido-cream px-5 py-2.5 rounded-full text-[0.875rem] font-medium no-underline hover:bg-white/25 transition-all duration-200 whitespace-nowrap">
+          Crear mi hogar
+          <lucide-icon name="arrow-right" [size]="15" />
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── TESTIMONIOS ───────────────────────────────────────────── -->
+  <section class="py-24 px-6 bg-white">
+    <div class="max-w-7xl mx-auto">
+
+      <div class="reveal-section text-center mb-14">
+        <p class="section-eyebrow">Testimonios</p>
+        <h2 class="section-title">Lo que dice nuestra <span class="text-accent-gradient">comunidad</span></h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <div class="testimonial-card reveal-section bg-nido-bg rounded-[18px] p-6 relative overflow-hidden">
+          <div class="testimonial-quote">&ldquo;</div>
+          <p class="text-nido-brown text-[0.9rem] leading-[1.75] mb-5 relative z-10">
+            Antes compraba el doble de lo que necesitaba porque no sabía qué tenía. Ahora reviso Nido antes de ir al super y no tiro nada.
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-nido-green-dark flex items-center justify-center text-[0.72rem] font-bold text-nido-cream shrink-0">ML</div>
+            <div>
+              <p class="text-nido-green-dark text-[0.8375rem] font-semibold">Marcela L.</p>
+              <p class="text-nido-muted text-[0.74rem]">Mamá de 3</p>
+            </div>
+            <div class="ml-auto flex gap-0.5">
+              @for (_ of [1,2,3,4,5]; track $index) {
+                <lucide-icon name="star" [size]="12" class="text-nido-gold" />
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card reveal-section bg-nido-bg rounded-[18px] p-6 relative overflow-hidden">
+          <div class="testimonial-quote">&ldquo;</div>
+          <p class="text-nido-brown text-[0.9rem] leading-[1.75] mb-5 relative z-10">
+            El módulo de recetas me cambió la rutina. Antes miraba la heladera sin saber qué hacer. Ahora Nido me dice exactamente qué puedo cocinar hoy.
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-nido-gold flex items-center justify-center text-[0.72rem] font-bold text-white shrink-0">SR</div>
+            <div>
+              <p class="text-nido-green-dark text-[0.8375rem] font-semibold">Santiago R.</p>
+              <p class="text-nido-muted text-[0.74rem]">Estudiante universitario</p>
+            </div>
+            <div class="ml-auto flex gap-0.5">
+              @for (_ of [1,2,3,4,5]; track $index) {
+                <lucide-icon name="star" [size]="12" class="text-nido-gold" />
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card reveal-section bg-nido-bg rounded-[18px] p-6 relative overflow-hidden">
+          <div class="testimonial-quote">&ldquo;</div>
+          <p class="text-nido-brown text-[0.9rem] leading-[1.75] mb-5 relative z-10">
+            Lo mejor es que lo usamos en familia. Mi marido agrega lo que compra y yo veo el stock actualizado al instante. Se terminó comprar duplicados.
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-nido-brown flex items-center justify-center text-[0.72rem] font-bold text-white shrink-0">VG</div>
+            <div>
+              <p class="text-nido-green-dark text-[0.8375rem] font-semibold">Valeria G.</p>
+              <p class="text-nido-muted text-[0.74rem]">Hogar de 4 personas</p>
+            </div>
+            <div class="ml-auto flex gap-0.5">
+              @for (_ of [1,2,3,4,5]; track $index) {
+                <lucide-icon name="star" [size]="12" class="text-nido-gold" />
+              }
+            </div>
           </div>
         </div>
 
@@ -290,26 +734,141 @@
     </div>
   </section>
 
+  <!-- ── PLANES ───────────────────────────────────────────────── -->
+  <section class="py-24 px-6 bg-nido-bg" id="precios">
+    <div class="max-w-7xl mx-auto">
+
+      <div class="reveal-section text-center mb-14">
+        <p class="section-eyebrow">Precios</p>
+        <h2 class="section-title">Planes simples y transparentes</h2>
+        <p class="text-nido-brown text-[0.9375rem] mt-3 max-w-[440px] mx-auto leading-relaxed">
+          Empezá gratis y escalá cuando tu hogar lo necesite.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+
+        <!-- Plan Básico -->
+        <div class="pricing-card reveal-section flex flex-col">
+          <div class="pricing-icon bg-[rgba(62,94,74,0.08)]">
+            <lucide-icon name="sprout" [size]="22" class="text-nido-green" />
+          </div>
+          <h3 class="pricing-name text-nido-green-dark">Plan Básico</h3>
+          <div class="flex items-baseline gap-1.5 mb-7">
+            <span class="pricing-amount text-nido-green-dark">Gratis</span>
+            <span class="text-nido-muted text-[0.8125rem]">para siempre</span>
+          </div>
+          <ul class="pricing-features flex-1">
+            <li><lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /><span>Inventario digital (hasta 30 items)</span></li>
+            <li><lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /><span>Recetas básicas (hasta 20)</span></li>
+            <li><lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /><span>1 usuario</span></li>
+            <li><lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /><span>Alertas de vencimiento</span></li>
+          </ul>
+          <a routerLink="/registro"
+             class="mt-6 flex items-center justify-center py-2.5 px-5 rounded-full border-[1.5px] border-nido-border text-nido-green-dark text-[0.875rem] font-semibold no-underline transition-all duration-200 hover:border-nido-green hover:bg-nido-green/[0.04]">
+            Empezar gratis
+          </a>
+        </div>
+
+        <!-- Plan Hogar (destacado) -->
+        <div class="pricing-card pricing-card--featured reveal-section flex flex-col relative">
+          <div class="pricing-badge">Más popular</div>
+          <div class="pricing-icon bg-white/[0.12]">
+            <lucide-icon name="house" [size]="22" class="text-nido-cream" />
+          </div>
+          <h3 class="pricing-name text-nido-cream">Plan Hogar</h3>
+          <div class="flex items-baseline gap-1 mb-7">
+            <span class="text-nido-gold font-bold text-[1.25rem]">$</span>
+            <span class="pricing-amount text-nido-cream">9.99</span>
+            <span class="text-nido-cream/45 text-[0.8125rem]">/mes</span>
+          </div>
+          <ul class="pricing-features pricing-features--featured flex-1">
+            <li><lucide-icon name="check" [size]="13" class="text-nido-gold shrink-0" /><span>Inventario ilimitado</span></li>
+            <li><lucide-icon name="check" [size]="13" class="text-nido-gold shrink-0" /><span>Todas las recetas (+120)</span></li>
+            <li><lucide-icon name="check" [size]="13" class="text-nido-gold shrink-0" /><span>Hasta 4 miembros del hogar</span></li>
+            <li><lucide-icon name="check" [size]="13" class="text-nido-gold shrink-0" /><span>Escáner de código de barras</span></li>
+            <li><lucide-icon name="check" [size]="13" class="text-nido-gold shrink-0" /><span>Electrodomésticos ilimitados</span></li>
+          </ul>
+          <a routerLink="/registro"
+             class="mt-6 flex items-center justify-center py-2.5 px-5 rounded-full bg-nido-gold text-white text-[0.875rem] font-semibold no-underline transition-opacity duration-200 hover:opacity-90 shadow-[0_4px_16px_rgba(199,143,90,0.4)]">
+            Elegir Hogar
+          </a>
+        </div>
+
+        <!-- Plan Familia -->
+        <div class="pricing-card reveal-section flex flex-col">
+          <div class="pricing-icon bg-[rgba(199,143,90,0.08)]">
+            <lucide-icon name="users" [size]="22" class="text-nido-gold" />
+          </div>
+          <h3 class="pricing-name text-nido-green-dark">Plan Familia</h3>
+          <div class="flex items-baseline gap-1 mb-7">
+            <span class="text-nido-gold font-bold text-[1.25rem]">$</span>
+            <span class="pricing-amount text-nido-green-dark">14.99</span>
+            <span class="text-nido-muted text-[0.8125rem]">/mes</span>
+          </div>
+          <ul class="pricing-features flex-1">
+            <li><lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /><span>Todo lo del Plan Hogar</span></li>
+            <li><lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /><span>Miembros ilimitados</span></li>
+            <li><lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /><span>Historial y estadísticas avanzadas</span></li>
+            <li><lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /><span>Soporte prioritario</span></li>
+          </ul>
+          <a routerLink="/registro"
+             class="mt-6 flex items-center justify-center py-2.5 px-5 rounded-full border-[1.5px] border-nido-border text-nido-green-dark text-[0.875rem] font-semibold no-underline transition-all duration-200 hover:border-nido-green hover:bg-nido-green/[0.04]">
+            Elegir Familia
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FAQ ───────────────────────────────────────────────────── -->
+  <section class="py-24 px-6 bg-nido-bg" id="faq">
+    <div class="max-w-2xl mx-auto">
+
+      <div class="reveal-section text-center mb-14">
+        <p class="section-eyebrow">Preguntas frecuentes</p>
+        <h2 class="section-title">Todo lo que necesitás saber</h2>
+      </div>
+
+      <div class="flex flex-col gap-3 reveal-section">
+        @for (item of faqItems; track item.question; let i = $index) {
+          <div class="faq-item" [class.is-open]="activeFaq() === i">
+            <button class="faq-question" (click)="toggleFaq(i)">
+              <span>{{ item.question }}</span>
+              <lucide-icon [name]="activeFaq() === i ? 'minus' : 'plus'" [size]="17" class="shrink-0" />
+            </button>
+            <div class="faq-body">
+              <p class="faq-answer">{{ item.answer }}</p>
+            </div>
+          </div>
+        }
+      </div>
+
+    </div>
+  </section>
+
   <!-- ── CTA FINAL ─────────────────────────────────────────────── -->
-  <section class="cta-section reveal-section py-24 px-6 text-center relative overflow-hidden">
-    <!-- glow decorativo -->
+  <section class="cta-section py-28 px-6 text-center relative overflow-hidden">
     <div class="cta-glow absolute inset-0 pointer-events-none"></div>
-    <div class="relative z-10 max-w-2xl mx-auto">
-      <p class="section-eyebrow-light mb-3">Empezá hoy</p>
-      <h2 class="text-nido-cream text-[2rem] sm:text-[2.5rem] font-bold mb-5 leading-tight">
-        Tu hogar organizado,<br>desde el primer día
+    <div class="absolute -top-32 -left-32 w-80 h-80 rounded-full bg-nido-gold/[0.06] blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-32 -right-32 w-80 h-80 rounded-full bg-[rgba(62,94,74,0.1)] blur-3xl pointer-events-none"></div>
+    <div class="relative z-10 max-w-2xl mx-auto reveal-section">
+      <p class="section-eyebrow-light mb-4">Empezá hoy</p>
+      <h2 class="cta-title text-nido-cream font-bold leading-tight mb-5">
+        Tu hogar organizado,<br>desde el <span class="text-nido-gold">primer día</span>
       </h2>
-      <p class="text-nido-cream/60 text-[1rem] leading-relaxed mb-10 max-w-[480px] mx-auto">
-        Creá tu cuenta gratis y descubrí cómo Nido transforma la gestión diaria de tu hogar en algo simple, conectado y armónico.
+      <p class="text-nido-cream/50 text-[0.9375rem] leading-relaxed mb-10 max-w-[460px] mx-auto">
+        Creá tu cuenta gratis y descubrí cómo Nido transforma la gestión diaria de tu hogar en algo simple y conectado.
       </p>
       <div class="flex items-center justify-center gap-4 flex-wrap">
         <a routerLink="/registro"
-           class="inline-flex items-center gap-2 bg-nido-gold text-white px-8 py-3.5 rounded-full text-[1rem] font-semibold no-underline hover:opacity-90 transition-opacity shadow-[0_6px_28px_rgba(199,143,90,0.45)]">
+           class="inline-flex items-center gap-2 bg-nido-gold text-white px-8 py-3.5 rounded-full text-[1rem] font-semibold no-underline hover:opacity-90 transition-opacity shadow-[0_6px_32px_rgba(199,143,90,0.5)]">
           Crear mi cuenta gratis
           <lucide-icon name="arrow-right" [size]="18" />
         </a>
         <a routerLink="/login"
-           class="inline-flex items-center border border-nido-cream/30 text-nido-cream/70 px-6 py-3.5 rounded-full text-[0.9375rem] no-underline hover:border-nido-cream/60 hover:text-nido-cream transition-all duration-200">
+           class="inline-flex items-center border border-nido-cream/20 text-nido-cream/60 px-6 py-3.5 rounded-full text-[0.9375rem] no-underline hover:border-nido-cream/45 hover:text-nido-cream transition-all duration-200">
           Ya tengo cuenta
         </a>
       </div>
@@ -317,18 +876,41 @@
   </section>
 
   <!-- ── FOOTER ─────────────────────────────────────────────────── -->
-  <footer id="contacto" class="bg-nido-green-dark border-t border-white/[0.07] py-9 px-6">
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-5">
-      <a routerLink="/" class="no-underline shrink-0">
-        <img src="logo.png" alt="Nido" class="h-8 w-auto object-contain opacity-90" />
-      </a>
-      <p class="text-nido-cream/30 text-[0.8rem] text-center">
+  <footer id="contacto" class="bg-nido-green-dark border-t border-white/[0.07] pt-14 pb-8 px-6">
+    <div class="max-w-7xl mx-auto">
+      <!-- Top -->
+      <div class="flex flex-col md:flex-row justify-between gap-10 mb-10 pb-10 border-b border-white/[0.07]">
+        <div class="max-w-[280px]">
+          <a routerLink="/" class="no-underline block mb-4">
+            <img src="logo.png" alt="Nido" class="h-8 w-auto object-contain opacity-85" />
+          </a>
+          <p class="text-nido-cream/30 text-[0.8375rem] leading-relaxed">
+            La app de gestión del hogar que conecta tu alacena, recetas y electrodomésticos en un solo lugar.
+          </p>
+        </div>
+        <div class="flex gap-14 flex-wrap">
+          <div>
+            <p class="text-nido-cream/40 text-[0.72rem] font-bold tracking-widest uppercase mb-4">Navegación</p>
+            <div class="flex flex-col gap-3">
+              <a href="#inicio"     class="footer-link">Inicio</a>
+              <a href="#beneficios" class="footer-link">Beneficios</a>
+              <a href="#funciones"  class="footer-link">Módulos</a>
+              <a href="#faq"        class="footer-link">Preguntas frecuentes</a>
+            </div>
+          </div>
+          <div>
+            <p class="text-nido-cream/40 text-[0.72rem] font-bold tracking-widest uppercase mb-4">Cuenta</p>
+            <div class="flex flex-col gap-3">
+              <a routerLink="/login"    class="footer-link">Iniciar sesión</a>
+              <a routerLink="/registro" class="footer-link">Crear cuenta gratis</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Bottom -->
+      <p class="text-nido-cream/20 text-[0.775rem] text-center">
         © 2025 Nido · Trabajo Práctico Integrador · Universidad
       </p>
-      <div class="flex items-center gap-6">
-        <a routerLink="/login"    class="text-nido-cream/45 text-[0.8125rem] no-underline hover:text-nido-cream/80 transition-colors">Iniciar sesión</a>
-        <a routerLink="/registro" class="text-nido-cream/45 text-[0.8125rem] no-underline hover:text-nido-cream/80 transition-colors">Registrarse</a>
-      </div>
     </div>
   </footer>
 

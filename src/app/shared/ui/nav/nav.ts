@@ -4,7 +4,7 @@ import {
   LucideAngularModule, LucideIconData,
   House, Refrigerator, ChefHat, Wallet,
   CheckSquare, Calendar, Zap, Bell,
-  User, Settings, LogOut,
+  User, Settings, LogOut, ShoppingCart,
 } from 'lucide-angular';
 import { AuthService } from '../../../core/auth/auth.service';
 
@@ -41,8 +41,9 @@ export class Nav {
   protected readonly mainNavItems: NavItem[] = [
     { label: 'Inicio',            route: '/inicio',           icon: 'house'       },
     { label: 'Alacena',           route: '/alacena',          icon: 'refrigerator'},
-    { label: 'Recetas',           route: '/recetas',          icon: 'chef-hat'    },
-    { label: 'Finanzas',          route: '/finanzas',         icon: 'wallet'      },
+    { label: 'Recetas',           route: '/recetas',          icon: 'chef-hat'      },
+    { label: 'Lista de compras',  route: '/lista-compras',    icon: 'shopping-cart' },
+    { label: 'Finanzas',          route: '/finanzas',         icon: 'wallet'        },
     { label: 'Tareas',            route: '/tareas',           icon: 'check-square'},
     { label: 'Planificador',      route: '/planificador',     icon: 'calendar'    },
     { label: 'Electrodomésticos', route: '/electrodomesticos',icon: 'zap'         },
@@ -69,6 +70,7 @@ export class Nav {
     'bell':         Bell,
     'user':         User,
     'settings':     Settings,
-    'log-out':      LogOut,
+    'shopping-cart': ShoppingCart,
+    'log-out':       LogOut,
   };
 }

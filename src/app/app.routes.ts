@@ -3,7 +3,9 @@ import { authChildGuard, authGuard, guestGuard } from './core/guards/auth';
 import { Layout } from './core/layout/layout';
 import { Home } from './features/home/home/home';
 import { Recipes } from './features/recipes/recipes/recipes';
+import { RecipeDetail } from './features/recipes/recipe-detail/recipe-detail';
 import { Alacena } from './features/alacena/alacena/alacena';
+import { ListaCompras } from './features/lista-compras/lista-compras';
 import { CreateHousehold } from './features/household/create-household/create-household';
 import { AcceptInvitation } from './features/household/accept-invitation/accept-invitation';
 import { WellnessStep } from './features/onboarding/wellness-step/wellness-step';
@@ -31,7 +33,9 @@ export const routes: Routes = [
       { path: '', redirectTo: 'inicio', pathMatch: 'full' },
       { path: 'inicio', component: Home },
       { path: 'recetas', component: Recipes },
-      { path: 'alacena', component: Alacena },
+      { path: 'recetas/:id',    component: RecipeDetail  },
+      { path: 'alacena',        component: Alacena       },
+      { path: 'lista-compras',  component: ListaCompras  },
       { path: 'electrodomesticos', component: Electrodomesticos },
       { path: 'agregar-producto', component: AgregarProducto },
       { path: 'configuracion', component: Configuracion },

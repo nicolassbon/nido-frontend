@@ -1,10 +1,13 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
-import { AlacenaApiService } from '../../alacena/alacena-api.service';
 import { ElectrodomesticosService } from '../../electrodomesticos/services/electrodomesticos.service';
+import { environment } from '../../../../environments/environment';
 import { ApiReceta, RecipesApiService } from './services/recipes-api.service';
+import { ProductService } from '../../../core/servicios/agregar-producto.service';
+import { AuthService } from '../../../core/auth/auth.service';
 
 type Difficulty = 'Fácil' | 'Medio' | 'Difícil';
 type FilterOption = 'Todos' | Difficulty;
@@ -12,6 +15,7 @@ type SortOption = 'default' | 'rating' | 'coincidencia';
 
 interface RecipeIngredient {
   name: string;
+  inStock: boolean;
   allergenType?: string;
 }
 
@@ -25,6 +29,7 @@ interface Recipe {
   calories: number;
   ingredients: RecipeIngredient[];
   requiredAppliances: string[];
+  vecesCocinada: number;
 }
 
 interface RecipeWithAvailability extends Recipe {
@@ -55,22 +60,25 @@ const APPLIANCE_KEYWORDS = [
 
 @Component({
   selector: 'app-recipes',
-  imports: [LucideAngularModule, FormsModule],
+  imports: [LucideAngularModule, FormsModule, RouterModule],
   templateUrl: './recipes.html',
   styleUrl: './recipes.scss',
 })
 export class Recipes implements OnInit {
   private readonly recipesApi        = inject(RecipesApiService);
-  private readonly alacenaApi        = inject(AlacenaApiService);
+  private readonly router            = inject(Router);
+  private readonly productService    = inject(ProductService);
+  private readonly authService       = inject(AuthService);
   private readonly electrodomesticos = inject(ElectrodomesticosService);
   private readonly destroyRef        = inject(DestroyRef);
 
-  protected readonly searchQuery        = signal('');
-  protected readonly activeFilter       = signal<FilterOption>('Todos');
-  protected readonly sortBy             = signal<SortOption>('default');
-  protected readonly showSortDropdown   = signal(false);
-  protected readonly excludeAllergens   = signal(false);
+  protected readonly searchQuery              = signal('');
+  protected readonly activeFilter             = signal<FilterOption>('Todos');
+  protected readonly sortBy                   = signal<SortOption>('default');
+  protected readonly showSortDropdown         = signal(false);
+  protected readonly excludeAllergens         = signal(false);
   protected readonly excludeMissingAppliances = signal(false);
+  protected readonly filterByIngredients      = signal(false);
 
   protected readonly filterOptions: FilterOption[] = ['Todos', 'Fácil', 'Medio', 'Difícil'];
 
@@ -90,9 +98,9 @@ export class Recipes implements OnInit {
     return [...new Set(eating.flatMap(member => member.allergens))];
   });
 
-  protected readonly pantryIngredients  = signal<PantryIngredient[]>([]);
-  private readonly allRecipes           = signal<Recipe[]>([]);
-  private readonly userApplianceNames   = signal<string[]>([]);
+  protected readonly pantryIngredients = signal<PantryIngredient[]>([]);
+  private readonly allRecipes          = signal<Recipe[]>([]);
+  private readonly userApplianceNames  = signal<string[]>([]);
 
   ngOnInit(): void {
     this.loadRecipes();
@@ -110,17 +118,20 @@ export class Recipes implements OnInit {
             requiredAppliances: this.extractRequiredAppliances(r.nombre),
           }))
         ),
-        error: () => {},
+        error: err => console.error('Error cargando recetas', err),
       });
   }
 
   private loadPantry(): void {
-    this.alacenaApi.getStock()
+    const hogarId = this.authService.getHogarId();
+    if (!hogarId) return;
+    this.productService.getProductManual()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(stock => {
-        this.pantryIngredients.set(
-          stock.map(item => ({ name: item.nombre, amount: String(item.cantidad), selected: true }))
-        );
+      .subscribe({
+        next: items => this.pantryIngredients.set(
+          items.map(item => ({ name: item.nombre, amount: `${item.cantidad}`, selected: true }))
+        ),
+        error: err => console.error('Error cargando alacena', err),
       });
   }
 
@@ -128,9 +139,7 @@ export class Recipes implements OnInit {
     this.electrodomesticos.getAll()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(items => {
-        this.userApplianceNames.set(
-          items.map(e => e.nombre.toLowerCase())
-        );
+        this.userApplianceNames.set(items.map(e => e.nombre.toLowerCase()));
       });
   }
 
@@ -140,20 +149,32 @@ export class Recipes implements OnInit {
   }
 
   private readonly recipesWithAvailability = computed<RecipeWithAvailability[]>(() => {
-    const pantryNames = this.pantryIngredients()
+    const pantry = this.pantryIngredients();
+    const allergens = this.activeAllergens();
+
+    // Nombres de los ingredientes seleccionados en el panel
+    const selectedNames = pantry
       .filter(item => item.selected)
       .map(item => item.name.toLowerCase());
 
-    const allergens       = this.activeAllergens();
-    const userAppliances  = this.userApplianceNames();
+    const userAppliances = this.userApplianceNames();
+    const hasPantryItems = pantry.length > 0;
+    const hasSelected    = selectedNames.length > 0;
 
     return this.allRecipes().map(recipe => {
-      const matched = recipe.ingredients.filter(ingredient =>
-        pantryNames.some(pantryName =>
-          pantryName.includes(ingredient.name.toLowerCase()) ||
-          ingredient.name.toLowerCase().includes(pantryName)
-        )
-      ).length;
+      const matched = recipe.ingredients.filter(ingredient => {
+        if (hasPantryItems) {
+          // Si la pantry tiene items: usar name matching con los seleccionados
+          // (cubre productos agregados manualmente sin el mismo ProductoId del catálogo)
+          if (!hasSelected) return false; // todo deseleccionado → 0%
+          const ingName = ingredient.name.toLowerCase();
+          return selectedNames.some(pName =>
+            pName.includes(ingName) || ingName.includes(pName)
+          );
+        }
+        // Pantry vacía (sin stock cargado) → usar el flag enStock del backend
+        return ingredient.inStock;
+      }).length;
 
       const availabilityPercent = recipe.ingredients.length === 0
         ? 0
@@ -195,9 +216,15 @@ export class Recipes implements OnInit {
       result = result.filter(recipe => !recipe.hasMissingAppliance);
     }
 
+    if (this.filterByIngredients()) {
+      result = result.filter(recipe => recipe.availabilityPercent > 0);
+    }
+
     if (this.sortBy() === 'rating') {
       result.sort((a, b) => b.rating - a.rating);
     } else if (this.sortBy() === 'coincidencia') {
+      result.sort((a, b) => b.availabilityPercent - a.availabilityPercent);
+    } else if (this.filterByIngredients()) {
       result.sort((a, b) => b.availabilityPercent - a.availabilityPercent);
     }
 
@@ -237,6 +264,17 @@ export class Recipes implements OnInit {
     this.pantryIngredients.update(items =>
       items.map((item, i) => i === index ? { ...item, selected: !item.selected } : item)
     );
+  }
+
+  protected buscarPorIngredientes(): void {
+    this.filterByIngredients.set(true);
+    if (this.sortBy() === 'default') {
+      this.sortBy.set('coincidencia');
+    }
+  }
+
+  protected limpiarFiltroPorIngredientes(): void {
+    this.filterByIngredients.set(false);
   }
 
   protected clearSearch(): void {
@@ -313,13 +351,15 @@ export class Recipes implements OnInit {
     return {
       id: receta.id,
       name: receta.nombre,
-      image: receta.imagenUrl ?? 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=250&fit=crop',
+      image: this.resolveImageUrl(receta.imagenUrl) ?? 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=250&fit=crop',
       rating: 4.5,
       difficulty: this.mapDifficulty(receta.dificultad),
       timeMinutes: receta.tiempoCoccionMin ?? 0,
       calories: Math.round(receta.calorias ?? 0),
+      vecesCocinada: receta.vecesCocinada ?? 0,
       ingredients: receta.ingredientes.map(ingrediente => ({
         name: ingrediente.productoNombre || ingrediente.nombre,
+        inStock: ingrediente.enStock,
       })),
       requiredAppliances: [],
     };
@@ -330,5 +370,24 @@ export class Recipes implements OnInit {
     if (normalized === 'facil' || normalized === 'fácil') return 'Fácil';
     if (normalized === 'dificil' || normalized === 'difícil') return 'Difícil';
     return 'Medio';
+  }
+
+  protected navigateToRecipe(id: string): void {
+    this.router.navigate(['/recetas', id]);
+  }
+
+  private resolveImageUrl(url: string | null): string | null {
+    if (!url) {
+      return null;
+    }
+
+    if (/^(https?:)?\/\//i.test(url) || /^(data|blob):/i.test(url)) {
+      return url;
+    }
+
+    const baseUrl = environment.apiBaseUrl.replace(/\/$/, '');
+    const path = url.startsWith('/') ? url : `/${url}`;
+
+    return `${baseUrl}${path}`;
   }
 }

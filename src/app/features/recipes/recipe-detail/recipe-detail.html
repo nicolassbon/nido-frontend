@@ -1,1 +1,317 @@
-<p>recipe-detail works!</p>
+<div class="recipe-page">
+  <button type="button" class="back-button" (click)="goBack()">
+    <lucide-icon name="arrow-left" [size]="18" />
+    Volver al inventario
+  </button>
+
+  @if (loading()) {
+    <section class="state-card">
+      <lucide-icon name="loader" [size]="38" class="spin" />
+      <p>Cargando receta...</p>
+    </section>
+  }
+
+  @if (errorMessage()) {
+    <section class="state-card state-card--error">
+      <lucide-icon name="alert-circle" [size]="36" />
+      <p>{{ errorMessage() }}</p>
+    </section>
+  }
+
+  @if (recipe() && !loading() && !errorMessage()) {
+    @let r = recipe()!;
+    <div class="recipe-layout">
+      <main class="recipe-main">
+        <section class="hero-card">
+          <div class="recipe-photo">
+            @if (imageUrl() && !imageFailed()) {
+              <img [src]="imageUrl()!" [alt]="r.nombre" (error)="onImageError()" />
+            } @else {
+              <div class="photo-empty">
+                <lucide-icon name="image-off" [size]="52" />
+              </div>
+            }
+          </div>
+
+          <div class="hero-content">
+            <div>
+              <h1>{{ r.nombre }}</h1>
+              @if (r.descripcion) {
+                <p class="description">{{ r.descripcion }}</p>
+              }
+            </div>
+
+            <div class="recipe-facts">
+              <div class="fact">
+                <span class="fact-icon"><lucide-icon name="clock" [size]="22" /></span>
+                <span>
+                  <small>Tiempo</small>
+                  <strong>{{ r.tiempoCoccionMin || '-' }} min</strong>
+                </span>
+              </div>
+
+              <div class="fact">
+                <span class="fact-icon"><lucide-icon name="chef-hat" [size]="22" /></span>
+                <span>
+                  <small>Dificultad</small>
+                  <strong>{{ displayDifficulty(r.dificultad) }}</strong>
+                </span>
+              </div>
+
+              <div class="fact">
+                <span class="fact-icon"><lucide-icon name="flame" [size]="22" /></span>
+                <span>
+                  <small>Calorias</small>
+                  <strong>{{ formatNutrition(r.calorias) }} kcal</strong>
+                  <em>por porcion</em>
+                </span>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button type="button" class="primary-action" (click)="abrirModalCocinar()">
+                <lucide-icon name="play" [size]="16" />
+                Cocinar receta
+              </button>
+              <button type="button" class="secondary-action">
+                <lucide-icon name="bookmark" [size]="16" />
+                Guardar receta
+              </button>
+            </div>
+
+            @if (vecesCocinada() > 0) {
+              <div class="flex items-center gap-1.5 mt-1 text-[0.775rem] text-nido-brown">
+                <lucide-icon name="chef-hat" [size]="13" />
+                Cocinada {{ vecesCocinada() }} {{ vecesCocinada() === 1 ? 'vez' : 'veces' }}
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="content-card steps-card">
+          <header class="section-heading">
+            <span class="heading-icon"><lucide-icon name="list" [size]="22" /></span>
+            <h2>Pasos de preparacion</h2>
+          </header>
+
+          @if (r.pasos && r.pasos.length > 0) {
+            <ol class="steps-list">
+              @for (paso of r.pasos; track paso.id) {
+                <li>
+                  <span>{{ paso.orden }}</span>
+                  <p>{{ paso.descripcion }}</p>
+                </li>
+              }
+            </ol>
+          } @else {
+            <p class="empty-copy">Todavia no hay pasos cargados para esta receta.</p>
+          }
+        </section>
+      </main>
+
+      <aside class="recipe-sidebar">
+        <section class="content-card ingredients-card">
+          <header class="section-heading section-heading--between">
+            <span class="title-wrap">
+              <span class="heading-icon"><lucide-icon name="package" [size]="21" /></span>
+              <h2>Ingredientes</h2>
+            </span>
+            <small>{{ r.ingredientes.length }} ingredientes</small>
+          </header>
+
+          <ul class="ingredients-list">
+            @for (ingrediente of r.ingredientes; track ingrediente.id) {
+              <li>
+                <span class="ingredient-name">{{ ingrediente.productoNombre || ingrediente.nombre }}</span>
+                <span class="ingredient-amount">{{ formatAmount(ingrediente.cantidad, ingrediente.unidad) }}</span>
+                @if (isDisponible()(ingrediente)) {
+                  <span class="ingredient-status ingredient-status--ok">
+                    <lucide-icon name="check" [size]="12" />
+                    En stock
+                  </span>
+                } @else {
+                  <span class="ingredient-status ingredient-status--missing">
+                    <lucide-icon name="alert-circle" [size]="12" />
+                    Falta
+                  </span>
+                }
+              </li>
+            }
+          </ul>
+
+          @if (missingIngredients().length > 0) {
+            <button
+              class="w-full mt-4 flex items-center justify-center gap-2 py-2.5 bg-nido-green-dark text-nido-cream border-none rounded-lg text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 hover:bg-nido-green"
+              (click)="agregarFaltantesALista()">
+              <lucide-icon name="shopping-cart" [size]="15" />
+              Agregar faltantes a lista de compras
+            </button>
+          }
+        </section>
+
+        <section class="content-card nutrition-card">
+          <header class="section-heading section-heading--between">
+            <span class="title-wrap">
+              <span class="heading-icon"><lucide-icon name="chart-pie" [size]="21" /></span>
+              <h2>Informacion nutricional</h2>
+            </span>
+            <small>Por porcion</small>
+          </header>
+
+          <div class="nutrition-grid">
+            <div>
+              <lucide-icon name="flame" [size]="22" />
+              <strong>{{ formatNutrition(r.calorias) }}</strong>
+              <small>kcal</small>
+            </div>
+            <div>
+              <lucide-icon name="utensils-crossed" [size]="22" />
+              <strong>{{ formatNutrition(r.proteinas) }} g</strong>
+              <small>Proteinas</small>
+            </div>
+            <div>
+              <lucide-icon name="sprout" [size]="22" />
+              <strong>{{ formatNutrition(r.carbohidratos) }} g</strong>
+              <small>Carbohidratos</small>
+            </div>
+            <div>
+              <lucide-icon name="droplet" [size]="22" />
+              <strong>{{ formatNutrition(r.grasas) }} g</strong>
+              <small>Grasas</small>
+            </div>
+          </div>
+        </section>
+
+        <section class="tip-card">
+          <lucide-icon name="lightbulb" [size]="34" />
+          <div>
+            <h2>Consejo Nido</h2>
+            <p>
+              Tenés {{ availableIngredients() }} de {{ r.ingredientes.length }} ingredientes en casa.
+              @if (missingIngredients().length > 0) {
+                Te faltan {{ missingIngredients().length }}.
+              } @else {
+                ¡Podés cocinarla ya!
+              }
+            </p>
+          </div>
+        </section>
+      </aside>
+    </div>
+    <!-- Modal confirmación cocinar -->
+    @if (showCookModal()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+           (click)="cerrarModalCocinar()">
+        <div class="bg-white rounded-[16px] w-full max-w-[460px] shadow-[0_8px_32px_rgba(0,0,0,0.18)] overflow-hidden"
+             (click)="$event.stopPropagation()">
+
+          <!-- Header del modal -->
+          <div class="px-6 py-5 border-b border-nido-border/40 flex items-start justify-between gap-3">
+            <div>
+              <h2 class="text-[1.05rem] font-bold text-nido-green-dark">¿Confirmar cocción?</h2>
+              <p class="text-[0.8125rem] text-nido-brown mt-0.5">{{ r.nombre }}</p>
+            </div>
+            <button class="bg-transparent border-none cursor-pointer text-nido-brown hover:text-nido-green-dark p-1 mt-0.5"
+                    (click)="cerrarModalCocinar()">
+              <lucide-icon name="x" [size]="18" />
+            </button>
+          </div>
+
+          <!-- Estado: idle / loading / success / error -->
+          @if (cookingState() === 'idle' || cookingState() === 'loading') {
+            <div class="px-6 py-4">
+              <p class="text-[0.8125rem] text-nido-brown mb-3">
+                Los siguientes ingredientes se descontarán de tu alacena:
+              </p>
+              <ul class="list-none m-0 p-0 max-h-[220px] overflow-y-auto flex flex-col gap-1.5">
+                @for (ing of r.ingredientes; track ing.id) {
+                  <li class="flex items-center gap-2.5 py-1.5 border-b border-nido-border/30 last:border-b-0">
+                    @if (isDisponible()(ing)) {
+                      <lucide-icon name="check-circle" [size]="15" class="text-nido-green shrink-0" />
+                    } @else {
+                      <lucide-icon name="alert-circle" [size]="15" class="text-nido-gold shrink-0" />
+                    }
+                    <span class="flex-1 text-[0.8375rem] text-nido-green-dark">
+                      {{ ing.productoNombre || ing.nombre }}
+                    </span>
+                    @if (formatAmount(ing.cantidad, ing.unidad)) {
+                      <span class="text-[0.775rem] text-nido-brown shrink-0">{{ formatAmount(ing.cantidad, ing.unidad) }}</span>
+                    }
+                  </li>
+                }
+              </ul>
+              @if (missingIngredients().length > 0) {
+                <p class="text-[0.775rem] text-nido-gold mt-3 flex items-center gap-1.5">
+                  <lucide-icon name="alert-triangle" [size]="13" />
+                  {{ missingIngredients().length }} ingrediente{{ missingIngredients().length !== 1 ? 's' : '' }} no están en tu alacena y no se descontarán.
+                </p>
+              }
+            </div>
+
+            <div class="px-6 pb-5 flex gap-3">
+              <button
+                class="flex-1 py-2.5 border border-nido-border rounded-lg bg-white text-nido-brown text-[0.875rem] font-medium cursor-pointer hover:bg-nido-cream transition-colors duration-150"
+                [disabled]="cookingState() === 'loading'"
+                (click)="cerrarModalCocinar()">
+                Cancelar
+              </button>
+              <button
+                class="flex-1 py-2.5 border-none rounded-lg bg-nido-green-dark text-nido-cream text-[0.875rem] font-medium cursor-pointer hover:bg-nido-green transition-colors duration-150 flex items-center justify-center gap-2 disabled:opacity-60"
+                [disabled]="cookingState() === 'loading'"
+                (click)="confirmarCocinar()">
+                @if (cookingState() === 'loading') {
+                  <lucide-icon name="loader" [size]="16" class="spin" />
+                  Guardando...
+                } @else {
+                  <lucide-icon name="chef-hat" [size]="16" />
+                  Confirmar cocción
+                }
+              </button>
+            </div>
+          }
+
+          @if (cookingState() === 'success') {
+            <div class="px-6 py-8 flex flex-col items-center gap-3 text-center">
+              <div class="w-14 h-14 rounded-full bg-[rgba(62,94,74,0.12)] flex items-center justify-center">
+                <lucide-icon name="check-circle" [size]="32" class="text-nido-green-dark" />
+              </div>
+              <div>
+                <p class="text-nido-green-dark font-semibold text-[1rem]">¡Receta cocinada!</p>
+                <p class="text-nido-brown text-[0.8125rem] mt-1">Los ingredientes fueron descontados de tu alacena.</p>
+                @if (vecesCocinada() > 0) {
+                  <p class="text-nido-brown text-[0.8125rem] mt-0.5">
+                    Esta receta fue cocinada {{ vecesCocinada() }} {{ vecesCocinada() === 1 ? 'vez' : 'veces' }}.
+                  </p>
+                }
+              </div>
+              <button
+                class="mt-2 px-6 py-2.5 border-none rounded-lg bg-nido-green-dark text-nido-cream text-[0.875rem] font-medium cursor-pointer hover:bg-nido-green transition-colors duration-150"
+                (click)="cerrarModalCocinar()">
+                Cerrar
+              </button>
+            </div>
+          }
+
+          @if (cookingState() === 'error') {
+            <div class="px-6 py-8 flex flex-col items-center gap-3 text-center">
+              <div class="w-14 h-14 rounded-full bg-[rgba(180,76,60,0.1)] flex items-center justify-center">
+                <lucide-icon name="alert-circle" [size]="32" class="text-nido-red" />
+              </div>
+              <div>
+                <p class="text-nido-green-dark font-semibold text-[1rem]">No se pudo registrar</p>
+                <p class="text-nido-brown text-[0.8125rem] mt-1">El endpoint aún no está disponible. Tu compañero lo implementará en US-14.</p>
+              </div>
+              <button
+                class="mt-2 px-6 py-2.5 border-none rounded-lg bg-nido-green-dark text-nido-cream text-[0.875rem] font-medium cursor-pointer hover:bg-nido-green transition-colors duration-150"
+                (click)="cerrarModalCocinar()">
+                Cerrar
+              </button>
+            </div>
+          }
+
+        </div>
+      </div>
+    }
+
+  }
+</div>
