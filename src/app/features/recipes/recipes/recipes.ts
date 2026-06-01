@@ -2,14 +2,14 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { ApiReceta, RecipesApiService } from './services/recipes-api.service';
-import { AlacenaApiService } from '../../alacena/alacena-api.service';
+import { ProductService } from '../../../core/servicios/agregar-producto.service';
+import { AuthService } from '../../../core/auth/auth.service';
 
 type Difficulty = 'Fácil' | 'Medio' | 'Difícil';
 type FilterOption = 'Todos' | Difficulty;
 type SortOption = 'default' | 'rating' | 'coincidencia';
 
 interface RecipeIngredient {
-  productoId: string;
   name: string;
   allergenType?: string;
 }
@@ -31,7 +31,6 @@ interface RecipeWithAvailability extends Recipe {
 }
 
 interface PantryIngredient {
-  productoId: string;
   name: string;
   amount: string;
   selected: boolean;
@@ -53,7 +52,8 @@ interface HouseholdMember {
 })
 export class Recipes implements OnInit {
   private readonly recipesApi = inject(RecipesApiService);
-  private readonly alacenaApi = inject(AlacenaApiService);
+  private readonly productService = inject(ProductService);
+  private readonly authService = inject(AuthService);
 
   protected readonly searchQuery = signal('');
   protected readonly activeFilter = signal<FilterOption>('Todos');
@@ -94,35 +94,38 @@ export class Recipes implements OnInit {
       },
     });
 
-    this.alacenaApi.getStock().subscribe({
-      next: items => {
-        this.pantryIngredients.set(
-          items.map(item => ({
-            productoId: item.productoId,
-            name: item.nombre,
-            amount: `${item.cantidad}`,
-            selected: true,
-          }))
-        );
-      },
-      error: error => {
-        console.error('Error cargando alacena', error);
-      },
-    });
+    const hogarId = this.authService.getHogarId();
+    if (hogarId) {
+      this.productService.getProductManual(hogarId).subscribe({
+        next: items => {
+          this.pantryIngredients.set(
+            items.map(item => ({
+              name: item.nombre,
+              amount: `${item.cantidad}`,
+              selected: true,
+            }))
+          );
+        },
+        error: error => {
+          console.error('Error cargando alacena', error);
+        },
+      });
+    }
   }
 
   private readonly recipesWithAvailability = computed<RecipeWithAvailability[]>(() => {
-    const selectedProductoIds = new Set(
-      this.pantryIngredients()
-        .filter(item => item.selected)
-        .map(item => item.productoId)
-    );
+    const pantryNames = this.pantryIngredients()
+      .filter(item => item.selected)
+      .map(item => item.name.toLowerCase());
 
     const allergens = this.activeAllergens();
 
     return this.allRecipes().map(recipe => {
       const matched = recipe.ingredients.filter(ingredient =>
-        selectedProductoIds.has(ingredient.productoId)
+        pantryNames.some(pantryName =>
+          pantryName.includes(ingredient.name.toLowerCase()) ||
+          ingredient.name.toLowerCase().includes(pantryName)
+        )
       ).length;
 
       const availabilityPercent = recipe.ingredients.length === 0
@@ -285,7 +288,6 @@ export class Recipes implements OnInit {
       timeMinutes: receta.tiempoCoccionMin ?? 0,
       calories: Math.round(receta.calorias ?? 0),
       ingredients: receta.ingredientes.map(ingrediente => ({
-        productoId: ingrediente.productoId,
         name: ingrediente.productoNombre || ingrediente.nombre,
       })),
     };
