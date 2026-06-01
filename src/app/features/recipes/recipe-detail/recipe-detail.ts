@@ -4,7 +4,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { environment } from '../../../../environments/environment';
-import { ApiReceta, RecipesApiService } from '../recipes/services/recipes-api.service';
+import { ApiReceta, ApiRecetaIngrediente, RecipesApiService } from '../recipes/services/recipes-api.service';
+import { AuthService } from '../../../core/auth/auth.service';
+import { ProductService } from '../../../core/servicios/agregar-producto.service';
+import { ListaComprasService } from '../../lista-compras/lista-compras.service';
 
 @Component({
   selector: 'app-recipe-detail',
@@ -14,32 +17,67 @@ import { ApiReceta, RecipesApiService } from '../recipes/services/recipes-api.se
   styleUrl: './recipe-detail.scss',
 })
 export class RecipeDetail {
-  private readonly route = inject(ActivatedRoute);
+  private readonly route          = inject(ActivatedRoute);
   private readonly recipesService = inject(RecipesApiService);
-  protected readonly router = inject(Router);
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly authService    = inject(AuthService);
+  private readonly productService = inject(ProductService);
+  private readonly listaService   = inject(ListaComprasService);
+  protected readonly router       = inject(Router);
+  private readonly destroyRef     = inject(DestroyRef);
 
-  protected readonly recipe = signal<ApiReceta | null>(null);
-  protected readonly loading = signal(false);
+  protected readonly recipe       = signal<ApiReceta | null>(null);
+  protected readonly loading      = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
-  protected readonly imageFailed = signal(false);
-  protected readonly imageUrl = computed(() => this.resolveImageUrl(this.recipe()?.imagenUrl ?? null));
+  protected readonly imageFailed  = signal(false);
+
+  // Nombres de la alacena del usuario (para name-matching como fallback)
+  private readonly pantryNames    = signal<string[]>([]);
+
+  protected readonly imageUrl = computed(() =>
+    this.resolveImageUrl(this.recipe()?.imagenUrl ?? null)
+  );
+
+  // Un ingrediente está disponible si:
+  //   1. enStock (match exacto por ProductoId en el backend), O
+  //   2. La alacena tiene un item cuyo nombre coincide (fallback para productos manuales)
+  protected readonly isDisponible = computed(() => {
+    const names = this.pantryNames();
+    return (ingrediente: ApiRecetaIngrediente): boolean => {
+      if (ingrediente.enStock) return true;
+      if (names.length === 0)  return false;
+      const ingName = (ingrediente.productoNombre || ingrediente.nombre).toLowerCase();
+      return names.some(n => n.includes(ingName) || ingName.includes(n));
+    };
+  });
+
   protected readonly availableIngredients = computed(() =>
-    this.recipe()?.ingredientes.filter(ingrediente => ingrediente.enStock).length ?? 0
+    (this.recipe()?.ingredientes ?? []).filter(i => this.isDisponible()(i)).length
+  );
+
+  protected readonly missingIngredients = computed(() =>
+    (this.recipe()?.ingredientes ?? []).filter(i => !this.isDisponible()(i))
   );
 
   constructor() {
+    // Cargar pantry para el name-matching
+    const hogarId = this.authService.getHogarId();
+    if (hogarId) {
+      this.productService.getProductManual().subscribe({
+        next: items => {
+          this.pantryNames.set(items.map(i => i.nombre.toLowerCase()));
+        },
+      });
+    }
+
     this.route.paramMap
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(params => {
         const id = params.get('id');
-
         if (!id) {
           this.errorMessage.set('ID de receta no proporcionado');
           this.loading.set(false);
           return;
         }
-
         this.loadRecipe(id);
       });
   }
@@ -65,6 +103,27 @@ export class RecipeDetail {
       });
   }
 
+  protected agregarFaltantesALista(): void {
+    const receta    = this.recipe();
+    const faltantes = this.missingIngredients();
+    if (!receta || faltantes.length === 0) return;
+
+    const items = faltantes.map(i => ({
+      nombre:   i.productoNombre || i.nombre,
+      cantidad: i.cantidad,
+      unidad:   i.unidad,
+      checked:  false,
+    }));
+
+    // Guardar en el servicio (persiste en localStorage)
+    this.listaService.addToLista(receta.nombre, items);
+
+    // Pasar también por router state para garantizar el primer render
+    this.router.navigate(['/lista-compras'], {
+      state: { recetaNombre: receta.nombre, items },
+    });
+  }
+
   protected goBack(): void {
     this.router.navigate(['/recetas']);
   }
@@ -75,43 +134,27 @@ export class RecipeDetail {
 
   protected formatAmount(value: number | null | undefined, unit: string | null | undefined): string {
     const suffix = unit ? ` ${unit}` : '';
-
-    if (value === null || value === undefined) {
-      return suffix.trim() || '-';
-    }
-
+    if (value === null || value === undefined) return suffix.trim() || '-';
     return `${new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(value)}${suffix}`;
   }
 
   protected formatNutrition(value: number | null | undefined): string {
-    if (value === null || value === undefined) {
-      return '-';
-    }
-
+    if (value === null || value === undefined) return '-';
     return new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 }).format(value);
   }
 
   protected displayDifficulty(value: string | null | undefined): string {
     const normalized = value?.trim().toLowerCase();
-
-    if (normalized === 'facil') return 'Facil';
+    if (normalized === 'facil')   return 'Facil';
     if (normalized === 'dificil') return 'Dificil';
-
     return value?.trim() || '-';
   }
 
   private resolveImageUrl(url: string | null): string | null {
-    if (!url) {
-      return null;
-    }
-
-    if (/^(https?:)?\/\//i.test(url) || /^(data|blob):/i.test(url)) {
-      return url;
-    }
-
+    if (!url) return null;
+    if (/^(https?:)?\/\//i.test(url) || /^(data|blob):/i.test(url)) return url;
     const baseUrl = environment.apiBaseUrl.replace(/\/$/, '');
-    const path = url.startsWith('/') ? url : `/${url}`;
-
+    const path    = url.startsWith('/') ? url : `/${url}`;
     return `${baseUrl}${path}`;
   }
 }

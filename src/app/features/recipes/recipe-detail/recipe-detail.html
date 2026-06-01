@@ -117,7 +117,7 @@
               <li>
                 <span class="ingredient-name">{{ ingrediente.productoNombre || ingrediente.nombre }}</span>
                 <span class="ingredient-amount">{{ formatAmount(ingrediente.cantidad, ingrediente.unidad) }}</span>
-                @if (ingrediente.enStock) {
+                @if (isDisponible()(ingrediente)) {
                   <span class="ingredient-status ingredient-status--ok">
                     <lucide-icon name="check" [size]="12" />
                     En stock
@@ -131,6 +131,15 @@
               </li>
             }
           </ul>
+
+          @if (missingIngredients().length > 0) {
+            <button
+              class="w-full mt-4 flex items-center justify-center gap-2 py-2.5 bg-nido-green-dark text-nido-cream border-none rounded-lg text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 hover:bg-nido-green"
+              (click)="agregarFaltantesALista()">
+              <lucide-icon name="shopping-cart" [size]="15" />
+              Agregar faltantes a lista de compras
+            </button>
+          }
         </section>
 
         <section class="content-card nutrition-card">
@@ -171,8 +180,12 @@
           <div>
             <h2>Consejo Nido</h2>
             <p>
-              Tienes {{ availableIngredients() }} de {{ r.ingredientes.length }} ingredientes en casa.
-              Revisa los faltantes antes de empezar.
+              Tenés {{ availableIngredients() }} de {{ r.ingredientes.length }} ingredientes en casa.
+              @if (missingIngredients().length > 0) {
+                Te faltan {{ missingIngredients().length }}.
+              } @else {
+                ¡Podés cocinarla ya!
+              }
             </p>
           </div>
         </section>
