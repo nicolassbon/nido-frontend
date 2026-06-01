@@ -29,7 +29,7 @@
           <input
             formControlName="nombre"
             placeholder="Nombre"
-            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white px-11 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 placeholder:text-nido-muted focus:border-nido-green"
+            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 placeholder:text-nido-muted focus:border-nido-green"
             [class.border-nido-red]="form.controls.nombre.invalid && form.controls.nombre.touched"
             [class.border-nido-green-dark]="!(form.controls.nombre.invalid && form.controls.nombre.touched)"
           />
@@ -42,7 +42,7 @@
           <span class="text-[0.82rem] font-semibold text-nido-green-dark">Categoría</span>
           <select
             formControlName="categoriaId"
-            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white px-11 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 focus:border-nido-green"
+            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 focus:border-nido-green"
             [class.border-nido-red]="form.controls.categoriaId.invalid && form.controls.categoriaId.touched"
             [class.border-nido-green-dark]="!(form.controls.categoriaId.invalid && form.controls.categoriaId.touched)">
             <option value="">Seleccionar categoría</option>
@@ -59,10 +59,10 @@
         </label>
 
         <label class="flex flex-col gap-2 sm:col-span-2">
-          <span class="text-[0.82rem] font-semibold text-nido-green-dark">UbicaciÃ³n</span>
+          <span class="text-[0.82rem] font-semibold text-nido-green-dark">Ubicación</span>
           <select
             formControlName="ubicacion"
-            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white px-11 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 focus:border-nido-green"
+            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 focus:border-nido-green"
             [class.border-nido-red]="form.controls.ubicacion.invalid && form.controls.ubicacion.touched"
             [class.border-nido-green-dark]="!(form.controls.ubicacion.invalid && form.controls.ubicacion.touched)">
             @for (ubicacion of ubicaciones; track ubicacion) {
@@ -72,7 +72,7 @@
             }
           </select>
           @if (form.controls.ubicacion.invalid && form.controls.ubicacion.touched) {
-            <span class="text-[0.75rem] font-medium text-nido-red">SeleccionÃ¡ una ubicaciÃ³n.</span>
+            <span class="text-[0.75rem] font-medium text-nido-red">Seleccioná una ubicación.</span>
           }
         </label>
 
@@ -82,7 +82,7 @@
             formControlName="cantidad"
             type="number"
             min="1"
-            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white px-11 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 focus:border-nido-green"
+            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 focus:border-nido-green"
             [class.border-nido-red]="form.controls.cantidad.invalid && form.controls.cantidad.touched"
             [class.border-nido-green-dark]="!(form.controls.cantidad.invalid && form.controls.cantidad.touched)"
           />
@@ -95,7 +95,7 @@
           <span class="text-[0.82rem] font-semibold text-nido-green-dark">Unidad</span>
           <select
             formControlName="unidadMedida"
-            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white px-11 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 focus:border-nido-green"
+            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 focus:border-nido-green"
             [class.border-nido-red]="form.controls.unidadMedida.invalid && form.controls.unidadMedida.touched"
             [class.border-nido-green-dark]="!(form.controls.unidadMedida.invalid && form.controls.unidadMedida.touched)">
             <option value="">Seleccionar unidad</option>
@@ -116,7 +116,7 @@
           <input
             formControlName="fechaVencimiento"
             type="date"
-            class="h-12 w-full rounded-lg border-[1.5px] border-solid border-nido-border bg-white px-11 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 [color-scheme:light] focus:border-nido-green"
+            class="h-12 w-full rounded-lg border-[1.5px] border-solid border-nido-border bg-white px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 [color-scheme:light] focus:border-nido-green"
           />
         </label>
       </div>

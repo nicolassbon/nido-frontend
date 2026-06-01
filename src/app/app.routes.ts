@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authChildGuard, authGuard } from './core/guards/auth';
+import { authChildGuard, authGuard, guestGuard } from './core/guards/auth';
 import { Layout } from './core/layout/layout';
 import { Home } from './features/home/home/home';
 import { Recipes } from './features/recipes/recipes/recipes';
@@ -19,8 +19,10 @@ import { EquipmentStep } from './features/onboarding/equipment-step/equipment-st
 import { ForgotPassword } from './features/auth/forgot-password/forgot-password';
 import { ResetPassword } from './features/auth/reset-password/reset-password';
 import { Configuracion } from './features/configuracion/configuracion';
+import { Landing } from './features/landing/landing';
 
 export const routes: Routes = [
+  { path: '', component: Landing, pathMatch: 'full', canActivate: [guestGuard] },
   { path: 'login',           component: Login },
   { path: 'registro',        component: Register },
   { path: 'olvidaste-contrasena', component: ForgotPassword },
@@ -45,6 +47,7 @@ export const routes: Routes = [
       { path: 'perfil/editar', component: EditarPerfil },
       { path: 'configuracion', component: Configuracion },
       { path: 'agregar-producto', component: AgregarProducto },
+      { path: 'configuracion', component: Configuracion },
     ],
   },
   { path: '**', redirectTo: '' },

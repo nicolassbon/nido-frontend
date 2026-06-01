@@ -189,7 +189,7 @@ export class Electrodomesticos {
 
   protected getColorByTipo(tipo: string | null): string {
     const map: Record<string, string> = {
-      Cocina: '#C78F5A',
+      Cocina: '#B48B6A',
       Lavadero: '#3E5E4A',
       Living: '#927357',
       Otro: '#6B7280',

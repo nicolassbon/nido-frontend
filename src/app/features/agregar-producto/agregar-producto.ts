@@ -5,6 +5,7 @@ import { ProductService } from '../../core/servicios/agregar-producto.service';
 import { environment } from '../../../environments/environment';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule],
@@ -15,6 +16,7 @@ export class AgregarProducto {
   private readonly fb = inject(FormBuilder);
   private readonly productService = inject(ProductService);
   private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
 
   protected isSaving = false;
   protected errorMessage = '';

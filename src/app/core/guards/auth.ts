@@ -18,3 +18,18 @@ export const authGuard: CanActivateFn = () => {
 };
 
 export const authChildGuard: CanActivateChildFn = (childRoute, state) => authGuard(childRoute, state);
+
+/** Redirige a /inicio si el usuario ya está autenticado (para la landing) */
+export const guestGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (auth.isAuthenticated()) {
+    return router.createUrlTree(['/inicio']);
+  }
+
+  return auth.refresh().pipe(
+    map(() => router.createUrlTree(['/inicio'])),
+    catchError(() => of(true))
+  );
+};

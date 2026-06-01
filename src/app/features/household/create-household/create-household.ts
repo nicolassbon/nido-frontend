@@ -7,7 +7,7 @@ import { HogaresApiService } from '../hogares-api.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { OnboardingApiService } from '../../onboarding/onboarding-api.service';
 
-const MEMBER_COLORS = ['#263F30', '#C78F5A', '#927357', '#5C7A6E', '#8B4513', '#4A7C59'];
+const MEMBER_COLORS = ['#263F30', '#B48B6A', '#927357', '#5C7A6E', '#8B4513', '#4A7C59'];
 
 interface FamilyMember {
   id: string;
