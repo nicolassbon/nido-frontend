@@ -313,7 +313,10 @@ export class ProductDetail {
 
   private displayUnit(unit: string | null | undefined): string | null {
     const normalized = unit?.trim();
-    return normalized && normalized.toLowerCase() !== 'unidad' ? normalized : null;
+    if (!normalized) return 'unidad';
+    if (normalized.toLowerCase() === 'gr') return 'g';
+    if (normalized.toLowerCase() === 'lt') return 'l';
+    return normalized;
   }
 
   private normalizeToken(value: string): string {

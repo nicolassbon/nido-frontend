@@ -130,7 +130,9 @@
     <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,190px),1fr))] gap-4">
       @for (product of filteredProducts(); track product.id) {
         @let daysLeft = getDaysRemaining(product.expiryDate);
-        <article class="bg-white/[0.51] rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition-[transform,box-shadow] duration-[180ms] cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)] group">
+        <a
+          [routerLink]="['/alacena', product.id]"
+          class="block no-underline text-inherit bg-white/[0.51] rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition-[transform,box-shadow] duration-[180ms] cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)] group">
 
           <div class="relative h-40 overflow-hidden bg-nido-cream">
             @if (product.image) {
@@ -178,7 +180,7 @@
             </div>
           </div>
 
-        </article>
+        </a>
       }
     </div>
   }

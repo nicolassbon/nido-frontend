@@ -5,9 +5,11 @@
 }
 
 .recipe-page {
-  min-height: 100%;
-  padding: 14px 14px 20px;
+  box-sizing: border-box;
+  min-height: 100dvh;
+  padding: clamp(12px, 2vw, 24px);
   color: #2d201b;
+  overflow-x: hidden;
 }
 
 .back-button {
@@ -25,10 +27,12 @@
 
 .recipe-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 308px;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, clamp(300px, 28vw, 360px));
+  gap: clamp(12px, 1.8vw, 20px);
   align-items: stretch;
-  max-width: 1020px;
+  width: min(100%, 1280px);
+  max-width: none;
+  margin: 0 auto;
 }
 
 .recipe-main,
@@ -40,9 +44,11 @@
 
 .recipe-main {
   min-width: 0;
+  align-self: stretch;
 }
 
 .recipe-sidebar {
+  min-width: 0;
   align-self: stretch;
 }
 
@@ -54,8 +60,8 @@
 .recipe-bottom-row {
   display: grid;
   grid-column: 1 / -1;
-  grid-template-columns: minmax(0, 1fr) 308px;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, clamp(300px, 28vw, 360px));
+  gap: clamp(12px, 1.8vw, 20px);
   align-items: stretch;
 }
 
@@ -67,6 +73,7 @@
 .content-card,
 .tip-card,
 .state-card {
+  min-width: 0;
   border: 1px solid rgba(146, 115, 87, 0.14);
   border-radius: 8px;
   background: rgba(248, 240, 230, 0.51);
@@ -75,14 +82,15 @@
 
 .hero-card {
   display: grid;
-  grid-template-columns: minmax(250px, 1fr) minmax(280px, 0.95fr);
-  gap: 12px;
-  min-height: 320px;
-  padding: 14px;
+  grid-template-columns: minmax(260px, 0.95fr) minmax(260px, 1fr);
+  gap: clamp(12px, 1.6vw, 18px);
+  min-height: clamp(300px, 39dvh, 420px);
+  padding: clamp(12px, 1.5vw, 18px);
 }
 
 .recipe-photo {
-  min-height: 288px;
+  height: 100%;
+  min-height: clamp(260px, 34dvh, 384px);
   overflow: hidden;
   border-radius: 8px;
   background: #e5e5e5;
@@ -92,7 +100,7 @@
 .photo-empty {
   width: 100%;
   height: 100%;
-  min-height: 288px;
+  min-height: inherit;
 }
 
 .recipe-photo img {
@@ -111,6 +119,7 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  gap: 18px;
   min-width: 0;
 }
 
@@ -192,7 +201,8 @@ h1 {
 
 .actions {
   display: flex;
-  gap: 34px;
+  flex-wrap: wrap;
+  gap: 12px clamp(12px, 3vw, 34px);
   align-items: center;
 }
 
@@ -234,7 +244,7 @@ h1 {
 
 .content-card {
   box-sizing: border-box;
-  padding: 18px;
+  padding: clamp(14px, 1.5vw, 20px);
 }
 
 .section-heading {
@@ -276,7 +286,8 @@ h1 {
 }
 
 .steps-card {
-  min-height: 320px;
+  flex: 1 1 auto;
+  min-height: clamp(240px, 34dvh, 360px);
 }
 
 .steps-list {
@@ -493,7 +504,9 @@ h1 {
   display: grid;
   justify-items: center;
   gap: 12px;
-  max-width: 1020px;
+  width: min(100%, 1280px);
+  max-width: none;
+  margin: 0 auto;
   padding: 48px;
   color: #263f30;
 }
@@ -512,19 +525,24 @@ h1 {
   }
 }
 
-@media (max-width: 1060px) {
+@media (max-width: 1500px) {
   .recipe-layout {
     grid-template-columns: 1fr;
+    width: min(100%, 980px);
   }
 
   .recipe-sidebar {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
     align-items: stretch;
   }
 
   .recipe-bottom-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
+  }
+
+  .hero-card {
+    min-height: 0;
   }
 
   .ingredients-card,
@@ -533,7 +551,19 @@ h1 {
   }
 
   .nutrition-card {
+    flex: unset;
     flex-basis: auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .recipe-sidebar,
+  .recipe-bottom-row {
+    grid-template-columns: 1fr;
+  }
+
+  .tip-card {
+    justify-content: flex-start;
   }
 }
 
@@ -550,7 +580,7 @@ h1 {
   .recipe-photo,
   .recipe-photo img,
   .photo-empty {
-    min-height: 220px;
+    min-height: clamp(220px, 58vw, 340px);
   }
 
   .recipe-facts {

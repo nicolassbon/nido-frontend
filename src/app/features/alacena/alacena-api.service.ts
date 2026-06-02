@@ -25,6 +25,7 @@ export interface CreateStockItemRequest {
   imagen:              string | null;
   ubicacion:           string;
   cantidad:            number;
+  unidadMedida?:       string | null;
   fechaVencimiento:    string | null;
   estaAbierto:         boolean;
   porcentajeConsumido: number;
