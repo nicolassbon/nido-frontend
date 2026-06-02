@@ -1,2 +1,15 @@
 /* migrated to Tailwind */
-:host { display: contents; }
+:host {
+  display: contents;
+}
+
+.nido-sidebar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.nido-sidebar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}

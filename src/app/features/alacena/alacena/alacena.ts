@@ -625,6 +625,7 @@ private loadProducts(): void {
           imagen:              d.image || null,
           ubicacion:           d.location,
           cantidad:            d.quantity,
+          unidadMedida:        'unidad',
           fechaVencimiento:    d.expiryDate || null,
           estaAbierto:         d.isOpened,
           porcentajeConsumido: d.consumedPercent,

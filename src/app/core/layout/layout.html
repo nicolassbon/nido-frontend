@@ -1,4 +1,4 @@
-<div class="flex h-screen overflow-hidden">
+<div class="flex h-dvh overflow-hidden">
 
   <!-- Sidebar -->
   <app-nav [isOpen]="isMenuOpen()" />
@@ -12,7 +12,7 @@
   }
 
   <!-- Contenido principal -->
-  <div class="flex flex-1 flex-col overflow-hidden">
+  <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
 
     <!-- Header mobile -->
     <header class="flex items-center px-4 py-3 border-b border-gray-200 bg-white md:hidden">
@@ -26,7 +26,7 @@
       </button>
     </header>
 
-    <main class="flex-1 overflow-y-auto">
+    <main class="w-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
       <router-outlet />
     </main>
 

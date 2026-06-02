@@ -1,7 +1,7 @@
 <div class="flex flex-col min-h-screen bg-nido-cream" (click)="closeMenus()">
 
   <!-- Header -->
-  <header class="relative bg-nido-green-dark px-6 py-4 flex items-center">
+  <header class="relative bg-nido-green-dark px-4 py-4 flex items-center sm:px-6">
 
     <!-- Logo -->
     <div class="flex items-center shrink-0">
@@ -30,7 +30,7 @@
 
           <!-- Connector -->
           @if (!last) {
-            <div class="w-12 h-px mt-4 mx-1"
+          <div class="w-6 h-px mt-4 mx-1 sm:w-12"
                  [class]="step.completed ? 'bg-nido-cream/60' : 'bg-[rgba(247,241,230,0.2)]'">
             </div>
           }
@@ -44,7 +44,7 @@
   <!-- Main -->
   <main class="flex-1 flex items-center justify-center px-4 py-8">
 
-    <div class="bg-white rounded-2xl shadow-[0_4px_32px_rgba(38,63,48,0.10)] w-full max-w-[740px] px-10 py-10 flex flex-col items-center gap-6">
+    <div class="bg-white rounded-2xl shadow-[0_4px_32px_rgba(38,63,48,0.10)] w-full max-w-[740px] px-5 py-8 sm:px-10 sm:py-10 flex flex-col items-center gap-6">
 
       <!-- Tagline -->
       <p class="text-nido-muted italic text-[0.9rem]">Todo conecta, todo fluye.</p>
@@ -61,7 +61,7 @@
       <div class="flex flex-wrap justify-center gap-3 w-full">
 
         @for (member of sortedMembers(); track member.id) {
-          <div class="relative flex flex-col items-center gap-2 bg-white border border-nido-border rounded-xl p-3 pt-5 shadow-[0_1px_4px_rgba(38,63,48,0.06)] w-[130px]">
+          <div class="relative flex min-w-0 flex-col items-center gap-2 bg-white/[0.51] border border-nido-border rounded-xl p-3 pt-5 shadow-[0_1px_4px_rgba(38,63,48,0.06)] w-[calc(50%_-_0.375rem)] max-w-[130px] sm:w-[130px] sm:flex-none">
 
             <!-- Menu trigger -->
             @if (!member.isCurrentUser) {
@@ -85,7 +85,7 @@
 
             <!-- Name & role -->
             <div class="flex flex-col items-center gap-0.5 text-center">
-              <span class="text-[0.875rem] font-semibold text-nido-green-dark leading-snug">{{ member.name }}</span>
+              <span class="max-w-full break-words text-[0.875rem] font-semibold text-nido-green-dark leading-snug">{{ member.name }}</span>
               <span class="text-[0.75rem] text-nido-brown">{{ member.role }}</span>
             </div>
 
@@ -107,7 +107,7 @@
 
         <!-- Add member -->
         <button
-          class="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-nido-border rounded-xl p-3 cursor-pointer bg-transparent w-[130px] min-h-[118px] transition-all duration-150 hover:border-nido-green hover:bg-[rgba(62,94,74,0.04)]"
+          class="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-nido-border rounded-xl p-3 cursor-pointer bg-transparent w-[calc(50%_-_0.375rem)] max-w-[130px] min-h-[118px] transition-all duration-150 hover:border-nido-green hover:bg-[rgba(62,94,74,0.04)] sm:w-[130px] sm:flex-none"
           (click)="addMember(); $event.stopPropagation()">
           <div class="w-10 h-10 rounded-full border-2 border-dashed border-nido-muted flex items-center justify-center text-nido-muted">
             <lucide-icon name="plus" [size]="18" />
@@ -120,7 +120,7 @@
       <!-- Actions -->
       <div class="flex flex-col items-center gap-3 w-full pt-2">
         <button
-          class="flex items-center gap-2 bg-nido-green-dark text-nido-cream px-10 py-3.5 rounded-full text-[0.9375rem] font-semibold border-none cursor-pointer transition-[background] duration-150 hover:bg-nido-green"
+          class="flex w-full items-center justify-center gap-2 bg-nido-green-dark text-nido-cream px-8 py-3.5 rounded-full text-[0.9375rem] font-semibold border-none cursor-pointer transition-[background] duration-150 hover:bg-nido-green sm:w-auto sm:px-10"
           [disabled]="saving()"
           (click)="next()">
           {{ saving() ? 'Guardando...' : 'Siguiente' }}
@@ -150,7 +150,7 @@
     (click)="closeInviteModal()">
 
     <div
-      class="bg-white rounded-2xl shadow-[0_8px_40px_rgba(38,63,48,0.18)] w-full max-w-[420px] px-8 py-8 flex flex-col gap-5"
+      class="bg-white rounded-2xl shadow-[0_8px_40px_rgba(38,63,48,0.18)] w-full max-w-[420px] px-5 py-6 sm:px-8 sm:py-8 flex flex-col gap-5"
       (click)="$event.stopPropagation()">
 
       <!-- Modal header -->

@@ -21,7 +21,7 @@
     <form
       [formGroup]="form"
       (ngSubmit)="onSubmit()"
-      class="rounded-[14px] border border-nido-border bg-white px-6 py-6 shadow-[0_3px_12px_rgba(38,63,48,0.09)]">
+      class="rounded-[14px] border border-nido-brown bg-white/[0.51] px-6 py-6 shadow-[0_3px_12px_rgba(38,63,48,0.09)]">
 
       <div class="grid gap-x-4 gap-y-5 sm:grid-cols-2">
         <label class="flex flex-col gap-2 sm:col-span-2">
@@ -29,9 +29,9 @@
           <input
             formControlName="nombre"
             placeholder="Nombre"
-            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 placeholder:text-nido-muted focus:border-nido-green"
+            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white/[0.51] px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 placeholder:text-nido-muted focus:border-nido-brown"
             [class.border-nido-red]="form.controls.nombre.invalid && form.controls.nombre.touched"
-            [class.border-nido-green-dark]="!(form.controls.nombre.invalid && form.controls.nombre.touched)"
+            [class.border-nido-brown]="!(form.controls.nombre.invalid && form.controls.nombre.touched)"
           />
           @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
             <span class="text-[0.75rem] font-medium text-nido-red">Ingresá un producto.</span>
@@ -42,9 +42,9 @@
           <span class="text-[0.82rem] font-semibold text-nido-green-dark">Categoría</span>
           <select
             formControlName="categoriaId"
-            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 focus:border-nido-green"
+            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white/[0.51] px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 focus:border-nido-brown"
             [class.border-nido-red]="form.controls.categoriaId.invalid && form.controls.categoriaId.touched"
-            [class.border-nido-green-dark]="!(form.controls.categoriaId.invalid && form.controls.categoriaId.touched)">
+            [class.border-nido-brown]="!(form.controls.categoriaId.invalid && form.controls.categoriaId.touched)">
             <option value="">Seleccionar categoría</option>
 
             @for (categoria of categorias; track categoria.id) {
@@ -62,9 +62,9 @@
           <span class="text-[0.82rem] font-semibold text-nido-green-dark">Ubicación</span>
           <select
             formControlName="ubicacion"
-            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 focus:border-nido-green"
+            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white/[0.51] px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 focus:border-nido-brown"
             [class.border-nido-red]="form.controls.ubicacion.invalid && form.controls.ubicacion.touched"
-            [class.border-nido-green-dark]="!(form.controls.ubicacion.invalid && form.controls.ubicacion.touched)">
+            [class.border-nido-brown]="!(form.controls.ubicacion.invalid && form.controls.ubicacion.touched)">
             @for (ubicacion of ubicaciones; track ubicacion) {
               <option [value]="ubicacion">
                 {{ ubicacion }}
@@ -82,9 +82,9 @@
             formControlName="cantidad"
             type="number"
             min="1"
-            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 focus:border-nido-green"
+            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white/[0.51] px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 focus:border-nido-brown"
             [class.border-nido-red]="form.controls.cantidad.invalid && form.controls.cantidad.touched"
-            [class.border-nido-green-dark]="!(form.controls.cantidad.invalid && form.controls.cantidad.touched)"
+            [class.border-nido-brown]="!(form.controls.cantidad.invalid && form.controls.cantidad.touched)"
           />
           @if (form.controls.cantidad.invalid && form.controls.cantidad.touched) {
             <span class="text-[0.75rem] font-medium text-nido-red">Ingresá una cantidad.</span>
@@ -95,9 +95,9 @@
           <span class="text-[0.82rem] font-semibold text-nido-green-dark">Unidad</span>
           <select
             formControlName="unidadMedida"
-            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 focus:border-nido-green"
+            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white/[0.51] px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 focus:border-nido-brown"
             [class.border-nido-red]="form.controls.unidadMedida.invalid && form.controls.unidadMedida.touched"
-            [class.border-nido-green-dark]="!(form.controls.unidadMedida.invalid && form.controls.unidadMedida.touched)">
+            [class.border-nido-brown]="!(form.controls.unidadMedida.invalid && form.controls.unidadMedida.touched)">
             <option value="">Seleccionar unidad</option>
 
             @for (unidad of unidadesMedida; track unidad) {
@@ -116,7 +116,7 @@
           <input
             formControlName="fechaVencimiento"
             type="date"
-            class="h-12 w-full rounded-lg border-[1.5px] border-solid border-nido-border bg-white px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 [color-scheme:light] focus:border-nido-green"
+            class="h-12 w-full rounded-lg border-[1.5px] border-solid border-nido-brown bg-white/[0.51] px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 [color-scheme:light] focus:border-nido-brown"
           />
         </label>
       </div>
@@ -131,7 +131,7 @@
       <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <a
           routerLink="/alacena"
-          class="inline-flex h-11 min-w-[108px] items-center justify-center rounded-lg border-[1.5px] border-solid border-nido-border bg-white px-5 text-[0.875rem] font-semibold text-nido-brown no-underline transition-colors duration-150 hover:border-nido-brown hover:text-nido-green-dark">
+          class="inline-flex h-11 min-w-[108px] items-center justify-center rounded-lg border-[1.5px] border-solid border-nido-brown bg-white/[0.51] px-5 text-[0.875rem] font-semibold text-nido-brown no-underline transition-colors duration-150 hover:border-nido-brown hover:text-nido-green-dark">
           Cancelar
         </a>
 

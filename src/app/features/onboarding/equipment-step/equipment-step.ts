@@ -117,7 +117,7 @@ cardClass(selected: boolean): string {
 
   return selected
     ? `${base} bg-nido-green-dark text-nido-cream border-nido-green-dark shadow-[0_6px_18px_rgba(38,63,48,0.18)]`
-    : `${base} bg-white text-nido-green-dark border-nido-border hover:border-nido-green hover:bg-[rgba(62,94,74,0.04)]`;
+    : `${base} bg-white/[0.51] text-nido-green-dark border-nido-border hover:border-nido-green hover:bg-[rgba(62,94,74,0.04)]`;
 }
 
 iconClass(selected: boolean): string {
@@ -134,7 +134,7 @@ stepCircleClass(step: { completed: boolean; active: boolean }): string {
 
 stepLabelClass(step: { active: boolean }): string {
   return step.active
-    ? 'text-[0.65rem] whitespace-nowrap text-nido-cream font-semibold'
-    : 'text-[0.65rem] whitespace-nowrap text-[rgba(247,241,230,0.45)]';
+    ? 'hidden text-[0.65rem] whitespace-nowrap text-nido-cream font-semibold sm:block'
+    : 'hidden text-[0.65rem] whitespace-nowrap text-[rgba(247,241,230,0.45)] sm:block';
 }
 }

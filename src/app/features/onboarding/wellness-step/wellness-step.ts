@@ -129,7 +129,7 @@ export class WellnessStep implements OnInit {
     const base = 'relative flex flex-col items-center gap-2 py-4 px-2 rounded-xl border-[1.5px] border-solid cursor-pointer transition-all duration-150';
     return selected
       ? `${base} bg-nido-green-dark border-nido-green-dark`
-      : `${base} bg-white border-nido-border hover:border-nido-green`;
+      : `${base} bg-white/[0.51] border-nido-border hover:border-nido-green`;
   }
 
   prefIconBgClass(selected: boolean): string {
@@ -146,7 +146,7 @@ export class WellnessStep implements OnInit {
     const base = 'w-full flex items-center justify-between p-4 rounded-xl border-[1.5px] border-solid cursor-pointer transition-all duration-150 text-left';
     return selected
       ? `${base} bg-nido-green-dark border-nido-green-dark text-nido-cream`
-      : `${base} bg-white border-nido-border text-nido-green-dark hover:border-nido-green`;
+      : `${base} bg-white/[0.51] border-nido-border text-nido-green-dark hover:border-nido-green`;
   }
 
   goalIconBgClass(selected: boolean): string {
@@ -168,8 +168,8 @@ export class WellnessStep implements OnInit {
 
   stepLabelClass(step: { active: boolean }): string {
     return step.active
-      ? 'text-[0.65rem] whitespace-nowrap text-nido-cream font-semibold'
-      : 'text-[0.65rem] whitespace-nowrap text-[rgba(247,241,230,0.45)]';
+      ? 'hidden text-[0.65rem] whitespace-nowrap text-nido-cream font-semibold sm:block'
+      : 'hidden text-[0.65rem] whitespace-nowrap text-[rgba(247,241,230,0.45)] sm:block';
   }
 
   // ── Acciones ─────────────────────────────────────────────────

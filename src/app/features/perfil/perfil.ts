@@ -180,7 +180,7 @@ export class PerfilComponent implements OnInit {
     const base = 'relative flex flex-col items-center gap-2 py-4 px-2 rounded-xl border-[1.5px] border-solid cursor-pointer transition-all duration-150 w-full';
     return selected
       ? `${base} bg-nido-green-dark border-nido-green-dark`
-      : `${base} bg-white border-nido-border hover:border-nido-green`;
+      : `${base} bg-white/[0.51] border-nido-border hover:border-nido-green`;
   }
 
   protected prefIconBgClass(selected: boolean): string {
