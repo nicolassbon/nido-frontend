@@ -1,21 +1,18 @@
 <div class="p-4 sm:p-6 flex flex-col gap-6 max-w-[1200px] mx-auto bg-nido-cream min-h-screen">
 
-  <!-- Header Banner -->
   <section class="relative overflow-hidden rounded-[16px] px-6 py-6 sm:px-8 sm:py-8 shadow-md [background:linear-gradient(135deg,#1F3A3A_0%,#2B4A47_60%,#B48B6A_100%)]">
-    <!-- Decorative subtle background shapes for visual excellence -->
     <div class="absolute -right-16 -top-16 w-48 h-48 rounded-full bg-white/5 blur-xl pointer-events-none"></div>
     <div class="absolute -left-16 -bottom-16 w-64 h-64 rounded-full bg-[#B48B6A]/10 blur-2xl pointer-events-none"></div>
-    
+
     <div class="relative z-10">
       <h1 class="text-nido-cream text-[1.75rem] font-bold tracking-tight">Configuración</h1>
       <p class="text-nido-cream/75 text-sm mt-1 leading-relaxed">Ajustá las preferencias de tu cuenta y tu hogar</p>
     </div>
   </section>
 
-  <!-- Content Grid -->
   <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)] gap-6 items-start">
-    
-    <!-- Cuenta Card (Cell 1 on desktop, 1st on mobile) -->
+
+
     <section class="order-1 xl:order-1 min-w-0 bg-white/75 backdrop-blur-md rounded-[16px] p-6 shadow-[0_4px_20px_rgba(38,63,48,0.03)] border border-nido-border/60 flex flex-col transition-all duration-300 hover:shadow-[0_6px_24px_rgba(38,63,48,0.05)]">
       <div class="flex items-center gap-2.5 mb-5 border-b border-nido-border/40 pb-3">
         <lucide-icon name="user" [size]="20" class="text-nido-green" />
@@ -40,7 +37,6 @@
       </button>
     </section>
 
-    <!-- Notificaciones Card (Cell 2 on desktop, 3rd on mobile) -->
     <section class="order-3 xl:order-2 min-w-0 bg-white/75 backdrop-blur-md rounded-[16px] p-6 shadow-[0_4px_20px_rgba(38,63,48,0.03)] border border-nido-border/60 transition-all duration-300 hover:shadow-[0_6px_24px_rgba(38,63,48,0.05)]">
       <div class="flex items-center gap-2.5 mb-5 border-b border-nido-border/40 pb-3">
         <lucide-icon name="bell" [size]="20" class="text-nido-green" />
@@ -90,7 +86,6 @@
       }
     </section>
 
-    <!-- Seguridad de la cuenta Card (Cell 3 on desktop, 2nd on mobile) -->
     <section class="order-2 xl:order-3 min-w-0 bg-white/75 backdrop-blur-md rounded-[16px] p-6 shadow-[0_4px_20px_rgba(38,63,48,0.03)] border border-nido-border/60 flex flex-col gap-6 transition-all duration-300 hover:shadow-[0_6px_24px_rgba(38,63,48,0.05)]">
       <div class="flex items-center gap-2.5 border-b border-nido-border/40 pb-3">
         <lucide-icon name="shield-check" [size]="20" class="text-nido-green" />
@@ -113,7 +108,6 @@
           </button>
         </div>
       } @else {
-        <!-- Credential Status section -->
         <div class="flex flex-col gap-3 bg-[rgba(62,94,74,0.03)] border border-nido-border/40 rounded-xl p-4">
           <h3 class="text-xs font-bold text-nido-green-dark uppercase tracking-wider pl-0.5">Estado de credenciales</h3>
 
@@ -144,7 +138,6 @@
         </div>
 
         @if (hasPassword()) {
-          <!-- Change Password Form -->
           <form
             [formGroup]="changePasswordForm"
             (ngSubmit)="onChangePasswordSubmit()"
@@ -260,7 +253,6 @@
             </button>
           </form>
         } @else {
-          <!-- Add Password Form (when account only linked to Google) -->
           <form
             [formGroup]="addPasswordForm"
             (ngSubmit)="onAddPasswordSubmit()"
@@ -363,7 +355,6 @@
       }
     </section>
 
-    <!-- Miembros del hogar Card (Cell 4 on desktop, 4th on mobile) -->
     <section class="order-4 xl:order-4 min-w-0 bg-white/75 backdrop-blur-md rounded-[16px] p-6 shadow-[0_4px_20px_rgba(38,63,48,0.03)] border border-nido-border/60 transition-all duration-300 hover:shadow-[0_6px_24px_rgba(38,63,48,0.05)]">
       <div class="flex items-center gap-2.5 mb-5 border-b border-nido-border/40 pb-3">
         <lucide-icon name="users" [size]="20" class="text-nido-green" />
@@ -407,58 +398,17 @@
         <h3 class="text-sm font-bold text-nido-green-dark">Invitar convivente</h3>
       </div>
 
-      @if (inviteState() === 'success') {
-        <div class="flex flex-col gap-3 bg-[rgba(43,74,71,0.03)] border border-nido-green/20 rounded-xl p-4">
-          <p class="text-xs font-semibold text-nido-green m-0 leading-relaxed">
-            ✓ Invitación enviada. El convivente recibirá un email con el enlace de acceso.
-          </p>
-          <button
-            (click)="resetInvite()"
-            class="self-start text-xs font-bold text-nido-gold hover:text-nido-brown bg-transparent border-none cursor-pointer p-0 transition-colors">
-            Invitar a otro convivente
-          </button>
-        </div>
-      } @else {
-        <div class="flex flex-col sm:flex-row gap-2.5">
-          <input
-            type="email"
-            placeholder="correo@ejemplo.com"
-            [ngModel]="inviteEmail()"
-            (ngModelChange)="inviteEmail.set($event)"
-            class="flex-1 min-w-0 bg-white border border-nido-border rounded-xl px-4 py-2.5 text-sm text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green focus:ring-2 focus:ring-nido-green/10 transition-all duration-150 disabled:opacity-50"
-          />
-          <button
-            (click)="submitInvite()"
-            [disabled]="inviteState() === 'loading' || !inviteEmail().trim()"
-            class="px-5 py-2.5 rounded-xl bg-nido-green-dark text-nido-cream text-[0.875rem] font-bold border-none cursor-pointer transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-nido-green active:scale-[0.98] whitespace-nowrap shadow-sm">
-            {{ inviteState() === 'loading' ? 'Enviando...' : 'Invitar' }}
-          </button>
-        </div>
-        @if (inviteState() === 'error') {
-          <p class="mt-2.5 text-xs font-semibold text-nido-red pl-0.5 flex items-center gap-1">
-            <lucide-icon name="alert-triangle" [size]="12" />
-            {{ inviteErrorMsg() }}
-          </p>
-        }
-      }
-    </section>
+      <button
+        (click)="openInviteModal()"
+        class="flex items-center gap-2 px-5 py-2.5 rounded-[10px] bg-nido-green-dark text-nido-cream text-[0.875rem] font-medium border-none cursor-pointer transition-opacity duration-150 hover:opacity-90 w-full justify-center sm:w-auto">
+        <lucide-icon name="user-plus" [size]="16" />
+        Invitar convivente
+      </button>
 
-  </div>
-      </ul>
-    }
-
-    <!-- Invitar convivente -->
-    <button
-      (click)="openInviteModal()"
-      class="flex items-center gap-2 px-5 py-2.5 rounded-[10px] bg-nido-green-dark text-nido-cream text-[0.875rem] font-medium border-none cursor-pointer transition-opacity duration-150 hover:opacity-90 w-full justify-center sm:w-auto">
-      <lucide-icon name="user-plus" [size]="16" />
-      Invitar convivente
-    </button>
   </section>
 
 </div>
 
-<!-- Invite modal -->
 @if (showInviteModal()) {
   <div
     class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4"
