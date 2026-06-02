@@ -6,6 +6,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import { RouterLink } from '@angular/router';
 import { PerfilApiService, PerfilApiResponse } from './perfil-api.service';
 import { OnboardingApiService, RestriccionCatalogo } from '../onboarding/onboarding-api.service';
+import { HogaresApiService } from '../household/hogares-api.service';
 
 @Component({
   selector: 'app-perfil',
@@ -16,6 +17,7 @@ import { OnboardingApiService, RestriccionCatalogo } from '../onboarding/onboard
 export class PerfilComponent implements OnInit {
   private readonly perfilApi = inject(PerfilApiService);
   private readonly onboardingApi = inject(OnboardingApiService);
+  private readonly hogaresApi = inject(HogaresApiService);
 
   protected readonly usuario = signal<PerfilApiResponse | null>(null);
   protected readonly isLoading = signal(true);
@@ -33,6 +35,37 @@ export class PerfilComponent implements OnInit {
   // --- Selecciones temporales ---
   protected readonly selectedPreferenciaIds = signal<Set<string>>(new Set());
   protected readonly selectedAlergias = signal<RestriccionCatalogo[]>([]);
+
+  // --- Invitar familiar ---
+  protected readonly showInviteModal = signal(false);
+  protected readonly inviteEmail     = signal('');
+  protected readonly inviteState     = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
+  protected readonly inviteErrorMsg  = signal('');
+
+  protected openInviteModal(): void {
+    this.inviteEmail.set('');
+    this.inviteState.set('idle');
+    this.inviteErrorMsg.set('');
+    this.showInviteModal.set(true);
+  }
+
+  protected closeInviteModal(): void {
+    this.showInviteModal.set(false);
+  }
+
+  protected submitInvite(): void {
+    const email = this.inviteEmail().trim();
+    if (!email) return;
+
+    this.inviteState.set('loading');
+    this.hogaresApi.invitar(email).subscribe({
+      next: () => this.inviteState.set('success'),
+      error: (err) => {
+        this.inviteErrorMsg.set(err.error?.message ?? 'Error al enviar la invitación.');
+        this.inviteState.set('error');
+      },
+    });
+  }
 
   // --- Buscador de Alergias ---
   protected readonly alergiaSearch = signal('');
