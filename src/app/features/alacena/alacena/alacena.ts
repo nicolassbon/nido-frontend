@@ -16,7 +16,14 @@ import { LucideAngularModule } from 'lucide-angular';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin, of, switchMap } from 'rxjs';
 import { BrowserMultiFormatReader } from '@zxing/browser';
-import { DecodeHintType } from '@zxing/library';
+import {
+  MultiFormatReader,
+  RGBLuminanceSource,
+  BinaryBitmap,
+  GlobalHistogramBinarizer,
+  DecodeHintType,
+  BarcodeFormat,
+} from '@zxing/library';
 import { OpenFoodFactsService } from '../open-food-facts.service';
 import { AlacenaApiService, StockItemResponse } from '../alacena-api.service';
 import { PreferenciasApiService } from '../preferencias-api.service';
@@ -223,7 +230,6 @@ export class Alacena implements OnInit {
   private readonly videoRef      = viewChild<ElementRef<HTMLVideoElement>>('videoRef');
   private readonly photoInputRef = viewChild<ElementRef<HTMLInputElement>>('photoInput');
   private scanControls?: { stop(): void };
-  private codeReader?:  BrowserMultiFormatReader;
   private mediaStream?: MediaStream;
   private rafId?:       number;
   private scannerBusy  = false;
@@ -344,11 +350,16 @@ private loadProducts(): void {
     try {
       const BD = (window as Window & { BarcodeDetector?: NativeBarcodeDetector }).BarcodeDetector;
       if (BD) {
-        await this.startNativeScanner(BD, videoEl);
-      } else {
-        await this.startZxingScanner(videoEl);
+        const supported = await BD.getSupportedFormats();
+        const formats   = ['ean_13', 'ean_8', 'upc_a', 'upc_e'].filter(f => supported.includes(f));
+        if (formats.length > 0) {
+          await this.startNativeScanner(BD, videoEl, formats);
+          return;
+        }
       }
-    } catch {
+      await this.startZxingScanner(videoEl);
+    } catch (err) {
+      console.error('[Camera] error:', err);
       this.zone.run(() => {
         this.scannerStep.set('error');
         this.scannerError.set('No se pudo acceder a la cámara. Verificá los permisos del navegador.');
@@ -359,11 +370,8 @@ private loadProducts(): void {
   private async startNativeScanner(
     BD: NativeBarcodeDetector,
     videoEl: HTMLVideoElement,
+    formats: string[],
   ): Promise<void> {
-    const supported = await BD.getSupportedFormats();
-    const formats   = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code']
-      .filter(f => supported.includes(f));
-
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
     });
@@ -381,7 +389,7 @@ private loadProducts(): void {
           this.zone.run(() => this.onBarcodeDetected(barcodes[0].rawValue));
           return;
         }
-      } catch { /* frame error — continue */ }
+      } catch { /* frame error — continuar */ }
       this.rafId = requestAnimationFrame(() => void scan());
     };
 
@@ -389,23 +397,83 @@ private loadProducts(): void {
   }
 
   private async startZxingScanner(videoEl: HTMLVideoElement): Promise<void> {
-    const hints = new Map<DecodeHintType, unknown>();
-    hints.set(DecodeHintType.TRY_HARDER, true);
-    this.codeReader = new BrowserMultiFormatReader(hints);
+    const formats = [
+      BarcodeFormat.EAN_13,
+      BarcodeFormat.EAN_8,
+      BarcodeFormat.UPC_A,
+      BarcodeFormat.UPC_E,
+    ];
 
-    const controls = await this.codeReader.decodeFromVideoDevice(
-      undefined,
-      videoEl,
-      result => {
-        if (result) this.zone.run(() => this.onBarcodeDetected(result.getText()));
+    // Intento 1 (rápido): sin TRY_HARDER — ZXing escanea filas centrales solamente
+    const fastHints = new Map<DecodeHintType, unknown>();
+    fastHints.set(DecodeHintType.POSSIBLE_FORMATS, formats);
+
+    // Intento 2 (exhaustivo): con TRY_HARDER — busca en toda la imagen
+    const thoroughHints = new Map<DecodeHintType, unknown>();
+    thoroughHints.set(DecodeHintType.TRY_HARDER, true);
+    thoroughHints.set(DecodeHintType.POSSIBLE_FORMATS, formats);
+
+    const browserReader = new BrowserMultiFormatReader(fastHints);
+    const libReader     = new MultiFormatReader();
+    libReader.setHints(thoroughHints);
+
+    // Pedir 640×480: resolución óptima para detección de códigos de barras
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: 'environment' },
+        width:  { ideal: 640, max: 1280 },
+        height: { ideal: 480, max: 720  },
       },
-    );
+    });
+    this.mediaStream  = stream;
+    videoEl.srcObject = stream;
+    await videoEl.play();
 
-    if (this.scannerStep() !== 'scanning') {
-      controls.stop();
-      return;
-    }
-    this.scanControls = controls;
+    const canvas = document.createElement('canvas');
+    const ctx    = canvas.getContext('2d', { willReadFrequently: true })!;
+
+    const doScan = (): void => {
+      if (this.scannerStep() !== 'scanning') return;
+      const vw = videoEl.videoWidth;
+      const vh = videoEl.videoHeight;
+      if (!vw || !vh) { setTimeout(doScan, 100); return; }
+
+      // Capear a 640px: suficiente resolución para EAN-13, mucho más rápido de procesar
+      const scale = Math.min(1, 640 / vw);
+      const w = Math.round(vw * scale);
+      const h = Math.round(vh * scale);
+      canvas.width  = w;
+      canvas.height = h;
+
+      // Aumentar contraste al dibujar: ayuda a webcams con imagen lavada o con poca luz
+      ctx.filter = 'contrast(1.5) brightness(1.05)';
+      ctx.drawImage(videoEl, 0, 0, w, h);
+      ctx.filter = 'none';
+
+      // Intento 1: HybridBinarizer vía BrowserMultiFormatReader (maneja RGBA correctamente)
+      try {
+        const code = browserReader.decodeFromCanvas(canvas).getText();
+        this.zone.run(() => this.onBarcodeDetected(code));
+        return;
+      } catch { /* continuar */ }
+
+      // Intento 2: GlobalHistogramBinarizer — mejor para imágenes de bajo contraste
+      try {
+        const rgba = ctx.getImageData(0, 0, w, h).data;
+        const gray = new Uint8ClampedArray(w * h);
+        for (let i = 0; i < gray.length; i++) {
+          gray[i] = (rgba[i * 4] + rgba[i * 4 + 1] + rgba[i * 4 + 1] + rgba[i * 4 + 2]) >> 2;
+        }
+        const src  = new RGBLuminanceSource(gray, w, h);
+        const code = libReader.decode(new BinaryBitmap(new GlobalHistogramBinarizer(src))).getText();
+        this.zone.run(() => this.onBarcodeDetected(code));
+        return;
+      } catch { /* no barcode en este frame */ }
+
+      setTimeout(doScan, 100);
+    };
+
+    setTimeout(doScan, 100);
   }
 
   private stopCamera(): void {
@@ -415,7 +483,6 @@ private loadProducts(): void {
     }
     this.scanControls?.stop();
     this.scanControls = undefined;
-    this.codeReader   = undefined;
     this.mediaStream?.getTracks().forEach(t => t.stop());
     this.mediaStream  = undefined;
   }

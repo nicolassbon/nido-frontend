@@ -70,12 +70,16 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "allowedHosts": [".ngrok-free.app", ".ngrok.io", "localhost"]
+          },
           "configurations": {
             "production": {
               "buildTarget": "nido-frontend:build:production"
             },
             "development": {
-              "buildTarget": "nido-frontend:build:development"
+              "buildTarget": "nido-frontend:build:development",
+              "proxyConfig": "proxy.conf.mjs"
             }
           },
           "defaultConfiguration": "development"
