@@ -72,6 +72,3 @@ lucide-icon svg {
   display: block;
 }
 
-main :where(section, article, form, div).bg-white[class*="rounded"] {
-  background-color: rgb(255 255 255 / 51%);
-}

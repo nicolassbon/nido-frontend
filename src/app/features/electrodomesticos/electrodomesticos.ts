@@ -5,6 +5,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   CrearElectrodomesticoRequest,
   Electrodomestico,
+  ElectrodomesticoCatalogo,
   ElectrodomesticosService,
 } from './services/electrodomesticos.service';
 
@@ -16,15 +17,21 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Electrodomesticos {
+  protected readonly manualCatalogoValue = '__manual__';
+
   private readonly electrodomesticosService = inject(ElectrodomesticosService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly cdr = inject(ChangeDetectorRef);
 
   protected readonly electrodomesticos = signal<Electrodomestico[]>([]);
+  protected readonly catalogo = signal<ElectrodomesticoCatalogo[]>([]);
   protected readonly loading = signal(false);
+  protected readonly catalogoLoading = signal(false);
+  protected readonly catalogoErrorMessage = signal<string | null>(null);
   protected readonly errorMessage = signal<string | null>(null);
 
   protected readonly showAddModal = signal(false);
+  protected readonly selectedCatalogoValue = signal('');
 
   protected readonly searchQuery = signal('');
   protected readonly activeTipo = signal('Todos');
@@ -32,9 +39,10 @@ export class Electrodomesticos {
   protected readonly tipos = ['Todos', 'Cocina', 'Lavadero', 'Living', 'Otro'];
 
   protected readonly draft = signal<CrearElectrodomesticoRequest>({
+    catalogoId: null,
     nombre: '',
     tipo: 'Cocina',
-    estado: 'Activo',
+    estado: 'activo',
     imagenUrl: null,
   });
 
@@ -58,19 +66,44 @@ export class Electrodomesticos {
     return lista;
   });
 
-  protected readonly cantidadMantenimiento = computed(() =>
+  readonly cantidadFueraDeServicio = computed(() =>
     this.electrodomesticos().filter(
-      (item) => item.estado === 'Necesita mantenimiento'
+      (item) => this.normalizarEstado(item.estado) === 'fuera de servicio'
     ).length
   );
 
   protected readonly formularioValido = computed(() => {
     const draft = this.draft();
-    return draft.nombre.trim().length >= 2;
+    const selectedValue = this.selectedCatalogoValue();
+
+    if (!selectedValue) {
+      return false;
+    }
+
+    if (selectedValue === this.manualCatalogoValue) {
+      return draft.nombre.trim().length >= 2;
+    }
+
+    return Boolean(draft.catalogoId);
+  });
+
+  protected readonly modoManual = computed(() =>
+    this.selectedCatalogoValue() === this.manualCatalogoValue
+  );
+
+  protected readonly catalogoSeleccionado = computed(() => {
+    const catalogoId = this.draft().catalogoId;
+
+    if (!catalogoId) {
+      return null;
+    }
+
+    return this.catalogo().find((item) => item.id === catalogoId) ?? null;
   });
 
   constructor() {
     this.cargarElectrodomesticos();
+    this.cargarCatalogo();
   }
 
   protected cargarElectrodomesticos(): void {
@@ -95,6 +128,7 @@ export class Electrodomesticos {
 
   protected abrirModalAgregar(): void {
     this.resetFormulario();
+    this.cargarCatalogo();
     this.showAddModal.set(true);
   }
 
@@ -109,12 +143,14 @@ export class Electrodomesticos {
     }
 
     const draft = this.draft();
+    const manual = this.modoManual();
 
     const request: CrearElectrodomesticoRequest = {
+      catalogoId: manual ? null : draft.catalogoId,
       nombre: draft.nombre.trim(),
       tipo: draft.tipo || 'Otro',
-      estado: draft.estado || 'Activo',
-      imagenUrl: draft.imagenUrl?.trim() || null,
+      estado: draft.estado || 'activo',
+      imagenUrl: null,
     };
 
     this.electrodomesticosService.add(request)
@@ -132,12 +168,79 @@ export class Electrodomesticos {
   }
 
   protected resetFormulario(): void {
+    this.selectedCatalogoValue.set('');
     this.draft.set({
+      catalogoId: null,
       nombre: '',
       tipo: 'Cocina',
-      estado: 'Activo',
+      estado: 'activo',
       imagenUrl: null,
     });
+  }
+
+  protected cargarCatalogo(): void {
+    if (this.catalogoLoading() || this.catalogo().length > 0) {
+      return;
+    }
+
+    this.catalogoLoading.set(true);
+    this.catalogoErrorMessage.set(null);
+
+    this.electrodomesticosService.getCatalogo()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response) => {
+          this.catalogo.set(response);
+          this.catalogoLoading.set(false);
+          this.cdr.markForCheck();
+        },
+        error: (error) => {
+          console.error('Error al cargar catalogo de electrodomesticos:', error);
+          this.catalogoErrorMessage.set('No se pudo cargar el catalogo.');
+          this.catalogoLoading.set(false);
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  protected seleccionarCatalogo(value: string): void {
+    this.selectedCatalogoValue.set(value);
+
+    if (!value) {
+      this.draft.update((draft) => ({
+        ...draft,
+        catalogoId: null,
+        nombre: '',
+        tipo: 'Cocina',
+        imagenUrl: null,
+      }));
+      return;
+    }
+
+    if (value === this.manualCatalogoValue) {
+      this.draft.update((draft) => ({
+        ...draft,
+        catalogoId: null,
+        nombre: '',
+        tipo: 'Cocina',
+        imagenUrl: null,
+      }));
+      return;
+    }
+
+    const item = this.catalogo().find((catalogoItem) => catalogoItem.id === value);
+
+    if (!item) {
+      return;
+    }
+
+    this.draft.update((draft) => ({
+      ...draft,
+      catalogoId: item.id,
+      nombre: item.nombre,
+      tipo: item.tipo,
+      imagenUrl: item.imagenUrl,
+    }));
   }
 
   protected tipoChipClass(tipo: string): string {
@@ -199,14 +302,14 @@ export class Electrodomesticos {
   }
 
   protected getEstadoClass(estado: string | null): string {
-    if (estado === 'Necesita mantenimiento') {
-      return 'text-orange-700 bg-orange-100';
-    }
-
-    if (estado === 'Fuera de servicio') {
+    if (this.normalizarEstado(estado) === 'fuera de servicio') {
       return 'text-red-700 bg-red-100';
     }
 
     return 'text-green-700 bg-green-100';
+  }
+
+  private normalizarEstado(estado: string | null): string {
+    return (estado ?? 'activo').trim().toLowerCase();
   }
 }
