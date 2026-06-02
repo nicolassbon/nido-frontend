@@ -1,14 +1,14 @@
 import { Component, inject, OnInit, signal, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { PerfilApiService } from '../perfil/perfil-api.service';
 import { validatePhotoFile } from '../../shared/validators/photo';
 
 @Component({
   selector: 'app-editar-perfil',
-  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule, RouterLink],
   templateUrl: './editar-perfil.html',
   styleUrl: './editar-perfil.scss',
 })
@@ -29,6 +29,7 @@ export class EditarPerfil implements OnInit {
     sexo: ['', Validators.required],
   });
 
+  protected readonly sexoOpts = ['Femenino', 'Masculino', 'Otro'];
   protected readonly apiError = signal<string | null>(null);
   protected readonly isLoading = signal(true);
   protected readonly isSaving = signal(false);

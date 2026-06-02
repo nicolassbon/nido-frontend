@@ -1,0 +1,60 @@
+<div class="nido-dp"
+     [class.is-open]="isOpen()"
+     [class.has-error]="hasError"
+     [class.is-disabled]="isDisabled()">
+
+  <!-- ── Trigger ─────────────────────────────────────────────── -->
+  <div class="nido-dp__trigger" (click)="open()">
+    <lucide-icon name="calendar" [size]="17" class="nido-dp__cal-icon" />
+    <span class="nido-dp__label" [class.is-placeholder]="!displayValue">
+      {{ displayValue || placeholder }}
+    </span>
+    @if (value()) {
+      <button type="button" class="nido-dp__clear" (click)="clear($event)" title="Limpiar">
+        <lucide-icon name="x" [size]="13" />
+      </button>
+    }
+  </div>
+
+  <!-- ── Calendar popup ──────────────────────────────────────── -->
+  @if (isOpen()) {
+    <div class="nido-dp__panel" [class.open-up]="openUp()">
+
+      <!-- Header: month navigation -->
+      <div class="nido-dp__header">
+        <button type="button" class="nido-dp__nav" (click)="prevMonth()">
+          <lucide-icon name="chevron-left" [size]="16" />
+        </button>
+        <span class="nido-dp__month">{{ monthLabel() }}</span>
+        <button type="button" class="nido-dp__nav" (click)="nextMonth()">
+          <lucide-icon name="chevron-right" [size]="16" />
+        </button>
+      </div>
+
+      <!-- Weekday headers -->
+      <div class="nido-dp__weekdays">
+        @for (d of dayNames; track d) {
+          <span>{{ d }}</span>
+        }
+      </div>
+
+      <!-- Day grid -->
+      <div class="nido-dp__grid">
+        @for (cell of calendarCells(); track $index) {
+          <button
+            type="button"
+            class="nido-dp__day"
+            [class.is-empty]="!cell.date"
+            [class.is-today]="cell.date === todayStr"
+            [class.is-selected]="cell.date === value()"
+            [disabled]="!cell.date"
+            (click)="selectDate(cell.date)">
+            {{ cell.day }}
+          </button>
+        }
+      </div>
+
+    </div>
+  }
+
+</div>

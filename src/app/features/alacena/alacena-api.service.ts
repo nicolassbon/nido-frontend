@@ -32,8 +32,10 @@ export interface CreateStockItemRequest {
 }
 
 export interface UpdateStockItemRequest {
+  nombre?:              string;
   cantidad?:            number;
   ubicacion?:           string;
+  unidadMedida?:        string;
   fechaVencimiento?:    string | null;
   estaAbierto?:         boolean;
   porcentajeConsumido?: number;

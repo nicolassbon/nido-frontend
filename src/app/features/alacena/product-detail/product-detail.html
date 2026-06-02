@@ -57,28 +57,50 @@
             </span>
             <strong>{{ formatDate(p.fechaVencimiento) }}</strong>
           </div>
+
+          <div class="info-row">
+            <span class="info-label">
+              <span class="info-icon">
+                <lucide-icon [name]="p.estaAbierto ? 'package-open' : 'lock-keyhole'" [size]="18" />
+              </span>
+              Estado:
+            </span>
+            <span class="estado-badge" [class.estado-badge--abierto]="p.estaAbierto">
+              {{ p.estaAbierto ? 'Abierto' : 'Cerrado' }}
+            </span>
+          </div>
         </div>
 
         <section class="summary-card">
           <h2>Resumen del producto</h2>
 
-          <div class="summary-row summary-row--progress">
+          <div class="summary-row summary-row--full">
             <span class="summary-icon"><lucide-icon name="leaf" [size]="15" /></span>
-            <div class="summary-copy">
-              <strong>Nivel actual</strong>
-              <small>Tenes aproximadamente {{ formatAmount(p.cantidad, p.unidadMedida) }} disponibles.</small>
-            </div>
-            <div class="progress-track" aria-label="Nivel actual">
-              <span [style.width.%]="remainingPercent()"></span>
-              <em>{{ remainingPercent() }}%</em>
-            </div>
-          </div>
-
-          <div class="summary-row">
-            <span class="summary-icon"><lucide-icon name="trending-up" [size]="15" /></span>
-            <div class="summary-copy">
-              <strong>Consumo promedio</strong>
-              <small>{{ consumptionText(p) }}</small>
+            <div class="summary-copy-full">
+              <div class="nivel-header">
+                <strong>Nivel actual</strong>
+                <span class="nivel-pcts">
+                  <span class="nivel-restante">{{ remainingPercent() }}% restante</span>
+                  @if (p.estaAbierto && p.porcentajeConsumido > 0) {
+                    <span class="nivel-consumido">· {{ p.porcentajeConsumido }}% consumido</span>
+                  }
+                </span>
+              </div>
+              <!-- Barra de consumo -->
+              <div class="nivel-track">
+                <div class="nivel-fill"
+                     [style.width.%]="remainingPercent()"
+                     [class.nivel-fill--low]="remainingPercent() <= 25"
+                     [class.nivel-fill--mid]="remainingPercent() > 25 && remainingPercent() <= 60">
+                </div>
+              </div>
+              <small>
+                @if (p.estaAbierto) {
+                  Abierto · {{ formatAmount(p.cantidad, p.unidadMedida) }} disponibles.
+                } @else {
+                  Cerrado · {{ formatAmount(p.cantidad, p.unidadMedida) }} disponibles.
+                }
+              </small>
             </div>
           </div>
 
@@ -105,10 +127,10 @@
             <span class="action-label">Agregar a la lista</span>
           </button>
 
-          <a class="secondary-action" routerLink="/agregar-producto">
+          <button type="button" class="secondary-action" (click)="showEditModal.set(true)">
             <span class="action-symbol">/</span>
             <span class="action-label">Editar</span>
-          </a>
+          </button>
 
           <button type="button" class="secondary-action finish-action" [disabled]="finishing()" (click)="finishProduct()">
             <span class="action-symbol">x</span>
@@ -129,3 +151,10 @@
     </div>
   }
 </div>
+
+@if (showEditModal() && product()) {
+  <app-agregar-producto
+    [isModal]="true"
+    [stockItem]="product()!"
+    (closed)="onEditClosed()" />
+}

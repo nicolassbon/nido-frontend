@@ -1,0 +1,27 @@
+<div class="nido-select" [class.is-open]="isOpen()" [class.has-error]="hasError" [class.is-disabled]="isDisabled()">
+
+  <button type="button" class="nido-select__trigger" (click)="toggle()" [disabled]="isDisabled()">
+    <span class="nido-select__value" [class.is-placeholder]="!selectedLabel">
+      {{ selectedLabel || placeholder }}
+    </span>
+    <lucide-icon name="chevron-down" [size]="18" class="nido-select__arrow" />
+  </button>
+
+  @if (isOpen()) {
+    <div class="nido-select__dropdown" [class.open-up]="openUp()">
+      @for (opt of options; track opt.value) {
+        <button
+          type="button"
+          class="nido-select__option"
+          [class.is-selected]="opt.value === selected()"
+          (click)="select(opt)">
+          <span>{{ opt.label }}</span>
+          @if (opt.value === selected()) {
+            <lucide-icon name="check" [size]="14" class="nido-select__check" />
+          }
+        </button>
+      }
+    </div>
+  }
+
+</div>

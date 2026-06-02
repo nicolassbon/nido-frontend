@@ -332,6 +332,93 @@
   font-weight: 700;
 }
 
+// ── Estado badge ──────────────────────────────────────────────
+.estado-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(146, 115, 87, 0.15);
+  color: #7a5a45;
+  border: 1px solid rgba(146, 115, 87, 0.25);
+
+  &--abierto {
+    background: rgba(62, 94, 74, 0.12);
+    color: #2b4a47;
+    border-color: rgba(62, 94, 74, 0.25);
+  }
+}
+
+// ── Nivel actual (full width) ──────────────────────────────────
+.summary-row--full {
+  grid-template-columns: 26px minmax(0, 1fr);
+}
+
+.summary-copy-full {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.nivel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  strong {
+    color: #34231e;
+    font-size: 12px;
+    font-weight: 700;
+    margin: 0;
+  }
+}
+
+.nivel-pcts {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.nivel-restante {
+  font-weight: 700;
+  color: #2b4a47;
+}
+
+.nivel-consumido {
+  color: #9a806c;
+  font-weight: 500;
+}
+
+.nivel-track {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: #ead8c3;
+  overflow: hidden;
+}
+
+.nivel-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: #2b4a47;
+  transition: width 0.4s ease;
+
+  &--mid { background: #b48b6a; }
+  &--low { background: #b44c3c; }
+}
+
+.summary-copy-full small {
+  color: #7b6a5d;
+  font-size: 9px;
+  line-height: 1.2;
+  margin: 0;
+}
+
 .state-card {
   display: grid;
   justify-items: center;

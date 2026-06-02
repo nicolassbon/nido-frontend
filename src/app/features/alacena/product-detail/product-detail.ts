@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { AgregarProducto } from '../../agregar-producto/agregar-producto';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
@@ -51,7 +52,7 @@ function clamp(value: number, min: number, max: number): number {
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, RouterLink],
+  imports: [CommonModule, LucideAngularModule, RouterLink, AgregarProducto],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.scss',
 })
@@ -68,7 +69,8 @@ export class ProductDetail {
   protected readonly errorMessage = signal<string | null>(null);
   protected readonly imageFailed = signal(false);
   protected readonly listMessage = signal<string | null>(null);
-  protected readonly finishing = signal(false);
+  protected readonly finishing    = signal(false);
+  protected readonly showEditModal = signal(false);
 
   protected readonly imageUrl = computed(() =>
     this.imageFailed()
@@ -188,6 +190,12 @@ export class ProductDetail {
 
   protected goBack(): void {
     this.router.navigate(['/alacena']);
+  }
+
+  protected onEditClosed(): void {
+    this.showEditModal.set(false);
+    const id = this.product()?.id;
+    if (id) this.loadProduct(id);
   }
 
   protected onImageError(event: Event, productName: string): void {

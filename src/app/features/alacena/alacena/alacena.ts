@@ -30,6 +30,7 @@ import { PreferenciasApiService } from '../preferencias-api.service';
 import { getTtlForCategory, TtlInfo } from '../ttl.config';
 import { RouterLink } from '@angular/router';
 import { ProductService, ProductManualResponse } from '../../../core/servicios/agregar-producto.service';
+import { AgregarProducto, KnownProduct } from '../../agregar-producto/agregar-producto';
 import { environment } from '../../../../environments/environment';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -52,6 +53,8 @@ export interface Product {
   location:         Exclude<StorageLocation, 'Todos'>;
   expiryDate:       string;   // ISO date string (YYYY-MM-DD)
   quantity:         number;
+  unit?:            string;
+  categoriaNombre?: string;
   isOpened?:        boolean;
   remainingPercent?: number;  // 100 = full, 75 / 50 / 25 = approximate remaining
   barcode?:         string;
@@ -169,7 +172,7 @@ const LOCATION_COLORS: Record<string, string> = {
 
 @Component({
   selector: 'app-alacena',
-  imports: [LucideAngularModule, FormsModule, RouterLink],
+  imports: [LucideAngularModule, FormsModule, RouterLink, AgregarProducto],
   templateUrl: './alacena.html',
   styleUrl: './alacena.scss',
 })
@@ -193,6 +196,18 @@ export class Alacena implements OnInit {
   protected readonly products           = signal<Product[]>([]);
   protected readonly isLoadingProducts  = signal(false);
   protected readonly apiError           = signal<string | null>(null);
+
+  /** Productos conocidos para el autocomplete del form de agregar */
+  protected readonly knownProducts = computed<KnownProduct[]>(() =>
+    this.products().map(p => ({
+      nombre:          p.name,
+      categoriaNombre: p.categoriaNombre,
+      unidadMedida:    p.unit,
+      ubicacion:       p.location,
+      stockId:         p.id,
+      cantidad:        p.quantity,
+    })),
+  );
 
   protected readonly diasAlerta         = signal(7);
   protected readonly diasAlertaInput    = signal(7);
@@ -226,7 +241,8 @@ export class Alacena implements OnInit {
   );
 
   // ── Scanner state ────────────────────────────────────────
-  protected readonly showScanner  = signal(false);
+  protected readonly showScanner      = signal(false);
+  protected readonly showManualForm   = signal(false);
   protected readonly scannerStep  = signal<ScannerStep>('scanning');
   protected readonly scannerError = signal('');
   protected readonly draft        = signal<ProductDraft>(makeEmptyDraft());
@@ -312,7 +328,9 @@ export class Alacena implements OnInit {
       });
   }
 
-private loadProducts(): void {
+protected reloadProducts(): void { this.loadProducts(); }
+
+  private loadProducts(): void {
   this.isLoadingProducts.set(true);
   this.apiError.set(null);
 
@@ -349,6 +367,8 @@ private loadProducts(): void {
       location:         item.ubicacion as Exclude<StorageLocation, 'Todos'>,
       expiryDate:       item.fechaVencimiento ?? '',
       quantity:         item.cantidad,
+      unit:             item.unidadMedida ?? undefined,
+      categoriaNombre:  item.categoriaNombre ?? undefined,
       isOpened:         item.estaAbierto,
       remainingPercent: 100 - item.porcentajeConsumido,
       barcode:          item.codigoBarras ?? undefined,
@@ -363,6 +383,8 @@ private loadProducts(): void {
     location: item.ubicacion as Exclude<StorageLocation, 'Todos'>,
     expiryDate: item.fechaVencimiento ?? '',
     quantity: item.cantidad,
+    unit:             item.unidadMedida ?? undefined,
+    categoriaNombre:  item.categoriaNombre ?? undefined,
     isOpened: item.estaAbierto,
     remainingPercent: 100 - item.porcentajeConsumido,
     barcode: item.codigoBarras ?? undefined,
@@ -754,6 +776,27 @@ private loadProducts(): void {
     if (pct >= 50) return '~Mitad';
     if (pct >= 25) return '~¼ restante';
     return 'Casi vacío';
+  }
+
+  /**
+   * Etiqueta de cantidad para la card.
+   * - Unidades contables ('unidad' o sin unidad): "x3" (solo si > 1)
+   * - Unidades de medida (gr/kg/ml/lt/cda/cdita): "100 g", "1.5 kg", etc.
+   */
+  protected quantityBadge(product: Product): string {
+    const unit = (product.unit ?? '').trim().toLowerCase();
+    const qty  = product.quantity;
+
+    if (!unit || unit === 'unidad') {
+      return qty > 1 ? `x${qty}` : '';
+    }
+
+    const labels: Record<string, string> = {
+      gr: 'g', kg: 'kg', ml: 'ml', lt: 'l', cda: 'cda', cdita: 'cdita',
+    };
+    const suffix = labels[unit] ?? unit;
+    const sep = (suffix === 'cda' || suffix === 'cdita') ? ' ' : '';
+    return `${qty}${sep}${suffix}`;
   }
 
   protected getLocationIcon(location: StorageLocation): string {

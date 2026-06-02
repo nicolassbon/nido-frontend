@@ -32,6 +32,8 @@ import {
   Star,
   Shuffle,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   X,
   SlidersHorizontal,
   Pencil,
@@ -91,6 +93,7 @@ import {
   WashingMachine,
 
   // Perfil / Configuracion
+  UserRoundPen,
   UserPlus,
   Award,
   Phone,
@@ -143,6 +146,8 @@ export const appConfig: ApplicationConfig = {
         Star,
         Shuffle,
         ChevronDown,
+        ChevronLeft,
+        ChevronRight,
         X,
         SlidersHorizontal,
         Pencil,
@@ -198,6 +203,7 @@ export const appConfig: ApplicationConfig = {
         WashingMachine,
 
         // Perfil / Configuracion
+        UserRoundPen,
         UserPlus,
         Award,
         Phone,
