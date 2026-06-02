@@ -385,7 +385,7 @@ export class Recipes implements OnInit {
       return url;
     }
 
-    const baseUrl = environment.apiBaseUrl.replace(/\/$/, '');
+    const baseUrl = environment.apiBaseUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
     const path = url.startsWith('/') ? url : `/${url}`;
 
     return `${baseUrl}${path}`;

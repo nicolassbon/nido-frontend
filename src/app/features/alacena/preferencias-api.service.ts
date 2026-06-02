@@ -13,12 +13,12 @@ export class PreferenciasApiService {
   private readonly base = environment.apiBaseUrl;
 
   getPreferences(): Observable<UserPreferencesResponse> {
-    return this.http.get<UserPreferencesResponse>(`${this.base}/api/preferencias/usuario`);
+    return this.http.get<UserPreferencesResponse>(`${this.base}/preferencias/usuario`);
   }
 
   updatePreferences(diasAlerta: number): Observable<UserPreferencesResponse> {
     return this.http.patch<UserPreferencesResponse>(
-      `${this.base}/api/preferencias/usuario`,
+      `${this.base}/preferencias/usuario`,
       { diasAlerta },
     );
   }

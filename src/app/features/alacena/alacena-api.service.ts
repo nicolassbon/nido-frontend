@@ -52,14 +52,14 @@ export class AlacenaApiService {
 
   getStock(): Observable<StockItemResponse[]> {
     return this.http
-      .get<StockItemResponse[]>(`${this.base}/api/alacena/productos`)
+      .get<StockItemResponse[]>(`${this.base}/alacena/productos`)
       .pipe(catchError(() => of([])));
   }
 
   findProductByBarcode(barcode: string): Observable<ProductoApiResponse | null> {
     return this.http
       .get<ProductoApiResponse>(
-        `${this.base}/api/productos/barcode/${encodeURIComponent(barcode)}`,
+        `${this.base}/productos/barcode/${encodeURIComponent(barcode)}`,
       )
       .pipe(
         catchError(err => {
@@ -71,19 +71,19 @@ export class AlacenaApiService {
 
   createStock(req: CreateStockItemRequest): Observable<StockItemResponse> {
     return this.http.post<StockItemResponse>(
-      `${this.base}/api/alacena/productos`,
+      `${this.base}/alacena/productos`,
       req,
     );
   }
 
   updateStock(id: string, changes: UpdateStockItemRequest): Observable<StockItemResponse> {
     return this.http.patch<StockItemResponse>(
-      `${this.base}/api/alacena/productos/${id}`,
+      `${this.base}/alacena/productos/${id}`,
       changes,
     );
   }
 
   deleteStock(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/api/alacena/productos/${id}`);
+    return this.http.delete<void>(`${this.base}/alacena/productos/${id}`);
   }
 }

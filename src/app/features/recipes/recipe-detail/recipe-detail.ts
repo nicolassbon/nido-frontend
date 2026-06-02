@@ -190,7 +190,7 @@ export class RecipeDetail {
   private resolveImageUrl(url: string | null): string | null {
     if (!url) return null;
     if (/^(https?:)?\/\//i.test(url) || /^(data|blob):/i.test(url)) return url;
-    const baseUrl = environment.apiBaseUrl.replace(/\/$/, '');
+    const baseUrl = environment.apiBaseUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
     const path    = url.startsWith('/') ? url : `/${url}`;
     return `${baseUrl}${path}`;
   }
