@@ -1,9 +1,7 @@
 export const environment = {
   production: true,
   apiBaseUrl: 'https://api.nidoapp.online/api',
-  googleClientId: '',
-  devHogarId:   '',
-  devUsuarioId: '',
+  googleClientId: '605350584310-kiivqgb65fisp5visrh53451gi9ndgj1.apps.googleusercontent.com',
   offWorldBase: 'https://world.openfoodfacts.org',
   offArBase:    'https://ar.openfoodfacts.org',
   upcItemDb:    'https://api.upcitemdb.com',

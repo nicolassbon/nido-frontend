@@ -11,8 +11,6 @@ export const environment = {
 
   apiBaseUrl: 'http://localhost:8080/api',  // ← uso local normal
   googleClientId: '605350584310-kiivqgb65fisp5visrh53451gi9ndgj1.apps.googleusercontent.com',
-  devHogarId:   '00000000-0000-0000-0000-000000000001',
-  devUsuarioId: '00000000-0000-0000-0000-000000000001',
   offWorldBase: 'https://world.openfoodfacts.org',
   offArBase:    'https://ar.openfoodfacts.org',
   upcItemDb:    'https://api.upcitemdb.com',

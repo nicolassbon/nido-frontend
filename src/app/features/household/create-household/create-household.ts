@@ -171,7 +171,7 @@ export class CreateHousehold {
 
   stepLabelClass(step: { active: boolean }): string {
     return step.active
-      ? 'text-[0.65rem] whitespace-nowrap text-nido-cream font-semibold'
-      : 'text-[0.65rem] whitespace-nowrap text-[rgba(247,241,230,0.45)]';
+      ? 'hidden text-[0.65rem] whitespace-nowrap text-nido-cream font-semibold sm:block'
+      : 'hidden text-[0.65rem] whitespace-nowrap text-[rgba(247,241,230,0.45)] sm:block';
   }
 }

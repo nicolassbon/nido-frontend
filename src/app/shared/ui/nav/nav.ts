@@ -27,7 +27,7 @@ export class Nav {
 
   protected readonly sidebarClass = computed(() => {
     const base = [
-      'w-[230px] h-screen overflow-y-auto bg-nido-green-dark flex flex-col px-3 py-6 shrink-0',
+      'nido-sidebar w-[230px] h-screen overflow-y-auto bg-nido-green-dark flex flex-col px-3 py-6 shrink-0',
       'transition-transform duration-[280ms] ease-out',
       'fixed top-0 left-0 z-[100]',
       'md:sticky md:top-0 md:translate-x-0 md:shadow-none',

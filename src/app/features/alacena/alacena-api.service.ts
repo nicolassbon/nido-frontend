@@ -10,8 +10,10 @@ export interface StockItemResponse {
   nombre:              string;
   imagen:              string | null;
   codigoBarras:        string | null;
+  categoriaNombre:     string | null;
   ubicacion:           string;
   cantidad:            number;
+  unidadMedida:        string | null;
   fechaVencimiento:    string | null;   // ISO yyyy-MM-dd
   estaAbierto:         boolean;
   porcentajeConsumido: number;
@@ -23,6 +25,7 @@ export interface CreateStockItemRequest {
   imagen:              string | null;
   ubicacion:           string;
   cantidad:            number;
+  unidadMedida?:       string | null;
   fechaVencimiento:    string | null;
   estaAbierto:         boolean;
   porcentajeConsumido: number;
@@ -54,6 +57,12 @@ export class AlacenaApiService {
     return this.http
       .get<StockItemResponse[]>(`${this.base}/alacena/productos`)
       .pipe(catchError(() => of([])));
+  }
+
+  getStockById(id: string): Observable<StockItemResponse> {
+    return this.http.get<StockItemResponse>(
+      `${this.base}/alacena/productos/${encodeURIComponent(id)}`,
+    );
   }
 
   findProductByBarcode(barcode: string): Observable<ProductoApiResponse | null> {

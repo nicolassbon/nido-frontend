@@ -33,7 +33,15 @@ html, body {
   font-family: var(--font-family-sans);
   background-color: var(--color-nido-bg);
   color: #2D1E16;
+  overflow-x: hidden;
   scroll-behavior: smooth;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
 }
 
 h1,
@@ -72,6 +80,3 @@ lucide-icon svg {
   display: block;
 }
 
-main :where(section, article, form, div).bg-white[class*="rounded"] {
-  background-color: rgb(255 255 255 / 51%);
-}

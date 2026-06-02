@@ -1,11 +1,11 @@
-<div class="p-4 sm:p-6 flex flex-col gap-6 max-w-[1200px]">
+<div class="w-full p-4 sm:p-6 flex flex-col gap-6">
 
   <!-- Banner -->
   <section
     class="relative overflow-hidden rounded-[14px] px-8 py-7 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
 
-    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=900&h=200&fit=crop')] bg-center bg-cover opacity-[0.12]"></div>
 
+    <div class="absolute inset-0 bg-[url('/images/banners/electrodomesticos.png')] bg-center bg-cover ']"></div>
     <div class="relative z-10">
       <h1 class="text-nido-cream text-[1.6rem] font-bold">
         Electrodomésticos
@@ -15,10 +15,10 @@
         {{ electrodomesticos().length }}
         dispositivo{{ electrodomesticos().length === 1 ? '' : 's' }}
 
-        @if (cantidadMantenimiento() > 0) {
+        @if (cantidadFueraDeServicio() > 0) {
           ·
           <span class="text-[#f4a261] font-semibold">
-            {{ cantidadMantenimiento() }} requieren mantenimiento
+            {{ cantidadFueraDeServicio() }} fuera de servicio
           </span>
         }
       </p>
@@ -57,7 +57,7 @@
       </span>
 
       <input
-        class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-border rounded-[10px] bg-white text-[0.875rem] text-nido-green-dark outline-none focus:border-nido-green placeholder:text-nido-muted"
+        class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-brown rounded-[10px] bg-white/[0.51] text-[0.875rem] text-nido-green-dark outline-none focus:border-nido-brown placeholder:text-nido-muted"
         type="text"
         placeholder="Buscar electrodoméstico..."
         [ngModel]="searchQuery()"
@@ -110,11 +110,11 @@
 
   <!-- Cards -->
   @if (!loading() && electrodomesticosFiltrados().length > 0) {
-    <div class="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
+    <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-4">
 
       @for (item of electrodomesticosFiltrados(); track item.id) {
         <article
-          class="bg-white rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition duration-[180ms] hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)]">
+          class="bg-white/[0.51] rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition duration-[180ms] hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)]">
 
           <div class="relative h-40 overflow-hidden bg-nido-cream flex items-center justify-center">
             @if (item.imagenUrl) {
@@ -156,7 +156,7 @@
                 class="text-[0.72rem] font-semibold px-2 py-1 rounded-full whitespace-nowrap"
                 [class]="getEstadoClass(item.estado)">
 
-                {{ item.estado || 'Activo' }}
+                {{ item.estado || 'activo' }}
               </span>
             </div>
 
@@ -182,14 +182,14 @@
   <!-- Modal -->
   @if (showAddModal()) {
     <div
-      class="fixed inset-0 bg-[rgba(38,63,48,0.5)] flex items-center justify-center z-[100] p-4"
+      class="fixed inset-0 bg-[rgba(31,58,58,0.72)] backdrop-blur-[2px] flex items-center justify-center z-[100] p-4"
       (click)="cerrarModal()">
 
       <div
-        class="bg-white rounded-[14px] w-full max-w-[520px] overflow-hidden shadow-[0_12px_32px_rgba(38,63,48,0.18)]"
+        class="relative z-[101] bg-[#fff] rounded-[14px] w-full max-w-[520px] overflow-hidden shadow-[0_18px_46px_rgba(31,58,58,0.28)]"
         (click)="$event.stopPropagation()">
 
-        <div class="flex items-center justify-between px-6 py-5 border-b border-nido-border">
+        <div class="flex items-center justify-between px-6 py-5 border-b border-nido-border bg-[#fff]">
           <h2 class="text-base font-bold text-nido-green-dark">
             Agregar electrodoméstico
           </h2>
@@ -202,65 +202,106 @@
           </button>
         </div>
 
-        <div class="px-6 py-5 space-y-4">
+        <div class="px-6 py-5 space-y-4 bg-[#fff]">
 
-          <!-- Nombre -->
+          <!-- Catalogo -->
           <label class="block text-[0.85rem] font-semibold text-nido-brown">
-            Nombre
-
-            <input
-              class="w-full mt-2 px-4 py-3 border-[1.5px] border-nido-border rounded-[12px] outline-none focus:border-nido-green"
-              type="text"
-              placeholder="Ej: Heladera, lavarropas, microondas..."
-              [ngModel]="draft().nombre"
-              (ngModelChange)="draft.update(d => ({ ...d, nombre: $event }))" />
-          </label>
-
-          <!-- Tipo -->
-          <label class="block text-[0.85rem] font-semibold text-nido-brown">
-            Tipo
+            Electrodoméstico
 
             <select
-              class="w-full mt-2 px-4 py-3 border-[1.5px] border-nido-border rounded-[12px] outline-none focus:border-nido-green"
-              [ngModel]="draft().tipo"
-              (ngModelChange)="draft.update(d => ({ ...d, tipo: $event }))">
+              class="w-full mt-2 px-4 py-3 border-[1.5px] border-nido-border rounded-[12px] bg-[#fff] text-nido-green-dark outline-none focus:border-nido-green"
+              [disabled]="catalogoLoading()"
+              [ngModel]="selectedCatalogoValue()"
+              (ngModelChange)="seleccionarCatalogo($event)">
 
-              <option value="Cocina">Cocina</option>
-              <option value="Lavadero">Lavadero</option>
-              <option value="Living">Living</option>
-              <option value="Otro">Otro</option>
+              <option value="">
+                {{ catalogoLoading() ? 'Cargando catálogo...' : 'Elegí una opción' }}
+              </option>
+
+              @for (item of catalogo(); track item.id) {
+                <option [value]="item.id">
+                  {{ item.nombre }}
+                </option>
+              }
+
+              <option [value]="manualCatalogoValue">
+                Agregar otro electrodoméstico
+              </option>
             </select>
           </label>
+
+          @if (catalogoErrorMessage()) {
+            <div class="rounded-[10px] bg-red-100 text-red-700 px-4 py-3 text-sm">
+              {{ catalogoErrorMessage() }}
+            </div>
+          }
+
+          @if (catalogoSeleccionado(); as item) {
+            <div class="flex items-center gap-3 rounded-[12px] border border-nido-border bg-[#f7f3ef] p-3">
+              <div class="h-14 w-14 shrink-0 overflow-hidden rounded-[10px] bg-[#fff] flex items-center justify-center">
+                @if (item.imagenUrl) {
+                  <img
+                    class="h-full w-full object-cover"
+                    [src]="item.imagenUrl"
+                    [alt]="item.nombre" />
+                } @else {
+                  <lucide-icon [name]="getIconByElectrodomestico(item.nombre, item.tipo)" [size]="26" />
+                }
+              </div>
+
+              <div class="min-w-0">
+                <p class="text-[0.92rem] font-semibold text-nido-green-dark truncate">
+                  {{ item.nombre }}
+                </p>
+                <p class="text-[0.78rem] text-nido-brown">
+                  {{ item.tipo }}
+                </p>
+              </div>
+            </div>
+          }
+
+          @if (modoManual()) {
+            <!-- Nombre manual -->
+            <label class="block text-[0.85rem] font-semibold text-nido-brown">
+              Nombre
+
+              <input
+                class="w-full mt-2 px-4 py-3 border-[1.5px] border-nido-border rounded-[12px] bg-[#fff] text-nido-green-dark outline-none focus:border-nido-green"
+                type="text"
+                placeholder="Ej: Heladera, lavarropas, microondas..."
+                [ngModel]="draft().nombre"
+                (ngModelChange)="draft.update(d => ({ ...d, nombre: $event }))" />
+            </label>
+
+            <!-- Tipo manual -->
+            <label class="block text-[0.85rem] font-semibold text-nido-brown">
+              Tipo
+
+              <select
+                class="w-full mt-2 px-4 py-3 border-[1.5px] border-nido-border rounded-[12px] bg-[#fff] text-nido-green-dark outline-none focus:border-nido-green"
+                [ngModel]="draft().tipo"
+                (ngModelChange)="draft.update(d => ({ ...d, tipo: $event }))">
+
+                <option value="Cocina">Cocina</option>
+                <option value="Lavadero">Lavadero</option>
+                <option value="Living">Living</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </label>
+          }
 
           <!-- Estado -->
           <label class="block text-[0.85rem] font-semibold text-nido-brown">
             Estado
 
             <select
-              class="w-full mt-2 px-4 py-3 border-[1.5px] border-nido-border rounded-[12px] outline-none focus:border-nido-green"
+              class="w-full mt-2 px-4 py-3 border-[1.5px] border-nido-border rounded-[12px] bg-[#fff] text-nido-green-dark outline-none focus:border-nido-green"
               [ngModel]="draft().estado"
               (ngModelChange)="draft.update(d => ({ ...d, estado: $event }))">
 
-              <option value="Activo">Activo</option>
-              <option value="Necesita mantenimiento">Necesita mantenimiento</option>
-              <option value="Fuera de servicio">Fuera de servicio</option>
+              <option value="activo">activo</option>
+              <option value="fuera de servicio">fuera de servicio</option>
             </select>
-          </label>
-
-          <!-- URL de imagen -->
-          <label class="block text-[0.85rem] font-semibold text-nido-brown">
-            URL de imagen (opcional)
-
-            <input
-              class="w-full mt-2 px-4 py-3 border-[1.5px] border-nido-border rounded-[12px] outline-none focus:border-nido-green"
-              type="text"
-              placeholder="https://..."
-              [ngModel]="draft().imagenUrl ?? ''"
-              (ngModelChange)="draft.update(d => ({ ...d, imagenUrl: $event }))" />
-
-            <span class="text-[0.75rem] text-nido-muted mt-2 block">
-              Agrega una URL para que se muestre la imagen del electrodoméstico.
-            </span>
           </label>
 
           <div class="flex gap-3 flex-wrap pt-2">
@@ -273,7 +314,7 @@
             </button>
 
             <button
-              class="flex-1 py-3 rounded-[12px] border border-nido-border text-nido-brown font-semibold hover:bg-[#f7f3ef]"
+              class="flex-1 py-3 rounded-[12px] border border-nido-border bg-[#fff] text-nido-brown font-semibold hover:bg-[#f7f3ef]"
               (click)="cerrarModal()">
 
               Cancelar

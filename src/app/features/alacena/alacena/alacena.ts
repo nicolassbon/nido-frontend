@@ -112,6 +112,30 @@ function resolveImageUrl(imageUrl: string | null | undefined): string {
   return `${baseUrl}${normalizedPath}`;
 }
 
+function normalizeProductName(name: string | null | undefined): string {
+  return (name ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function fallbackProductImage(name: string | null | undefined): string {
+  const normalized = normalizeProductName(name);
+  const catalog: Record<string, string> = {
+    arroz: '/productos/arroz.png',
+    leche: '/productos/leche.png',
+    yogur: '/productos/yogur.png',
+    queso: '/productos/queso.png',
+    agua: '/productos/agua.png',
+    fideos: '/productos/fideos.png',
+    sal: '/productos/sal.png',
+  };
+
+  const key = Object.keys(catalog).find(item => normalized === item || normalized.includes(item));
+  return key ? catalog[key] : '';
+}
+
 function formatCategoryTag(tag: string): string {
   return tag
     .replace(/^[a-z]{2}:/, '')
@@ -321,7 +345,7 @@ private loadProducts(): void {
     return {
       id:               item.id,
       name:             item.nombre,
-      image:            resolveImageUrl(item.imagen),
+      image:            resolveImageUrl(item.imagen) || fallbackProductImage(item.nombre),
       location:         item.ubicacion as Exclude<StorageLocation, 'Todos'>,
       expiryDate:       item.fechaVencimiento ?? '',
       quantity:         item.cantidad,
@@ -335,7 +359,7 @@ private loadProducts(): void {
   return {
     id: item.stockHogarId,
     name: item.nombre,
-    image: resolveImageUrl(item.imagenUrl),
+    image: resolveImageUrl(item.imagenUrl) || fallbackProductImage(item.nombre),
     location: item.ubicacion as Exclude<StorageLocation, 'Todos'>,
     expiryDate: item.fechaVencimiento ?? '',
     quantity: item.cantidad,
@@ -668,6 +692,7 @@ private loadProducts(): void {
           imagen:              d.image || null,
           ubicacion:           d.location,
           cantidad:            d.quantity,
+          unidadMedida:        'unidad',
           fechaVencimiento:    d.expiryDate || null,
           estaAbierto:         d.isOpened,
           porcentajeConsumido: d.consumedPercent,
@@ -741,6 +766,12 @@ private loadProducts(): void {
 
   protected onImgError(event: Event): void {
     const img = event.target as HTMLImageElement;
+    const fallback = fallbackProductImage(img.alt);
+    const fallbackUrl = fallback ? new URL(fallback, window.location.origin).href : '';
+    if (fallback && img.src !== fallbackUrl) {
+      img.src = fallback;
+      return;
+    }
     if (!img.src.includes('placehold.co')) img.src = PLACEHOLDER_IMAGE;
   }
 
