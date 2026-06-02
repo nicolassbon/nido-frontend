@@ -24,7 +24,7 @@
       <lucide-icon name="search" [size]="18" />
     </span>
     <input
-      class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-border rounded-[10px] bg-white text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-green placeholder:text-nido-muted"
+      class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-brown rounded-[10px] bg-white/[0.51] text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-brown placeholder:text-nido-muted"
       type="text"
       placeholder="Buscar receta..."
       [ngModel]="searchQuery()"
@@ -100,7 +100,7 @@
           @for (recipe of filteredRecipes(); track recipe.id) {
             <article
               (click)="navigateToRecipe(recipe.id)"
-              class="bg-white rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition-[transform,box-shadow] duration-[180ms] cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)] group">
+              class="bg-white/[0.51] rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition-[transform,box-shadow] duration-[180ms] cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)] group">
 
               <!-- Imagen -->
               <div class="relative h-40 overflow-hidden">
@@ -187,7 +187,7 @@
     <aside class="order-1 md:order-2 flex flex-col gap-4">
 
       <!-- Quien come hoy? -->
-      <div class="bg-white rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
+      <div class="bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
         <h3 class="text-[0.9375rem] font-semibold text-nido-green-dark mb-1">Quien come hoy?</h3>
         <p class="text-[0.775rem] text-nido-brown mb-3.5">Las recetas se filtran segun sus alergenos</p>
         <div class="grid grid-cols-2 gap-2 mb-2">
@@ -225,7 +225,7 @@
       </div>
 
       <!-- Cocina con lo que tenes -->
-      <div class="bg-white rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
+      <div class="bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
         <h3 class="text-[0.9375rem] font-semibold text-nido-green-dark mb-1">Cocina con lo que tenes</h3>
         <p class="text-[0.775rem] text-nido-brown mb-3.5">Selecciona ingredientes de tu alacena</p>
         <div class="flex flex-wrap gap-2">
@@ -256,7 +256,7 @@
       </div>
 
       <!-- Tus ingredientes -->
-      <div class="bg-white rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
+      <div class="bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
         <div class="flex items-center justify-between mb-3.5">
           <h3 class="text-[0.9375rem] font-semibold text-nido-green-dark">Tus ingredientes</h3>
           <button class="flex items-center gap-1 bg-transparent border-none text-nido-gold text-[0.775rem] font-medium cursor-pointer hover:underline">

@@ -98,7 +98,7 @@
         <lucide-icon name="search" [size]="18" />
       </span>
       <input
-        class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-border rounded-[10px] bg-white text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-green placeholder:text-nido-muted"
+        class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-brown rounded-[10px] bg-white/[0.51] text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-brown placeholder:text-nido-muted"
         type="text"
         placeholder="Buscar producto..."
         [ngModel]="searchQuery()"
@@ -127,10 +127,10 @@
       }
     </div>
   } @else {
-    <div class="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-4">
+    <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,190px),1fr))] gap-4">
       @for (product of filteredProducts(); track product.id) {
         @let daysLeft = getDaysRemaining(product.expiryDate);
-        <article class="bg-white rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition-[transform,box-shadow] duration-[180ms] cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)] group">
+        <article class="bg-white/[0.51] rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition-[transform,box-shadow] duration-[180ms] cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)] group">
 
           <div class="relative h-40 overflow-hidden bg-nido-cream">
             @if (product.image) {

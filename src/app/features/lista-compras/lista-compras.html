@@ -1,7 +1,7 @@
-<div class="p-6 flex flex-col gap-5 max-w-[1200px]">
+<div class="w-full max-w-[1200px] p-4 sm:p-6 flex flex-col gap-5">
 
   <!-- Banner -->
-  <section class="relative overflow-hidden rounded-[14px] px-8 py-7 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
+  <section class="relative overflow-hidden rounded-[14px] px-5 py-6 sm:px-8 sm:py-7 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
     <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1534723328310-e82dad3ee43f?w=900&h=200&fit=crop')] bg-center bg-cover opacity-[0.12]"></div>
     <div class="relative z-10">
       <h1 class="text-nido-cream text-[1.6rem] font-bold">Lista de compras</h1>
@@ -16,7 +16,7 @@
     </div>
     @if (listas.length > 0) {
       <button
-        class="relative z-10 flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]"
+        class="relative z-10 flex w-full items-center justify-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)] sm:w-auto"
         (click)="clearAll()">
         <lucide-icon name="trash-2" [size]="15" />
         Vaciar todo
@@ -26,7 +26,7 @@
 
   <!-- Estado vacío -->
   @if (listas.length === 0) {
-    <section class="bg-white rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] flex flex-col items-center justify-center gap-4 py-16 px-8 text-center">
+    <section class="bg-white/[0.51] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] flex flex-col items-center justify-center gap-4 px-5 py-12 text-center sm:px-8 sm:py-16">
       <lucide-icon name="shopping-cart" [size]="48" class="text-nido-brown/30" />
       <div>
         <p class="text-nido-green-dark font-semibold text-[1rem]">La lista está vacía</p>
@@ -42,11 +42,11 @@
 
   <!-- Una card por receta -->
   @for (lista of listas; track lista.recetaNombre) {
-    <section class="bg-white rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] overflow-hidden">
+    <section class="bg-white/[0.51] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] overflow-hidden">
 
       <!-- Header -->
-      <div class="flex items-center justify-between px-5 py-3.5 border-b border-nido-border/40 bg-nido-cream/30">
-        <div class="flex items-center gap-2.5">
+      <div class="flex flex-col gap-3 px-4 py-3.5 border-b border-nido-border/40 bg-nido-cream/30 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div class="flex min-w-0 flex-wrap items-center gap-2.5">
           <lucide-icon name="chef-hat" [size]="16" class="text-nido-green-dark shrink-0" />
           <span class="text-[0.875rem] font-semibold text-nido-green-dark">{{ lista.recetaNombre }}</span>
           <span class="text-[0.775rem] text-nido-brown">
@@ -54,7 +54,7 @@
           </span>
         </div>
         <button
-          class="flex items-center gap-1 px-2.5 py-1 rounded-[20px] border border-nido-border bg-transparent text-nido-brown text-[0.75rem] cursor-pointer hover:border-nido-red hover:text-nido-red transition-colors duration-150"
+          class="flex w-fit items-center gap-1 px-2.5 py-1 rounded-[20px] border border-nido-border bg-transparent text-nido-brown text-[0.75rem] cursor-pointer hover:border-nido-red hover:text-nido-red transition-colors duration-150"
           (click)="removeReceta(lista.recetaNombre)">
           <lucide-icon name="x" [size]="13" />
           Quitar
@@ -65,7 +65,7 @@
       <ul class="list-none m-0 p-0">
         @for (item of lista.items; track $index; let i = $index) {
           <li
-            class="flex items-center gap-4 px-5 py-3.5 border-b border-nido-border/40 cursor-pointer transition-colors duration-150 last:border-b-0 hover:bg-nido-cream/40"
+            class="flex items-center gap-3 px-4 py-3.5 border-b border-nido-border/40 cursor-pointer transition-colors duration-150 last:border-b-0 hover:bg-nido-cream/40 sm:gap-4 sm:px-5"
             (click)="toggleItem(lista.recetaNombre, i)">
 
             @if (item.checked) {
@@ -87,7 +87,7 @@
       </ul>
 
       <!-- Footer progreso -->
-      <div class="px-5 py-2.5 border-t border-nido-border/40 flex items-center justify-between bg-nido-cream/20">
+      <div class="px-4 py-2.5 border-t border-nido-border/40 flex flex-col gap-2 bg-nido-cream/20 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <span class="text-[0.775rem] text-nido-brown">
           {{ lista.items.length - pendientesDe(lista) }} de {{ lista.items.length }} comprado{{ lista.items.length !== 1 ? 's' : '' }}
         </span>

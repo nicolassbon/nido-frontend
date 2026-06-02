@@ -57,7 +57,7 @@
       </span>
 
       <input
-        class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-border rounded-[10px] bg-white text-[0.875rem] text-nido-green-dark outline-none focus:border-nido-green placeholder:text-nido-muted"
+        class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-brown rounded-[10px] bg-white/[0.51] text-[0.875rem] text-nido-green-dark outline-none focus:border-nido-brown placeholder:text-nido-muted"
         type="text"
         placeholder="Buscar electrodoméstico..."
         [ngModel]="searchQuery()"
@@ -110,11 +110,11 @@
 
   <!-- Cards -->
   @if (!loading() && electrodomesticosFiltrados().length > 0) {
-    <div class="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
+    <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-4">
 
       @for (item of electrodomesticosFiltrados(); track item.id) {
         <article
-          class="bg-white rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition duration-[180ms] hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)]">
+          class="bg-white/[0.51] rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition duration-[180ms] hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)]">
 
           <div class="relative h-40 overflow-hidden bg-nido-cream flex items-center justify-center">
             @if (item.imagenUrl) {

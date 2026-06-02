@@ -1,24 +1,24 @@
-<div class="p-6 flex flex-col gap-6 max-w-[1200px]">
+<div class="w-full max-w-[1200px] p-4 sm:p-6 flex flex-col gap-6">
 
   <div class="flex flex-col">
 
     <div
-      class="relative w-full h-[120px] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] bg-nido-green-dark overflow-hidden">
+      class="relative w-full min-h-[120px] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] bg-nido-green-dark overflow-hidden">
       <img src="assets/banner.jpg" class="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-overlay"
         alt="">
-      <div class="absolute inset-0 px-8 py-6 flex justify-between items-start z-10">
+      <div class="relative z-10 flex flex-col gap-4 px-5 py-6 sm:flex-row sm:justify-between sm:px-8">
         <div class="text-nido-bg">
           <h1 class="text-2xl font-bold mb-0.5">Mi perfil</h1>
           <p class="text-xs opacity-90">Administrá tu información y preferencias</p>
         </div>
         <button
-          class="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-nido-bg px-4 py-1.5 rounded-[20px] text-xs font-medium flex items-center gap-2 transition cursor-pointer">
+          class="w-fit bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-nido-bg px-4 py-1.5 rounded-[20px] text-xs font-medium flex items-center gap-2 transition cursor-pointer">
           <lucide-icon name="user-plus" class="w-3.5 h-3.5"></lucide-icon> Invitar familiar
         </button>
       </div>
     </div>
 
-    <div class="flex flex-col md:flex-row items-start md:items-end gap-6 px-8 mt-8 relative z-20">
+    <div class="flex flex-col md:flex-row items-start md:items-end gap-6 px-2 sm:px-8 mt-8 relative z-20">
 
       <div class="relative shrink-0 inline-block">
 
@@ -33,17 +33,17 @@
       </div>
 
       <div class="flex flex-col pb-2">
-        <h2 class="text-[3rem] font-bold text-gray-900 mb-2 leading-none">{{ usuario()?.nombre }}</h2>
+        <h2 class="text-[2rem] sm:text-[3rem] font-bold text-gray-900 mb-2 leading-none break-words">{{ usuario()?.nombre }}</h2>
 
         <div
-          class="inline-flex items-center gap-2 bg-white px-5 py-2.5 rounded-full text-[0.9rem] text-nido-green-dark shadow-[0_1px_3px_rgba(0,0,0,0.05)] border border-[#e5ddd0] w-max mb-5">
+          class="inline-flex max-w-full items-center gap-2 bg-white px-5 py-2.5 rounded-full text-[0.9rem] text-nido-green-dark shadow-[0_1px_3px_rgba(0,0,0,0.05)] border border-[#e5ddd0] w-fit mb-5">
           <lucide-icon name="award" class="w-5 h-5"></lucide-icon> Nivel Nido <span class="font-bold">{{
             usuario()?.nivel }}</span>
         </div>
 
         <hr class="border-[#e5ddd0] border-t-[1.5px] mb-4 w-full max-w-2xl">
 
-        <div class="flex flex-wrap items-center gap-6 text-[0.8rem] text-nido-brown font-medium">
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-[0.8rem] text-nido-brown font-medium">
           <span class="flex items-center gap-1.5"><lucide-icon name="mail" class="w-3.5 h-3.5"></lucide-icon> {{
             usuario()?.email }}</span>
           <span class="flex items-center gap-1.5"><lucide-icon name="phone" class="w-3.5 h-3.5"></lucide-icon> {{
@@ -87,7 +87,7 @@
             <input type="text" placeholder="Buscar alergia..." [value]="alergiaSearch()"
               (input)="alergiaSearch.set($any($event.target).value)" (focus)="alergiaInputFocused.set(true)"
               (blur)="onAlergiaBlur()"
-              class="w-full border border-nido-border rounded-xl pl-11 pr-4 py-2.5 text-[0.9375rem] text-nido-green-dark placeholder:text-nido-muted bg-white outline-none focus:border-nido-green transition-colors duration-150" />
+              class="w-full border border-nido-brown rounded-xl pl-11 pr-4 py-2.5 text-[0.9375rem] text-nido-green-dark placeholder:text-nido-muted bg-white/[0.51] outline-none focus:border-nido-brown transition-colors duration-150" />
           </div>
 
           @if (showAlergiaDropdown()) {
