@@ -3,11 +3,25 @@ import { inject } from '@angular/core';
 import { catchError, switchMap, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 
+const publicAuthPaths = [
+  '/auth/register',
+  '/auth/login',
+  '/auth/google-login',
+  '/auth/refresh',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+  '/auth/logout',
+];
+
+function isPublicAuthRequest(url: string): boolean {
+  return publicAuthPaths.some(path => url.includes(path));
+}
+
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AuthService);
 
-  // Auth endpoints manejan sus propias credenciales — no tocarlos
-  if (req.url.includes('/auth/')) return next(req);
+  // Solo los endpoints públicos de auth deben viajar sin bearer.
+  if (isPublicAuthRequest(req.url)) return next(req);
 
   const token = auth.getToken();
   const authReq = token

@@ -110,11 +110,33 @@ describe('Configuracion', () => {
       form.controls.newPassword.setValue('NewPwd123!');
       form.controls.confirmPassword.setValue('NewPwd123!');
 
-      mockAuthService.changePassword.mockReturnValue(throwError(() => ({ status: 400 })));
+      mockAuthService.changePassword.mockReturnValue(throwError(() => ({ status: 401, error: { title: 'INVALID_CREDENTIALS' } })));
 
       component.onChangePasswordSubmit();
 
-      expect(component.globalError()).toBe('La contraseña actual es incorrecta o la nueva contraseña no cumple con las reglas de complejidad.');
+      expect(component.globalError()).toBe('La contraseña actual no coincide con tu contraseña vigente.');
+    });
+
+    it('should invalidate the form when the new password matches the current one', () => {
+      const form = component.changePasswordForm;
+      form.controls.currentPassword.setValue('Current1!');
+      form.controls.newPassword.setValue('Current1!');
+      form.controls.confirmPassword.setValue('Current1!');
+
+      expect(form.valid).toBe(false);
+      expect(form.errors?.['sameAsCurrent']).toBe(true);
+    });
+
+    it('should show a dedicated error when backend rejects same password reuse', () => {
+      const form = component.changePasswordForm;
+      form.controls.currentPassword.setValue('Current1!');
+      form.controls.newPassword.setValue('NewPwd123!');
+      form.controls.confirmPassword.setValue('NewPwd123!');
+      mockAuthService.changePassword.mockReturnValue(throwError(() => ({ status: 400, error: { title: 'PASSWORD_SAME_AS_CURRENT' } })));
+
+      component.onChangePasswordSubmit();
+
+      expect(component.globalError()).toBe('La nueva contraseña no puede ser igual a la actual.');
     });
   });
 
@@ -157,6 +179,24 @@ describe('Configuracion', () => {
       });
       expect(component.globalSuccess()).toBe('¡Tu contraseña de acceso ha sido creada con éxito!');
       expect(component.hasPassword()).toBe(true); // Should switch to Change Password form view
+    });
+
+    it('should mark add-password form as submitted when invalid so validations become visible', () => {
+      component.onAddPasswordSubmit();
+
+      expect(component.addSubmitted()).toBe(true);
+      expect(mockAuthService.addPassword).not.toHaveBeenCalled();
+    });
+
+    it('should toggle password visibility for add-password inputs', () => {
+      expect(component.showAddNewPassword()).toBe(false);
+      expect(component.showAddConfirmPassword()).toBe(false);
+
+      component.togglePasswordVisibility('addNew');
+      component.togglePasswordVisibility('addConfirm');
+
+      expect(component.showAddNewPassword()).toBe(true);
+      expect(component.showAddConfirmPassword()).toBe(true);
     });
   });
 });
