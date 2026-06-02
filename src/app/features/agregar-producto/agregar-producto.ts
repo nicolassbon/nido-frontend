@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../core/auth/auth.service';
+import { ListaComprasService } from '../lista-compras/lista-compras.service';
 
 @Component({
   imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule],
@@ -17,6 +18,7 @@ export class AgregarProducto {
   private readonly productService = inject(ProductService);
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
+  private readonly listaComprasService = inject(ListaComprasService);
 
   protected isSaving = false;
   protected errorMessage = '';
@@ -75,6 +77,7 @@ export class AgregarProducto {
     this.productService.createStockHome(payload).subscribe({
       next: (res) => {
         console.log('Producto creado:', res);
+        this.listaComprasService.marcarCompradoPorNombre(payload.nombre);
         this.form.reset({ cantidad: 1, ubicacion: 'Alacena' });
         this.isSaving = false;
         this.router.navigate(['/alacena']);

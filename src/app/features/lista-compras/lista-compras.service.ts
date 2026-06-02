@@ -52,6 +52,21 @@ export class ListaComprasService {
     this.saveToStorage(updated);
   }
 
+  marcarCompradoPorNombre(nombre: string): void {
+    const nombreNorm = nombre.trim().toLowerCase();
+    const updated = this._listas$.value.map(lista => ({
+      ...lista,
+      items: lista.items.map(item => {
+        if (item.checked) return item;
+        const itemNorm = item.nombre.trim().toLowerCase();
+        const coincide = itemNorm.includes(nombreNorm) || nombreNorm.includes(itemNorm);
+        return coincide ? { ...item, checked: true } : item;
+      }),
+    }));
+    this._listas$.next(updated);
+    this.saveToStorage(updated);
+  }
+
   removeRecetaLista(recetaNombre: string): void {
     const updated = this._listas$.value.filter(l => l.recetaNombre !== recetaNombre);
     this._listas$.next(updated);
