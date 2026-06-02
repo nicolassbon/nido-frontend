@@ -46,6 +46,7 @@ export class Configuracion {
   readonly isLoadingMembers = signal(true);
 
   // ── Invitar convivente (Giulianna) ───────────────────────
+  readonly showInviteModal = signal(false);
   readonly inviteEmail = signal('');
   readonly inviteState = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
   readonly inviteErrorMsg = signal('');
@@ -147,6 +148,15 @@ export class Configuracion {
         },
         error: () => this.isSavingPrefs.set(false),
       });
+  }
+
+  openInviteModal(): void {
+    this.resetInvite();
+    this.showInviteModal.set(true);
+  }
+
+  closeInviteModal(): void {
+    this.showInviteModal.set(false);
   }
 
   submitInvite(): void {
