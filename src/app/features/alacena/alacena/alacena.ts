@@ -107,8 +107,9 @@ function resolveImageUrl(imageUrl: string | null | undefined): string {
   if (!imageUrl) return '';
   if (/^(https?:|data:|blob:)/i.test(imageUrl)) return imageUrl;
 
+  const baseUrl = environment.apiBaseUrl.replace(/\/api\/?$/, '');
   const normalizedPath = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
-  return `${environment.apiBaseUrl}${normalizedPath}`;
+  return `${baseUrl}${normalizedPath}`;
 }
 
 function formatCategoryTag(tag: string): string {

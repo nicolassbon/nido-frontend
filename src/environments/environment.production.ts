@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://api.nidoapp.online',
+  apiBaseUrl: 'https://api.nidoapp.online/api',
   googleClientId: '',
   devHogarId:   '',
   devUsuarioId: '',

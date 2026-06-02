@@ -8,8 +8,6 @@ import { RecipesApiService, ApiReceta } from './services/recipes-api.service';
 import { ProductService, ProductManualResponse } from '../../../core/servicios/agregar-producto.service';
 import { AuthService } from '../../../core/auth/auth.service';
 
-// ─── Mocks de datos ──────────────────────────────────────────────────────────
-
 const HOGAR_ID = 'test-hogar-id';
 
 const makeReceta = (
@@ -49,8 +47,6 @@ const arrozPantry = makePantry('s1', 'p1', 'Arroz');
 const lechePantry = makePantry('s2', 'p2', 'Leche');
 const fideoPantry = makePantry('s3', 'p3', 'Fideos');
 
-// ─── Suite ───────────────────────────────────────────────────────────────────
-
 describe('Recipes', () => {
   let fixture:   ComponentFixture<Recipes>;
   let component: Recipes;
@@ -59,10 +55,6 @@ describe('Recipes', () => {
   const productSvcMock  = { getProductManual: vi.fn(), createStockHome: vi.fn() };
   const authServiceMock = { getHogarId:       vi.fn() };
 
-  /**
-   * Configura el módulo, crea el componente e invoca ngOnInit directamente
-   * (sin fixture.detectChanges) para evitar errores de rendering del template.
-   */
   async function setup(
     recetas: ApiReceta[]             = [],
     pantry:  ProductManualResponse[] = [],
@@ -86,8 +78,6 @@ describe('Recipes', () => {
     fixture   = TestBed.createComponent(Recipes);
     component = fixture.componentInstance;
 
-    // Llamamos ngOnInit directamente para evitar renderizar el template
-    // (que requiere providers de íconos de Lucide no disponibles en tests)
     component.ngOnInit();
   }
 
@@ -96,14 +86,10 @@ describe('Recipes', () => {
     TestBed.resetTestingModule();
   });
 
-  // ─── Creación ──────────────────────────────────────────────────────────────
-
   it('debería crearse correctamente', async () => {
     await setup();
     expect(component).toBeTruthy();
   });
-
-  // ─── Carga de la alacena ───────────────────────────────────────────────────
 
   it('debería llamar a getProductManual al cargar cuando hay hogarId', async () => {
     await setup();
@@ -130,10 +116,7 @@ describe('Recipes', () => {
     expect(component['pantryIngredients']()).toHaveLength(0);
   });
 
-  // ─── Cálculo de disponibilidad (pantry seleccionada + fallback a inStock) ────
-
   it('debería calcular 50% cuando la pantry tiene Arroz seleccionado (1 de 2 ingredientes)', async () => {
-    // Arroz en pantry → matchea por nombre con ingrediente Arroz → 1/2 = 50%
     await setup([mockRecetaArroz], [arrozPantry]);
     expect(component['filteredRecipes']()[0].availabilityPercent).toBe(50);
   });
@@ -144,12 +127,11 @@ describe('Recipes', () => {
   });
 
   it('debería calcular 0% cuando ningún ingrediente matchea por nombre', async () => {
-    await setup([mockRecetaPasta], [arrozPantry]); // Arroz no está en Pasta con salsa
+    await setup([mockRecetaPasta], [arrozPantry]);
     expect(component['filteredRecipes']()[0].availabilityPercent).toBe(0);
   });
 
   it('debería usar inStock del backend cuando la alacena está vacía', async () => {
-    // Sin pantry: usa inStock. mockRecetaArroz tiene Arroz inStock:true → 1/2 = 50%
     await setup([mockRecetaArroz], []);
     expect(component['filteredRecipes']()[0].availabilityPercent).toBe(50);
   });
@@ -157,7 +139,6 @@ describe('Recipes', () => {
   it('debería matchear ingredientes con nombres parciales (fuzzy)', async () => {
     const arrozIntegral = makePantry('sx', 'px', 'Arroz integral');
     await setup([mockRecetaArroz], [arrozIntegral]);
-    // "arroz integral" contiene "arroz" → debe matchear con el ingrediente "Arroz"
     expect(component['filteredRecipes']()[0].availabilityPercent).toBeGreaterThan(0);
   });
 
@@ -165,12 +146,10 @@ describe('Recipes', () => {
     await setup([mockRecetaArroz], [arrozPantry]);
     expect(component['filteredRecipes']()[0].availabilityPercent).toBe(50);
 
-    component['toggleIngredient'](0); // deselecciona Arroz → pantry tiene items pero nada seleccionado → 0%
+    component['toggleIngredient'](0);
 
     expect(component['filteredRecipes']()[0].availabilityPercent).toBe(0);
   });
-
-  // ─── Filtro por ingredientes ───────────────────────────────────────────────
 
   it('buscarPorIngredientes debería activar el filtro', async () => {
     await setup();
@@ -209,7 +188,6 @@ describe('Recipes', () => {
   });
 
   it('debería ocultar recetas sin coincidencias cuando el filtro está activo', async () => {
-    // Arroz con leche: Arroz inStock+seleccionado → 50%. Pasta: 0%
     await setup([mockRecetaArroz, mockRecetaPasta], [arrozPantry]);
     expect(component['filteredRecipes']()).toHaveLength(2);
 
@@ -221,7 +199,6 @@ describe('Recipes', () => {
   });
 
   it('debería ordenar por mayor coincidencia cuando el filtro está activo', async () => {
-    // Arroz con leche: Arroz inStock+seleccionado (50%). Pasta: Fideos inStock+seleccionado (50% si agregamos)
     const receta100 = makeReceta('r1', 'Arroz con leche', [
       { id: 'i1', productoId: 'p1', nombre: 'Arroz', productoNombre: 'Arroz', cantidad: 200, unidad: 'g', enStock: true },
       { id: 'i2', productoId: 'p2', nombre: 'Leche', productoNombre: 'Leche', cantidad: 500, unidad: 'ml', enStock: true },

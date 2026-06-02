@@ -111,8 +111,9 @@
           <!-- Buscador + dropdown -->
           <div class="relative">
             <div class="relative">
-              <lucide-icon name="search" [size]="15"
-                class="absolute left-3 top-1/2 -translate-y-1/2 text-nido-muted pointer-events-none" />
+              <span class="absolute inset-y-0 left-3 flex w-5 items-center justify-center text-nido-muted pointer-events-none">
+                <lucide-icon name="search" [size]="15" />
+              </span>
               <input type="text" placeholder="Buscar alergia..." [value]="alergiaSearch()"
                 (input)="alergiaSearch.set($any($event.target).value)" (focus)="alergiaInputFocused.set(true)"
                 (blur)="onAlergiaBlur()"

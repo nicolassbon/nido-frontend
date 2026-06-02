@@ -22,7 +22,7 @@ export interface PerfilApiResponse {
   providedIn: 'root',
 })
 export class PerfilApiService {
-  private readonly endpoint = `${environment.apiBaseUrl}/api/perfiles`;
+  private readonly endpoint = `${environment.apiBaseUrl}/perfiles`;
   private readonly http = inject(HttpClient);
 
   getProfile(): Observable<PerfilApiResponse> {
