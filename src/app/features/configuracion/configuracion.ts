@@ -13,6 +13,24 @@ export function passwordMatchValidator(control: AbstractControl): ValidationErro
   return password === confirmPassword ? null : { passwordMismatch: true };
 }
 
+export function changePasswordValidator(control: AbstractControl): ValidationErrors | null {
+  const currentPassword = control.get('currentPassword')?.value;
+  const newPassword = control.get('newPassword')?.value;
+  const confirmPassword = control.get('confirmPassword')?.value;
+
+  const errors: ValidationErrors = {};
+
+  if (newPassword !== confirmPassword) {
+    errors['passwordMismatch'] = true;
+  }
+
+  if (currentPassword && newPassword && currentPassword === newPassword) {
+    errors['sameAsCurrent'] = true;
+  }
+
+  return Object.keys(errors).length > 0 ? errors : null;
+}
+
 const MEMBER_COLORS = ['#263F30', '#C78F5A', '#927357', '#5C7A6E', '#8B4513', '#4A7C59'];
 
 @Component({
@@ -61,6 +79,11 @@ export class Configuracion {
   readonly globalSuccess = signal<string | null>(null);
   readonly changeSubmitted = signal(false);
   readonly addSubmitted = signal(false);
+  readonly showCurrentPassword = signal(false);
+  readonly showChangeNewPassword = signal(false);
+  readonly showChangeConfirmPassword = signal(false);
+  readonly showAddNewPassword = signal(false);
+  readonly showAddConfirmPassword = signal(false);
 
   readonly changePasswordForm = this.fb.nonNullable.group({
     currentPassword: ['', Validators.required],
@@ -69,7 +92,7 @@ export class Configuracion {
       Validators.pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&.]{8,}$/),
     ]],
     confirmPassword: ['', Validators.required],
-  }, { validators: passwordMatchValidator });
+  }, { validators: changePasswordValidator });
 
   readonly addPasswordForm = this.fb.nonNullable.group({
     newPassword: ['', [
@@ -209,8 +232,12 @@ export class Configuracion {
       },
       error: (err) => {
         this.saving.set(false);
-        if (err.status === 401 || err.status === 400) {
-          this.globalError.set('La contraseña actual es incorrecta o la nueva contraseña no cumple con las reglas de complejidad.');
+        if (err.status === 401 || err.error?.title === 'INVALID_CREDENTIALS') {
+          this.globalError.set('La contraseña actual no coincide con tu contraseña vigente.');
+        } else if (err.status === 400 && err.error?.title === 'PASSWORD_SAME_AS_CURRENT') {
+          this.globalError.set('La nueva contraseña no puede ser igual a la actual.');
+        } else if (err.status === 400) {
+          this.globalError.set('La nueva contraseña no cumple con las reglas de complejidad o la confirmación no coincide.');
         } else {
           this.globalError.set('Ocurrió un error al cambiar la contraseña. Intentá de nuevo.');
         }
@@ -244,7 +271,7 @@ export class Configuracion {
       error: (err) => {
         this.saving.set(false);
         if (err.status === 400) {
-          this.globalError.set('La contraseña elegida no cumple con las reglas de complejidad.');
+          this.globalError.set('La contraseña elegida no cumple con las reglas de complejidad o la confirmación no coincide.');
         } else {
           this.globalError.set('Ocurrió un error al crear la contraseña. Intentá de nuevo.');
         }
@@ -267,5 +294,25 @@ export class Configuracion {
 
   logout(): void {
     this.auth.logout().subscribe();
+  }
+
+  togglePasswordVisibility(field: 'current' | 'changeNew' | 'changeConfirm' | 'addNew' | 'addConfirm'): void {
+    switch (field) {
+      case 'current':
+        this.showCurrentPassword.update(value => !value);
+        return;
+      case 'changeNew':
+        this.showChangeNewPassword.update(value => !value);
+        return;
+      case 'changeConfirm':
+        this.showChangeConfirmPassword.update(value => !value);
+        return;
+      case 'addNew':
+        this.showAddNewPassword.update(value => !value);
+        return;
+      case 'addConfirm':
+        this.showAddConfirmPassword.update(value => !value);
+        return;
+    }
   }
 }
