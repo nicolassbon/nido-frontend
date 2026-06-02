@@ -1,0 +1,119 @@
+<div class="min-h-screen bg-nido-green-dark flex items-center justify-center px-4">
+
+  <div class="bg-white rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,0.2)] w-full max-w-[580px] px-6 py-8 sm:px-12 sm:py-12 flex flex-col items-center gap-8 text-center">
+
+    <!-- Logo -->
+    <img src="logo.png" alt="Nido" class="h-10 object-contain" />
+
+    @switch (state()) {
+
+      @case ('preview-loading') {
+        <div class="flex flex-col items-center gap-4 py-4">
+          <div class="w-10 h-10 rounded-full border-4 border-nido-green-dark/20 border-t-nido-green-dark animate-spin"></div>
+          <p class="text-nido-brown text-[0.9rem] m-0">Verificando invitación...</p>
+        </div>
+      }
+
+      @case ('idle') {
+        <div class="flex flex-col items-center gap-5">
+          <div class="w-16 h-16 rounded-full bg-[rgba(62,94,74,0.08)] flex items-center justify-center">
+            <lucide-icon name="mail-open" [size]="32" class="text-nido-green-dark" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <h1 class="text-[1.5rem] font-bold text-nido-green-dark m-0">¡Te invitaron a {{ hogarNombre() }}!</h1>
+            <p class="text-nido-brown text-[0.875rem] leading-relaxed m-0 max-w-[380px] mx-auto">
+              Aceptá la invitación para unirte y organizar tu hogar junto a tu familia.
+            </p>
+          </div>
+          <button
+            (click)="accept()"
+            class="px-9 py-3.5 rounded-full text-[0.9375rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150">
+            Aceptar invitación
+          </button>
+        </div>
+      }
+
+      @case ('unauthenticated') {
+        <div class="flex flex-col items-center gap-5">
+          <div class="w-16 h-16 rounded-full bg-[rgba(62,94,74,0.08)] flex items-center justify-center">
+            <lucide-icon name="mail-open" [size]="32" class="text-nido-green-dark" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <h1 class="text-[1.5rem] font-bold text-nido-green-dark m-0">¡Te invitaron a {{ hogarNombre() }}!</h1>
+            <p class="text-nido-brown text-[0.875rem] leading-relaxed m-0 max-w-[380px] mx-auto">
+              Para aceptar la invitación, iniciá sesión o creá una cuenta.
+            </p>
+          </div>
+          <div class="flex flex-col gap-3 w-full max-w-[280px]">
+            <button
+              (click)="goToLogin()"
+              class="px-9 py-3.5 rounded-full text-[0.9375rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150">
+              Iniciar sesión
+            </button>
+            <button
+              (click)="goToRegister()"
+              class="px-9 py-3.5 rounded-full text-[0.9375rem] font-semibold text-nido-green-dark bg-transparent border-2 border-nido-green-dark cursor-pointer hover:bg-nido-green-dark/5 transition-colors duration-150">
+              Crear cuenta
+            </button>
+          </div>
+        </div>
+      }
+
+      @case ('loading') {
+        <div class="flex flex-col items-center gap-4 py-4">
+          <div class="w-10 h-10 rounded-full border-4 border-nido-green-dark/20 border-t-nido-green-dark animate-spin"></div>
+          <p class="text-nido-brown text-[0.9rem] m-0">Procesando tu invitación...</p>
+        </div>
+      }
+
+      @case ('success') {
+        <div class="flex flex-col items-center gap-5">
+          <div class="w-16 h-16 rounded-full bg-[rgba(62,94,74,0.08)] flex items-center justify-center">
+            <lucide-icon name="check-circle" [size]="32" class="text-nido-green-dark" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <h2 class="text-[1.4rem] font-bold text-nido-green-dark m-0">¡Bienvenido a {{ hogarNombre() }}!</h2>
+            <p class="text-nido-brown text-[0.875rem] m-0">Te estamos redirigiendo...</p>
+          </div>
+        </div>
+      }
+
+      @case ('error') {
+        <div class="flex flex-col items-center gap-5">
+          <div class="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center">
+            <lucide-icon name="x-circle" [size]="32" class="text-nido-red" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <h2 class="text-[1.25rem] font-bold text-nido-green-dark m-0">No pudimos procesar la invitación</h2>
+            <p class="text-nido-brown text-[0.875rem] m-0">{{ errorMsg() }}</p>
+          </div>
+          <button
+            (click)="goHome()"
+            class="px-7 py-3 rounded-full text-[0.875rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150">
+            Ir al inicio
+          </button>
+        </div>
+      }
+
+      @case ('invalid') {
+        <div class="flex flex-col items-center gap-5">
+          <div class="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center">
+            <lucide-icon name="x-circle" [size]="32" class="text-nido-red" />
+          </div>
+          <div class="flex flex-col gap-2">
+            <h2 class="text-[1.25rem] font-bold text-nido-green-dark m-0">Link inválido</h2>
+            <p class="text-nido-brown text-[0.875rem] m-0">Este link de invitación no es válido o ya expiró.</p>
+          </div>
+          <button
+            (click)="goHome()"
+            class="px-7 py-3 rounded-full text-[0.875rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150">
+            Ir al inicio
+          </button>
+        </div>
+      }
+
+    }
+
+  </div>
+
+</div>

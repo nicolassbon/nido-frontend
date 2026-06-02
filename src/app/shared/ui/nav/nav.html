@@ -33,6 +33,14 @@
         </a>
       </li>
     }
+    <li>
+      <button
+        (click)="logout()"
+        class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-nido-cream/60 bg-transparent border-none cursor-pointer text-[0.8125rem] transition-colors duration-150 hover:bg-nido-green hover:text-nido-cream">
+        <lucide-icon [img]="icons['log-out']" [size]="18" class="shrink-0" />
+        <span>Salir</span>
+      </button>
+    </li>
   </ul>
 
 </nav>

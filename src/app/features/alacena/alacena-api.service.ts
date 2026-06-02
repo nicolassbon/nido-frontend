@@ -4,8 +4,6 @@ import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
-// ── Response / request types (mirror the .NET DTOs) ─────────────────────────
-
 export interface StockItemResponse {
   id:                  string;
   productoId:          string;
@@ -19,7 +17,6 @@ export interface StockItemResponse {
   porcentajeConsumido: number;
 }
 
-/** Fields the caller provides. hogarId and usuarioId are added by the service. */
 export interface CreateStockItemRequest {
   nombre:              string;
   codigoBarras:        string | null;
@@ -37,11 +34,8 @@ export interface UpdateStockItemRequest {
   fechaVencimiento?:    string | null;
   estaAbierto?:         boolean;
   porcentajeConsumido?: number;
-  // TODO: remove once auth is in place — will come from JWT claims
-  usuarioId: string;
 }
 
-/** Returned by GET /api/productos/barcode/:barcode */
 export interface ProductoApiResponse {
   id:              string;
   nombre:          string;
@@ -51,33 +45,21 @@ export interface ProductoApiResponse {
   ttlDias:         number | null;
 }
 
-// ── Service ──────────────────────────────────────────────────────────────────
-
 @Injectable({ providedIn: 'root' })
 export class AlacenaApiService {
-  private readonly http      = inject(HttpClient);
-  private readonly base      = environment.apiBaseUrl;
-  // TODO: replace with values from auth context once login is implemented
-  private readonly hogarId   = environment.devHogarId;
-  private readonly usuarioId = environment.devUsuarioId;
+  private readonly http = inject(HttpClient);
+  private readonly base = environment.apiBaseUrl;
 
-  /** Load all stock items for the current household. */
   getStock(): Observable<StockItemResponse[]> {
     return this.http
-      .get<StockItemResponse[]>(`${this.base}/api/alacena/productos`, {
-        params: { hogarId: this.hogarId },
-      })
+      .get<StockItemResponse[]>(`${this.base}/alacena/productos`)
       .pipe(catchError(() => of([])));
   }
 
-  /**
-   * Check our DB for a barcode before calling Open Food Facts.
-   * Returns null on 404 (product not in our DB yet).
-   */
   findProductByBarcode(barcode: string): Observable<ProductoApiResponse | null> {
     return this.http
       .get<ProductoApiResponse>(
-        `${this.base}/api/productos/barcode/${encodeURIComponent(barcode)}`,
+        `${this.base}/productos/barcode/${encodeURIComponent(barcode)}`,
       )
       .pipe(
         catchError(err => {
@@ -87,29 +69,21 @@ export class AlacenaApiService {
       );
   }
 
-  /** Save a new product + stock entry. */
   createStock(req: CreateStockItemRequest): Observable<StockItemResponse> {
     return this.http.post<StockItemResponse>(
-      `${this.base}/api/alacena/productos`,
-      {
-        ...req,
-        // TODO: replace with values from JWT claims once auth is implemented
-        hogarId:   this.hogarId,
-        usuarioId: this.usuarioId,
-      },
+      `${this.base}/alacena/productos`,
+      req,
     );
   }
 
-  /** Update quantity / details of an existing stock entry. */
-  updateStock(id: string, changes: Omit<UpdateStockItemRequest, 'usuarioId'>): Observable<StockItemResponse> {
+  updateStock(id: string, changes: UpdateStockItemRequest): Observable<StockItemResponse> {
     return this.http.patch<StockItemResponse>(
-      `${this.base}/api/alacena/productos/${id}`,
-      { ...changes, usuarioId: this.usuarioId },
+      `${this.base}/alacena/productos/${id}`,
+      changes,
     );
   }
 
-  /** Remove a stock entry. */
   deleteStock(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/api/alacena/productos/${id}`);
+    return this.http.delete<void>(`${this.base}/alacena/productos/${id}`);
   }
 }

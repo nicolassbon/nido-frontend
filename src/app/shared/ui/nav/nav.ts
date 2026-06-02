@@ -1,11 +1,12 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import {
   LucideAngularModule, LucideIconData,
   House, Refrigerator, ChefHat, Wallet,
   CheckSquare, Calendar, Zap, Bell,
-  User, Settings, LogOut,
+  User, Settings, LogOut, ShoppingCart,
 } from 'lucide-angular';
+import { AuthService } from '../../../core/auth/auth.service';
 
 interface NavItem {
   label: string;
@@ -20,6 +21,8 @@ interface NavItem {
   styleUrl:    './nav.scss',
 })
 export class Nav {
+  private readonly authService = inject(AuthService);
+
   readonly isOpen = input(false);
 
   protected readonly sidebarClass = computed(() => {
@@ -38,8 +41,9 @@ export class Nav {
   protected readonly mainNavItems: NavItem[] = [
     { label: 'Inicio',            route: '/inicio',           icon: 'house'       },
     { label: 'Alacena',           route: '/alacena',          icon: 'refrigerator'},
-    { label: 'Recetas',           route: '/recetas',          icon: 'chef-hat'    },
-    { label: 'Finanzas',          route: '/finanzas',         icon: 'wallet'      },
+    { label: 'Recetas',           route: '/recetas',          icon: 'chef-hat'      },
+    { label: 'Lista de compras',  route: '/lista-compras',    icon: 'shopping-cart' },
+    { label: 'Finanzas',          route: '/finanzas',         icon: 'wallet'        },
     { label: 'Tareas',            route: '/tareas',           icon: 'check-square'},
     { label: 'Planificador',      route: '/planificador',     icon: 'calendar'    },
     { label: 'Electrodomésticos', route: '/electrodomesticos',icon: 'zap'         },
@@ -49,8 +53,11 @@ export class Nav {
 
   protected readonly bottomNavItems: NavItem[] = [
     { label: 'Configuración', route: '/configuracion', icon: 'settings' },
-    { label: 'Salir',         route: '/salir',          icon: 'log-out'  },
   ];
+
+  protected logout(): void {
+    this.authService.logout().subscribe();
+  }
 
   protected readonly icons: Record<string, LucideIconData> = {
     'house':        House,
@@ -63,6 +70,7 @@ export class Nav {
     'bell':         Bell,
     'user':         User,
     'settings':     Settings,
-    'log-out':      LogOut,
+    'shopping-cart': ShoppingCart,
+    'log-out':       LogOut,
   };
 }

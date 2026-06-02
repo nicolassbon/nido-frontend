@@ -1,30 +1,15 @@
-import { Component, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
-
-interface StatCard {
-  value: string;
-  label: string;
-  icon: string;
-}
+import { environment } from '../../../../environments/environment';
+import { AuthService } from '../../../core/auth/auth.service';
+import { DashboardApiService, DashboardResponse } from './dashboard-api.service';
 
 interface QuickAction {
   label: string;
   icon: string;
   route: string;
-  accent: string;
-}
-
-interface Alert {
-  message: string;
-  detail: string;
-  type: 'warning' | 'info' | 'success';
-  icon: string;
-}
-
-interface PendingTask {
-  title: string;
-  tag: string;
+  classes: string;
 }
 
 @Component({
@@ -33,8 +18,12 @@ interface PendingTask {
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
-export class Home {
+export class Home implements OnInit {
+  private readonly authService = inject(AuthService);
+  private readonly dashboardApi = inject(DashboardApiService);
+
   protected readonly greeting = signal(this.buildGreeting());
+  protected readonly userName = signal(this.authService.getNombre() ?? 'vos');
   protected readonly today = signal(
     new Date().toLocaleDateString('es-AR', {
       weekday: 'long',
@@ -43,66 +32,45 @@ export class Home {
     })
   );
 
-  protected readonly stats: StatCard[] = [
-    { value: '87', label: 'Productos en stock', icon: 'shopping-basket' },
-    { value: '$20.300', label: 'Gasto mensual', icon: 'trending-up' },
-    { value: '4', label: 'Tareas pendientes', icon: 'clipboard-list' },
-  ];
-
   protected readonly quickActions: QuickAction[] = [
-    { label: 'Agregar a alacena', icon: 'refrigerator', route: '/alacena', accent: '#3E5E4A' },
-    { label: 'Nueva receta', icon: 'chef-hat', route: '/recetas', accent: '#C78F5A' },
-    { label: 'Nueva tarea', icon: 'check-square', route: '/tareas', accent: '#927357' },
-    { label: 'Ver finanzas', icon: 'wallet', route: '/finanzas', accent: '#3E5E4A' },
-    { label: 'Planificar comidas', icon: 'calendar', route: '/planificador', accent: '#C78F5A' },
-    { label: 'Electrodomésticos', icon: 'zap', route: '/electrodomesticos', accent: '#927357' },
-  ];
-
-  protected readonly alerts: Alert[] = [
     {
-      message: '3 productos vencen esta semana',
-      detail: 'Leche, yogur y queso crema',
-      type: 'warning',
-      icon: 'alert-triangle',
+      label: 'Agregar a la alacena',
+      icon: 'shopping-basket',
+      route: '/agregar-producto',
+      classes: 'flex items-center justify-center gap-6 rounded-[8px] min-h-[72px] px-5 text-nido-cream no-underline text-[1rem] font-medium leading-none shadow-[0_3px_10px_rgba(38,63,48,0.08)] bg-nido-green-dark hover:bg-nido-green hover:-translate-y-0.5 transition-transform',
     },
     {
-      message: 'Presupuesto mensual al 78%',
-      detail: 'Llevás $20.300 de $26.000',
-      type: 'warning',
-      icon: 'trending-up',
-    },
-    {
-      message: 'Plan de comidas incompleto',
-      detail: 'Faltan 3 días sin planificar',
-      type: 'info',
-      icon: 'info',
-    },
-    {
-      message: 'Alacena bien abastecida',
-      detail: '87 productos disponibles',
-      type: 'success',
-      icon: 'check-square',
+      label: 'Nueva receta',
+      icon: 'chef-hat',
+      route: '/recetas',
+      classes: 'flex items-center justify-center gap-6 rounded-[8px] min-h-[72px] px-5 text-nido-cream no-underline text-[1rem] font-medium leading-none shadow-[0_3px_10px_rgba(38,63,48,0.08)] bg-nido-brown hover:bg-nido-gold hover:-translate-y-0.5 transition-transform',
     },
   ];
 
-  protected readonly pendingTasks: PendingTask[] = [
-    { title: 'Comprar leche y huevos', tag: 'Alacena' },
-    { title: 'Limpiar heladera', tag: 'Hogar' },
-    { title: 'Pagar servicios', tag: 'Finanzas' },
-    { title: 'Revisar microondas', tag: 'Electrodomésticos' },
-  ];
+  protected readonly dashboard = signal<DashboardResponse | null>(null);
+  protected readonly isLoading = signal(true);
+  protected readonly hasError = signal(false);
 
-  protected alertContainerClass(type: 'warning' | 'info' | 'success'): string {
-    const base = 'flex items-start gap-3 rounded-[10px] border-l-[3px] border-solid px-4 py-3.5';
-    if (type === 'warning') return `${base} bg-[rgba(199,143,90,0.1)] border-l-nido-gold`;
-    if (type === 'info')    return `${base} bg-[rgba(62,94,74,0.08)] border-l-nido-green`;
-    return `${base} bg-[rgba(38,63,48,0.07)] border-l-nido-green-dark`;
-  }
+  protected readonly expiringProducts = computed(() =>
+    this.dashboard()?.alacena.productosPorVencer ?? []
+  );
 
-  protected alertIconClass(type: 'warning' | 'info' | 'success'): string {
-    if (type === 'warning') return 'text-nido-gold';
-    if (type === 'info')    return 'text-nido-green';
-    return 'text-nido-green-dark';
+  protected readonly featuredRecipes = computed(() =>
+    this.dashboard()?.recetas.destacadas ?? []
+  );
+
+  ngOnInit(): void {
+    this.dashboardApi.getSummary().subscribe({
+      next: dashboard => {
+        this.dashboard.set(this.withResolvedImages(dashboard));
+        this.isLoading.set(false);
+      },
+      error: error => {
+        console.error('Error cargando dashboard', error);
+        this.hasError.set(true);
+        this.isLoading.set(false);
+      },
+    });
   }
 
   private buildGreeting(): string {
@@ -110,5 +78,39 @@ export class Home {
     if (hour < 12) return 'Buenos días';
     if (hour < 19) return 'Buenas tardes';
     return 'Buenas noches';
+  }
+
+  private withResolvedImages(dashboard: DashboardResponse): DashboardResponse {
+    return {
+      alacena: {
+        ...dashboard.alacena,
+        productosPorVencer: dashboard.alacena.productosPorVencer.map(product => ({
+          ...product,
+          imagenUrl: this.resolveImageUrl(product.imagenUrl),
+        })),
+      },
+      recetas: {
+        ...dashboard.recetas,
+        destacadas: dashboard.recetas.destacadas.map(recipe => ({
+          ...recipe,
+          imagenUrl: this.resolveImageUrl(recipe.imagenUrl),
+        })),
+      },
+    };
+  }
+
+  private resolveImageUrl(url: string | null): string | null {
+    if (!url) {
+      return null;
+    }
+
+    if (/^(https?:)?\/\//i.test(url) || /^(data|blob):/i.test(url)) {
+      return url;
+    }
+
+    const baseUrl = environment.apiBaseUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
+    const path = url.startsWith('/') ? url : `/${url}`;
+
+    return `${baseUrl}${path}`;
   }
 }

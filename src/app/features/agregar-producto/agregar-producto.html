@@ -1,0 +1,150 @@
+<section class="min-h-full px-6 py-8">
+  <div class="mx-auto flex w-full max-w-[836px] flex-col gap-5">
+    <a
+      routerLink="/alacena"
+      class="w-fit text-[0.9rem] font-semibold text-nido-green-dark no-underline transition-colors duration-150 hover:text-nido-green">
+      Volver a alacena
+    </a>
+
+    <header class="relative overflow-hidden rounded-[14px] px-6 py-6 [background:linear-gradient(100deg,#263F30_0%,#315642_50%,#927357_100%)] shadow-[0_4px_14px_rgba(38,63,48,0.16)]">
+      <div class="flex items-center gap-3">
+        <span class="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[10px] bg-[rgba(247,241,230,0.16)] ring-1 ring-[rgba(247,241,230,0.22)]">
+          <lucide-icon name="package" [size]="22" class="text-nido-cream/80" />
+        </span>
+        <div class="min-w-0">
+          <h1 class="text-[1.45rem] font-bold leading-tight text-nido-cream">Agregar producto</h1>
+          <p class="mt-0.5 text-[0.9rem] text-nido-cream">Alacena</p>
+        </div>
+      </div>
+    </header>
+
+    <form
+      [formGroup]="form"
+      (ngSubmit)="onSubmit()"
+      class="rounded-[14px] border border-nido-border bg-white px-6 py-6 shadow-[0_3px_12px_rgba(38,63,48,0.09)]">
+
+      <div class="grid gap-x-4 gap-y-5 sm:grid-cols-2">
+        <label class="flex flex-col gap-2 sm:col-span-2">
+          <span class="text-[0.82rem] font-semibold text-nido-green-dark">Producto</span>
+          <input
+            formControlName="nombre"
+            placeholder="Nombre"
+            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 placeholder:text-nido-muted focus:border-nido-green"
+            [class.border-nido-red]="form.controls.nombre.invalid && form.controls.nombre.touched"
+            [class.border-nido-green-dark]="!(form.controls.nombre.invalid && form.controls.nombre.touched)"
+          />
+          @if (form.controls.nombre.invalid && form.controls.nombre.touched) {
+            <span class="text-[0.75rem] font-medium text-nido-red">Ingresá un producto.</span>
+          }
+        </label>
+
+        <label class="flex flex-col gap-2 sm:col-span-2">
+          <span class="text-[0.82rem] font-semibold text-nido-green-dark">Categoría</span>
+          <select
+            formControlName="categoriaId"
+            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 focus:border-nido-green"
+            [class.border-nido-red]="form.controls.categoriaId.invalid && form.controls.categoriaId.touched"
+            [class.border-nido-green-dark]="!(form.controls.categoriaId.invalid && form.controls.categoriaId.touched)">
+            <option value="">Seleccionar categoría</option>
+
+            @for (categoria of categorias; track categoria.id) {
+              <option [value]="categoria.id">
+                {{ categoria.nombre }}
+              </option>
+            }
+          </select>
+          @if (form.controls.categoriaId.invalid && form.controls.categoriaId.touched) {
+            <span class="text-[0.75rem] font-medium text-nido-red">Seleccioná una categoría.</span>
+          }
+        </label>
+
+        <label class="flex flex-col gap-2 sm:col-span-2">
+          <span class="text-[0.82rem] font-semibold text-nido-green-dark">Ubicación</span>
+          <select
+            formControlName="ubicacion"
+            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 focus:border-nido-green"
+            [class.border-nido-red]="form.controls.ubicacion.invalid && form.controls.ubicacion.touched"
+            [class.border-nido-green-dark]="!(form.controls.ubicacion.invalid && form.controls.ubicacion.touched)">
+            @for (ubicacion of ubicaciones; track ubicacion) {
+              <option [value]="ubicacion">
+                {{ ubicacion }}
+              </option>
+            }
+          </select>
+          @if (form.controls.ubicacion.invalid && form.controls.ubicacion.touched) {
+            <span class="text-[0.75rem] font-medium text-nido-red">Seleccioná una ubicación.</span>
+          }
+        </label>
+
+        <label class="flex flex-col gap-2">
+          <span class="text-[0.82rem] font-semibold text-nido-green-dark">Cantidad</span>
+          <input
+            formControlName="cantidad"
+            type="number"
+            min="1"
+            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 focus:border-nido-green"
+            [class.border-nido-red]="form.controls.cantidad.invalid && form.controls.cantidad.touched"
+            [class.border-nido-green-dark]="!(form.controls.cantidad.invalid && form.controls.cantidad.touched)"
+          />
+          @if (form.controls.cantidad.invalid && form.controls.cantidad.touched) {
+            <span class="text-[0.75rem] font-medium text-nido-red">Ingresá una cantidad.</span>
+          }
+        </label>
+
+        <label class="flex flex-col gap-2">
+          <span class="text-[0.82rem] font-semibold text-nido-green-dark">Unidad</span>
+          <select
+            formControlName="unidadMedida"
+            class="h-12 w-full rounded-lg border-[1.5px] border-solid bg-white px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 focus:border-nido-green"
+            [class.border-nido-red]="form.controls.unidadMedida.invalid && form.controls.unidadMedida.touched"
+            [class.border-nido-green-dark]="!(form.controls.unidadMedida.invalid && form.controls.unidadMedida.touched)">
+            <option value="">Seleccionar unidad</option>
+
+            @for (unidad of unidadesMedida; track unidad) {
+              <option [value]="unidad">
+                {{ unidad }}
+              </option>
+            }
+          </select>
+          @if (form.controls.unidadMedida.invalid && form.controls.unidadMedida.touched) {
+            <span class="text-[0.75rem] font-medium text-nido-red">Ingresá una unidad.</span>
+          }
+        </label>
+
+        <label class="flex flex-col gap-2 sm:col-span-2">
+          <span class="text-[0.82rem] font-semibold text-nido-green-dark">Vencimiento</span>
+          <input
+            formControlName="fechaVencimiento"
+            type="date"
+            class="h-12 w-full rounded-lg border-[1.5px] border-solid border-nido-border bg-white px-4 text-[0.95rem] text-nido-green-dark outline-none transition-colors duration-150 [color-scheme:light] focus:border-nido-green"
+          />
+        </label>
+      </div>
+
+      @if (errorMessage) {
+        <div class="mt-5 flex items-center gap-2 rounded-lg border border-[rgba(180,76,60,0.25)] bg-[rgba(180,76,60,0.06)] px-3 py-2 text-[0.8125rem] font-medium text-nido-red">
+          <lucide-icon name="alert-circle" [size]="15" />
+          {{ errorMessage }}
+        </div>
+      }
+
+      <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <a
+          routerLink="/alacena"
+          class="inline-flex h-11 min-w-[108px] items-center justify-center rounded-lg border-[1.5px] border-solid border-nido-border bg-white px-5 text-[0.875rem] font-semibold text-nido-brown no-underline transition-colors duration-150 hover:border-nido-brown hover:text-nido-green-dark">
+          Cancelar
+        </a>
+
+        <button
+          type="submit"
+          [disabled]="isSaving"
+          class="inline-flex h-11 min-w-[114px] items-center justify-center gap-2 rounded-lg border-none bg-nido-green-dark px-6 text-[0.9rem] font-bold text-nido-cream transition-colors duration-150 hover:bg-nido-green disabled:cursor-not-allowed disabled:opacity-60">
+          @if (isSaving) {
+            <span class="h-4 w-4 rounded-full border-2 border-solid border-nido-cream/45 border-t-nido-cream animate-spin"></span>
+          }
+          Guardar
+        </button>
+      </div>
+    </form>
+  </div>
+</section>

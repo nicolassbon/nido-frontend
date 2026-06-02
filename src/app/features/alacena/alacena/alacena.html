@@ -1,4 +1,4 @@
-<div class="p-6 flex flex-col gap-5 max-w-[1200px]">
+<div class="p-4 sm:p-6 flex flex-col gap-5 max-w-[1200px]">
 
   <!-- Banner -->
   <section class="relative overflow-hidden rounded-[14px] px-8 py-7 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
@@ -19,8 +19,69 @@
         <lucide-icon name="qr-code" [size]="15" />
         Escanear código
       </button>
+       <a
+  routerLink="/agregar-producto"
+  class="flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)] no-underline">
+  <lucide-icon name="plus" [size]="15" />
+  Agregar producto
+</a>
     </div>
   </section>
+
+  <!-- Panel de alertas de vencimiento -->
+  @if (expiringProducts().length > 0) {
+    <section class="rounded-[12px] border border-[rgba(180,76,60,0.25)] bg-[rgba(180,76,60,0.05)] px-5 py-4 flex flex-col gap-3">
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2 text-[#b44c3c]">
+          <lucide-icon name="bell" [size]="16" />
+          <span class="text-[0.8375rem] font-semibold">
+            {{ expiringProducts().length }} producto{{ expiringProducts().length === 1 ? '' : 's' }}
+            vence{{ expiringProducts().length === 1 ? '' : 'n' }} en {{ diasAlerta() }} días o menos
+          </span>
+        </div>
+        <button
+          class="flex items-center gap-1 px-3 py-1 rounded-[20px] border border-[rgba(180,76,60,0.3)] bg-transparent text-[#b44c3c] text-[0.75rem] font-medium cursor-pointer transition-[background] duration-150 hover:bg-[rgba(180,76,60,0.1)]"
+          (click)="showAlertSettings.set(!showAlertSettings())">
+          <lucide-icon name="settings" [size]="12" />
+          Configurar
+        </button>
+      </div>
+
+      @if (showAlertSettings()) {
+        <div class="flex items-center gap-2 flex-wrap pt-1 border-t border-[rgba(180,76,60,0.15)]">
+          <span class="text-[0.8rem] text-nido-brown">Alertar cuando queden menos de</span>
+          <input
+            class="w-[64px] py-1.5 px-2 border border-nido-border rounded-lg text-[0.875rem] text-nido-green-dark bg-white outline-none transition-[border-color] duration-150 focus:border-nido-green text-center"
+            type="number"
+            min="1"
+            max="365"
+            [ngModel]="diasAlertaInput()"
+            (ngModelChange)="diasAlertaInput.set(+$event)"
+          />
+          <span class="text-[0.8rem] text-nido-brown">días</span>
+          <button
+            class="flex items-center gap-1 px-3 py-1.5 bg-nido-green-dark text-nido-cream rounded-lg text-[0.8rem] font-semibold border-none cursor-pointer transition-[background] duration-150 hover:bg-nido-green disabled:opacity-50"
+            [disabled]="isSavingPrefs()"
+            (click)="saveDiasAlerta()">
+            <lucide-icon name="check" [size]="12" />
+            Guardar
+          </button>
+        </div>
+      }
+
+      <div class="flex flex-col gap-1.5">
+        @for (p of expiringProducts(); track p.id) {
+          @let daysLeft = getDaysRemaining(p.expiryDate);
+          <div class="flex items-center justify-between gap-2 text-[0.8rem]">
+            <span class="text-nido-green-dark font-medium truncate">{{ p.name }}</span>
+            <span class="shrink-0 font-semibold whitespace-nowrap" [style.color]="getExpiryColor(daysLeft)">
+              {{ getExpiryLabel(daysLeft) }}
+            </span>
+          </div>
+        }
+      </div>
+    </section>
+  }
 
   <!-- Toolbar: filtros + buscador -->
   <div class="flex items-center justify-between gap-3 flex-wrap max-sm:flex-col max-sm:items-stretch">
@@ -33,7 +94,9 @@
       }
     </div>
     <div class="relative flex items-center min-w-[220px] max-sm:min-w-0">
-      <lucide-icon name="search" [size]="18" class="absolute left-4 text-nido-brown pointer-events-none" />
+      <span class="absolute inset-y-0 left-3.5 flex w-6 items-center justify-center text-nido-brown pointer-events-none">
+        <lucide-icon name="search" [size]="18" />
+      </span>
       <input
         class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-border rounded-[10px] bg-white text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-green placeholder:text-nido-muted"
         type="text"
@@ -43,7 +106,7 @@
       />
       @if (searchQuery()) {
         <button
-          class="absolute right-3 bg-transparent border-none text-nido-brown cursor-pointer flex items-center p-1 rounded hover:text-nido-green-dark"
+          class="absolute right-2.5 top-1/2 -translate-y-1/2 h-8 w-8 bg-transparent border-none text-nido-brown cursor-pointer flex items-center justify-center rounded hover:text-nido-green-dark"
           (click)="searchQuery.set('')">
           <lucide-icon name="x" [size]="16" />
         </button>
@@ -72,7 +135,8 @@
           <div class="relative h-40 overflow-hidden bg-nido-cream">
             @if (product.image) {
               <img [src]="product.image" [alt]="product.name" loading="lazy" (error)="onImgError($event)"
-                   class="w-full h-full object-contain p-2 box-border transition-transform duration-300 group-hover:scale-[1.04]" />
+                   class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
+              <div class="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/5 pointer-events-none"></div>
             } @else {
               <div class="w-full h-full flex flex-col items-center justify-center gap-2 p-4 text-nido-gold">
                 <lucide-icon [name]="getLocationIcon(product.location)" [size]="22" />
@@ -197,7 +261,7 @@
 
             <!-- Producto no encontrado -->
             @if (draft().notFound) {
-              <div class="flex items-start gap-2 py-3 px-4 bg-[rgba(199,143,90,0.1)] border border-[rgba(199,143,90,0.3)] rounded-lg text-nido-brown text-[0.8125rem] leading-snug">
+              <div class="flex items-start gap-2 py-3 px-4 bg-nido-gold/10 border border-nido-gold/30 rounded-lg text-nido-brown text-[0.8125rem] leading-snug">
                 <lucide-icon name="search-x" [size]="15" class="shrink-0 mt-px" />
                 <span>No encontramos este código en nuestra base de datos. Completá los datos del producto.</span>
               </div>
@@ -237,6 +301,17 @@
                 <p class="text-[0.775rem] text-nido-red">{{ draftErrors()['name'] }}</p>
               }
             </div>
+
+            <!-- Categoría (solo lectura, solo si está disponible) -->
+            @if (draft().category) {
+              <div class="flex items-center gap-2">
+                <span class="text-[0.8125rem] font-semibold text-nido-green-dark">Categoría</span>
+                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-[20px] bg-[rgba(62,94,74,0.1)] text-nido-green text-[0.775rem] font-medium">
+                  <lucide-icon name="tag" [size]="11" />
+                  {{ draft().category }}
+                </span>
+              </div>
+            }
 
             <!-- Cantidad -->
             <div class="flex flex-col gap-1.5">
