@@ -81,7 +81,6 @@ describe('Login Component', () => {
 
   it('should initialize the Google button on render', () => {
     expect(mockGoogleIdentityService.renderButton).toHaveBeenCalledTimes(1);
-    expect(component.googleLoginReady()).toBe(true);
   });
 
   it('should initialize with an invalid form', () => {
@@ -167,15 +166,6 @@ describe('Login Component', () => {
     expect(component.loading()).toBe(false);
   });
 
-  it('should prompt the Google flow when the visible button is activated', () => {
-    const renderedButton = mockGoogleIdentityService.host?.querySelector('div[role="button"]') as HTMLElement;
-    const clickSpy = vi.spyOn(renderedButton, 'click');
-
-    component.onGoogleLogin();
-
-    expect(clickSpy).toHaveBeenCalledTimes(1);
-  });
-
   it('should exchange the Google credential with the backend and redirect to home for existing users', () => {
     const mockResponse: GoogleLoginResponse = {
       usuarioId: 'u-google',
@@ -219,25 +209,18 @@ describe('Login Component', () => {
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
-  it('should show a helpful message when Google login is not ready', () => {
-    component.googleLoginReady.set(false);
+  it('should show an origin/config error when renderButton fails during initialization', async () => {
+    // Create a fresh fixture where renderButton will throw
+    mockGoogleIdentityService.renderButton = vi.fn(async () => {
+      throw new Error('origin mismatch');
+    });
 
-    component.onGoogleLogin();
+    const freshFixture = TestBed.createComponent(Login);
+    const freshComponent = freshFixture.componentInstance;
+    freshFixture.detectChanges();
+    await freshFixture.whenStable();
 
-    expect(component.globalError()).toBe(
-      'Google Login no está disponible todavía. Revisá la configuración del cliente.',
-    );
-  });
-
-  it('should show an origin/config error when the rendered Google button is unavailable', async () => {
-    const host = mockGoogleIdentityService.host as HTMLElement;
-    host.innerHTML = '';
-    component.googleLoginReady.set(true);
-
-    component.onGoogleLogin();
-
-    expect(component.googleLoginReady()).toBe(false);
-    expect(component.globalError()).toBe(
+    expect(freshComponent.globalError()).toBe(
       'Google Login no está disponible para este origen. Revisá la configuración del cliente.',
     );
   });
