@@ -192,8 +192,14 @@ export class ProductDetail {
     this.router.navigate(['/alacena']);
   }
 
-  protected onEditClosed(): void {
+  protected onEditClosed(updated?: StockItemResponse | void): void {
     this.showEditModal.set(false);
+    if (updated) {
+      this.product.set(updated);
+      this.imageFailed.set(false);
+      return;
+    }
+
     const id = this.product()?.id;
     if (id) this.loadProduct(id);
   }
@@ -320,11 +326,43 @@ export class ProductDetail {
   }
 
   private displayUnit(unit: string | null | undefined): string | null {
-    const normalized = unit?.trim();
-    if (!normalized) return 'unidad';
-    if (normalized.toLowerCase() === 'gr') return 'g';
-    if (normalized.toLowerCase() === 'lt') return 'l';
-    return normalized;
+    const normalized = (unit ?? '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+    const aliases: Record<string, string> = {
+      '': 'unidad',
+      u: 'unidad',
+      unidad: 'unidad',
+      unidades: 'unidad',
+      gr: 'g',
+      g: 'g',
+      gramo: 'g',
+      gramos: 'g',
+      kg: 'kg',
+      kilo: 'kg',
+      kilos: 'kg',
+      kilogramo: 'kg',
+      kilogramos: 'kg',
+      ml: 'ml',
+      mililitro: 'ml',
+      mililitros: 'ml',
+      lt: 'l',
+      l: 'l',
+      litro: 'l',
+      litros: 'l',
+      cdita: 'cdita',
+      cucharadita: 'cdita',
+      cucharaditas: 'cdita',
+      cdta: 'cdita',
+      cda: 'cda',
+      cucharada: 'cda',
+      cucharadas: 'cda',
+    };
+
+    return aliases[normalized] ?? normalized;
   }
 
   private normalizeToken(value: string): string {

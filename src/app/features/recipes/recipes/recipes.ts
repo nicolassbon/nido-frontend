@@ -58,13 +58,14 @@ const MEMBER_COLORS = ['#3E5E4A', '#B48B6A', '#927357', '#263F30', '#b44c3c', '#
 
 const ALLERGEN_ALIASES: Record<string, string[]> = {
   'Maní': ['mani', 'cacahuate', 'peanut', 'peanuts'],
-  'Gluten': ['gluten', 'harina', 'trigo', 'fideos', 'pasta', 'pan', 'masa'],
-  'Lactosa': ['lactosa', 'leche', 'queso', 'crema', 'manteca', 'yogur', 'yogurt', 'milk', 'cheese'],
+  'Gluten': ['gluten', 'harina', 'trigo', 'fideos', 'pasta', 'pan', 'pan rallado', 'masa', 'avena'],
+  'Lactosa': ['lactosa', 'leche', 'leche en polvo', 'queso', 'queso crema', 'crema', 'manteca', 'mantequilla', 'yogur', 'yogurt', 'ricota', 'mozzarella', 'parmesano', 'dulce de leche', 'milk', 'cheese', 'butter', 'cream'],
   'Mariscos': ['mariscos', 'camaron', 'camarones', 'langostino', 'langostinos', 'mejillon', 'mejillones', 'calamar', 'calamares'],
   'Soja': ['soja', 'soya', 'tofu', 'salsa de soja'],
-  'Huevo': ['huevo', 'huevos', 'clara', 'yema', 'egg'],
+  'Huevo': ['huevo', 'huevos', 'clara', 'claras', 'yema', 'yemas', 'egg', 'eggs'],
   'Frutos secos': ['frutos secos', 'almendra', 'almendras', 'nuez', 'nueces', 'avellana', 'avellanas', 'castana', 'castanas', 'pistacho', 'pistachos'],
   'Pescado': ['pescado', 'atun', 'salmon', 'merluza', 'sardina', 'sardinas'],
+  'Carne': ['carne', 'pollo', 'pechuga', 'cerdo', 'jamon', 'panceta', 'tocino', 'chorizo', 'salchicha', 'vacuno', 'vacuna', 'res', 'ternera', 'cordero', 'pavo', 'beef', 'chicken', 'pork', 'bacon', 'ham'],
   'Sésamo': ['sesamo', 'tahini'],
   'Mostaza': ['mostaza', 'mustard'],
 };
@@ -78,6 +79,10 @@ const RESTRICTION_TO_ALLERGENS: Record<string, string[]> = {
   'celiaquia': ['Gluten'],
   'celiaco': ['Gluten'],
   'celiaca': ['Gluten'],
+  'vegano': ['Carne', 'Pescado', 'Mariscos', 'Lactosa', 'Huevo'],
+  'vegan': ['Carne', 'Pescado', 'Mariscos', 'Lactosa', 'Huevo'],
+  'vegetariano': ['Carne', 'Pescado', 'Mariscos'],
+  'vegetariana': ['Carne', 'Pescado', 'Mariscos'],
 };
 
 const APPLIANCE_ALIASES: Record<string, string[]> = {
@@ -114,6 +119,7 @@ export class Recipes implements OnInit {
   protected readonly activeFilter             = signal<FilterOption>('Todos');
   protected readonly sortBy                   = signal<SortOption>('default');
   protected readonly showSortDropdown         = signal(false);
+  protected readonly showRoulettePopup        = signal(false);
   protected readonly excludeAllergens         = signal(false);
   protected readonly excludeMissingAppliances = signal(false);
   protected readonly filterByIngredients      = signal(false);
@@ -345,6 +351,14 @@ export class Recipes implements OnInit {
     this.searchQuery.set('');
   }
 
+  protected openRoulettePopup(): void {
+    this.showRoulettePopup.set(true);
+  }
+
+  protected closeRoulettePopup(): void {
+    this.showRoulettePopup.set(false);
+  }
+
   protected get selectedIngredients(): PantryIngredient[] {
     return this.pantryIngredients().filter(item => item.selected);
   }
@@ -426,9 +440,10 @@ export class Recipes implements OnInit {
         return {
           name: ingredientName,
           inStock: ingrediente.enStock,
-          allergenTypes: ingrediente.alergenos?.length
-            ? ingrediente.alergenos
-            : this.detectIngredientAllergens(ingredientName),
+          allergenTypes: this.mergeAllergens([
+            ...(ingrediente.alergenos ?? []),
+            ...this.detectIngredientAllergens(ingredientName),
+          ]),
         };
       }),
       requiredAppliances: (receta.electrodomesticos ?? [])
@@ -470,6 +485,18 @@ export class Recipes implements OnInit {
     return Object.entries(ALLERGEN_ALIASES)
       .filter(([, aliases]) => aliases.some(alias => normalizedIngredient.includes(this.normalizeText(alias))))
       .map(([allergen]) => allergen);
+  }
+
+  private mergeAllergens(allergens: string[]): string[] {
+    const byNormalized = new Map<string, string>();
+    for (const allergen of allergens) {
+      const normalized = this.normalizeText(allergen);
+      if (normalized && !byNormalized.has(normalized)) {
+        byNormalized.set(normalized, allergen);
+      }
+    }
+
+    return [...byNormalized.values()];
   }
 
   private expandRestrictions(restrictions: string[]): string[] {

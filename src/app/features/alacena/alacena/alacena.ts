@@ -146,6 +146,47 @@ function formatCategoryTag(tag: string): string {
     .replace(/\b\w/g, c => c.toUpperCase());
 }
 
+function normalizeUnit(value: string | null | undefined): string {
+  const normalized = (value ?? '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  const aliases: Record<string, string> = {
+    '': 'unidad',
+    u: 'unidad',
+    unidad: 'unidad',
+    unidades: 'unidad',
+    unit: 'unidad',
+    gr: 'gr',
+    g: 'gr',
+    gramo: 'gr',
+    gramos: 'gr',
+    kg: 'kg',
+    kilo: 'kg',
+    kilos: 'kg',
+    kilogramo: 'kg',
+    kilogramos: 'kg',
+    ml: 'ml',
+    mililitro: 'ml',
+    mililitros: 'ml',
+    lt: 'lt',
+    l: 'lt',
+    litro: 'lt',
+    litros: 'lt',
+    cdita: 'cdita',
+    cucharadita: 'cdita',
+    cucharaditas: 'cdita',
+    cdta: 'cdita',
+    cda: 'cda',
+    cucharada: 'cda',
+    cucharadas: 'cda',
+  };
+
+  return aliases[normalized] ?? normalized;
+}
+
 const PLACEHOLDER_IMAGE = 'https://placehold.co/200x200/F7F1E6/927357?text=Sin+imagen';
 
 const CONSUMED_OPTIONS: { label: string; value: number }[] = [
@@ -366,8 +407,8 @@ protected reloadProducts(): void { this.loadProducts(); }
       image:            resolveImageUrl(item.imagen) || fallbackProductImage(item.nombre),
       location:         item.ubicacion as Exclude<StorageLocation, 'Todos'>,
       expiryDate:       item.fechaVencimiento ?? '',
-      quantity:         item.cantidad,
-      unit:             item.unidadMedida ?? undefined,
+      quantity:         item.cantidad ?? 0,
+      unit:             normalizeUnit(item.unidadMedida),
       categoriaNombre:  item.categoriaNombre ?? undefined,
       isOpened:         item.estaAbierto,
       remainingPercent: 100 - item.porcentajeConsumido,
@@ -382,8 +423,8 @@ protected reloadProducts(): void { this.loadProducts(); }
     image: resolveImageUrl(item.imagenUrl) || fallbackProductImage(item.nombre),
     location: item.ubicacion as Exclude<StorageLocation, 'Todos'>,
     expiryDate: item.fechaVencimiento ?? '',
-    quantity: item.cantidad,
-    unit:             item.unidadMedida ?? undefined,
+    quantity: item.cantidad ?? 0,
+    unit:             normalizeUnit(item.unidadMedida),
     categoriaNombre:  item.categoriaNombre ?? undefined,
     isOpened: item.estaAbierto,
     remainingPercent: 100 - item.porcentajeConsumido,
@@ -780,15 +821,15 @@ protected reloadProducts(): void { this.loadProducts(); }
 
   /**
    * Etiqueta de cantidad para la card.
-   * - Unidades contables ('unidad' o sin unidad): "x3" (solo si > 1)
+   * - Unidades contables ('unidad' o sin unidad): "x1", "x3", etc.
    * - Unidades de medida (gr/kg/ml/lt/cda/cdita): "100 g", "1.5 kg", etc.
    */
   protected quantityBadge(product: Product): string {
-    const unit = (product.unit ?? '').trim().toLowerCase();
+    const unit = normalizeUnit(product.unit);
     const qty  = product.quantity;
 
-    if (!unit || unit === 'unidad') {
-      return qty > 1 ? `x${qty}` : '';
+    if (unit === 'unidad') {
+      return `x${qty}`;
     }
 
     const labels: Record<string, string> = {

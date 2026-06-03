@@ -151,6 +151,10 @@
               <lucide-icon [name]="getLocationIcon(product.location)" [size]="11" />
               {{ product.location }}
             </span>
+            <span
+              class="absolute top-2 right-2 rounded-[20px] bg-nido-green-dark px-2.5 py-0.5 text-[0.72rem] font-bold leading-[1.4] text-nido-cream shadow-[0_2px_8px_rgba(38,63,48,0.22)]">
+              {{ quantityBadge(product) }}
+            </span>
           </div>
 
           <div class="px-4 py-3.5 flex flex-col gap-2">
@@ -167,9 +171,6 @@
               </span>
             </div>
             <div class="flex items-center gap-1 text-[0.7rem] font-medium text-nido-gold min-h-4">
-              @if (quantityBadge(product)) {
-                <span class="text-[0.7rem] font-bold text-white bg-nido-green rounded-[20px] px-[0.45rem] py-[0.1rem] leading-[1.4]">{{ quantityBadge(product) }}</span>
-              }
               @if (product.isOpened) {
                 <lucide-icon name="package-open" [size]="11" />
                 Abierto

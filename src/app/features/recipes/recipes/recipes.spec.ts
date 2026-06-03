@@ -207,6 +207,18 @@ describe('Recipes', () => {
     expect(component['filterByIngredients']()).toBe(false);
   });
 
+  it('deberia mostrar y cerrar el popup de ruleta de comidas', async () => {
+    await setup();
+
+    expect(component['showRoulettePopup']()).toBe(false);
+
+    component['openRoulettePopup']();
+    expect(component['showRoulettePopup']()).toBe(true);
+
+    component['closeRoulettePopup']();
+    expect(component['showRoulettePopup']()).toBe(false);
+  });
+
   it('debería ocultar recetas sin coincidencias cuando el filtro está activo', async () => {
     await setup([mockRecetaArroz, mockRecetaPasta], [arrozPantry]);
     expect(component['filteredRecipes']()).toHaveLength(2);
@@ -343,6 +355,60 @@ describe('Recipes', () => {
     ];
 
     await setup([recetaConLeche], [], HOGAR_ID, miembros, [], [], ['Sin lactosa']);
+
+    component['toggleAllergens']();
+
+    expect(component['filteredRecipes']()).toHaveLength(0);
+  });
+
+  it('deberia mapear Vegano contra ingredientes de origen animal', async () => {
+    const recetaConPollo = makeReceta('r1', 'Pollo al horno', [
+      { id: 'i1', productoId: 'p1', nombre: 'Pechuga de pollo', productoNombre: 'Pechuga de pollo', cantidad: 1, unidad: 'unidad', enStock: true },
+    ]);
+    const recetaConHuevo = makeReceta('r2', 'Omelette', [
+      { id: 'i2', productoId: 'p2', nombre: 'Huevos', productoNombre: 'Huevos', cantidad: 2, unidad: 'unidad', enStock: true },
+    ]);
+    const recetaVegana = makeReceta('r3', 'Ensalada de tomate', [
+      { id: 'i3', productoId: 'p3', nombre: 'Tomate', productoNombre: 'Tomate', cantidad: 1, unidad: 'unidad', enStock: true },
+    ]);
+    const miembros = [
+      { usuarioId: 'u1', nombre: 'Marco', email: 'm@test.com', rol: 'owner', fotoUrl: null, alergias: ['Vegano'] },
+    ];
+
+    await setup([recetaConPollo, recetaConHuevo, recetaVegana], [], HOGAR_ID, miembros);
+
+    component['toggleAllergens']();
+
+    expect(component['filteredRecipes']().map(recipe => recipe.name)).toEqual(['Ensalada de tomate']);
+  });
+
+  it('deberia mapear Vegetariano contra carne pescado y mariscos', async () => {
+    const recetaConPescado = makeReceta('r1', 'Merluza al horno', [
+      { id: 'i1', productoId: 'p1', nombre: 'Merluza', productoNombre: 'Merluza', cantidad: 1, unidad: 'unidad', enStock: true },
+    ]);
+    const recetaConQueso = makeReceta('r2', 'Tarta de queso', [
+      { id: 'i2', productoId: 'p2', nombre: 'Queso', productoNombre: 'Queso', cantidad: 100, unidad: 'g', enStock: true },
+    ]);
+    const miembros = [
+      { usuarioId: 'u1', nombre: 'Marco', email: 'm@test.com', rol: 'owner', fotoUrl: null, alergias: ['Vegetariano'] },
+    ];
+
+    await setup([recetaConPescado, recetaConQueso], [], HOGAR_ID, miembros);
+
+    component['toggleAllergens']();
+
+    expect(component['filteredRecipes']().map(recipe => recipe.name)).toEqual(['Tarta de queso']);
+  });
+
+  it('deberia combinar alergenos de la API con deteccion local por ingrediente', async () => {
+    const recetaConLeche = makeReceta('r1', 'Panqueques', [
+      { id: 'i1', productoId: 'p1', nombre: 'Leche', productoNombre: 'Leche', cantidad: 250, unidad: 'ml', enStock: true, alergenos: ['Gluten'] },
+    ]);
+    const miembros = [
+      { usuarioId: 'u1', nombre: 'Marco', email: 'm@test.com', rol: 'owner', fotoUrl: null, alergias: ['Sin lactosa'] },
+    ];
+
+    await setup([recetaConLeche], [], HOGAR_ID, miembros);
 
     component['toggleAllergens']();
 

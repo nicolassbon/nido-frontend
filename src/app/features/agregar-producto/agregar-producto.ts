@@ -35,7 +35,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
   @Input() knownProducts: KnownProduct[] = [];
 
   @Input() isModal = false;
-  @Output() closed = new EventEmitter<void>();
+  @Output() closed = new EventEmitter<StockItemResponse | void>();
 
   private readonly fb                  = inject(FormBuilder);
   private readonly productService      = inject(ProductService);
@@ -94,6 +94,47 @@ export class AgregarProducto implements OnInit, OnDestroy {
   getLocationIcon(loc: string): string  { return this.locationIcons[loc]  ?? 'package'; }
   getLocationColor(loc: string): string { return this.locationColors[loc] ?? '#263F30'; }
 
+  private normalizeUnit(value: string | null | undefined): string {
+    const normalized = (value ?? '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+    const aliases: Record<string, string> = {
+      '': 'unidad',
+      u: 'unidad',
+      unidad: 'unidad',
+      unidades: 'unidad',
+      unit: 'unidad',
+      gr: 'gr',
+      g: 'gr',
+      gramo: 'gr',
+      gramos: 'gr',
+      kg: 'kg',
+      kilo: 'kg',
+      kilos: 'kg',
+      kilogramo: 'kg',
+      kilogramos: 'kg',
+      ml: 'ml',
+      mililitro: 'ml',
+      mililitros: 'ml',
+      lt: 'lt',
+      l: 'lt',
+      litro: 'lt',
+      litros: 'lt',
+      cdita: 'cdita',
+      cucharadita: 'cdita',
+      cucharaditas: 'cdita',
+      cdta: 'cdita',
+      cda: 'cda',
+      cucharada: 'cda',
+      cucharadas: 'cda',
+    };
+
+    return aliases[normalized] ?? normalized;
+  }
+
   // ── Reactive form ─────────────────────────────────────────
   form = this.fb.group({
     nombre:           ['', Validators.required],
@@ -142,7 +183,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
         nombre:           s.nombre ?? '',
         ubicacion:        s.ubicacion ?? 'Alacena',
         cantidad:         s.cantidad ?? null,
-        unidadMedida:     s.unidadMedida ?? '',
+        unidadMedida:     this.normalizeUnit(s.unidadMedida),
         fechaVencimiento: s.fechaVencimiento ?? '',
       });
 
@@ -172,7 +213,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
     this.form.patchValue({
       nombre:       s.nombre,
       categoriaId:  catId,
-      unidadMedida: s.unidadMedida ?? '',
+      unidadMedida: this.normalizeUnit(s.unidadMedida),
       ubicacion:    s.ubicacion    ?? 'Alacena',
     });
     this.showSuggestions.set(false);
@@ -190,7 +231,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
   }
 
   updateQuantity(delta: number): void {
-    const current = (this.form.get('cantidad')?.value as number) ?? 1;
+    const current = this.parseCantidad(this.form.get('cantidad')?.value) || 1;
     this.form.patchValue({ cantidad: Math.max(1, current + delta) });
   }
 
@@ -222,7 +263,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
       categoriaId:         this.form.value.categoriaId!,
       ubicacion:           this.form.value.ubicacion!,
       cantidad:            this.parseCantidad(this.form.value.cantidad),
-      unidadMedida:        this.form.value.unidadMedida!,
+      unidadMedida:        this.normalizeUnit(this.form.value.unidadMedida),
       fechaVencimiento:    this.form.value.fechaVencimiento || undefined,
     };
 
@@ -233,7 +274,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
     const existing = this.knownProducts.find(p =>
       p.stockId &&
       p.nombre.trim().toLowerCase() === payload.nombre.trim().toLowerCase() &&
-      (p.unidadMedida ?? '') === payload.unidadMedida,
+      this.normalizeUnit(p.unidadMedida) === payload.unidadMedida,
     );
 
     if (existing?.stockId) {
@@ -294,16 +335,26 @@ export class AgregarProducto implements OnInit, OnDestroy {
       nombre:              this.form.value.nombre!,
       ubicacion:           this.form.value.ubicacion!,
       cantidad:            this.parseCantidad(this.form.value.cantidad),
-      unidadMedida:        this.form.value.unidadMedida || undefined,
+      unidadMedida:        this.normalizeUnit(this.form.value.unidadMedida),
       fechaVencimiento:    this.form.value.fechaVencimiento || null,
       estaAbierto:         this.isOpened(),
       porcentajeConsumido: this.consumedPct(),
     };
 
     this.alacenaApi.updateStock(this.stockItem!.id, patch).subscribe({
-      next: () => {
+      next: (updated) => {
+        const edited: StockItemResponse = {
+          ...updated,
+          nombre: patch.nombre,
+          ubicacion: patch.ubicacion,
+          cantidad: patch.cantidad,
+          unidadMedida: patch.unidadMedida,
+          fechaVencimiento: patch.fechaVencimiento,
+          estaAbierto: patch.estaAbierto,
+          porcentajeConsumido: patch.porcentajeConsumido,
+        };
         this.isSaving = false;
-        this.closed.emit();
+        this.closed.emit(edited);
         if (!this.isModal) this.router.navigate(['/alacena']);
       },
       error: (err) => {
