@@ -12,6 +12,7 @@
           <p class="text-xs opacity-90">Administrá tu información y preferencias</p>
         </div>
         <button
+          (click)="openInviteModal()"
           class="w-fit bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-nido-bg px-4 py-1.5 rounded-[20px] text-xs font-medium flex items-center gap-2 transition cursor-pointer">
           <lucide-icon name="user-plus" class="w-3.5 h-3.5"></lucide-icon> Invitar familiar
         </button>
@@ -25,7 +26,7 @@
         <img [src]="usuario()?.fotoUrl || '/images/default-avatar.png'" [alt]="usuario()?.nombre"
           (error)="onImgError($event)"
           class="w-32 h-32 md:w-[180px] md:h-[180px] rounded-full border-[8px] border-[#F7F1E6] object-cover bg-white shadow-sm">
-        <button [routerLink]="['/perfil/editar']"
+        <button (click)="showEditModal.set(true)"
           class="absolute bottom-[3%] right-[6%] bg-nido-green-dark text-nido-bg p-2 rounded-full hover:opacity-90 transition shadow-md border-[3px] border-nido-cream cursor-pointer flex items-center justify-center">
           <lucide-icon name="pencil" class="w-3.5 h-3.5"></lucide-icon>
         </button>
@@ -73,7 +74,7 @@
         (editClick)="startEditingAlergias()">
       </app-preference-card>
     } @else {
-      <div class="bg-nido-bg border border-nido-border rounded-[14px] p-5 flex flex-col h-full shadow-[0_1px_4px_rgba(38,63,48,0.07)] gap-5">
+      <div class="bg-white/[0.51] border border-nido-border rounded-[14px] p-5 flex flex-col h-full shadow-[0_1px_4px_rgba(38,63,48,0.07)] gap-5">
         <div class="flex items-center gap-2">
           <lucide-icon name="wheat-off" class="w-5 h-5 text-gray-900"></lucide-icon>
           <h2 class="text-lg font-bold text-gray-900 m-0">Editar Alergias</h2>
@@ -139,7 +140,7 @@
       </app-preference-card>
     } @else {
       <!-- Edición de Alimentación -->
-      <div class="bg-nido-bg border border-nido-border rounded-[14px] p-5 flex flex-col h-full shadow-[0_1px_4px_rgba(38,63,48,0.07)] gap-5">
+      <div class="bg-white/[0.51] border border-nido-border rounded-[14px] p-5 flex flex-col h-full shadow-[0_1px_4px_rgba(38,63,48,0.07)] gap-5">
         <div class="flex items-center gap-2">
           <lucide-icon name="ban" class="w-5 h-5 text-gray-900"></lucide-icon>
           <h2 class="text-lg font-bold text-gray-900 m-0">Editar Alimentación</h2>
@@ -175,3 +176,84 @@
     }
   </div>
 </div>
+
+<!-- Invite modal -->
+@if (showInviteModal()) {
+  <div
+    class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4"
+    (click)="closeInviteModal()">
+
+    <div
+      class="bg-white rounded-2xl shadow-[0_8px_40px_rgba(38,63,48,0.18)] w-full max-w-[420px] px-5 py-6 sm:px-8 sm:py-8 flex flex-col gap-5"
+      (click)="$event.stopPropagation()">
+
+      <div class="flex items-start justify-between gap-4">
+        <div class="flex flex-col gap-1">
+          <h2 class="text-[1.25rem] font-bold text-nido-green-dark m-0">Invitar familiar</h2>
+          <p class="text-nido-brown text-[0.8375rem] m-0 leading-relaxed">
+            Ingresá el email de la persona que querés invitar. Le vamos a mandar un link para que pueda unirse a tu hogar.
+          </p>
+        </div>
+        <button
+          class="shrink-0 p-1 bg-transparent border-none cursor-pointer text-nido-muted hover:text-nido-brown transition-colors duration-150 mt-0.5"
+          (click)="closeInviteModal()">
+          <lucide-icon name="x" [size]="18" />
+        </button>
+      </div>
+
+      @if (inviteState() !== 'success') {
+        <div class="flex flex-col gap-2">
+          <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Email</label>
+          <input
+            type="email"
+            placeholder="ejemplo@email.com"
+            [value]="inviteEmail()"
+            (input)="inviteEmail.set($any($event.target).value)"
+            [disabled]="inviteState() === 'loading'"
+            class="border border-nido-border rounded-xl px-4 py-3 text-[0.9rem] text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green transition-colors duration-150 disabled:opacity-50"
+          />
+          @if (inviteState() === 'error') {
+            <span class="text-nido-red text-[0.8rem]">{{ inviteErrorMsg() }}</span>
+          }
+        </div>
+
+        <div class="flex gap-3 justify-end pt-1">
+          <button
+            class="px-5 py-2.5 rounded-full text-[0.875rem] text-nido-brown bg-transparent border border-nido-border cursor-pointer hover:bg-nido-cream transition-colors duration-150"
+            (click)="closeInviteModal()">
+            Cancelar
+          </button>
+          <button
+            [disabled]="!inviteEmail().trim() || inviteState() === 'loading'"
+            (click)="submitInvite()"
+            class="px-6 py-2.5 rounded-full text-[0.875rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ inviteState() === 'loading' ? 'Enviando...' : 'Enviar invitación' }}
+          </button>
+        </div>
+      } @else {
+        <div class="flex flex-col items-center gap-4 py-4 text-center">
+          <div class="w-16 h-16 rounded-full bg-[rgba(62,94,74,0.08)] flex items-center justify-center">
+            <lucide-icon name="mail-check" [size]="30" class="text-nido-green-dark" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <p class="text-[0.9375rem] font-semibold text-nido-green-dark m-0">¡Invitación enviada!</p>
+            <p class="text-[0.8375rem] text-nido-brown m-0">
+              Le mandamos un email a <strong>{{ inviteEmail() }}</strong> con el link para unirse.
+            </p>
+          </div>
+          <button
+            class="mt-1 px-7 py-2.5 rounded-full text-[0.875rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150"
+            (click)="closeInviteModal()">
+            Cerrar
+          </button>
+        </div>
+      }
+
+    </div>
+  </div>
+}
+
+<!-- Modal editar perfil (se abre sobre esta vista) -->
+@if (showEditModal()) {
+  <app-editar-perfil [isModal]="true" (closed)="onEditClosed($event)" />
+}

@@ -12,7 +12,6 @@ import { AcceptInvitation } from './features/household/accept-invitation/accept-
 import { WellnessStep } from './features/onboarding/wellness-step/wellness-step';
 import { Electrodomesticos } from './features/electrodomesticos/electrodomesticos';
 import { PerfilComponent } from './features/perfil/perfil';
-import { EditarPerfil } from './features/editar-perfil/editar-perfil';
 import { AgregarProducto } from './features/agregar-producto/agregar-producto';
 import { Register } from './features/auth/register/register';
 import { Login } from './features/auth/login/login';
@@ -46,7 +45,6 @@ export const routes: Routes = [
       { path: 'lista-compras',  component: ListaCompras  },
       { path: 'electrodomesticos', component: Electrodomesticos },
       { path: 'perfil', component: PerfilComponent },
-      { path: 'perfil/editar', component: EditarPerfil },
       { path: 'configuracion', component: Configuracion },
       { path: 'agregar-producto', component: AgregarProducto },
     ],
