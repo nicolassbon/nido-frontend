@@ -191,7 +191,7 @@
         <h3 class="text-[0.9375rem] font-semibold text-nido-green-dark mb-1">Quien come hoy?</h3>
         <p class="text-[0.775rem] text-nido-brown mb-3.5">Las recetas se filtran segun sus alergenos</p>
         <div class="grid grid-cols-2 gap-2 mb-2">
-          @for (member of householdMembers; track member.id) {
+          @for (member of householdMembers(); track member.id) {
             <button
               [class]="memberToggleClass(member.id)"
               [style.border-color]="isEatingToday(member.id) ? member.color : null"

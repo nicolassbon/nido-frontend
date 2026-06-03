@@ -1,8 +1,8 @@
-<div class="p-4 sm:p-6 flex flex-col gap-6 max-w-[1200px] mx-auto bg-nido-cream min-h-screen">
+<div class="w-full p-4 sm:p-6 flex flex-col gap-5">
 
-  <section class="relative overflow-hidden rounded-[16px] px-6 py-6 sm:px-8 sm:py-8 shadow-md [background:linear-gradient(135deg,#1F3A3A_0%,#2B4A47_60%,#B48B6A_100%)]">
-    <div class="absolute -right-16 -top-16 w-48 h-48 rounded-full bg-white/5 blur-xl pointer-events-none"></div>
-    <div class="absolute -left-16 -bottom-16 w-64 h-64 rounded-full bg-[#B48B6A]/10 blur-2xl pointer-events-none"></div>
+  <section class="relative overflow-hidden rounded-[14px] px-8 py-7 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
+    <div class="absolute inset-0 bg-[url('/images/banners/miperfil.png')] bg-center bg-cover opacity-35"></div>
+    <div class="absolute inset-0 bg-nido-green-dark/35"></div>
 
     <div class="relative z-10">
       <h1 class="text-nido-cream text-[1.75rem] font-bold tracking-tight">Configuración</h1>
@@ -10,10 +10,10 @@
     </div>
   </section>
 
-  <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1.25fr)_minmax(360px,0.75fr)] gap-6 items-start">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
 
-    <section class="order-1 xl:order-1 min-w-0 bg-white/75 backdrop-blur-md rounded-[16px] p-6 shadow-[0_4px_20px_rgba(38,63,48,0.03)] border border-nido-border/60 flex flex-col transition-all duration-300 hover:shadow-[0_6px_24px_rgba(38,63,48,0.05)]">
+    <section class="order-1 lg:col-span-4 min-w-0 bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col">
       <div class="flex items-center gap-2.5 mb-5 border-b border-nido-border/40 pb-3">
         <lucide-icon name="user" [size]="20" class="text-nido-green" />
         <h2 class="text-base font-bold text-nido-green-dark">Cuenta</h2>
@@ -37,7 +37,7 @@
       </button>
     </section>
 
-    <section class="order-3 xl:order-2 min-w-0 bg-white/75 backdrop-blur-md rounded-[16px] p-6 shadow-[0_4px_20px_rgba(38,63,48,0.03)] border border-nido-border/60 transition-all duration-300 hover:shadow-[0_6px_24px_rgba(38,63,48,0.05)]">
+    <section class="order-2 lg:col-span-8 min-w-0 bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60">
       <div class="flex items-center gap-2.5 mb-5 border-b border-nido-border/40 pb-3">
         <lucide-icon name="bell" [size]="20" class="text-nido-green" />
         <h2 class="text-base font-bold text-nido-green-dark">Notificaciones</h2>
@@ -86,7 +86,7 @@
       }
     </section>
 
-    <section class="order-2 xl:order-3 min-w-0 bg-white/75 backdrop-blur-md rounded-[16px] p-6 shadow-[0_4px_20px_rgba(38,63,48,0.03)] border border-nido-border/60 flex flex-col gap-6 transition-all duration-300 hover:shadow-[0_6px_24px_rgba(38,63,48,0.05)]">
+    <section class="order-3 lg:col-span-8 min-w-0 bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col gap-6">
       <div class="flex items-center gap-2.5 border-b border-nido-border/40 pb-3">
         <lucide-icon name="shield-check" [size]="20" class="text-nido-green" />
         <h2 class="text-base font-bold text-nido-green-dark">Seguridad de la cuenta</h2>
@@ -355,7 +355,7 @@
       }
     </section>
 
-    <section class="order-4 xl:order-4 min-w-0 bg-white/75 backdrop-blur-md rounded-[16px] p-6 shadow-[0_4px_20px_rgba(38,63,48,0.03)] border border-nido-border/60 transition-all duration-300 hover:shadow-[0_6px_24px_rgba(38,63,48,0.05)]">
+    <section class="order-4 lg:col-span-4 min-w-0 bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60">
       <div class="flex items-center gap-2.5 mb-5 border-b border-nido-border/40 pb-3">
         <lucide-icon name="users" [size]="20" class="text-nido-green" />
         <h2 class="text-base font-bold text-nido-green-dark">Miembros del hogar</h2>

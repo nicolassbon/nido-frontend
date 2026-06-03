@@ -45,7 +45,7 @@ describe('Configuracion', () => {
 
     mockHogaresApiService = {
       getMiembros: vi.fn().mockReturnValue(of([
-        { usuarioId: 'u-1', nombre: 'Test User', email: 'test@example.com', rol: 'owner', fotoUrl: null }
+        { usuarioId: 'u-1', nombre: 'Test User', email: 'test@example.com', rol: 'owner', fotoUrl: null, alergias: [] }
       ])),
       invitar: vi.fn().mockReturnValue(of({ token: 'mock-token' })),
     };
