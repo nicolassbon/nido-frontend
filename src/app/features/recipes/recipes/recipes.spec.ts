@@ -7,6 +7,9 @@ import { Recipes } from './recipes';
 import { RecipesApiService, ApiReceta } from './services/recipes-api.service';
 import { ProductService, ProductManualResponse } from '../../../core/servicios/agregar-producto.service';
 import { AuthService } from '../../../core/auth/auth.service';
+import { ElectrodomesticosService } from '../../electrodomesticos/services/electrodomesticos.service';
+import { HogaresApiService, MiembroResponse } from '../../household/hogares-api.service';
+import { PerfilApiService } from '../../perfil/perfil-api.service';
 
 const HOGAR_ID = 'test-hogar-id';
 
@@ -51,27 +54,44 @@ describe('Recipes', () => {
   let fixture:   ComponentFixture<Recipes>;
   let component: Recipes;
 
-  const recipesApiMock  = { getAll:           vi.fn() };
-  const productSvcMock  = { getProductManual: vi.fn(), createStockHome: vi.fn() };
-  const authServiceMock = { getHogarId:       vi.fn() };
+  const recipesApiMock          = { getAll:           vi.fn() };
+  const productSvcMock          = { getProductManual: vi.fn(), createStockHome: vi.fn() };
+  const authServiceMock         = { getHogarId:       vi.fn(), getUserId: vi.fn() };
+  const electrodomesticosMock   = { getAll:           vi.fn() };
+  const hogaresApiMock          = { getMiembros:      vi.fn() };
+  const perfilApiMock           = { getProfile:       vi.fn() };
 
   async function setup(
     recetas: ApiReceta[]             = [],
     pantry:  ProductManualResponse[] = [],
     hogarId: string | null           = HOGAR_ID,
+    miembros: MiembroResponse[]      = [],
+    electrodomesticos: unknown[]     = [],
+    profileAllergies: string[]       = [],
+    profileFoodRestrictions: string[] = [],
   ): Promise<void> {
     recipesApiMock.getAll.mockReturnValue(of(recetas));
     productSvcMock.getProductManual.mockReturnValue(of(pantry));
     authServiceMock.getHogarId.mockReturnValue(hogarId);
+    authServiceMock.getUserId.mockReturnValue('u1');
+    hogaresApiMock.getMiembros.mockReturnValue(of(miembros));
+    electrodomesticosMock.getAll.mockReturnValue(of(electrodomesticos));
+    perfilApiMock.getProfile.mockReturnValue(of({
+      alergias: profileAllergies,
+      alimentacion: profileFoodRestrictions,
+    }));
 
     await TestBed.configureTestingModule({
       imports:   [Recipes],
       schemas:   [NO_ERRORS_SCHEMA],
       providers: [
         provideHttpClient(),
-        { provide: RecipesApiService, useValue: recipesApiMock  },
-        { provide: ProductService,    useValue: productSvcMock  },
-        { provide: AuthService,       useValue: authServiceMock },
+        { provide: RecipesApiService,       useValue: recipesApiMock        },
+        { provide: ProductService,          useValue: productSvcMock        },
+        { provide: AuthService,             useValue: authServiceMock       },
+        { provide: ElectrodomesticosService, useValue: electrodomesticosMock },
+        { provide: HogaresApiService,       useValue: hogaresApiMock        },
+        { provide: PerfilApiService,        useValue: perfilApiMock         },
       ],
     }).compileComponents();
 
@@ -212,5 +232,120 @@ describe('Recipes', () => {
 
     const filtered = component['filteredRecipes']();
     expect(filtered[0].availabilityPercent).toBeGreaterThanOrEqual(filtered[1].availabilityPercent);
+  });
+
+  it('deberia ocultar recetas con alergenos de quienes comen hoy', async () => {
+    const recetaConGluten = makeReceta('r1', 'Pasta', [
+      { id: 'i1', productoId: 'p1', nombre: 'Fideos', productoNombre: 'Fideos', cantidad: 200, unidad: 'g', enStock: true, alergenos: ['Gluten'] },
+    ]);
+    const recetaSinGluten = makeReceta('r2', 'Ensalada', [
+      { id: 'i2', productoId: 'p2', nombre: 'Tomate', productoNombre: 'Tomate', cantidad: 1, unidad: 'unidad', enStock: true, alergenos: [] },
+    ]);
+    const miembros = [
+      { usuarioId: 'u1', nombre: 'Marco', email: 'm@test.com', rol: 'owner', fotoUrl: null, alergias: ['Gluten'] },
+    ];
+
+    await setup([recetaConGluten, recetaSinGluten], [], HOGAR_ID, miembros);
+
+    component['toggleAllergens']();
+
+    expect(component['filteredRecipes']().map(recipe => recipe.name)).toEqual(['Ensalada']);
+  });
+
+  it('deberia dejar de filtrar alergias al deseleccionar el miembro que come hoy', async () => {
+    const recetaConGluten = makeReceta('r1', 'Pasta', [
+      { id: 'i1', productoId: 'p1', nombre: 'Fideos', productoNombre: 'Fideos', cantidad: 200, unidad: 'g', enStock: true, alergenos: ['Gluten'] },
+    ]);
+    const miembros = [
+      { usuarioId: 'u1', nombre: 'Marco', email: 'm@test.com', rol: 'owner', fotoUrl: null, alergias: ['Gluten'] },
+    ];
+
+    await setup([recetaConGluten], [], HOGAR_ID, miembros);
+    component['toggleAllergens']();
+    expect(component['filteredRecipes']()).toHaveLength(0);
+
+    component['toggleEatingToday']('u1');
+
+    expect(component['filteredRecipes']()).toHaveLength(1);
+  });
+
+  it('deberia ocultar recetas que requieren electrodomesticos faltantes', async () => {
+    const recetaHorno = {
+      ...makeReceta('r1', 'Pollo al horno', []),
+      electrodomesticos: [{ id: 'e1', tipoRequerido: 'Horno/Cocina' }],
+    };
+    const recetaLibre = {
+      ...makeReceta('r2', 'Ensalada', []),
+      electrodomesticos: [],
+    };
+    const electrodomesticos = [
+      { id: 'a1', hogarId: HOGAR_ID, nombre: 'Licuadora', tipo: 'Cocina', estado: null, imagenUrl: null, marca: null },
+    ];
+
+    await setup([recetaHorno, recetaLibre], [], HOGAR_ID, [], electrodomesticos);
+
+    component['toggleMissingAppliances']();
+
+    expect(component['filteredRecipes']().map(recipe => recipe.name)).toEqual(['Ensalada']);
+  });
+
+  it('deberia detectar alergenos por nombre si la API de recetas no los envia', async () => {
+    const recetaConFideos = makeReceta('r1', 'Pasta', [
+      { id: 'i1', productoId: 'p1', nombre: 'Fideos', productoNombre: 'Fideos', cantidad: 200, unidad: 'g', enStock: true },
+    ]);
+    const miembros = [
+      { usuarioId: 'u1', nombre: 'Marco', email: 'm@test.com', rol: 'owner', fotoUrl: null, alergias: ['Gluten'] },
+    ];
+
+    await setup([recetaConFideos], [], HOGAR_ID, miembros);
+
+    component['toggleAllergens']();
+
+    expect(component['filteredRecipes']()).toHaveLength(0);
+  });
+
+  it('deberia usar alergias del perfil si miembros todavia no trae alergias', async () => {
+    const recetaConFideos = makeReceta('r1', 'Pasta', [
+      { id: 'i1', productoId: 'p1', nombre: 'Fideos', productoNombre: 'Fideos', cantidad: 200, unidad: 'g', enStock: true },
+    ]);
+    const miembros = [
+      { usuarioId: 'u1', nombre: 'Marco', email: 'm@test.com', rol: 'owner', fotoUrl: null, alergias: [] },
+    ];
+
+    await setup([recetaConFideos], [], HOGAR_ID, miembros, [], ['Gluten']);
+
+    component['toggleAllergens']();
+
+    expect(component['filteredRecipes']()).toHaveLength(0);
+  });
+
+  it('deberia mapear restriccion Sin lactosa contra ingredientes con leche', async () => {
+    const recetaConLeche = makeReceta('r1', 'Arroz con leche', [
+      { id: 'i1', productoId: 'p1', nombre: 'Leche', productoNombre: 'Leche', cantidad: 500, unidad: 'ml', enStock: true },
+    ]);
+    const miembros = [
+      { usuarioId: 'u1', nombre: 'Marco', email: 'm@test.com', rol: 'owner', fotoUrl: null, alergias: ['Sin lactosa'] },
+    ];
+
+    await setup([recetaConLeche], [], HOGAR_ID, miembros);
+
+    component['toggleAllergens']();
+
+    expect(component['filteredRecipes']()).toHaveLength(0);
+  });
+
+  it('deberia mapear alimentacion Sin lactosa del perfil contra ingredientes con leche', async () => {
+    const recetaConLeche = makeReceta('r1', 'Arroz con leche', [
+      { id: 'i1', productoId: 'p1', nombre: 'Leche', productoNombre: 'Leche', cantidad: 500, unidad: 'ml', enStock: true },
+    ]);
+    const miembros = [
+      { usuarioId: 'u1', nombre: 'Marco', email: 'm@test.com', rol: 'owner', fotoUrl: null, alergias: [] },
+    ];
+
+    await setup([recetaConLeche], [], HOGAR_ID, miembros, [], [], ['Sin lactosa']);
+
+    component['toggleAllergens']();
+
+    expect(component['filteredRecipes']()).toHaveLength(0);
   });
 });

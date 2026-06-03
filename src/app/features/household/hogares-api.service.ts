@@ -9,6 +9,7 @@ export interface MiembroResponse {
   email:     string;
   rol:       string;
   fotoUrl:   string | null;
+  alergias:  string[];
 }
 
 export interface AceptarInvitacionResponse {
