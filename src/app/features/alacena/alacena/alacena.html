@@ -129,7 +129,6 @@
   } @else {
     <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,190px),1fr))] gap-4">
       @for (product of filteredProducts(); track product.id) {
-        @let daysLeft = getDaysRemaining(product.expiryDate);
         <a
           [routerLink]="['/alacena', product.id]"
           class="block no-underline text-inherit bg-white/[0.51] rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition-[transform,box-shadow] duration-[180ms] cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)] group">
@@ -159,17 +158,29 @@
 
           <div class="px-4 py-3.5 flex flex-col gap-2">
             <h3 class="text-[0.875rem] font-semibold text-nido-green-dark leading-snug">{{ product.name }}</h3>
-            <div class="flex flex-col gap-1">
-              <div class="h-1 bg-nido-border rounded-[10px] overflow-hidden">
-                <div class="h-full rounded-[10px] transition-[width] duration-[400ms]"
-                     [style.width.%]="getExpiryWidth(daysLeft)"
-                     [style.background-color]="getExpiryColor(daysLeft)">
+            @if (hasExpiryDate(product.expiryDate)) {
+              @let daysLeft = getDaysRemaining(product.expiryDate);
+              <div class="flex flex-col gap-1">
+                <div class="h-1 bg-nido-border rounded-[10px] overflow-hidden">
+                  <div class="h-full rounded-[10px] transition-[width] duration-[400ms]"
+                       [style.width.%]="getExpiryWidth(daysLeft)"
+                       [style.background-color]="getExpiryColor(daysLeft)">
+                  </div>
                 </div>
+                <span class="text-[0.7rem] font-semibold whitespace-nowrap" [style.color]="getExpiryColor(daysLeft)">
+                  {{ getExpiryLabel(daysLeft) }}
+                </span>
               </div>
-              <span class="text-[0.7rem] font-semibold whitespace-nowrap" [style.color]="getExpiryColor(daysLeft)">
-                {{ getExpiryLabel(daysLeft) }}
-              </span>
-            </div>
+            } @else {
+              <div class="flex flex-col gap-1">
+                <div class="h-1 bg-nido-border rounded-[10px] overflow-hidden">
+                  <div class="h-full w-full rounded-[10px] bg-nido-border"></div>
+                </div>
+                <span class="text-[0.7rem] font-semibold whitespace-nowrap text-nido-brown">
+                  Sin vencimiento
+                </span>
+              </div>
+            }
             <div class="flex items-center gap-1 text-[0.7rem] font-medium text-nido-gold min-h-4">
               @if (product.isOpened) {
                 <lucide-icon name="package-open" [size]="11" />

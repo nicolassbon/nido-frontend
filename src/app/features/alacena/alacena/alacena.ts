@@ -109,6 +109,7 @@ function makeEmptyDraft(): ProductDraft {
 function resolveImageUrl(imageUrl: string | null | undefined): string {
   if (!imageUrl) return '';
   if (/^(https?:|data:|blob:)/i.test(imageUrl)) return imageUrl;
+  if (imageUrl.startsWith('/productos/')) return imageUrl;
 
   const baseUrl = environment.apiBaseUrl.replace(/\/api\/?$/, '');
   const normalizedPath = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
@@ -126,17 +127,44 @@ function normalizeProductName(name: string | null | undefined): string {
 function fallbackProductImage(name: string | null | undefined): string {
   const normalized = normalizeProductName(name);
   const catalog: Record<string, string> = {
+    'aceite de oliva': '/productos/aceite-oliva.png',
+    'ajo en polvo': '/productos/ajo-polvo.png',
     arroz: '/productos/arroz.png',
+    arvejas: '/productos/arvejas.png',
+    'cebolla en polvo': '/productos/cebolla-polvo.png',
+    cebolla: '/productos/cebolla.png',
+    harina: '/productos/harina.png',
     leche: '/productos/leche.png',
+    manteca: '/productos/manteca.png',
+    'muslo de pollo': '/productos/muslo-pollo.png',
+    'oregano seco': '/productos/oregano-seco.png',
+    'pasas de uva': '/productos/pasas-uva.png',
+    'pimenton dulce': '/productos/pimenton-dulce.png',
     yogur: '/productos/yogur.png',
     queso: '/productos/queso.png',
     agua: '/productos/agua.png',
     fideos: '/productos/fideos.png',
     sal: '/productos/sal.png',
+    salchicha: '/productos/salchicha.png',
+    salmon: '/productos/salmon.png',
   };
 
-  const key = Object.keys(catalog).find(item => normalized === item || normalized.includes(item));
-  return key ? catalog[key] : '';
+  const aliases: Record<string, string> = {
+    aceite: 'aceite de oliva',
+    'aceite vegetal': 'aceite de oliva',
+    'aji molido': 'pimenton dulce',
+    'cebolla amarilla': 'cebolla',
+    'cebolla grande': 'cebolla',
+    'cebolla morada': 'cebolla',
+    'harina comun': 'harina',
+    oregano: 'oregano seco',
+    pasas: 'pasas de uva',
+    pimenton: 'pimenton dulce',
+    'sal fina': 'sal',
+    'sal gruesa': 'sal',
+  };
+
+  return catalog[normalized] ?? catalog[aliases[normalized]] ?? '';
 }
 
 function formatCategoryTag(tag: string): string {
@@ -788,10 +816,19 @@ protected reloadProducts(): void { this.loadProducts(); }
   // ── Display helpers ──────────────────────────────────────
 
   protected getDaysRemaining(expiryDate: string): number {
+    if (!this.hasExpiryDate(expiryDate)) return Number.POSITIVE_INFINITY;
+
     const today  = new Date();
     today.setHours(0, 0, 0, 0);
     const expiry = new Date(expiryDate + 'T00:00:00');
     return Math.round((expiry.getTime() - today.getTime()) / 86_400_000);
+  }
+
+  protected hasExpiryDate(expiryDate: string | null | undefined): boolean {
+    if (!expiryDate) return false;
+
+    const expiry = new Date(`${expiryDate}T00:00:00`);
+    return !Number.isNaN(expiry.getTime());
   }
 
   protected getExpiryColor(days: number): string {

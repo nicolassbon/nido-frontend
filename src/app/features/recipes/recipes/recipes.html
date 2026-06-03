@@ -197,13 +197,14 @@
       <div class="bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
         <h3 class="text-[0.9375rem] font-semibold text-nido-green-dark mb-1">Quien come hoy?</h3>
         <p class="text-[0.775rem] text-nido-brown mb-3.5">Las recetas se filtran segun sus alergenos</p>
-        <div class="grid grid-cols-2 gap-2 mb-2">
+        <div class="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-1 xl:grid-cols-2 gap-2 mb-2">
           @for (member of householdMembers(); track member.id) {
             <button
               [class]="memberToggleClass(member.id)"
               [style.border-color]="isEatingToday(member.id) ? member.color : null"
               (click)="toggleEatingToday(member.id)"
-              [title]="member.allergens.length ? 'Alergico a: ' + member.allergens.join(', ') : 'Sin alergenos'">
+              [attr.aria-pressed]="isEatingToday(member.id)"
+              [title]="member.name + (member.allergens.length ? ' - Alergico a: ' + member.allergens.join(', ') : ' - Sin alergenos')">
               <div
                 class="w-7 h-7 rounded-full text-[0.65rem] font-bold flex items-center justify-center shrink-0 transition-[background] duration-150"
                 [style.background]="isEatingToday(member.id) ? member.color : '#e5ddd0'"
@@ -211,12 +212,12 @@
                 {{ member.initials }}
               </div>
               <span
-                class="text-[0.8rem] font-medium flex-1 text-left transition-[color] duration-150"
+                class="min-w-0 flex-1 truncate text-[0.8rem] font-medium text-left transition-[color] duration-150"
                 [style.color]="isEatingToday(member.id) ? '#263F30' : '#927357'">
                 {{ member.name }}
               </span>
               @if (member.allergens.length) {
-                <span class="text-nido-gold">
+                <span class="text-nido-gold shrink-0">
                   <lucide-icon name="alert-triangle" [size]="10" />
                 </span>
               }

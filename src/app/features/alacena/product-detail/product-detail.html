@@ -50,13 +50,15 @@
             <strong>{{ quantitySummary(p) }}</strong>
           </div>
 
-          <div class="info-row">
-            <span class="info-label">
-              <span class="info-icon"><lucide-icon name="calendar" [size]="18" /></span>
-              Fecha de vencimiento:
-            </span>
-            <strong>{{ formatDate(p.fechaVencimiento) }}</strong>
-          </div>
+          @if (p.fechaVencimiento) {
+            <div class="info-row">
+              <span class="info-label">
+                <span class="info-icon"><lucide-icon name="calendar" [size]="18" /></span>
+                Fecha de vencimiento:
+              </span>
+              <strong>{{ formatDate(p.fechaVencimiento) }}</strong>
+            </div>
+          }
 
           <div class="info-row">
             <span class="info-label">
@@ -104,13 +106,15 @@
             </div>
           </div>
 
-          <div class="summary-row">
-            <span class="summary-icon"><lucide-icon name="shopping-cart" [size]="15" /></span>
-            <div class="summary-copy">
-              <strong>Proxima reposicion estimada</strong>
-              <small>{{ restockText(p) }}</small>
+          @if (p.fechaVencimiento) {
+            <div class="summary-row">
+              <span class="summary-icon"><lucide-icon name="shopping-cart" [size]="15" /></span>
+              <div class="summary-copy">
+                <strong>Proxima reposicion estimada</strong>
+                <small>{{ restockText(p) }}</small>
+              </div>
             </div>
-          </div>
+          }
 
           <div class="summary-row">
             <span class="summary-icon"><lucide-icon name="check" [size]="15" /></span>

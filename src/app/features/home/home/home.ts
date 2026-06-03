@@ -108,6 +108,10 @@ export class Home implements OnInit {
       return url;
     }
 
+    if (url.startsWith('/productos/')) {
+      return url;
+    }
+
     const baseUrl = environment.apiBaseUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
     const path = url.startsWith('/') ? url : `/${url}`;
 

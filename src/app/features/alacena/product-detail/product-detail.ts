@@ -15,6 +15,7 @@ const SHOPPING_GROUP = 'Productos de alacena';
 function resolveImageUrl(imageUrl: string | null | undefined): string {
   if (!imageUrl) return '';
   if (/^(https?:|data:|blob:)/i.test(imageUrl)) return imageUrl;
+  if (imageUrl.startsWith('/productos/')) return imageUrl;
 
   const baseUrl = environment.apiBaseUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
   const normalizedPath = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
@@ -32,17 +33,44 @@ function normalizeProductName(name: string | null | undefined): string {
 function fallbackProductImage(name: string | null | undefined): string {
   const normalized = normalizeProductName(name);
   const catalog: Record<string, string> = {
+    'aceite de oliva': '/productos/aceite-oliva.png',
+    'ajo en polvo': '/productos/ajo-polvo.png',
     arroz: '/productos/arroz.png',
+    arvejas: '/productos/arvejas.png',
+    'cebolla en polvo': '/productos/cebolla-polvo.png',
+    cebolla: '/productos/cebolla.png',
+    harina: '/productos/harina.png',
     leche: '/productos/leche.png',
+    manteca: '/productos/manteca.png',
+    'muslo de pollo': '/productos/muslo-pollo.png',
+    'oregano seco': '/productos/oregano-seco.png',
+    'pasas de uva': '/productos/pasas-uva.png',
+    'pimenton dulce': '/productos/pimenton-dulce.png',
     yogur: '/productos/yogur.png',
     queso: '/productos/queso.png',
     agua: '/productos/agua.png',
     fideos: '/productos/fideos.png',
     sal: '/productos/sal.png',
+    salchicha: '/productos/salchicha.png',
+    salmon: '/productos/salmon.png',
   };
 
-  const key = Object.keys(catalog).find(item => normalized === item || normalized.includes(item));
-  return key ? catalog[key] : '';
+  const aliases: Record<string, string> = {
+    aceite: 'aceite de oliva',
+    'aceite vegetal': 'aceite de oliva',
+    'aji molido': 'pimenton dulce',
+    'cebolla amarilla': 'cebolla',
+    'cebolla grande': 'cebolla',
+    'cebolla morada': 'cebolla',
+    'harina comun': 'harina',
+    oregano: 'oregano seco',
+    pasas: 'pasas de uva',
+    pimenton: 'pimenton dulce',
+    'sal fina': 'sal',
+    'sal gruesa': 'sal',
+  };
+
+  return catalog[normalized] ?? catalog[aliases[normalized]] ?? '';
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -75,7 +103,7 @@ export class ProductDetail {
   protected readonly imageUrl = computed(() =>
     this.imageFailed()
       ? ''
-      : fallbackProductImage(this.product()?.nombre) || resolveImageUrl(this.product()?.imagen),
+      : resolveImageUrl(this.product()?.imagen) || fallbackProductImage(this.product()?.nombre),
   );
 
   protected readonly remainingPercent = computed(() =>

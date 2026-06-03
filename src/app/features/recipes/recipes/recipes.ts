@@ -418,7 +418,7 @@ export class Recipes implements OnInit {
   }
 
   protected memberToggleClass(memberId: string): string {
-    const base = 'flex items-center gap-2 px-2.5 py-2 rounded-[10px] border-[1.5px] border-solid cursor-pointer transition-all duration-150 relative w-full';
+    const base = 'flex min-w-0 min-h-11 items-center gap-2 px-2.5 py-2 rounded-[10px] border-[1.5px] border-solid cursor-pointer transition-all duration-150 relative w-full';
     return this.isEatingToday(memberId)
       ? `${base} bg-white`
       : `${base} bg-nido-cream border-nido-border`;
