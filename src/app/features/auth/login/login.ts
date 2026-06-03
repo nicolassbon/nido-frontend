@@ -31,7 +31,6 @@ export class Login {
   readonly loading = signal(false);
   readonly globalError = signal<string | null>(null);
   readonly submitted = signal(false);
-  readonly googleLoginReady = signal(false);
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -76,36 +75,6 @@ export class Login {
     });
   }
 
-  onGoogleLogin(): void {
-    if (!this.googleLoginReady()) {
-      this.globalError.set(
-        'Google Login no está disponible todavía. Revisá la configuración del cliente.',
-      );
-      return;
-    }
-
-    this.globalError.set(null);
-
-    try {
-      const host = this.googleButtonHost()?.nativeElement;
-      const renderedGoogleButton = host?.querySelector<HTMLElement>('div[role="button"], iframe');
-
-      if (!renderedGoogleButton) {
-        this.googleLoginReady.set(false);
-        this.globalError.set(
-          'Google Login no está disponible para este origen. Revisá la configuración del cliente.',
-        );
-        return;
-      }
-
-      renderedGoogleButton.click();
-    } catch {
-      this.globalError.set(
-        'Google Login no está disponible para este origen. Revisá la configuración del cliente.',
-      );
-    }
-  }
-
   private async initializeGoogleButton(): Promise<void> {
     const host = this.googleButtonHost()?.nativeElement;
 
@@ -118,10 +87,11 @@ export class Login {
         this.handleGoogleCredential(idToken),
       );
 
-      const renderedGoogleButton = host.querySelector<HTMLElement>('div[role="button"], iframe');
-      this.googleLoginReady.set(!!renderedGoogleButton);
+      this.globalError.set(null);
     } catch {
-      this.googleLoginReady.set(false);
+      this.globalError.set(
+        'Google Login no está disponible para este origen. Revisá la configuración del cliente.',
+      );
     }
   }
 
