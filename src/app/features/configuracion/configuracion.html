@@ -1,397 +1,485 @@
-<div class="p-4 sm:p-6 flex flex-col gap-5 max-w-[720px] mx-auto bg-nido-cream min-h-screen">
+<div class="w-full p-4 sm:p-6 flex flex-col gap-5">
 
-  <!-- Banner -->
-  <section class="relative overflow-hidden rounded-[14px] px-5 py-6 sm:px-8 sm:py-7 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_60%,#927357_100%)]">
+  <section class="relative overflow-hidden rounded-[14px] px-8 py-7 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
+    <div class="absolute inset-0 bg-[url('/images/banners/miperfil.png')] bg-center bg-cover opacity-35"></div>
+    <div class="absolute inset-0 bg-nido-green-dark/35"></div>
+
     <div class="relative z-10">
-      <h1 class="text-nido-cream text-[1.6rem] font-bold">Configuración</h1>
-      <p class="text-nido-cream/70 text-sm mt-0.5">Ajustá las preferencias de tu cuenta y tu hogar</p>
+      <h1 class="text-nido-cream text-[1.75rem] font-bold tracking-tight">Configuración</h1>
+      <p class="text-nido-cream/75 text-sm mt-1 leading-relaxed">Ajustá las preferencias de tu cuenta y tu hogar</p>
     </div>
   </section>
 
-  <!-- Cuenta -->
-  <section class="bg-white rounded-[14px] px-6 py-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border">
-    <div class="flex items-center gap-2 mb-4">
-      <lucide-icon name="user" [size]="18" class="text-nido-green" />
-      <h2 class="text-base font-semibold text-nido-green-dark">Cuenta</h2>
-    </div>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
 
-    <div class="flex items-center gap-3 py-3 border-b border-nido-border">
-      <div class="w-10 h-10 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0">
-        <span class="text-nido-cream text-[0.875rem] font-bold">{{ memberInitial(userName()) }}</span>
-      </div>
-      <div class="flex flex-col gap-0.5">
-        <span class="text-[0.875rem] font-medium text-nido-green-dark">{{ userName() }}</span>
-        <span class="text-[0.8rem] text-nido-brown">{{ email() }}</span>
-      </div>
-    </div>
 
-    <button
-      (click)="logout()"
-      class="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-[10px] border-[1.5px] border-solid border-[rgba(180,70,60,0.35)] text-nido-red bg-transparent text-[0.875rem] font-medium cursor-pointer transition-[background-color,border-color] duration-150 hover:bg-[rgba(180,70,60,0.06)]">
-      <lucide-icon name="log-out" [size]="16" />
-      Cerrar sesión
-    </button>
-  </section>
-
-  <!-- Seguridad de la cuenta (Password & Authentication Management) -->
-  <section class="bg-white rounded-[14px] px-6 py-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border flex flex-col gap-5">
-    
-    <!-- Header -->
-    <div class="flex items-center gap-2 border-b border-nido-border pb-3">
-      <lucide-icon name="shield-check" [size]="18" class="text-nido-green" />
-      <h2 class="text-base font-semibold text-nido-green-dark">Seguridad de la cuenta</h2>
-    </div>
-
-    @if (loadingProfile()) {
-      <div class="flex flex-col items-center justify-center py-6 gap-2">
-        <div class="w-6 h-6 rounded-full border-3 border-solid border-nido-border border-t-nido-green-dark animate-spin"></div>
-        <span class="text-[0.8rem] text-nido-brown">Cargando seguridad de la cuenta...</span>
+    <section class="order-1 min-w-0 h-full bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col">
+      <div class="flex items-center gap-2.5 mb-5 border-b border-nido-border/40 pb-3">
+        <lucide-icon name="user" [size]="20" class="text-nido-green" />
+        <h2 class="text-base font-bold text-nido-green-dark">Cuenta</h2>
       </div>
-    } @else if (profileError()) {
-      <div class="flex flex-col items-center text-center py-4 gap-2">
-        <span class="text-nido-red text-[0.8rem] font-medium">{{ profileError() }}</span>
-        <button
-          (click)="loadProfile()"
-          class="px-4 py-2 rounded-lg text-[0.8rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150"
-        >
-          Reintentar
-        </button>
-      </div>
-    } @else {
-      <!-- Credential State Badge Indicators -->
-      <div class="flex flex-col gap-2 bg-[rgba(62,94,74,0.03)] border border-nido-border rounded-lg p-4">
-        <h3 class="text-[0.8rem] font-bold text-nido-green-dark m-0">Estado de credenciales</h3>
-        
-        <div class="flex flex-wrap gap-3 mt-0.5">
-          <!-- Google Link Connection -->
-          @if (hasGoogleLinked()) {
-            <div class="flex items-center gap-1.5 bg-white border border-nido-border px-3 py-1.5 rounded-lg shadow-sm">
-              <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
-              </svg>
-              <span class="text-[0.75rem] font-semibold text-nido-green-dark">Google conectado</span>
-            </div>
-          }
-          
-          <!-- Password Status -->
-          <div class="flex items-center gap-1.5 bg-white border border-nido-border px-3 py-1.5 rounded-lg shadow-sm">
-            <lucide-icon
-              [name]="hasPassword() ? 'lock' : 'unlock'"
-              [size]="16"
-              [class]="hasPassword() ? 'text-nido-green-dark' : 'text-nido-brown'"
-            />
-            <span class="text-[0.75rem] font-semibold text-nido-green-dark">
-              {{ hasPassword() ? 'Contraseña configurada' : 'Sin contraseña' }}
-            </span>
-          </div>
+
+      <div class="flex items-center gap-4 py-3 border-b border-nido-border/40">
+        <div class="w-12 h-12 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0 shadow-sm border border-white/20">
+          <span class="text-nido-cream text-[1rem] font-bold">{{ memberInitial(userName()) }}</span>
+        </div>
+        <div class="flex flex-col gap-0.5 min-w-0">
+          <span class="text-[0.9375rem] font-semibold text-nido-green-dark break-words">{{ userName() }}</span>
+          <span class="text-[0.8125rem] text-nido-brown break-all opacity-90">{{ email() }}</span>
         </div>
       </div>
 
-      <!-- Dynamic Form Options -->
-      @if (hasPassword()) {
-        <!-- Change password form -->
-        <form
-          [formGroup]="changePasswordForm"
-          (ngSubmit)="onChangePasswordSubmit()"
-          class="flex flex-col gap-3.5 mt-1"
-        >
-          <h3 class="text-[0.875rem] font-bold text-nido-green-dark m-0">Cambiar contraseña</h3>
-          
-          <!-- Current Password -->
-          <div class="flex flex-col gap-1 w-full">
-            <label for="currentPassword" class="text-[0.775rem] font-semibold text-nido-green-dark pl-0.5"
-              >Contraseña actual</label
-            >
-            <input
-              id="currentPassword"
-              type="password"
-              formControlName="currentPassword"
-              placeholder="Contraseña actual"
-              [disabled]="saving()"
-              class="w-full border border-nido-border rounded-lg px-3 py-2 text-[0.85rem] text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green bg-white transition-colors duration-150 disabled:opacity-50"
-            />
-            @if (changeSubmitted() && changePasswordForm.get('currentPassword')?.invalid) {
-              <span class="text-nido-red text-[0.75rem] pl-0.5">La contraseña actual es requerida.</span>
-            }
-          </div>
+      <button
+        (click)="logout()"
+        class="mt-5 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-nido-red/35 text-nido-red bg-transparent text-[0.875rem] font-semibold cursor-pointer transition-all duration-150 hover:bg-nido-red/5 hover:border-nido-red/60 active:scale-[0.99]">
+        <lucide-icon name="log-out" [size]="16" />
+        Cerrar sesión
+      </button>
+    </section>
 
-          <!-- New Password -->
-          <div class="flex flex-col gap-1 w-full">
-            <label for="newPassword" class="text-[0.775rem] font-semibold text-nido-green-dark pl-0.5"
-              >Nueva contraseña</label
-            >
-            <input
-              id="newPassword"
-              type="password"
-              formControlName="newPassword"
-              placeholder="Mínimo 8 caracteres, mayúscula, minúscula y número"
-              [disabled]="saving()"
-              class="w-full border border-nido-border rounded-lg px-3 py-2 text-[0.85rem] text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green bg-white transition-colors duration-150 disabled:opacity-50"
-            />
-            @if (changeSubmitted() && changePasswordForm.get('newPassword')?.invalid) {
-              @if (changePasswordForm.get('newPassword')?.errors?.['required']) {
-                <span class="text-nido-red text-[0.75rem] pl-0.5">La nueva contraseña es requerida.</span>
-              } @else if (changePasswordForm.get('newPassword')?.errors?.['pattern']) {
-                <span class="text-nido-red text-[0.75rem] pl-0.5 leading-snug"
-                  >Mínimo 8 caracteres, una mayúscula, una minúscula y un número.</span
-                >
-              }
-            }
-          </div>
+    <section class="order-2 min-w-0 h-full bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col">
+      <div class="flex items-center gap-2.5 mb-5 border-b border-nido-border/40 pb-3">
+        <lucide-icon name="bell" [size]="20" class="text-nido-green" />
+        <h2 class="text-base font-bold text-nido-green-dark">Notificaciones</h2>
+      </div>
 
-          <!-- Confirm Password -->
-          <div class="flex flex-col gap-1 w-full">
-            <label for="confirmPassword" class="text-[0.775rem] font-semibold text-nido-green-dark pl-0.5"
-              >Confirmar contraseña</label
-            >
-            <input
-              id="confirmPassword"
-              type="password"
-              formControlName="confirmPassword"
-              placeholder="Confirmar contraseña"
-              [disabled]="saving()"
-              class="w-full border border-nido-border rounded-lg px-3 py-2 text-[0.85rem] text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green bg-white transition-colors duration-150 disabled:opacity-50"
-            />
-            @if (changeSubmitted()) {
-              @if (changePasswordForm.get('confirmPassword')?.errors?.['required']) {
-                <span class="text-nido-red text-[0.75rem] pl-0.5">La confirmación es requerida.</span>
-              } @else if (changePasswordForm.errors?.['passwordMismatch']) {
-                <span class="text-nido-red text-[0.75rem] pl-0.5">Las contraseñas no coinciden.</span>
-              }
-            }
-          </div>
-
-          <!-- Messages & Buttons -->
-          @if (globalError()) {
-            <span class="text-nido-red text-[0.8125rem] font-medium pl-0.5">{{ globalError() }}</span>
-          }
-          @if (globalSuccess()) {
-            <span class="text-nido-green-dark text-[0.8125rem] font-semibold pl-0.5 flex items-center gap-1">
-              <lucide-icon name="check-circle" [size]="14" class="text-nido-green" />
-              {{ globalSuccess() }}
-            </span>
-          }
-
-          <button
-            type="submit"
-            [disabled]="saving() || changePasswordForm.invalid"
-            class="flex items-center justify-center gap-2 bg-nido-green-dark text-nido-cream px-6 py-2.5 rounded-lg text-[0.85rem] font-semibold border-none cursor-pointer transition-all duration-150 hover:bg-nido-green disabled:opacity-70 disabled:cursor-not-allowed self-end mt-1 shadow-sm"
-          >
-            <span>{{ saving() ? 'Guardando...' : 'Cambiar contraseña' }}</span>
-          </button>
-        </form>
+      @if (isLoadingPrefs()) {
+        <div class="flex flex-col items-center justify-center py-6 gap-2">
+          <div class="w-6 h-6 rounded-full border-2 border-solid border-nido-border/50 border-t-nido-green-dark animate-spin"></div>
+          <span class="text-xs text-nido-brown">Cargando preferencias...</span>
+        </div>
       } @else {
-        <!-- Create password form for Google-only users -->
-        <form
-          [formGroup]="addPasswordForm"
-          (ngSubmit)="onAddPasswordSubmit()"
-          class="flex flex-col gap-3.5 mt-1"
-        >
-          <!-- Informational Banner -->
-          <div class="flex items-start gap-2.5 bg-[rgba(66,133,244,0.05)] border border-blue-200 rounded-lg p-3">
-            <div class="text-blue-500 shrink-0 mt-0.5">
-              <lucide-icon name="info" [size]="18" />
-            </div>
-            <div class="flex flex-col gap-0.5">
-              <h4 class="text-[0.8rem] font-bold text-blue-900 m-0">Cuenta vinculada con Google</h4>
-              <p class="text-blue-800 text-[0.75rem] leading-relaxed m-0">
-                Iniciás sesión con Google. Si creás una contraseña, también podrás ingresar con tu email y esta clave. Seguirás teniendo Google disponible.
-              </p>
-            </div>
+        <div class="flex flex-col gap-5">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[0.9375rem] font-semibold text-nido-green-dark leading-tight">
+              Días de anticipación para alertas de vencimiento
+            </label>
+            <p class="text-xs text-nido-brown opacity-95 leading-relaxed">
+              Te avisamos cuando un producto de la alacena vence en menos de este tiempo.
+            </p>
           </div>
 
-          <h3 class="text-[0.875rem] font-bold text-nido-green-dark m-0">Creá tu contraseña de acceso</h3>
-
-          <!-- New Password -->
-          <div class="flex flex-col gap-1 w-full">
-            <label for="newPasswordAdd" class="text-[0.775rem] font-semibold text-nido-green-dark pl-0.5"
-              >Nueva contraseña</label
-            >
+          <div class="flex items-center gap-3 flex-wrap">
             <input
-              id="newPasswordAdd"
-              type="password"
-              formControlName="newPassword"
-              placeholder="Mínimo 8 caracteres, mayúscula, minúscula y número"
-              [disabled]="saving()"
-              class="w-full border border-nido-border rounded-lg px-3 py-2 text-[0.85rem] text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green bg-white transition-colors duration-150 disabled:opacity-50"
+              type="number"
+              min="1"
+              max="365"
+              [ngModel]="diasAlertaInput()"
+              (ngModelChange)="diasAlertaInput.set($event)"
+              class="w-24 bg-white border border-nido-border rounded-xl px-4 py-2.5 text-sm text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green focus:ring-2 focus:ring-nido-green/10 transition-all duration-150 disabled:opacity-50"
             />
-            @if (addSubmitted() && addPasswordForm.get('newPassword')?.invalid) {
-              @if (addPasswordForm.get('newPassword')?.errors?.['required']) {
-                <span class="text-nido-red text-[0.75rem] pl-0.5">La contraseña es requerida.</span>
-              } @else if (addPasswordForm.get('newPassword')?.errors?.['pattern']) {
-                <span class="text-nido-red text-[0.75rem] pl-0.5 leading-snug"
-                  >Mínimo 8 caracteres, una mayúscula, una minúscula y un número.</span
-                >
-              }
+            <span class="text-[0.875rem] font-medium text-nido-brown">días</span>
+            <button
+              (click)="saveDiasAlerta()"
+              [disabled]="isSavingPrefs()"
+              class="px-5 py-2.5 rounded-xl bg-nido-green-dark text-nido-cream text-[0.875rem] font-bold border-none cursor-pointer transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-nido-green active:scale-[0.98] shadow-sm">
+              {{ isSavingPrefs() ? 'Guardando...' : 'Guardar' }}
+            </button>
+            @if (saveSuccess()) {
+              <span class="text-[0.8125rem] text-nido-green font-bold flex items-center gap-1">
+                <lucide-icon name="check" [size]="14" />
+                Guardado
+              </span>
             }
           </div>
-
-          <!-- Confirm Password -->
-          <div class="flex flex-col gap-1 w-full">
-            <label for="confirmPasswordAdd" class="text-[0.775rem] font-semibold text-nido-green-dark pl-0.5"
-              >Confirmar contraseña</label
-            >
-            <input
-              id="confirmPasswordAdd"
-              type="password"
-              formControlName="confirmPassword"
-              placeholder="Confirmar contraseña"
-              [disabled]="saving()"
-              class="w-full border border-nido-border rounded-lg px-3 py-2 text-[0.85rem] text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green bg-white transition-colors duration-150 disabled:opacity-50"
-            />
-            @if (addSubmitted()) {
-              @if (addPasswordForm.get('confirmPassword')?.errors?.['required']) {
-                <span class="text-nido-red text-[0.75rem] pl-0.5">La confirmación es requerida.</span>
-              } @else if (addPasswordForm.errors?.['passwordMismatch']) {
-                <span class="text-nido-red text-[0.75rem] pl-0.5">Las contraseñas no coinciden.</span>
-              }
-            }
-          </div>
-
-          <!-- Messages & Buttons -->
-          @if (globalError()) {
-            <span class="text-nido-red text-[0.8125rem] font-medium pl-0.5">{{ globalError() }}</span>
-          }
-          @if (globalSuccess()) {
-            <span class="text-nido-green-dark text-[0.8125rem] font-semibold pl-0.5 flex items-center gap-1">
-              <lucide-icon name="check-circle" [size]="14" class="text-nido-green" />
-              {{ globalSuccess() }}
-            </span>
-          }
-
-          <button
-            type="submit"
-            [disabled]="saving() || addPasswordForm.invalid"
-            class="flex items-center justify-center gap-2 bg-nido-green-dark text-nido-cream px-6 py-2.5 rounded-lg text-[0.85rem] font-semibold border-none cursor-pointer transition-all duration-150 hover:bg-nido-green disabled:opacity-70 disabled:cursor-not-allowed self-end mt-1 shadow-sm"
-          >
-            <span>{{ saving() ? 'Configurando...' : 'Crear contraseña' }}</span>
-          </button>
-        </form>
+        </div>
       }
-    }
-  </section>
+    </section>
 
-  <!-- Notificaciones -->
-  <section class="bg-white rounded-[14px] px-6 py-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border">
-    <div class="flex items-center gap-2 mb-4">
-      <lucide-icon name="bell" [size]="18" class="text-nido-green" />
-      <h2 class="text-base font-semibold text-nido-green-dark">Notificaciones</h2>
-    </div>
-
-    @if (isLoadingPrefs()) {
-      <p class="text-[0.875rem] text-nido-brown">Cargando preferencias...</p>
-    } @else {
-      <div class="flex flex-col gap-4">
-        <div class="flex flex-col gap-1.5">
-          <label class="text-[0.875rem] font-medium text-nido-green-dark">
-            Días de anticipación para alertas de vencimiento
-          </label>
-          <p class="text-[0.8rem] text-nido-brown">
-            Te avisamos cuando un producto de la alacena vence en menos de este tiempo.
-          </p>
-        </div>
-
-        <div class="flex items-center gap-3 flex-wrap">
-          <input
-            type="number"
-            min="1"
-            max="365"
-            [ngModel]="diasAlertaInput()"
-            (ngModelChange)="diasAlertaInput.set($event)"
-            class="w-24 px-3 py-2 border-[1.5px] border-solid border-nido-border rounded-[8px] text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-green"
-          />
-          <span class="text-[0.875rem] text-nido-brown">días</span>
-          <button
-            (click)="saveDiasAlerta()"
-            [disabled]="isSavingPrefs()"
-            class="px-5 py-2 rounded-[8px] bg-nido-green-dark text-nido-cream text-[0.875rem] font-medium border-none cursor-pointer transition-opacity duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90">
-            {{ isSavingPrefs() ? 'Guardando...' : 'Guardar' }}
-          </button>
-          @if (saveSuccess()) {
-            <span class="text-[0.8125rem] text-nido-green font-medium">✓ Guardado</span>
-          }
-        </div>
+    <section class="order-3 min-w-0 h-full bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col gap-6">
+      <div class="flex items-center gap-2.5 border-b border-nido-border/40 pb-3">
+        <lucide-icon name="shield-check" [size]="20" class="text-nido-green" />
+        <h2 class="text-base font-bold text-nido-green-dark">Seguridad de la cuenta</h2>
       </div>
-    }
-  </section>
 
-  <!-- Hogar -->
-  <section class="bg-white rounded-[14px] px-6 py-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border">
-    <div class="flex items-center gap-2 mb-4">
-      <lucide-icon name="users" [size]="18" class="text-nido-green" />
-      <h2 class="text-base font-semibold text-nido-green-dark">Miembros del hogar</h2>
-    </div>
+      @if (loadingProfile()) {
+        <div class="flex flex-col items-center justify-center py-8 gap-3">
+          <div class="w-8 h-8 rounded-full border-3 border-solid border-nido-border/50 border-t-nido-green-dark animate-spin"></div>
+          <span class="text-xs font-medium text-nido-brown">Cargando seguridad de la cuenta...</span>
+        </div>
+      } @else if (profileError()) {
+        <div class="flex flex-col items-center text-center py-6 gap-3">
+          <lucide-icon name="alert-circle" [size]="32" class="text-nido-red" />
+          <span class="text-nido-red text-[0.875rem] font-medium leading-relaxed max-w-sm">{{ profileError() }}</span>
+          <button
+            (click)="loadProfile()"
+            class="px-5 py-2 bg-nido-green-dark text-nido-cream border-none rounded-xl text-[0.875rem] font-semibold cursor-pointer hover:bg-nido-green transition-all duration-150 active:scale-[0.98]">
+            Reintentar
+          </button>
+        </div>
+      } @else {
+        <div class="flex flex-col gap-3 bg-[rgba(62,94,74,0.03)] border border-nido-border/40 rounded-xl p-4">
+          <h3 class="text-xs font-bold text-nido-green-dark uppercase tracking-wider pl-0.5">Estado de credenciales</h3>
 
-    <!-- Lista de miembros -->
-    @if (isLoadingMembers()) {
-      <p class="text-[0.875rem] text-nido-brown mb-4">Cargando miembros...</p>
-    } @else {
-      <ul class="list-none flex flex-col gap-2 mb-5">
-        @for (miembro of members(); track miembro.usuarioId; let i = $index) {
-          <li class="flex items-center gap-3 py-2 border-b border-nido-border last:border-0">
-            @if (miembro.fotoUrl) {
-              <img [src]="miembro.fotoUrl" [alt]="miembro.nombre"
-                   class="w-9 h-9 rounded-full object-cover shrink-0" />
-            } @else {
-              <div class="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-white text-[0.8rem] font-bold"
-                   [style.background]="memberColor(i)">
-                {{ memberInitial(miembro.nombre) }}
+          <div class="flex flex-wrap gap-2.5 mt-1">
+            @if (hasGoogleLinked()) {
+              <div class="flex items-center gap-2 bg-white border border-nido-border/50 px-3.5 py-2 rounded-xl shadow-xs transition-all duration-150 hover:border-nido-border hover:shadow-sm">
+                <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                </svg>
+                <span class="text-xs font-bold text-nido-green-dark">Google conectado</span>
               </div>
             }
-            <div class="flex-1 min-w-0">
-              <p class="text-[0.875rem] font-medium text-nido-green-dark truncate">
-                {{ miembro.nombre }}
-                @if (isCurrentUser(miembro)) {
-                  <span class="ml-1.5 text-[0.7rem] text-nido-brown font-normal">(vos)</span>
-                }
-              </p>
-              <p class="text-[0.775rem] text-nido-brown capitalize">{{ miembro.rol }}</p>
+
+            <div class="flex items-center gap-2 bg-white border border-nido-border/50 px-3.5 py-2 rounded-xl shadow-xs transition-all duration-150 hover:border-nido-border hover:shadow-sm">
+              <lucide-icon
+                [name]="hasPassword() ? 'lock' : 'unlock'"
+                [size]="16"
+                [class]="hasPassword() ? 'text-nido-green-dark' : 'text-nido-brown'"
+              />
+              <span class="text-xs font-bold text-nido-green-dark">
+                {{ hasPassword() ? 'Contraseña configurada' : 'Sin contraseña' }}
+              </span>
             </div>
-          </li>
+          </div>
+        </div>
+
+        @if (hasPassword()) {
+          <form
+            [formGroup]="changePasswordForm"
+            (ngSubmit)="onChangePasswordSubmit()"
+            class="flex flex-col gap-4.5"
+          >
+            <h3 class="text-sm font-bold text-nido-green-dark border-b border-nido-border/30 pb-1.5 mb-1">Cambiar contraseña</h3>
+
+            <div class="flex flex-col gap-1.5 w-full">
+              <label for="currentPassword" class="text-xs font-bold text-nido-green-dark pl-0.5 uppercase tracking-wider">Contraseña actual</label>
+              <div class="relative">
+                <input
+                  id="currentPassword"
+                  [type]="showCurrentPassword() ? 'text' : 'password'"
+                  formControlName="currentPassword"
+                  placeholder="Contraseña actual"
+                  [disabled]="saving()"
+                  class="w-full bg-white border border-nido-border rounded-xl px-4 py-2.5 pr-11 text-sm text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green focus:ring-2 focus:ring-nido-green/10 transition-all duration-150 disabled:opacity-50"
+                />
+                <button
+                  type="button"
+                  (click)="togglePasswordVisibility('current')"
+                  class="absolute right-3.5 top-1/2 -translate-y-1/2 border-none bg-transparent p-0 text-nido-brown/70 hover:text-nido-brown cursor-pointer flex items-center justify-center"
+                  [attr.aria-label]="showCurrentPassword() ? 'Ocultar contraseña actual' : 'Mostrar contraseña actual'"
+                >
+                  <lucide-icon [name]="showCurrentPassword() ? 'eye-off' : 'eye'" [size]="18" />
+                </button>
+              </div>
+              @if (changeSubmitted() && changePasswordForm.get('currentPassword')?.invalid) {
+                <span class="text-nido-red text-[0.75rem] pl-0.5 font-medium">La contraseña actual es requerida.</span>
+              }
+            </div>
+
+            <div class="flex flex-col gap-1.5 w-full">
+              <label for="newPassword" class="text-xs font-bold text-nido-green-dark pl-0.5 uppercase tracking-wider">Nueva contraseña</label>
+              <div class="relative">
+                <input
+                  id="newPassword"
+                  [type]="showChangeNewPassword() ? 'text' : 'password'"
+                  formControlName="newPassword"
+                  placeholder="Mínimo 8 caracteres, mayúscula, minúscula y número"
+                  [disabled]="saving()"
+                  class="w-full bg-white border border-nido-border rounded-xl px-4 py-2.5 pr-11 text-sm text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green focus:ring-2 focus:ring-nido-green/10 transition-all duration-150 disabled:opacity-50"
+                />
+                <button
+                  type="button"
+                  (click)="togglePasswordVisibility('changeNew')"
+                  class="absolute right-3.5 top-1/2 -translate-y-1/2 border-none bg-transparent p-0 text-nido-brown/70 hover:text-nido-brown cursor-pointer flex items-center justify-center"
+                  [attr.aria-label]="showChangeNewPassword() ? 'Ocultar nueva contraseña' : 'Mostrar nueva contraseña'"
+                >
+                  <lucide-icon [name]="showChangeNewPassword() ? 'eye-off' : 'eye'" [size]="18" />
+                </button>
+              </div>
+              @if (changeSubmitted() && changePasswordForm.get('newPassword')?.invalid) {
+                @if (changePasswordForm.get('newPassword')?.errors?.['required']) {
+                  <span class="text-nido-red text-[0.75rem] pl-0.5 font-medium">La nueva contraseña es requerida.</span>
+                } @else if (changePasswordForm.get('newPassword')?.errors?.['pattern']) {
+                  <span class="text-nido-red text-[0.75rem] pl-0.5 font-medium leading-snug">Mínimo 8 caracteres, una mayúscula, una minúscula y un número.</span>
+                }
+              }
+              @if (changeSubmitted() && changePasswordForm.errors?.['sameAsCurrent']) {
+                <span class="text-nido-red text-[0.75rem] pl-0.5 font-medium">La nueva contraseña no puede ser igual a la actual.</span>
+              }
+            </div>
+
+            <div class="flex flex-col gap-1.5 w-full">
+              <label for="confirmPassword" class="text-xs font-bold text-nido-green-dark pl-0.5 uppercase tracking-wider">Confirmar contraseña</label>
+              <div class="relative">
+                <input
+                  id="confirmPassword"
+                  [type]="showChangeConfirmPassword() ? 'text' : 'password'"
+                  formControlName="confirmPassword"
+                  placeholder="Confirmar contraseña"
+                  [disabled]="saving()"
+                  class="w-full bg-white border border-nido-border rounded-xl px-4 py-2.5 pr-11 text-sm text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green focus:ring-2 focus:ring-nido-green/10 transition-all duration-150 disabled:opacity-50"
+                />
+                <button
+                  type="button"
+                  (click)="togglePasswordVisibility('changeConfirm')"
+                  class="absolute right-3.5 top-1/2 -translate-y-1/2 border-none bg-transparent p-0 text-nido-brown/70 hover:text-nido-brown cursor-pointer flex items-center justify-center"
+                  [attr.aria-label]="showChangeConfirmPassword() ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'"
+                >
+                  <lucide-icon [name]="showChangeConfirmPassword() ? 'eye-off' : 'eye'" [size]="18" />
+                </button>
+              </div>
+              @if (changeSubmitted()) {
+                @if (changePasswordForm.get('confirmPassword')?.errors?.['required']) {
+                  <span class="text-nido-red text-[0.75rem] pl-0.5 font-medium">La confirmación es requerida.</span>
+                } @else if (changePasswordForm.errors?.['passwordMismatch']) {
+                  <span class="text-nido-red text-[0.75rem] pl-0.5 font-medium">Las contraseñas no coinciden.</span>
+                }
+              }
+            </div>
+
+            @if (globalError()) {
+              <span class="text-nido-red text-[0.8125rem] font-semibold pl-0.5 flex items-center gap-1">
+                <lucide-icon name="alert-circle" [size]="14" class="text-nido-red" />
+                {{ globalError() }}
+              </span>
+            }
+            @if (globalSuccess()) {
+              <span class="text-nido-green-dark text-[0.8125rem] font-semibold pl-0.5 flex items-center gap-1">
+                <lucide-icon name="check-circle" [size]="14" class="text-nido-green" />
+                {{ globalSuccess() }}
+              </span>
+            }
+
+            <button
+              type="submit"
+              [disabled]="saving()"
+              class="flex items-center justify-center gap-2 bg-nido-green-dark text-nido-cream px-6 py-2.5 rounded-xl text-[0.875rem] font-bold border-none cursor-pointer transition-all duration-150 hover:bg-nido-green active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed self-end mt-2 shadow-sm"
+            >
+              <span>{{ saving() ? 'Guardando...' : 'Cambiar contraseña' }}</span>
+            </button>
+          </form>
+        } @else {
+          <form
+            [formGroup]="addPasswordForm"
+            (ngSubmit)="onAddPasswordSubmit()"
+            class="flex flex-col gap-4.5"
+          >
+            <div class="flex items-start gap-3 bg-[rgba(66,133,244,0.06)] border border-blue-200/60 rounded-xl p-4">
+              <div class="text-blue-500 shrink-0 mt-0.5">
+                <lucide-icon name="info" [size]="18" />
+              </div>
+              <div class="flex flex-col gap-0.5">
+                <h4 class="text-xs font-bold text-blue-900 uppercase tracking-wide m-0">Cuenta vinculada con Google</h4>
+                <p class="text-blue-800 text-[0.775rem] leading-relaxed m-0 mt-1">
+                  Iniciás sesión con Google. Si creás una contraseña, también podrás ingresar con tu email y esta clave. Seguirás teniendo Google disponible.
+                </p>
+              </div>
+            </div>
+
+            <h3 class="text-sm font-bold text-nido-green-dark border-b border-nido-border/30 pb-1.5 mb-1">Creá tu contraseña de acceso</h3>
+
+            <div class="flex flex-col gap-1.5 w-full">
+              <label for="newPasswordAdd" class="text-xs font-bold text-nido-green-dark pl-0.5 uppercase tracking-wider">Nueva contraseña</label>
+              <div class="relative">
+                <input
+                  id="newPasswordAdd"
+                  [type]="showAddNewPassword() ? 'text' : 'password'"
+                  formControlName="newPassword"
+                  placeholder="Mínimo 8 caracteres, mayúscula, minúscula y número"
+                  [disabled]="saving()"
+                  class="w-full bg-white border border-nido-border rounded-xl px-4 py-2.5 pr-11 text-sm text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green focus:ring-2 focus:ring-nido-green/10 transition-all duration-150 disabled:opacity-50"
+                />
+                <button
+                  type="button"
+                  (click)="togglePasswordVisibility('addNew')"
+                  class="absolute right-3.5 top-1/2 -translate-y-1/2 border-none bg-transparent p-0 text-nido-brown/70 hover:text-nido-brown cursor-pointer flex items-center justify-center"
+                  [attr.aria-label]="showAddNewPassword() ? 'Ocultar nueva contraseña' : 'Mostrar nueva contraseña'"
+                >
+                  <lucide-icon [name]="showAddNewPassword() ? 'eye-off' : 'eye'" [size]="18" />
+                </button>
+              </div>
+              @if (addSubmitted() && addPasswordForm.get('newPassword')?.invalid) {
+                @if (addPasswordForm.get('newPassword')?.errors?.['required']) {
+                  <span class="text-nido-red text-[0.75rem] pl-0.5 font-medium">La contraseña es requerida.</span>
+                } @else if (addPasswordForm.get('newPassword')?.errors?.['pattern']) {
+                  <span class="text-nido-red text-[0.75rem] pl-0.5 font-medium leading-snug">Mínimo 8 caracteres, una mayúscula, una minúscula y un número.</span>
+                }
+              }
+            </div>
+
+            <div class="flex flex-col gap-1.5 w-full">
+              <label for="confirmPasswordAdd" class="text-xs font-bold text-nido-green-dark pl-0.5 uppercase tracking-wider">Confirmar contraseña</label>
+              <div class="relative">
+                <input
+                  id="confirmPasswordAdd"
+                  [type]="showAddConfirmPassword() ? 'text' : 'password'"
+                  formControlName="confirmPassword"
+                  placeholder="Confirmar contraseña"
+                  [disabled]="saving()"
+                  class="w-full bg-white border border-nido-border rounded-xl px-4 py-2.5 pr-11 text-sm text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green focus:ring-2 focus:ring-nido-green/10 transition-all duration-150 disabled:opacity-50"
+                />
+                <button
+                  type="button"
+                  (click)="togglePasswordVisibility('addConfirm')"
+                  class="absolute right-3.5 top-1/2 -translate-y-1/2 border-none bg-transparent p-0 text-nido-brown/70 hover:text-nido-brown cursor-pointer flex items-center justify-center"
+                  [attr.aria-label]="showAddConfirmPassword() ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'"
+                >
+                  <lucide-icon [name]="showAddConfirmPassword() ? 'eye-off' : 'eye'" [size]="18" />
+                </button>
+              </div>
+              @if (addSubmitted()) {
+                @if (addPasswordForm.get('confirmPassword')?.errors?.['required']) {
+                  <span class="text-nido-red text-[0.75rem] pl-0.5 font-medium">La confirmación es requerida.</span>
+                } @else if (addPasswordForm.errors?.['passwordMismatch']) {
+                  <span class="text-nido-red text-[0.75rem] pl-0.5 font-medium">Las contraseñas no coinciden.</span>
+                }
+              }
+            </div>
+
+            @if (globalError()) {
+              <span class="text-nido-red text-[0.8125rem] font-semibold pl-0.5 flex items-center gap-1">
+                <lucide-icon name="alert-circle" [size]="14" class="text-nido-red" />
+                {{ globalError() }}
+              </span>
+            }
+            @if (globalSuccess()) {
+              <span class="text-nido-green-dark text-[0.8125rem] font-semibold pl-0.5 flex items-center gap-1">
+                <lucide-icon name="check-circle" [size]="14" class="text-nido-green" />
+                {{ globalSuccess() }}
+              </span>
+            }
+
+            <button
+              type="submit"
+              [disabled]="saving()"
+              class="flex items-center justify-center gap-2 bg-nido-green-dark text-nido-cream px-6 py-2.5 rounded-xl text-[0.875rem] font-bold border-none cursor-pointer transition-all duration-150 hover:bg-nido-green active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed self-end mt-2 shadow-sm"
+            >
+              <span>{{ saving() ? 'Configurando...' : 'Crear contraseña' }}</span>
+            </button>
+          </form>
         }
-      </ul>
-    }
-
-    <!-- Invitar convivente -->
-    <div class="flex items-center gap-2 mb-3">
-      <lucide-icon name="user-plus" [size]="16" class="text-nido-green" />
-      <h3 class="text-[0.875rem] font-semibold text-nido-green-dark">Invitar convivente</h3>
-    </div>
-
-    @if (inviteState() === 'success') {
-      <div class="flex flex-col gap-3">
-        <p class="text-[0.875rem] text-nido-green font-medium">
-          ✓ Invitación enviada. El convivente recibirá un email con el link.
-        </p>
-        <button
-          (click)="resetInvite()"
-          class="self-start text-[0.8125rem] font-medium text-nido-gold hover:underline bg-transparent border-none cursor-pointer p-0">
-          Invitar a otro
-        </button>
-      </div>
-    } @else {
-      <div class="flex gap-2 flex-wrap">
-        <input
-          type="email"
-          placeholder="correo@ejemplo.com"
-          [ngModel]="inviteEmail()"
-          (ngModelChange)="inviteEmail.set($event)"
-          class="flex-1 min-w-0 px-3 py-2 border-[1.5px] border-solid border-nido-border rounded-[8px] text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-green placeholder:text-nido-muted"
-        />
-        <button
-          (click)="submitInvite()"
-          [disabled]="inviteState() === 'loading' || !inviteEmail().trim()"
-          class="px-5 py-2 rounded-[8px] bg-nido-green-dark text-nido-cream text-[0.875rem] font-medium border-none cursor-pointer transition-opacity duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 whitespace-nowrap">
-          {{ inviteState() === 'loading' ? 'Enviando...' : 'Invitar' }}
-        </button>
-      </div>
-      @if (inviteState() === 'error') {
-        <p class="mt-2 text-[0.8rem] text-nido-red">{{ inviteErrorMsg() }}</p>
       }
-    }
+    </section>
+
+    <section class="order-4 min-w-0 self-start bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col">
+      <div class="flex items-center gap-2.5 mb-5 border-b border-nido-border/40 pb-3">
+        <lucide-icon name="users" [size]="20" class="text-nido-green" />
+        <h2 class="text-base font-bold text-nido-green-dark">Miembros del hogar</h2>
+      </div>
+
+      @if (isLoadingMembers()) {
+        <div class="flex flex-col items-center justify-center py-6 gap-2">
+          <div class="w-6 h-6 rounded-full border-2 border-solid border-nido-border/50 border-t-nido-green-dark animate-spin"></div>
+          <span class="text-xs text-nido-brown">Cargando miembros...</span>
+        </div>
+      } @else {
+        <ul class="list-none flex flex-col gap-2.5 mb-6">
+          @for (miembro of members(); track miembro.usuarioId; let i = $index) {
+            <li class="flex items-center gap-3.5 py-2.5 border-b border-nido-border/30 last:border-0">
+              @if (miembro.fotoUrl) {
+                <img [src]="miembro.fotoUrl" [alt]="miembro.nombre"
+                     class="w-10 h-10 rounded-full object-cover shrink-0 shadow-xs border border-nido-border/50" />
+              } @else {
+                <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white text-[0.875rem] font-bold shadow-xs border border-white/20"
+                     [style.background]="memberColor(i)">
+                  {{ memberInitial(miembro.nombre) }}
+                </div>
+              }
+              <div class="flex-1 min-w-0">
+                <p class="text-[0.875rem] font-semibold text-nido-green-dark truncate m-0 flex items-center gap-1.5">
+                  {{ miembro.nombre }}
+                  @if (isCurrentUser(miembro)) {
+                    <span class="text-[0.7rem] bg-[rgba(62,94,74,0.07)] text-nido-green-dark px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">(vos)</span>
+                  }
+                </p>
+                <p class="text-[0.775rem] text-nido-brown capitalize m-0 mt-0.5 opacity-90">{{ miembro.rol }}</p>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+
+      <div class="flex items-center gap-2 mb-3.5 pt-2 border-t border-nido-border/20">
+        <lucide-icon name="user-plus" [size]="18" class="text-nido-green" />
+        <h3 class="text-sm font-bold text-nido-green-dark">Invitar convivente</h3>
+      </div>
+
+      <button
+        (click)="openInviteModal()"
+        class="flex items-center gap-2 px-5 py-2.5 rounded-[10px] bg-nido-green-dark text-nido-cream text-[0.875rem] font-medium border-none cursor-pointer transition-opacity duration-150 hover:opacity-90 w-full justify-center sm:w-auto">
+        <lucide-icon name="user-plus" [size]="16" />
+        Invitar convivente
+      </button>
+
   </section>
 
 </div>
+
+@if (showInviteModal()) {
+  <div
+    class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4"
+    (click)="closeInviteModal()">
+
+    <div
+      class="bg-white rounded-2xl shadow-[0_8px_40px_rgba(38,63,48,0.18)] w-full max-w-[420px] px-5 py-6 sm:px-8 sm:py-8 flex flex-col gap-5"
+      (click)="$event.stopPropagation()">
+
+      <div class="flex items-start justify-between gap-4">
+        <div class="flex flex-col gap-1">
+          <h2 class="text-[1.25rem] font-bold text-nido-green-dark m-0">Invitar convivente</h2>
+          <p class="text-nido-brown text-[0.8375rem] m-0 leading-relaxed">
+            Ingresá el email de la persona que querés invitar. Le vamos a mandar un link para que pueda unirse a tu hogar.
+          </p>
+        </div>
+        <button
+          class="shrink-0 p-1 bg-transparent border-none cursor-pointer text-nido-muted hover:text-nido-brown transition-colors duration-150 mt-0.5"
+          (click)="closeInviteModal()">
+          <lucide-icon name="x" [size]="18" />
+        </button>
+      </div>
+
+      @if (inviteState() !== 'success') {
+        <div class="flex flex-col gap-2">
+          <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Email</label>
+          <input
+            type="email"
+            placeholder="ejemplo@email.com"
+            [ngModel]="inviteEmail()"
+            (ngModelChange)="inviteEmail.set($event)"
+            [disabled]="inviteState() === 'loading'"
+            class="border border-nido-border rounded-xl px-4 py-3 text-[0.9rem] text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green transition-colors duration-150 disabled:opacity-50"
+          />
+          @if (inviteState() === 'error') {
+            <span class="text-nido-red text-[0.8rem]">{{ inviteErrorMsg() }}</span>
+          }
+        </div>
+
+        <div class="flex gap-3 justify-end pt-1">
+          <button
+            class="px-5 py-2.5 rounded-full text-[0.875rem] text-nido-brown bg-transparent border border-nido-border cursor-pointer hover:bg-nido-cream transition-colors duration-150"
+            (click)="closeInviteModal()">
+            Cancelar
+          </button>
+          <button
+            [disabled]="!inviteEmail().trim() || inviteState() === 'loading'"
+            (click)="submitInvite()"
+            class="px-6 py-2.5 rounded-full text-[0.875rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ inviteState() === 'loading' ? 'Enviando...' : 'Enviar invitación' }}
+          </button>
+        </div>
+      } @else {
+        <div class="flex flex-col items-center gap-4 py-4 text-center">
+          <div class="w-16 h-16 rounded-full bg-[rgba(62,94,74,0.08)] flex items-center justify-center">
+            <lucide-icon name="mail-check" [size]="30" class="text-nido-green-dark" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <p class="text-[0.9375rem] font-semibold text-nido-green-dark m-0">¡Invitación enviada!</p>
+            <p class="text-[0.8375rem] text-nido-brown m-0">
+              Le mandamos un email a <strong>{{ inviteEmail() }}</strong> con el link para unirse.
+            </p>
+          </div>
+          <button
+            class="mt-1 px-7 py-2.5 rounded-full text-[0.875rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150"
+            (click)="closeInviteModal()">
+            Cerrar
+          </button>
+        </div>
+      }
+
+    </div>
+  </div>
+}

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, DestroyRef } from '@angular/core';
+import { Component, inject, OnInit, signal, DestroyRef, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -13,6 +13,11 @@ import { validatePhotoFile } from '../../shared/validators/photo';
   styleUrl: './editar-perfil.scss',
 })
 export class EditarPerfil implements OnInit {
+  /** true cuando se usa embebido como modal dentro de perfil */
+  @Input() isModal = false;
+  /** Emite al guardar o cancelar (con true si hubo cambios guardados) */
+  @Output() closed = new EventEmitter<boolean>();
+
   private readonly perfilApi = inject(PerfilApiService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
@@ -20,7 +25,10 @@ export class EditarPerfil implements OnInit {
   private photoObjectUrl: string | null = null;
 
   constructor() {
-    this.destroyRef.onDestroy(() => this.clearSelectedPhoto());
+    this.destroyRef.onDestroy(() => {
+      this.clearSelectedPhoto();
+      if (this.isModal) document.body.style.overflow = '';
+    });
   }
 
   protected readonly form = this.fb.nonNullable.group({
@@ -38,6 +46,7 @@ export class EditarPerfil implements OnInit {
   protected readonly photoError = signal<string | null>(null);
 
   ngOnInit(): void {
+    if (this.isModal) document.body.style.overflow = 'hidden';
     this.loadProfile();
   }
 
@@ -116,7 +125,13 @@ export class EditarPerfil implements OnInit {
     const { nombre, sexo, telefono } = this.form.getRawValue();
 
     this.perfilApi.updateProfile(nombre, sexo, telefono, this.selectedPhoto()).subscribe({
-      next: () => this.router.navigate(['/perfil']),
+      next: () => {
+        if (this.isModal) {
+          this.closed.emit(true);
+        } else {
+          this.router.navigate(['/perfil']);
+        }
+      },
       error: () => {
         this.apiError.set('No se pudo guardar los cambios en el perfil. Intentá nuevamente más tarde.');
         this.isSaving.set(false);
@@ -125,7 +140,11 @@ export class EditarPerfil implements OnInit {
   }
 
   protected onCancel(): void {
-    this.router.navigate(['/perfil']);
+    if (this.isModal) {
+      this.closed.emit(false);
+    } else {
+      this.router.navigate(['/perfil']);
+    }
   }
 
   protected onImgError(event: Event): void {

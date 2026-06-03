@@ -21,6 +21,7 @@ export class Landing {
   readonly scrolled      = signal(false);
   readonly activeSection = signal<string>('inicio');
   readonly activeFaq     = signal<number | null>(null);
+  readonly menuOpen      = signal(false);
 
   private readonly navSections = ['inicio', 'beneficios', 'funciones', 'precios', 'faq'];
 
@@ -64,12 +65,17 @@ export class Landing {
     this.activeSection.set(current);
   }
 
+  toggleMenu(): void {
+    this.menuOpen.update(v => !v);
+  }
+
   toggleFaq(index: number): void {
     this.activeFaq.update(current => current === index ? null : index);
   }
 
   scrollTo(id: string, event: Event): void {
     event.preventDefault();
+    this.menuOpen.set(false);
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   }
 }

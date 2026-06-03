@@ -87,10 +87,21 @@ export class Login {
     this.globalError.set(null);
 
     try {
-      this.googleIdentity.prompt();
+      const host = this.googleButtonHost()?.nativeElement;
+      const renderedGoogleButton = host?.querySelector<HTMLElement>('div[role="button"], iframe');
+
+      if (!renderedGoogleButton) {
+        this.googleLoginReady.set(false);
+        this.globalError.set(
+          'Google Login no está disponible para este origen. Revisá la configuración del cliente.',
+        );
+        return;
+      }
+
+      renderedGoogleButton.click();
     } catch {
       this.globalError.set(
-        'Google Login no está disponible todavía. Revisá la configuración del cliente.',
+        'Google Login no está disponible para este origen. Revisá la configuración del cliente.',
       );
     }
   }
@@ -106,7 +117,9 @@ export class Login {
       await this.googleIdentity.renderButton(host, (idToken) =>
         this.handleGoogleCredential(idToken),
       );
-      this.googleLoginReady.set(true);
+
+      const renderedGoogleButton = host.querySelector<HTMLElement>('div[role="button"], iframe');
+      this.googleLoginReady.set(!!renderedGoogleButton);
     } catch {
       this.googleLoginReady.set(false);
     }

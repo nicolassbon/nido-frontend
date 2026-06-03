@@ -4,12 +4,14 @@ import { environment } from '../../../environments/environment';
 
 
 export interface CreateStockHomeRequest {
-  nombre: string;
-  categoriaId: string;
-  ubicacion: string;
-  cantidad: number;
-  unidadMedida: string;
-  fechaVencimiento?: string;
+  nombre:              string;
+  categoriaId:         string;
+  ubicacion:           string;
+  cantidad:            number;
+  unidadMedida:        string;
+  fechaVencimiento?:   string;
+  estaAbierto?:        boolean;
+  porcentajeConsumido?: number;
 }
 
 export interface ProductManualResponse {
@@ -39,7 +41,7 @@ private readonly baseUrl = environment.apiBaseUrl;
   constructor(private http: HttpClient) {}
 
 createStockHome(payload: CreateStockHomeRequest) {
-  return this.http.post(`${this.baseUrl}/productos`, payload);
+  return this.http.post<ProductManualResponse>(`${this.baseUrl}/productos`, payload);
 }
 
 getProductManual(hogarId?: string) {

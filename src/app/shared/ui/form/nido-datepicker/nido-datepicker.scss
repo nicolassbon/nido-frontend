@@ -1,0 +1,206 @@
+:host {
+  display: block;
+  position: relative;
+  width: 100%;
+}
+
+.nido-dp {
+  position: relative;
+  width: 100%;
+
+  // ── Trigger ────────────────────────────────────────────────
+  &__trigger {
+    width: 100%;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0 1rem;
+    border: 1.5px solid var(--color-nido-brown);
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.51);
+    font-family: var(--font-family-sans);
+    font-size: 0.95rem;
+    color: var(--color-nido-green-dark);
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    user-select: none;
+  }
+
+  &__cal-icon {
+    flex-shrink: 0;
+    color: var(--color-nido-muted);
+  }
+
+  &__label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &.is-placeholder {
+      color: var(--color-nido-muted);
+    }
+  }
+
+  &__clear {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    padding: 0;
+    border-radius: 50%;
+    border: none;
+    background: var(--color-nido-border);
+    color: var(--color-nido-muted);
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+
+    &:hover {
+      background: #c8b29d;
+      color: var(--color-nido-green-dark);
+    }
+  }
+
+  // ── States ─────────────────────────────────────────────────
+  &.is-open .nido-dp__trigger {
+    border-color: var(--color-nido-green-dark);
+    box-shadow: 0 0 0 3px rgba(31, 58, 58, 0.08);
+  }
+
+  &.has-error .nido-dp__trigger {
+    border-color: var(--color-nido-red);
+    box-shadow: none;
+  }
+
+  &.is-disabled .nido-dp__trigger {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  // ── Panel ──────────────────────────────────────────────────
+  &__panel {
+    position: absolute;
+    top: calc(100% + 0.375rem);
+    left: 0;
+
+    &.open-up {
+      top: auto;
+      bottom: calc(100% + 0.375rem);
+    }
+    background: #fff;
+    border: 1px solid var(--color-nido-border);
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 28px rgba(31, 58, 58, 0.16);
+    z-index: 200;
+    min-width: 272px;
+    overflow: hidden;
+    animation: nidoDpIn 0.14s ease;
+  }
+
+  // ── Header ─────────────────────────────────────────────────
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.8rem 0.875rem;
+    background: var(--color-nido-green-dark);
+  }
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: none;
+    border-radius: 0.375rem;
+    background: rgba(234, 220, 201, 0.14);
+    color: var(--color-nido-cream);
+    cursor: pointer;
+    transition: background 0.12s;
+
+    &:hover { background: rgba(234, 220, 201, 0.26); }
+  }
+
+  &__month {
+    font-family: var(--font-family-title);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-nido-cream);
+    letter-spacing: 0.01em;
+  }
+
+  // ── Weekday headers ────────────────────────────────────────
+  &__weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    padding: 0.625rem 0.75rem 0.25rem;
+    gap: 2px;
+
+    span {
+      text-align: center;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--color-nido-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  }
+
+  // ── Day grid ───────────────────────────────────────────────
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    padding: 0.25rem 0.75rem 0.75rem;
+    gap: 2px;
+  }
+
+  &__day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 1;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    font-family: var(--font-family-sans);
+    font-size: 0.8125rem;
+    color: var(--color-nido-green-dark);
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s;
+
+    &:hover:not(:disabled):not(.is-selected) {
+      background: var(--color-nido-cream);
+    }
+
+    &.is-empty,
+    &:disabled {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    &.is-today:not(.is-selected) {
+      font-weight: 700;
+      color: var(--color-nido-gold);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    &.is-selected {
+      background: var(--color-nido-green-dark);
+      color: var(--color-nido-cream);
+      font-weight: 600;
+    }
+  }
+}
+
+@keyframes nidoDpIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

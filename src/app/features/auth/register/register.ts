@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../../core/auth/auth.service';
 import { validatePhotoFile } from '../../../shared/validators/photo';
+import { NidoSelectComponent, NidoSelectOption } from '../../../shared/ui/form/nido-select/nido-select';
 
 export function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
   const password = control.get('password')?.value;
@@ -13,7 +14,7 @@ export function passwordMatchValidator(control: AbstractControl): ValidationErro
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule, LucideAngularModule],
+  imports: [ReactiveFormsModule, LucideAngularModule, NidoSelectComponent],
   templateUrl: './register.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -45,10 +46,10 @@ export class Register {
   readonly globalError         = signal<string | null>(null);
   readonly submitted           = signal(false);
 
-  readonly sexoOptions = [
-    { value: 'Masculino', label: 'Masculino' },
-    { value: 'Femenino', label: 'Femenino' },
-    { value: 'Otro', label: 'Otro' },
+  readonly sexoOptions: NidoSelectOption[] = [
+    { value: 'Masculino',           label: 'Masculino' },
+    { value: 'Femenino',            label: 'Femenino' },
+    { value: 'Otro',                label: 'Otro' },
     { value: 'Prefiero no decirlo', label: 'Prefiero no decirlo' },
   ];
 

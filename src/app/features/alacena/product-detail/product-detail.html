@@ -1,0 +1,164 @@
+<div class="product-page">
+  <button type="button" class="back-button" (click)="goBack()">
+    <lucide-icon name="arrow-left" [size]="18" />
+    Volver al inventario
+  </button>
+
+  @if (loading()) {
+    <section class="state-card">
+      <lucide-icon name="loader" [size]="38" class="spin" />
+      <p>Cargando producto...</p>
+    </section>
+  }
+
+  @if (errorMessage() && !loading()) {
+    <section class="state-card state-card--error">
+      <lucide-icon name="alert-circle" [size]="36" />
+      <p>{{ errorMessage() }}</p>
+    </section>
+  }
+
+  @if (product() && !loading()) {
+    @let p = product()!;
+
+    <div class="product-layout">
+      <section class="photo-panel">
+        @if (imageUrl()) {
+          <img [src]="imageUrl()" [alt]="p.nombre" (error)="onImageError($event, p.nombre)" />
+        } @else {
+          <div class="photo-empty">
+            <lucide-icon name="package" [size]="58" />
+            <span>{{ p.nombre }}</span>
+          </div>
+        }
+      </section>
+
+      <section class="detail-panel">
+        <header class="product-heading">
+          <h1>{{ p.nombre }}</h1>
+          <p>Marca: <strong>{{ brand() }}</strong></p>
+        </header>
+
+        <div class="divider"></div>
+
+        <div class="info-list">
+          <div class="info-row">
+            <span class="info-label">
+              <span class="info-icon"><lucide-icon name="package" [size]="18" /></span>
+              Cantidad actual:
+            </span>
+            <strong>{{ quantitySummary(p) }}</strong>
+          </div>
+
+          @if (p.fechaVencimiento) {
+            <div class="info-row">
+              <span class="info-label">
+                <span class="info-icon"><lucide-icon name="calendar" [size]="18" /></span>
+                Fecha de vencimiento:
+              </span>
+              <strong>{{ formatDate(p.fechaVencimiento) }}</strong>
+            </div>
+          }
+
+          <div class="info-row">
+            <span class="info-label">
+              <span class="info-icon">
+                <lucide-icon [name]="p.estaAbierto ? 'package-open' : 'lock-keyhole'" [size]="18" />
+              </span>
+              Estado:
+            </span>
+            <span class="estado-badge" [class.estado-badge--abierto]="p.estaAbierto">
+              {{ p.estaAbierto ? 'Abierto' : 'Cerrado' }}
+            </span>
+          </div>
+        </div>
+
+        <section class="summary-card">
+          <h2>Resumen del producto</h2>
+
+          <div class="summary-row summary-row--full">
+            <span class="summary-icon"><lucide-icon name="leaf" [size]="15" /></span>
+            <div class="summary-copy-full">
+              <div class="nivel-header">
+                <strong>Nivel actual</strong>
+                <span class="nivel-pcts">
+                  <span class="nivel-restante">{{ remainingPercent() }}% restante</span>
+                  @if (p.estaAbierto && p.porcentajeConsumido > 0) {
+                    <span class="nivel-consumido">· {{ p.porcentajeConsumido }}% consumido</span>
+                  }
+                </span>
+              </div>
+              <!-- Barra de consumo -->
+              <div class="nivel-track">
+                <div class="nivel-fill"
+                     [style.width.%]="remainingPercent()"
+                     [class.nivel-fill--low]="remainingPercent() <= 25"
+                     [class.nivel-fill--mid]="remainingPercent() > 25 && remainingPercent() <= 60">
+                </div>
+              </div>
+              <small>
+                @if (p.estaAbierto) {
+                  Abierto · {{ formatAmount(p.cantidad, p.unidadMedida) }} disponibles.
+                } @else {
+                  Cerrado · {{ formatAmount(p.cantidad, p.unidadMedida) }} disponibles.
+                }
+              </small>
+            </div>
+          </div>
+
+          @if (p.fechaVencimiento) {
+            <div class="summary-row">
+              <span class="summary-icon"><lucide-icon name="shopping-cart" [size]="15" /></span>
+              <div class="summary-copy">
+                <strong>Proxima reposicion estimada</strong>
+                <small>{{ restockText(p) }}</small>
+              </div>
+            </div>
+          }
+
+          <div class="summary-row">
+            <span class="summary-icon"><lucide-icon name="check" [size]="15" /></span>
+            <div class="summary-copy">
+              <strong>Consejo</strong>
+              <small>{{ adviceText(p) }}</small>
+            </div>
+          </div>
+        </section>
+
+        <div class="actions">
+          <button type="button" class="primary-action" (click)="addToShoppingList()">
+            <span class="action-symbol">+</span>
+            <span class="action-label">Agregar a la lista</span>
+          </button>
+
+          <button type="button" class="secondary-action" (click)="showEditModal.set(true)">
+            <span class="action-symbol">/</span>
+            <span class="action-label">Editar</span>
+          </button>
+
+          <button type="button" class="secondary-action finish-action" [disabled]="finishing()" (click)="finishProduct()">
+            <span class="action-symbol">x</span>
+            <span class="action-label">
+              @if (finishing()) {
+                Marcando...
+              } @else {
+                Marcar como terminado
+              }
+            </span>
+          </button>
+        </div>
+
+        @if (listMessage()) {
+          <p class="feedback">{{ listMessage() }}</p>
+        }
+      </section>
+    </div>
+  }
+</div>
+
+@if (showEditModal() && product()) {
+  <app-agregar-producto
+    [isModal]="true"
+    [stockItem]="product()!"
+    (closed)="onEditClosed($event)" />
+}

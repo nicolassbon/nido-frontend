@@ -16,13 +16,21 @@ import { LucideAngularModule } from 'lucide-angular';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin, of, switchMap } from 'rxjs';
 import { BrowserMultiFormatReader } from '@zxing/browser';
-import { DecodeHintType } from '@zxing/library';
+import {
+  MultiFormatReader,
+  RGBLuminanceSource,
+  BinaryBitmap,
+  GlobalHistogramBinarizer,
+  DecodeHintType,
+  BarcodeFormat,
+} from '@zxing/library';
 import { OpenFoodFactsService } from '../open-food-facts.service';
 import { AlacenaApiService, StockItemResponse } from '../alacena-api.service';
 import { PreferenciasApiService } from '../preferencias-api.service';
 import { getTtlForCategory, TtlInfo } from '../ttl.config';
 import { RouterLink } from '@angular/router';
 import { ProductService, ProductManualResponse } from '../../../core/servicios/agregar-producto.service';
+import { AgregarProducto, KnownProduct } from '../../agregar-producto/agregar-producto';
 import { environment } from '../../../../environments/environment';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -45,6 +53,8 @@ export interface Product {
   location:         Exclude<StorageLocation, 'Todos'>;
   expiryDate:       string;   // ISO date string (YYYY-MM-DD)
   quantity:         number;
+  unit?:            string;
+  categoriaNombre?: string;
   isOpened?:        boolean;
   remainingPercent?: number;  // 100 = full, 75 / 50 / 25 = approximate remaining
   barcode?:         string;
@@ -99,10 +109,62 @@ function makeEmptyDraft(): ProductDraft {
 function resolveImageUrl(imageUrl: string | null | undefined): string {
   if (!imageUrl) return '';
   if (/^(https?:|data:|blob:)/i.test(imageUrl)) return imageUrl;
+  if (imageUrl.startsWith('/productos/')) return imageUrl;
 
   const baseUrl = environment.apiBaseUrl.replace(/\/api\/?$/, '');
   const normalizedPath = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
   return `${baseUrl}${normalizedPath}`;
+}
+
+function normalizeProductName(name: string | null | undefined): string {
+  return (name ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function fallbackProductImage(name: string | null | undefined): string {
+  const normalized = normalizeProductName(name);
+  const catalog: Record<string, string> = {
+    'aceite de oliva': '/productos/aceite-oliva.png',
+    'ajo en polvo': '/productos/ajo-polvo.png',
+    arroz: '/productos/arroz.png',
+    arvejas: '/productos/arvejas.png',
+    'cebolla en polvo': '/productos/cebolla-polvo.png',
+    cebolla: '/productos/cebolla.png',
+    harina: '/productos/harina.png',
+    leche: '/productos/leche.png',
+    manteca: '/productos/manteca.png',
+    'muslo de pollo': '/productos/muslo-pollo.png',
+    'oregano seco': '/productos/oregano-seco.png',
+    'pasas de uva': '/productos/pasas-uva.png',
+    'pimenton dulce': '/productos/pimenton-dulce.png',
+    yogur: '/productos/yogur.png',
+    queso: '/productos/queso.png',
+    agua: '/productos/agua.png',
+    fideos: '/productos/fideos.png',
+    sal: '/productos/sal.png',
+    salchicha: '/productos/salchicha.png',
+    salmon: '/productos/salmon.png',
+  };
+
+  const aliases: Record<string, string> = {
+    aceite: 'aceite de oliva',
+    'aceite vegetal': 'aceite de oliva',
+    'aji molido': 'pimenton dulce',
+    'cebolla amarilla': 'cebolla',
+    'cebolla grande': 'cebolla',
+    'cebolla morada': 'cebolla',
+    'harina comun': 'harina',
+    oregano: 'oregano seco',
+    pasas: 'pasas de uva',
+    pimenton: 'pimenton dulce',
+    'sal fina': 'sal',
+    'sal gruesa': 'sal',
+  };
+
+  return catalog[normalized] ?? catalog[aliases[normalized]] ?? '';
 }
 
 function formatCategoryTag(tag: string): string {
@@ -110,6 +172,47 @@ function formatCategoryTag(tag: string): string {
     .replace(/^[a-z]{2}:/, '')
     .replace(/-/g, ' ')
     .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function normalizeUnit(value: string | null | undefined): string {
+  const normalized = (value ?? '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  const aliases: Record<string, string> = {
+    '': 'unidad',
+    u: 'unidad',
+    unidad: 'unidad',
+    unidades: 'unidad',
+    unit: 'unidad',
+    gr: 'gr',
+    g: 'gr',
+    gramo: 'gr',
+    gramos: 'gr',
+    kg: 'kg',
+    kilo: 'kg',
+    kilos: 'kg',
+    kilogramo: 'kg',
+    kilogramos: 'kg',
+    ml: 'ml',
+    mililitro: 'ml',
+    mililitros: 'ml',
+    lt: 'lt',
+    l: 'lt',
+    litro: 'lt',
+    litros: 'lt',
+    cdita: 'cdita',
+    cucharadita: 'cdita',
+    cucharaditas: 'cdita',
+    cdta: 'cdita',
+    cda: 'cda',
+    cucharada: 'cda',
+    cucharadas: 'cda',
+  };
+
+  return aliases[normalized] ?? normalized;
 }
 
 const PLACEHOLDER_IMAGE = 'https://placehold.co/200x200/F7F1E6/927357?text=Sin+imagen';
@@ -138,7 +241,7 @@ const LOCATION_COLORS: Record<string, string> = {
 
 @Component({
   selector: 'app-alacena',
-  imports: [LucideAngularModule, FormsModule, RouterLink],
+  imports: [LucideAngularModule, FormsModule, RouterLink, AgregarProducto],
   templateUrl: './alacena.html',
   styleUrl: './alacena.scss',
 })
@@ -162,6 +265,18 @@ export class Alacena implements OnInit {
   protected readonly products           = signal<Product[]>([]);
   protected readonly isLoadingProducts  = signal(false);
   protected readonly apiError           = signal<string | null>(null);
+
+  /** Productos conocidos para el autocomplete del form de agregar */
+  protected readonly knownProducts = computed<KnownProduct[]>(() =>
+    this.products().map(p => ({
+      nombre:          p.name,
+      categoriaNombre: p.categoriaNombre,
+      unidadMedida:    p.unit,
+      ubicacion:       p.location,
+      stockId:         p.id,
+      cantidad:        p.quantity,
+    })),
+  );
 
   protected readonly diasAlerta         = signal(7);
   protected readonly diasAlertaInput    = signal(7);
@@ -195,7 +310,8 @@ export class Alacena implements OnInit {
   );
 
   // ── Scanner state ────────────────────────────────────────
-  protected readonly showScanner  = signal(false);
+  protected readonly showScanner      = signal(false);
+  protected readonly showManualForm   = signal(false);
   protected readonly scannerStep  = signal<ScannerStep>('scanning');
   protected readonly scannerError = signal('');
   protected readonly draft        = signal<ProductDraft>(makeEmptyDraft());
@@ -224,7 +340,6 @@ export class Alacena implements OnInit {
   private readonly videoRef      = viewChild<ElementRef<HTMLVideoElement>>('videoRef');
   private readonly photoInputRef = viewChild<ElementRef<HTMLInputElement>>('photoInput');
   private scanControls?: { stop(): void };
-  private codeReader?:  BrowserMultiFormatReader;
   private mediaStream?: MediaStream;
   private rafId?:       number;
   private scannerBusy  = false;
@@ -282,7 +397,9 @@ export class Alacena implements OnInit {
       });
   }
 
-private loadProducts(): void {
+protected reloadProducts(): void { this.loadProducts(); }
+
+  private loadProducts(): void {
   this.isLoadingProducts.set(true);
   this.apiError.set(null);
 
@@ -315,10 +432,12 @@ private loadProducts(): void {
     return {
       id:               item.id,
       name:             item.nombre,
-      image:            resolveImageUrl(item.imagen),
+      image:            resolveImageUrl(item.imagen) || fallbackProductImage(item.nombre),
       location:         item.ubicacion as Exclude<StorageLocation, 'Todos'>,
       expiryDate:       item.fechaVencimiento ?? '',
-      quantity:         item.cantidad,
+      quantity:         item.cantidad ?? 0,
+      unit:             normalizeUnit(item.unidadMedida),
+      categoriaNombre:  item.categoriaNombre ?? undefined,
       isOpened:         item.estaAbierto,
       remainingPercent: 100 - item.porcentajeConsumido,
       barcode:          item.codigoBarras ?? undefined,
@@ -329,10 +448,12 @@ private loadProducts(): void {
   return {
     id: item.stockHogarId,
     name: item.nombre,
-    image: resolveImageUrl(item.imagenUrl),
+    image: resolveImageUrl(item.imagenUrl) || fallbackProductImage(item.nombre),
     location: item.ubicacion as Exclude<StorageLocation, 'Todos'>,
     expiryDate: item.fechaVencimiento ?? '',
-    quantity: item.cantidad,
+    quantity: item.cantidad ?? 0,
+    unit:             normalizeUnit(item.unidadMedida),
+    categoriaNombre:  item.categoriaNombre ?? undefined,
     isOpened: item.estaAbierto,
     remainingPercent: 100 - item.porcentajeConsumido,
     barcode: item.codigoBarras ?? undefined,
@@ -345,11 +466,16 @@ private loadProducts(): void {
     try {
       const BD = (window as Window & { BarcodeDetector?: NativeBarcodeDetector }).BarcodeDetector;
       if (BD) {
-        await this.startNativeScanner(BD, videoEl);
-      } else {
-        await this.startZxingScanner(videoEl);
+        const supported = await BD.getSupportedFormats();
+        const formats   = ['ean_13', 'ean_8', 'upc_a', 'upc_e'].filter(f => supported.includes(f));
+        if (formats.length > 0) {
+          await this.startNativeScanner(BD, videoEl, formats);
+          return;
+        }
       }
-    } catch {
+      await this.startZxingScanner(videoEl);
+    } catch (err) {
+      console.error('[Camera] error:', err);
       this.zone.run(() => {
         this.scannerStep.set('error');
         this.scannerError.set('No se pudo acceder a la cámara. Verificá los permisos del navegador.');
@@ -360,11 +486,8 @@ private loadProducts(): void {
   private async startNativeScanner(
     BD: NativeBarcodeDetector,
     videoEl: HTMLVideoElement,
+    formats: string[],
   ): Promise<void> {
-    const supported = await BD.getSupportedFormats();
-    const formats   = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'qr_code']
-      .filter(f => supported.includes(f));
-
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
     });
@@ -382,7 +505,7 @@ private loadProducts(): void {
           this.zone.run(() => this.onBarcodeDetected(barcodes[0].rawValue));
           return;
         }
-      } catch { /* frame error — continue */ }
+      } catch { /* frame error — continuar */ }
       this.rafId = requestAnimationFrame(() => void scan());
     };
 
@@ -390,23 +513,83 @@ private loadProducts(): void {
   }
 
   private async startZxingScanner(videoEl: HTMLVideoElement): Promise<void> {
-    const hints = new Map<DecodeHintType, unknown>();
-    hints.set(DecodeHintType.TRY_HARDER, true);
-    this.codeReader = new BrowserMultiFormatReader(hints);
+    const formats = [
+      BarcodeFormat.EAN_13,
+      BarcodeFormat.EAN_8,
+      BarcodeFormat.UPC_A,
+      BarcodeFormat.UPC_E,
+    ];
 
-    const controls = await this.codeReader.decodeFromVideoDevice(
-      undefined,
-      videoEl,
-      result => {
-        if (result) this.zone.run(() => this.onBarcodeDetected(result.getText()));
+    // Intento 1 (rápido): sin TRY_HARDER — ZXing escanea filas centrales solamente
+    const fastHints = new Map<DecodeHintType, unknown>();
+    fastHints.set(DecodeHintType.POSSIBLE_FORMATS, formats);
+
+    // Intento 2 (exhaustivo): con TRY_HARDER — busca en toda la imagen
+    const thoroughHints = new Map<DecodeHintType, unknown>();
+    thoroughHints.set(DecodeHintType.TRY_HARDER, true);
+    thoroughHints.set(DecodeHintType.POSSIBLE_FORMATS, formats);
+
+    const browserReader = new BrowserMultiFormatReader(fastHints);
+    const libReader     = new MultiFormatReader();
+    libReader.setHints(thoroughHints);
+
+    // Pedir 640×480: resolución óptima para detección de códigos de barras
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: 'environment' },
+        width:  { ideal: 640, max: 1280 },
+        height: { ideal: 480, max: 720  },
       },
-    );
+    });
+    this.mediaStream  = stream;
+    videoEl.srcObject = stream;
+    await videoEl.play();
 
-    if (this.scannerStep() !== 'scanning') {
-      controls.stop();
-      return;
-    }
-    this.scanControls = controls;
+    const canvas = document.createElement('canvas');
+    const ctx    = canvas.getContext('2d', { willReadFrequently: true })!;
+
+    const doScan = (): void => {
+      if (this.scannerStep() !== 'scanning') return;
+      const vw = videoEl.videoWidth;
+      const vh = videoEl.videoHeight;
+      if (!vw || !vh) { setTimeout(doScan, 100); return; }
+
+      // Capear a 640px: suficiente resolución para EAN-13, mucho más rápido de procesar
+      const scale = Math.min(1, 640 / vw);
+      const w = Math.round(vw * scale);
+      const h = Math.round(vh * scale);
+      canvas.width  = w;
+      canvas.height = h;
+
+      // Aumentar contraste al dibujar: ayuda a webcams con imagen lavada o con poca luz
+      ctx.filter = 'contrast(1.5) brightness(1.05)';
+      ctx.drawImage(videoEl, 0, 0, w, h);
+      ctx.filter = 'none';
+
+      // Intento 1: HybridBinarizer vía BrowserMultiFormatReader (maneja RGBA correctamente)
+      try {
+        const code = browserReader.decodeFromCanvas(canvas).getText();
+        this.zone.run(() => this.onBarcodeDetected(code));
+        return;
+      } catch { /* continuar */ }
+
+      // Intento 2: GlobalHistogramBinarizer — mejor para imágenes de bajo contraste
+      try {
+        const rgba = ctx.getImageData(0, 0, w, h).data;
+        const gray = new Uint8ClampedArray(w * h);
+        for (let i = 0; i < gray.length; i++) {
+          gray[i] = (rgba[i * 4] + rgba[i * 4 + 1] + rgba[i * 4 + 1] + rgba[i * 4 + 2]) >> 2;
+        }
+        const src  = new RGBLuminanceSource(gray, w, h);
+        const code = libReader.decode(new BinaryBitmap(new GlobalHistogramBinarizer(src))).getText();
+        this.zone.run(() => this.onBarcodeDetected(code));
+        return;
+      } catch { /* no barcode en este frame */ }
+
+      setTimeout(doScan, 100);
+    };
+
+    setTimeout(doScan, 100);
   }
 
   private stopCamera(): void {
@@ -416,7 +599,6 @@ private loadProducts(): void {
     }
     this.scanControls?.stop();
     this.scanControls = undefined;
-    this.codeReader   = undefined;
     this.mediaStream?.getTracks().forEach(t => t.stop());
     this.mediaStream  = undefined;
   }
@@ -601,6 +783,7 @@ private loadProducts(): void {
           imagen:              d.image || null,
           ubicacion:           d.location,
           cantidad:            d.quantity,
+          unidadMedida:        'unidad',
           fechaVencimiento:    d.expiryDate || null,
           estaAbierto:         d.isOpened,
           porcentajeConsumido: d.consumedPercent,
@@ -633,10 +816,19 @@ private loadProducts(): void {
   // ── Display helpers ──────────────────────────────────────
 
   protected getDaysRemaining(expiryDate: string): number {
+    if (!this.hasExpiryDate(expiryDate)) return Number.POSITIVE_INFINITY;
+
     const today  = new Date();
     today.setHours(0, 0, 0, 0);
     const expiry = new Date(expiryDate + 'T00:00:00');
     return Math.round((expiry.getTime() - today.getTime()) / 86_400_000);
+  }
+
+  protected hasExpiryDate(expiryDate: string | null | undefined): boolean {
+    if (!expiryDate) return false;
+
+    const expiry = new Date(`${expiryDate}T00:00:00`);
+    return !Number.isNaN(expiry.getTime());
   }
 
   protected getExpiryColor(days: number): string {
@@ -664,6 +856,27 @@ private loadProducts(): void {
     return 'Casi vacío';
   }
 
+  /**
+   * Etiqueta de cantidad para la card.
+   * - Unidades contables ('unidad' o sin unidad): "x1", "x3", etc.
+   * - Unidades de medida (gr/kg/ml/lt/cda/cdita): "100 g", "1.5 kg", etc.
+   */
+  protected quantityBadge(product: Product): string {
+    const unit = normalizeUnit(product.unit);
+    const qty  = product.quantity;
+
+    if (unit === 'unidad') {
+      return `x${qty}`;
+    }
+
+    const labels: Record<string, string> = {
+      gr: 'g', kg: 'kg', ml: 'ml', lt: 'l', cda: 'cda', cdita: 'cdita',
+    };
+    const suffix = labels[unit] ?? unit;
+    const sep = (suffix === 'cda' || suffix === 'cdita') ? ' ' : '';
+    return `${qty}${sep}${suffix}`;
+  }
+
   protected getLocationIcon(location: StorageLocation): string {
     return LOCATION_ICONS[location] ?? 'package';
   }
@@ -674,6 +887,12 @@ private loadProducts(): void {
 
   protected onImgError(event: Event): void {
     const img = event.target as HTMLImageElement;
+    const fallback = fallbackProductImage(img.alt);
+    const fallbackUrl = fallback ? new URL(fallback, window.location.origin).href : '';
+    if (fallback && img.src !== fallbackUrl) {
+      img.src = fallback;
+      return;
+    }
     if (!img.src.includes('placehold.co')) img.src = PLACEHOLDER_IMAGE;
   }
 

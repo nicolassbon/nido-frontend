@@ -12,6 +12,7 @@ interface NavItem {
   label: string;
   route: string;
   icon:  string;
+  disabled?: boolean;
 }
 
 @Component({
@@ -27,7 +28,7 @@ export class Nav {
 
   protected readonly sidebarClass = computed(() => {
     const base = [
-      'w-[230px] h-screen overflow-y-auto bg-nido-green-dark flex flex-col px-3 py-6 shrink-0',
+      'nido-sidebar w-[230px] h-screen overflow-y-auto bg-nido-green-dark flex flex-col px-3 py-6 shrink-0',
       'transition-transform duration-[280ms] ease-out',
       'fixed top-0 left-0 z-[100]',
       'md:sticky md:top-0 md:translate-x-0 md:shadow-none',
@@ -43,11 +44,11 @@ export class Nav {
     { label: 'Alacena',           route: '/alacena',          icon: 'refrigerator'},
     { label: 'Recetas',           route: '/recetas',          icon: 'chef-hat'      },
     { label: 'Lista de compras',  route: '/lista-compras',    icon: 'shopping-cart' },
-    { label: 'Finanzas',          route: '/finanzas',         icon: 'wallet'        },
-    { label: 'Tareas',            route: '/tareas',           icon: 'check-square'},
-    { label: 'Planificador',      route: '/planificador',     icon: 'calendar'    },
+    { label: 'Finanzas',          route: '/finanzas',         icon: 'wallet',       disabled: true },
+    { label: 'Tareas',            route: '/tareas',           icon: 'check-square', disabled: true },
+    { label: 'Planificador',      route: '/planificador',     icon: 'calendar',     disabled: true },
     { label: 'Electrodomésticos', route: '/electrodomesticos',icon: 'zap'         },
-    { label: 'Notificaciones',    route: '/notificaciones',   icon: 'bell'        },
+    { label: 'Notificaciones',    route: '/notificaciones',   icon: 'bell',         disabled: true },
     { label: 'Mi perfil',         route: '/perfil',           icon: 'user'        },
   ];
 

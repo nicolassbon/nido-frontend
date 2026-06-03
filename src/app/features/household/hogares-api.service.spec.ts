@@ -24,7 +24,7 @@ describe('HogaresApiService', () => {
 
   it('getMiembros() GETs /hogares/miembros', () => {
     const mockData = [
-      { usuarioId: 'u1', nombre: 'Ana', email: 'ana@test.com', rol: 'admin', fotoUrl: null },
+      { usuarioId: 'u1', nombre: 'Ana', email: 'ana@test.com', rol: 'admin', fotoUrl: null, alergias: ['Gluten'] },
     ];
 
     service.getMiembros().subscribe(data => expect(data).toEqual(mockData));

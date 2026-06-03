@@ -4,12 +4,13 @@
   <header
     [class.is-scrolled]="scrolled()"
     class="nav-floating fixed top-3 left-4 right-4 z-50 bg-nido-green-dark rounded-3xl">
-    <div class="px-6 h-[3.75rem] flex items-center justify-between">
+    <div class="px-4 sm:px-6 h-[3.75rem] flex items-center justify-between">
 
       <a routerLink="/" class="no-underline shrink-0">
         <img src="logo.png" alt="Nido" class="h-8 w-auto object-contain" />
       </a>
 
+      <!-- Links desktop -->
       <nav class="hidden md:flex items-center gap-8">
         <a href="#inicio"     class="nav-link" [class.active-link]="activeSection() === 'inicio'"     (click)="scrollTo('inicio',     $event)">Inicio</a>
         <a href="#beneficios" class="nav-link" [class.active-link]="activeSection() === 'beneficios'" (click)="scrollTo('beneficios', $event)">Beneficios</a>
@@ -19,10 +20,11 @@
       </nav>
 
       <a routerLink="/login"
-         class="hidden sm:inline-flex items-center gap-1.5 bg-nido-gold text-white px-5 py-2 rounded-full text-sm font-medium no-underline hover:opacity-90 transition-opacity">
+         class="inline-flex items-center gap-1.5 bg-nido-gold text-white px-4 py-2 rounded-full text-sm font-medium no-underline hover:opacity-90 transition-opacity sm:px-5">
         Iniciar sesión
       </a>
     </div>
+
   </header>
 
   <!-- ── HERO ──────────────────────────────────────────────────── -->
@@ -37,7 +39,7 @@
     <div class="absolute inset-0 hero-grain pointer-events-none"></div>
     <div class="hero-content-glow absolute pointer-events-none" aria-hidden="true"></div>
 
-    <div class="relative z-10 w-full max-w-7xl mx-auto px-8 pt-24 pb-16">
+    <div class="relative z-10 w-full max-w-7xl mx-auto px-5 pt-24 pb-16 sm:px-8">
       <div class="flex flex-col">
 
         <!-- ── Copy ──────────────────────────────────────────────────── -->
@@ -61,14 +63,14 @@
           </p>
 
           <!-- CTAs: py-3 = 46px de alto estándar para 15px de tipo -->
-          <div class="hero-cta flex items-center gap-4 flex-wrap mb-9">
+          <div class="hero-cta flex flex-col items-stretch gap-4 mb-9 sm:flex-row sm:items-center sm:flex-wrap">
             <a routerLink="/registro"
-               class="cta-primary inline-flex items-center gap-2 bg-nido-gold text-white px-7 py-3 rounded-full text-[0.9375rem] font-semibold no-underline shadow-[0_4px_20px_rgba(199,143,90,0.44)]">
+               class="cta-primary inline-flex items-center justify-center gap-2 bg-nido-gold text-white px-7 py-3 rounded-full text-[0.9375rem] font-semibold no-underline shadow-[0_4px_20px_rgba(199,143,90,0.44)]">
               Comenzá gratis
               <lucide-icon name="arrow-right" [size]="16" />
             </a>
             <a href="#beneficios" (click)="scrollTo('beneficios', $event)"
-               class="inline-flex items-center gap-2 border border-white/[0.22] text-white/70 px-6 py-3 rounded-full text-[0.9375rem] no-underline hover:bg-white/[0.08] hover:text-white transition-all duration-200">
+               class="inline-flex items-center justify-center gap-2 border border-white/[0.22] text-white/70 px-6 py-3 rounded-full text-[0.9375rem] no-underline hover:bg-white/[0.08] hover:text-white transition-all duration-200">
               Ver cómo funciona
             </a>
           </div>
@@ -121,9 +123,9 @@
 
   <!-- ── FEATURE STRIP ─────────────────────────────────────────── -->
   <section class="feature-strip bg-nido-cream">
-    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-nido-border">
+      <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-nido-border">
 
-      <div class="feature-item flex items-center gap-5 px-10 py-9">
+      <div class="feature-item flex items-center gap-5 px-5 py-8 sm:px-10 sm:py-9">
         <div class="feature-icon w-14 h-14 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0 shadow-[0_4px_16px_rgba(38,63,48,0.22)]">
           <lucide-icon name="refrigerator" [size]="22" class="text-nido-cream" />
         </div>
@@ -135,7 +137,7 @@
         </div>
       </div>
 
-      <div class="feature-item flex items-center gap-5 px-10 py-9">
+      <div class="feature-item flex items-center gap-5 px-5 py-8 sm:px-10 sm:py-9">
         <div class="feature-icon w-14 h-14 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0 shadow-[0_4px_16px_rgba(38,63,48,0.22)]">
           <lucide-icon name="chef-hat" [size]="22" class="text-nido-cream" />
         </div>
@@ -147,7 +149,7 @@
         </div>
       </div>
 
-      <div class="feature-item flex items-center gap-5 px-10 py-9">
+      <div class="feature-item flex items-center gap-5 px-5 py-8 sm:px-10 sm:py-9">
         <div class="feature-icon w-14 h-14 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0 shadow-[0_4px_16px_rgba(38,63,48,0.22)]">
           <lucide-icon name="users" [size]="22" class="text-nido-cream" />
         </div>
@@ -184,7 +186,7 @@
   </section>
 
   <!-- ── CÓMO FUNCIONA ─────────────────────────────────────────── -->
-  <section id="beneficios" class="bg-nido-cream py-28 px-6">
+  <section id="beneficios" class="bg-nido-cream px-4 py-16 sm:px-6 sm:py-28">
     <div class="max-w-6xl mx-auto">
 
       <div class="reveal-section text-center mb-20">
@@ -198,7 +200,7 @@
         <div class="steps-track hidden md:block" aria-hidden="true"></div>
 
         <!-- Paso 01 -->
-        <div class="step-item reveal-section relative px-8 pt-4 pb-10">
+        <div class="step-item reveal-section relative px-5 pt-4 pb-10 sm:px-8">
           <div class="step-deco-number" aria-hidden="true">01</div>
           <div class="relative z-10">
             <div class="flex items-center gap-3 mb-5">
@@ -215,7 +217,7 @@
         </div>
 
         <!-- Paso 02 -->
-        <div class="step-item step-item--mid reveal-section relative px-8 pt-4 pb-10">
+        <div class="step-item step-item--mid reveal-section relative px-5 pt-4 pb-10 sm:px-8">
           <div class="step-deco-number" aria-hidden="true">02</div>
           <div class="relative z-10">
             <div class="flex items-center gap-3 mb-5">
@@ -232,7 +234,7 @@
         </div>
 
         <!-- Paso 03 -->
-        <div class="step-item reveal-section relative px-8 pt-4 pb-10">
+        <div class="step-item reveal-section relative px-5 pt-4 pb-10 sm:px-8">
           <div class="step-deco-number" aria-hidden="true">03</div>
           <div class="relative z-10">
             <div class="flex items-center gap-3 mb-5">
@@ -253,7 +255,7 @@
   </section>
 
   <!-- ── APP SHOWCASE ──────────────────────────────────────────── -->
-  <section class="showcase-section py-24 px-6 bg-nido-bg">
+  <section class="showcase-section px-4 py-16 sm:px-6 sm:py-24 bg-nido-bg">
     <div class="max-w-7xl mx-auto">
 
       <div class="reveal-section text-center mb-20">
@@ -262,9 +264,9 @@
       </div>
 
       <!-- Bloque 1: Alacena -->
-      <div class="showcase-block reveal-section flex flex-col lg:flex-row items-center gap-16 mb-24">
+      <div class="showcase-block reveal-section flex flex-col lg:flex-row items-center gap-10 lg:gap-16 mb-16 sm:mb-24">
         <div class="showcase-visual lg:w-1/2 shrink-0 w-full">
-          <div class="showcase-frame bg-white rounded-[22px] shadow-[0_6px_32px_rgba(38,63,48,0.09)] overflow-hidden border border-nido-border">
+          <div class="showcase-frame bg-white/[0.51] rounded-[22px] shadow-[0_6px_32px_rgba(38,63,48,0.09)] overflow-hidden border border-nido-border">
             <div class="px-5 py-4 border-b border-nido-border flex items-center justify-between">
               <div>
                 <h3 class="text-nido-green-dark font-bold text-[0.9375rem]">Mi Alacena</h3>
@@ -358,9 +360,9 @@
       </div>
 
       <!-- Bloque 2: Recetas (invertido) -->
-      <div class="showcase-block reveal-section flex flex-col lg:flex-row-reverse items-center gap-16">
+      <div class="showcase-block reveal-section flex flex-col lg:flex-row-reverse items-center gap-10 lg:gap-16">
         <div class="showcase-visual lg:w-1/2 shrink-0 w-full">
-          <div class="showcase-frame bg-white rounded-[22px] shadow-[0_6px_32px_rgba(38,63,48,0.09)] overflow-hidden border border-nido-border">
+          <div class="showcase-frame bg-white/[0.51] rounded-[22px] shadow-[0_6px_32px_rgba(38,63,48,0.09)] overflow-hidden border border-nido-border">
             <div class="px-5 py-4 border-b border-nido-border">
               <h3 class="text-nido-green-dark font-bold text-[0.9375rem]">Recetas Inteligentes</h3>
               <p class="text-nido-muted text-[0.74rem]">48 recetas · filtrando por tu alacena</p>
@@ -431,7 +433,7 @@
   </section>
 
   <!-- ── MÓDULOS DESTACADOS ────────────────────────────────────── -->
-  <section id="funciones" class="modules-section py-24 px-6">
+  <section id="funciones" class="modules-section px-4 py-16 sm:px-6 sm:py-24">
     <div class="max-w-7xl mx-auto">
 
       <div class="reveal-section text-center mb-16">
@@ -445,7 +447,7 @@
       <!-- Módulos principales -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
 
-        <div class="module-card reveal-section bg-white rounded-[18px] overflow-hidden">
+        <div class="module-card reveal-section bg-white/[0.51] rounded-[18px] overflow-hidden">
           <div class="h-[3px] bg-nido-green"></div>
           <div class="p-7">
             <div class="module-icon w-11 h-11 rounded-[10px] bg-[rgba(62,94,74,0.08)] flex items-center justify-center mb-5">
@@ -469,7 +471,7 @@
           </div>
         </div>
 
-        <div class="module-card reveal-section bg-white rounded-[18px] overflow-hidden">
+        <div class="module-card reveal-section bg-white/[0.51] rounded-[18px] overflow-hidden">
           <div class="h-[3px] bg-nido-gold"></div>
           <div class="p-7">
             <div class="module-icon w-11 h-11 rounded-[10px] bg-[rgba(199,143,90,0.08)] flex items-center justify-center mb-5">
@@ -493,7 +495,7 @@
           </div>
         </div>
 
-        <div class="module-card reveal-section bg-white rounded-[18px] overflow-hidden">
+        <div class="module-card reveal-section bg-white/[0.51] rounded-[18px] overflow-hidden">
           <div class="h-[3px] bg-nido-brown"></div>
           <div class="p-7">
             <div class="module-icon w-11 h-11 rounded-[10px] bg-[rgba(146,115,87,0.08)] flex items-center justify-center mb-5">
@@ -522,7 +524,7 @@
       <!-- Módulos adicionales (compact) -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 reveal-section">
 
-        <div class="compact-module bg-white rounded-[14px] p-4.5 flex items-center gap-3.5 border border-nido-border shadow-[0_1px_6px_rgba(38,63,48,0.06)] hover:shadow-[0_6px_20px_rgba(38,63,48,0.1)] hover:-translate-y-[3px] transition-all duration-200">
+        <div class="compact-module bg-white/[0.51] rounded-[14px] p-4.5 flex items-center gap-3.5 border border-nido-border shadow-[0_1px_6px_rgba(38,63,48,0.06)] hover:shadow-[0_6px_20px_rgba(38,63,48,0.1)] hover:-translate-y-[3px] transition-all duration-200">
           <div class="w-10 h-10 rounded-[10px] bg-[rgba(62,94,74,0.08)] flex items-center justify-center shrink-0">
             <lucide-icon name="calendar" [size]="19" class="text-nido-green" />
           </div>
@@ -532,7 +534,7 @@
           </div>
         </div>
 
-        <div class="compact-module bg-white rounded-[14px] p-4.5 flex items-center gap-3.5 border border-nido-border shadow-[0_1px_6px_rgba(38,63,48,0.06)] hover:shadow-[0_6px_20px_rgba(38,63,48,0.1)] hover:-translate-y-[3px] transition-all duration-200">
+        <div class="compact-module bg-white/[0.51] rounded-[14px] p-4.5 flex items-center gap-3.5 border border-nido-border shadow-[0_1px_6px_rgba(38,63,48,0.06)] hover:shadow-[0_6px_20px_rgba(38,63,48,0.1)] hover:-translate-y-[3px] transition-all duration-200">
           <div class="w-10 h-10 rounded-[10px] bg-[rgba(199,143,90,0.08)] flex items-center justify-center shrink-0">
             <lucide-icon name="shopping-basket" [size]="19" class="text-nido-gold" />
           </div>
@@ -542,7 +544,7 @@
           </div>
         </div>
 
-        <div class="compact-module bg-white rounded-[14px] p-4.5 flex items-center gap-3.5 border border-nido-border shadow-[0_1px_6px_rgba(38,63,48,0.06)] hover:shadow-[0_6px_20px_rgba(38,63,48,0.1)] hover:-translate-y-[3px] transition-all duration-200">
+        <div class="compact-module bg-white/[0.51] rounded-[14px] p-4.5 flex items-center gap-3.5 border border-nido-border shadow-[0_1px_6px_rgba(38,63,48,0.06)] hover:shadow-[0_6px_20px_rgba(38,63,48,0.1)] hover:-translate-y-[3px] transition-all duration-200">
           <div class="w-10 h-10 rounded-[10px] bg-[rgba(146,115,87,0.08)] flex items-center justify-center shrink-0">
             <lucide-icon name="check-square" [size]="19" class="text-nido-brown" />
           </div>
@@ -552,7 +554,7 @@
           </div>
         </div>
 
-        <div class="compact-module bg-white rounded-[14px] p-4.5 flex items-center gap-3.5 border border-nido-border shadow-[0_1px_6px_rgba(38,63,48,0.06)] hover:shadow-[0_6px_20px_rgba(38,63,48,0.1)] hover:-translate-y-[3px] transition-all duration-200">
+        <div class="compact-module bg-white/[0.51] rounded-[14px] p-4.5 flex items-center gap-3.5 border border-nido-border shadow-[0_1px_6px_rgba(38,63,48,0.06)] hover:shadow-[0_6px_20px_rgba(38,63,48,0.1)] hover:-translate-y-[3px] transition-all duration-200">
           <div class="w-10 h-10 rounded-[10px] bg-[rgba(62,94,74,0.08)] flex items-center justify-center shrink-0">
             <lucide-icon name="wallet" [size]="19" class="text-nido-green" />
           </div>
@@ -565,7 +567,7 @@
       </div>
 
       <!-- Banner convivientes -->
-      <div class="convivientes-banner reveal-section mt-6 rounded-[18px] px-8 py-6 flex flex-col sm:flex-row items-center gap-5 justify-between">
+      <div class="convivientes-banner reveal-section mt-6 rounded-[18px] px-5 py-6 sm:px-8 flex flex-col sm:flex-row items-center gap-5 justify-between">
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center shrink-0">
             <lucide-icon name="users" [size]="22" class="text-nido-cream" />
@@ -586,7 +588,7 @@
   </section>
 
   <!-- ── TESTIMONIOS ───────────────────────────────────────────── -->
-  <section class="py-24 px-6 bg-white">
+  <section class="px-4 py-16 sm:px-6 sm:py-24 bg-white">
     <div class="max-w-7xl mx-auto">
 
       <div class="reveal-section text-center mb-14">
@@ -658,7 +660,7 @@
   </section>
 
   <!-- ── PLANES ───────────────────────────────────────────────── -->
-  <section class="py-24 px-6 bg-nido-bg" id="precios">
+  <section class="px-4 py-16 sm:px-6 sm:py-24 bg-nido-bg" id="precios">
     <div class="max-w-7xl mx-auto">
 
       <div class="reveal-section text-center mb-14">
@@ -746,7 +748,7 @@
   </section>
 
   <!-- ── FAQ ───────────────────────────────────────────────────── -->
-  <section class="py-24 px-6 bg-nido-bg" id="faq">
+  <section class="px-4 py-16 sm:px-6 sm:py-24 bg-nido-bg" id="faq">
     <div class="max-w-2xl mx-auto">
 
       <div class="reveal-section text-center mb-14">

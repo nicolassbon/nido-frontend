@@ -1,8 +1,8 @@
-<div class="p-4 sm:p-6 flex flex-col gap-5 max-w-[1200px]">
+<div class="w-full p-4 sm:p-6 flex flex-col gap-5">
 
   <!-- Banner -->
   <section class="relative overflow-hidden rounded-[14px] px-8 py-7 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
-    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=900&h=200&fit=crop')] bg-center bg-cover opacity-[0.12]"></div>
+    <div class="absolute inset-0 bg-[url('/images/banners/alacena.png')] bg-center bg-cover ']"></div>
     <div class="relative z-10">
       <h1 class="text-nido-cream text-[1.6rem] font-bold">Alacena</h1>
       <p class="text-nido-cream/70 text-sm mt-0.5">
@@ -19,12 +19,12 @@
         <lucide-icon name="qr-code" [size]="15" />
         Escanear código
       </button>
-       <a
-  routerLink="/agregar-producto"
-  class="flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)] no-underline">
-  <lucide-icon name="plus" [size]="15" />
-  Agregar producto
-</a>
+      <button
+        class="flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]"
+        (click)="showManualForm.set(true)">
+        <lucide-icon name="plus" [size]="15" />
+        Agregar producto
+      </button>
     </div>
   </section>
 
@@ -98,7 +98,7 @@
         <lucide-icon name="search" [size]="18" />
       </span>
       <input
-        class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-border rounded-[10px] bg-white text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-green placeholder:text-nido-muted"
+        class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-brown rounded-[10px] bg-white/[0.51] text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-brown placeholder:text-nido-muted"
         type="text"
         placeholder="Buscar producto..."
         [ngModel]="searchQuery()"
@@ -127,10 +127,11 @@
       }
     </div>
   } @else {
-    <div class="grid grid-cols-[repeat(auto-fill,minmax(190px,1fr))] gap-4">
+    <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,190px),1fr))] gap-4">
       @for (product of filteredProducts(); track product.id) {
-        @let daysLeft = getDaysRemaining(product.expiryDate);
-        <article class="bg-white rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition-[transform,box-shadow] duration-[180ms] cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)] group">
+        <a
+          [routerLink]="['/alacena', product.id]"
+          class="block no-underline text-inherit bg-white/[0.51] rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition-[transform,box-shadow] duration-[180ms] cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)] group">
 
           <div class="relative h-40 overflow-hidden bg-nido-cream">
             @if (product.image) {
@@ -149,25 +150,38 @@
               <lucide-icon [name]="getLocationIcon(product.location)" [size]="11" />
               {{ product.location }}
             </span>
+            <span
+              class="absolute top-2 right-2 rounded-[20px] bg-nido-green-dark px-2.5 py-0.5 text-[0.72rem] font-bold leading-[1.4] text-nido-cream shadow-[0_2px_8px_rgba(38,63,48,0.22)]">
+              {{ quantityBadge(product) }}
+            </span>
           </div>
 
           <div class="px-4 py-3.5 flex flex-col gap-2">
             <h3 class="text-[0.875rem] font-semibold text-nido-green-dark leading-snug">{{ product.name }}</h3>
-            <div class="flex flex-col gap-1">
-              <div class="h-1 bg-nido-border rounded-[10px] overflow-hidden">
-                <div class="h-full rounded-[10px] transition-[width] duration-[400ms]"
-                     [style.width.%]="getExpiryWidth(daysLeft)"
-                     [style.background-color]="getExpiryColor(daysLeft)">
+            @if (hasExpiryDate(product.expiryDate)) {
+              @let daysLeft = getDaysRemaining(product.expiryDate);
+              <div class="flex flex-col gap-1">
+                <div class="h-1 bg-nido-border rounded-[10px] overflow-hidden">
+                  <div class="h-full rounded-[10px] transition-[width] duration-[400ms]"
+                       [style.width.%]="getExpiryWidth(daysLeft)"
+                       [style.background-color]="getExpiryColor(daysLeft)">
+                  </div>
                 </div>
+                <span class="text-[0.7rem] font-semibold whitespace-nowrap" [style.color]="getExpiryColor(daysLeft)">
+                  {{ getExpiryLabel(daysLeft) }}
+                </span>
               </div>
-              <span class="text-[0.7rem] font-semibold whitespace-nowrap" [style.color]="getExpiryColor(daysLeft)">
-                {{ getExpiryLabel(daysLeft) }}
-              </span>
-            </div>
+            } @else {
+              <div class="flex flex-col gap-1">
+                <div class="h-1 bg-nido-border rounded-[10px] overflow-hidden">
+                  <div class="h-full w-full rounded-[10px] bg-nido-border"></div>
+                </div>
+                <span class="text-[0.7rem] font-semibold whitespace-nowrap text-nido-brown">
+                  Sin vencimiento
+                </span>
+              </div>
+            }
             <div class="flex items-center gap-1 text-[0.7rem] font-medium text-nido-gold min-h-4">
-              @if (product.quantity > 1) {
-                <span class="text-[0.7rem] font-bold text-white bg-nido-green rounded-[20px] px-[0.45rem] py-[0.1rem] leading-[1.4]">x{{ product.quantity }}</span>
-              }
               @if (product.isOpened) {
                 <lucide-icon name="package-open" [size]="11" />
                 Abierto
@@ -178,9 +192,14 @@
             </div>
           </div>
 
-        </article>
+        </a>
       }
     </div>
+  }
+
+  <!-- ── Modal agregar manual ─────────────────────────── -->
+  @if (showManualForm()) {
+    <app-agregar-producto [isModal]="true" [knownProducts]="knownProducts()" (closed)="showManualForm.set(false); reloadProducts()" />
   }
 
   <!-- ── Modal escáner ──────────────────────────────────── -->
@@ -220,7 +239,7 @@
             </div>
             <p class="flex items-center gap-1.5 text-[0.8125rem] text-nido-brown text-center">
               <lucide-icon name="qr-code" [size]="14" />
-              Apuntá la cámara al código de barras del producto
+              Apuntá la cámara al código de barras · mantenelo a ~30–40 cm
             </p>
           </div>
         }

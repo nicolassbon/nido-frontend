@@ -4,10 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { ElectrodomesticosService } from '../../electrodomesticos/services/electrodomesticos.service';
+import { HogaresApiService, MiembroResponse } from '../../household/hogares-api.service';
 import { environment } from '../../../../environments/environment';
 import { ApiReceta, RecipesApiService } from './services/recipes-api.service';
 import { ProductService } from '../../../core/servicios/agregar-producto.service';
 import { AuthService } from '../../../core/auth/auth.service';
+import { PerfilApiService } from '../../perfil/perfil-api.service';
 
 type Difficulty = 'Fácil' | 'Medio' | 'Difícil';
 type FilterOption = 'Todos' | Difficulty;
@@ -16,7 +18,7 @@ type SortOption = 'default' | 'rating' | 'coincidencia';
 interface RecipeIngredient {
   name: string;
   inStock: boolean;
-  allergenType?: string;
+  allergenTypes: string[];
 }
 
 interface Recipe {
@@ -52,11 +54,50 @@ interface HouseholdMember {
   allergens: string[];
 }
 
-const APPLIANCE_KEYWORDS = [
-  'freidora', 'microondas', 'horno', 'batidora',
-  'licuadora', 'tostadora', 'cafetera', 'waflera',
-  'sandwichera', 'procesadora', 'vaporera', 'airfryer',
-];
+const MEMBER_COLORS = ['#3E5E4A', '#B48B6A', '#927357', '#263F30', '#b44c3c', '#5f6f52'];
+
+const ALLERGEN_ALIASES: Record<string, string[]> = {
+  'Maní': ['mani', 'cacahuate', 'peanut', 'peanuts'],
+  'Gluten': ['gluten', 'harina', 'trigo', 'fideos', 'pasta', 'pan', 'pan rallado', 'masa', 'avena'],
+  'Lactosa': ['lactosa', 'leche', 'leche en polvo', 'queso', 'queso crema', 'crema', 'manteca', 'mantequilla', 'yogur', 'yogurt', 'ricota', 'mozzarella', 'parmesano', 'dulce de leche', 'milk', 'cheese', 'butter', 'cream'],
+  'Mariscos': ['mariscos', 'camaron', 'camarones', 'langostino', 'langostinos', 'mejillon', 'mejillones', 'calamar', 'calamares'],
+  'Soja': ['soja', 'soya', 'tofu', 'salsa de soja'],
+  'Huevo': ['huevo', 'huevos', 'clara', 'claras', 'yema', 'yemas', 'egg', 'eggs'],
+  'Frutos secos': ['frutos secos', 'almendra', 'almendras', 'nuez', 'nueces', 'avellana', 'avellanas', 'castana', 'castanas', 'pistacho', 'pistachos'],
+  'Pescado': ['pescado', 'atun', 'salmon', 'merluza', 'sardina', 'sardinas'],
+  'Carne': ['carne', 'pollo', 'pechuga', 'cerdo', 'jamon', 'panceta', 'tocino', 'chorizo', 'salchicha', 'vacuno', 'vacuna', 'res', 'ternera', 'cordero', 'pavo', 'beef', 'chicken', 'pork', 'bacon', 'ham'],
+  'Sésamo': ['sesamo', 'tahini'],
+  'Mostaza': ['mostaza', 'mustard'],
+};
+
+const RESTRICTION_TO_ALLERGENS: Record<string, string[]> = {
+  'sin lactosa': ['Lactosa'],
+  'libre de lactosa': ['Lactosa'],
+  'intolerancia a la lactosa': ['Lactosa'],
+  'sin tacc': ['Gluten'],
+  'sin gluten': ['Gluten'],
+  'celiaquia': ['Gluten'],
+  'celiaco': ['Gluten'],
+  'celiaca': ['Gluten'],
+  'vegano': ['Carne', 'Pescado', 'Mariscos', 'Lactosa', 'Huevo'],
+  'vegan': ['Carne', 'Pescado', 'Mariscos', 'Lactosa', 'Huevo'],
+  'vegetariano': ['Carne', 'Pescado', 'Mariscos'],
+  'vegetariana': ['Carne', 'Pescado', 'Mariscos'],
+};
+
+const APPLIANCE_ALIASES: Record<string, string[]> = {
+  'licuadora': ['licuadora', 'blender'],
+  'microondas': ['microondas', 'microwave'],
+  'horno/cocina': ['horno/cocina', 'horno', 'cocina', 'hornalla', 'estufa'],
+  'mixer': ['mixer', 'batidora de mano', 'minipimer'],
+  'procesadora': ['procesadora', 'food processor'],
+  'freidora de aire': ['freidora de aire', 'airfryer', 'air fryer'],
+  'cafetera': ['cafetera'],
+  'tostadora': ['tostadora'],
+  'olla de presion': ['olla de presion', 'olla a presion'],
+  'parrilla electrica': ['parrilla electrica', 'parrilla'],
+  'batidora': ['batidora'],
+};
 
 @Component({
   selector: 'app-recipes',
@@ -70,32 +111,35 @@ export class Recipes implements OnInit {
   private readonly productService    = inject(ProductService);
   private readonly authService       = inject(AuthService);
   private readonly electrodomesticos = inject(ElectrodomesticosService);
+  private readonly hogaresApi        = inject(HogaresApiService);
+  private readonly perfilApi         = inject(PerfilApiService);
   private readonly destroyRef        = inject(DestroyRef);
 
   protected readonly searchQuery              = signal('');
   protected readonly activeFilter             = signal<FilterOption>('Todos');
   protected readonly sortBy                   = signal<SortOption>('default');
   protected readonly showSortDropdown         = signal(false);
+  protected readonly showRoulettePopup        = signal(false);
   protected readonly excludeAllergens         = signal(false);
   protected readonly excludeMissingAppliances = signal(false);
   protected readonly filterByIngredients      = signal(false);
 
   protected readonly filterOptions: FilterOption[] = ['Todos', 'Fácil', 'Medio', 'Difícil'];
 
-  protected readonly householdMembers: HouseholdMember[] = [
-    { id: 'm1', name: 'Luisa', initials: 'LU', color: '#3E5E4A', allergens: [] },
-    { id: 'm2', name: 'Marco', initials: 'MA', color: '#B48B6A', allergens: ['Gluten'] },
-    { id: 'm3', name: 'Sofia', initials: 'SO', color: '#927357', allergens: ['Mariscos'] },
-    { id: 'm4', name: 'Juan', initials: 'JU', color: '#263F30', allergens: [] },
-  ];
-
-  protected readonly eatingToday = signal<Set<string>>(
-    new Set(this.householdMembers.map(member => member.id))
-  );
+  protected readonly householdMembers = signal<HouseholdMember[]>([]);
+  protected readonly eatingToday = signal<Set<string>>(new Set());
+  private readonly profileAllergies = signal<string[]>([]);
 
   private readonly activeAllergens = computed(() => {
-    const eating = this.householdMembers.filter(member => this.eatingToday().has(member.id));
-    return [...new Set(eating.flatMap(member => member.allergens))];
+    const eating = this.householdMembers().filter(member => this.eatingToday().has(member.id));
+    const memberAllergens = this.expandRestrictions(eating.flatMap(member => member.allergens));
+    if (memberAllergens.length > 0) {
+      return memberAllergens;
+    }
+
+    const userId = this.authService.getUserId();
+    const currentUserIsEating = !!userId && this.eatingToday().has(userId);
+    return currentUserIsEating ? this.expandRestrictions(this.profileAllergies()) : [];
   });
 
   protected readonly pantryIngredients = signal<PantryIngredient[]>([]);
@@ -103,9 +147,36 @@ export class Recipes implements OnInit {
   private readonly userApplianceNames  = signal<string[]>([]);
 
   ngOnInit(): void {
+    this.loadProfileAllergies();
+    this.loadMembers();
     this.loadRecipes();
     this.loadPantry();
     this.loadAppliances();
+  }
+
+  private loadProfileAllergies(): void {
+    this.perfilApi.getProfile()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: profile => this.profileAllergies.set([
+          ...(profile.alergias ?? []),
+          ...(profile.alimentacion ?? []),
+        ]),
+        error: err => console.error('Error cargando alergias del perfil', err),
+      });
+  }
+
+  private loadMembers(): void {
+    this.hogaresApi.getMiembros()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: members => {
+          const mapped = members.map((member, index) => this.toHouseholdMember(member, index));
+          this.householdMembers.set(mapped);
+          this.eatingToday.set(new Set(mapped.map(member => member.id)));
+        },
+        error: err => console.error('Error cargando miembros del hogar', err),
+      });
   }
 
   private loadRecipes(): void {
@@ -113,10 +184,7 @@ export class Recipes implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: recetas => this.allRecipes.set(
-          recetas.map(r => ({
-            ...this.toRecipe(r),
-            requiredAppliances: this.extractRequiredAppliances(r.nombre),
-          }))
+          recetas.map(r => this.toRecipe(r))
         ),
         error: err => console.error('Error cargando recetas', err),
       });
@@ -139,13 +207,16 @@ export class Recipes implements OnInit {
     this.electrodomesticos.getAll()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(items => {
-        this.userApplianceNames.set(items.map(e => e.nombre.toLowerCase()));
+        this.userApplianceNames.set(
+          items
+            .flatMap(item => {
+              const tipo = this.normalizeText(item.tipo ?? '');
+              return tipo && tipo !== 'cocina' ? [item.nombre, item.tipo ?? ''] : [item.nombre];
+            })
+            .map(value => this.normalizeText(value))
+            .filter(Boolean)
+        );
       });
-  }
-
-  private extractRequiredAppliances(recipeName: string): string[] {
-    const lower = recipeName.toLowerCase();
-    return APPLIANCE_KEYWORDS.filter(keyword => lower.includes(keyword));
   }
 
   private readonly recipesWithAvailability = computed<RecipeWithAvailability[]>(() => {
@@ -181,15 +252,14 @@ export class Recipes implements OnInit {
         : Math.round((matched / recipe.ingredients.length) * 100);
 
       const hasAllergen = recipe.ingredients.some(ingredient =>
-        ingredient.allergenType &&
-        allergens.some(allergen =>
-          allergen.toLowerCase() === ingredient.allergenType!.toLowerCase()
+        ingredient.allergenTypes.some(ingredientAllergen =>
+          allergens.some(allergen => this.normalizeText(allergen) === this.normalizeText(ingredientAllergen))
         )
       );
 
       const hasMissingAppliance = recipe.requiredAppliances.length > 0 &&
         recipe.requiredAppliances.some(required =>
-          !userAppliances.some(owned => owned.includes(required))
+          !this.hasCompatibleAppliance(required, userAppliances)
         );
 
       return { ...recipe, availabilityPercent, hasAllergen, hasMissingAppliance };
@@ -281,6 +351,14 @@ export class Recipes implements OnInit {
     this.searchQuery.set('');
   }
 
+  protected openRoulettePopup(): void {
+    this.showRoulettePopup.set(true);
+  }
+
+  protected closeRoulettePopup(): void {
+    this.showRoulettePopup.set(false);
+  }
+
   protected get selectedIngredients(): PantryIngredient[] {
     return this.pantryIngredients().filter(item => item.selected);
   }
@@ -340,7 +418,7 @@ export class Recipes implements OnInit {
   }
 
   protected memberToggleClass(memberId: string): string {
-    const base = 'flex items-center gap-2 px-2.5 py-2 rounded-[10px] border-[1.5px] border-solid cursor-pointer transition-all duration-150 relative w-full';
+    const base = 'flex min-w-0 min-h-11 items-center gap-2 px-2.5 py-2 rounded-[10px] border-[1.5px] border-solid cursor-pointer transition-all duration-150 relative w-full';
     return this.isEatingToday(memberId)
       ? `${base} bg-white`
       : `${base} bg-nido-cream border-nido-border`;
@@ -357,12 +435,85 @@ export class Recipes implements OnInit {
       timeMinutes: receta.tiempoCoccionMin ?? 0,
       calories: Math.round(receta.calorias ?? 0),
       vecesCocinada: receta.vecesCocinada ?? 0,
-      ingredients: receta.ingredientes.map(ingrediente => ({
-        name: ingrediente.productoNombre || ingrediente.nombre,
-        inStock: ingrediente.enStock,
-      })),
-      requiredAppliances: [],
+      ingredients: receta.ingredientes.map(ingrediente => {
+        const ingredientName = ingrediente.productoNombre || ingrediente.nombre;
+        return {
+          name: ingredientName,
+          inStock: ingrediente.enStock,
+          allergenTypes: this.mergeAllergens([
+            ...(ingrediente.alergenos ?? []),
+            ...this.detectIngredientAllergens(ingredientName),
+          ]),
+        };
+      }),
+      requiredAppliances: (receta.electrodomesticos ?? [])
+        .map(electrodomestico => electrodomestico.tipoRequerido?.trim())
+        .filter((tipo): tipo is string => !!tipo),
     };
+  }
+
+  private toHouseholdMember(member: MiembroResponse, index: number): HouseholdMember {
+    return {
+      id: member.usuarioId,
+      name: member.nombre,
+      initials: this.getInitials(member.nombre),
+      color: MEMBER_COLORS[index % MEMBER_COLORS.length],
+      allergens: this.expandRestrictions(member.alergias ?? []),
+    };
+  }
+
+  private getInitials(name: string): string {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return '--';
+    return parts.slice(0, 2).map(part => part[0]).join('').toUpperCase();
+  }
+
+  private hasCompatibleAppliance(required: string, ownedAppliances: string[]): boolean {
+    const normalizedRequired = this.normalizeText(required);
+    const aliases = APPLIANCE_ALIASES[normalizedRequired] ?? [normalizedRequired];
+
+    return aliases.some(alias => {
+      const normalizedAlias = this.normalizeText(alias);
+      return ownedAppliances.some(owned =>
+        owned.includes(normalizedAlias) || normalizedAlias.includes(owned)
+      );
+    });
+  }
+
+  private detectIngredientAllergens(ingredientName: string): string[] {
+    const normalizedIngredient = this.normalizeText(ingredientName);
+    return Object.entries(ALLERGEN_ALIASES)
+      .filter(([, aliases]) => aliases.some(alias => normalizedIngredient.includes(this.normalizeText(alias))))
+      .map(([allergen]) => allergen);
+  }
+
+  private mergeAllergens(allergens: string[]): string[] {
+    const byNormalized = new Map<string, string>();
+    for (const allergen of allergens) {
+      const normalized = this.normalizeText(allergen);
+      if (normalized && !byNormalized.has(normalized)) {
+        byNormalized.set(normalized, allergen);
+      }
+    }
+
+    return [...byNormalized.values()];
+  }
+
+  private expandRestrictions(restrictions: string[]): string[] {
+    const expanded = restrictions.flatMap(restriction => {
+      const normalized = this.normalizeText(restriction);
+      return RESTRICTION_TO_ALLERGENS[normalized] ?? [restriction];
+    });
+
+    return [...new Set(expanded)];
+  }
+
+  private normalizeText(value: string): string {
+    return value
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
   }
 
   private mapDifficulty(value: string | null): Difficulty {

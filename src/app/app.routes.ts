@@ -5,13 +5,13 @@ import { Home } from './features/home/home/home';
 import { Recipes } from './features/recipes/recipes/recipes';
 import { RecipeDetail } from './features/recipes/recipe-detail/recipe-detail';
 import { Alacena } from './features/alacena/alacena/alacena';
+import { ProductDetail } from './features/alacena/product-detail/product-detail';
 import { ListaCompras } from './features/lista-compras/lista-compras';
 import { CreateHousehold } from './features/household/create-household/create-household';
 import { AcceptInvitation } from './features/household/accept-invitation/accept-invitation';
 import { WellnessStep } from './features/onboarding/wellness-step/wellness-step';
 import { Electrodomesticos } from './features/electrodomesticos/electrodomesticos';
 import { PerfilComponent } from './features/perfil/perfil';
-import { EditarPerfil } from './features/editar-perfil/editar-perfil';
 import { AgregarProducto } from './features/agregar-producto/agregar-producto';
 import { Register } from './features/auth/register/register';
 import { Login } from './features/auth/login/login';
@@ -41,10 +41,10 @@ export const routes: Routes = [
       { path: 'recetas', component: Recipes },
       { path: 'recetas/:id',    component: RecipeDetail  },
       { path: 'alacena',        component: Alacena       },
+      { path: 'alacena/:id',    component: ProductDetail },
       { path: 'lista-compras',  component: ListaCompras  },
       { path: 'electrodomesticos', component: Electrodomesticos },
       { path: 'perfil', component: PerfilComponent },
-      { path: 'perfil/editar', component: EditarPerfil },
       { path: 'configuracion', component: Configuracion },
       { path: 'agregar-producto', component: AgregarProducto },
     ],

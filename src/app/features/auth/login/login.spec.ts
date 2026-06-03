@@ -24,9 +24,14 @@ class MockAuthService {
 
 class MockGoogleIdentityService {
   private credentialHandler: ((idToken: string) => void) | null = null;
+  host: HTMLElement | null = null;
 
-  renderButton = vi.fn(async (_host: HTMLElement, onCredential: (idToken: string) => void) => {
+  renderButton = vi.fn(async (host: HTMLElement, onCredential: (idToken: string) => void) => {
+    this.host = host;
     this.credentialHandler = onCredential;
+    const button = document.createElement('div');
+    button.setAttribute('role', 'button');
+    host.appendChild(button);
   });
   prompt = vi.fn();
 
@@ -163,9 +168,12 @@ describe('Login Component', () => {
   });
 
   it('should prompt the Google flow when the visible button is activated', () => {
+    const renderedButton = mockGoogleIdentityService.host?.querySelector('div[role="button"]') as HTMLElement;
+    const clickSpy = vi.spyOn(renderedButton, 'click');
+
     component.onGoogleLogin();
 
-    expect(mockGoogleIdentityService.prompt).toHaveBeenCalledTimes(1);
+    expect(clickSpy).toHaveBeenCalledTimes(1);
   });
 
   it('should exchange the Google credential with the backend and redirect to home for existing users', () => {
@@ -218,6 +226,19 @@ describe('Login Component', () => {
 
     expect(component.globalError()).toBe(
       'Google Login no está disponible todavía. Revisá la configuración del cliente.',
+    );
+  });
+
+  it('should show an origin/config error when the rendered Google button is unavailable', async () => {
+    const host = mockGoogleIdentityService.host as HTMLElement;
+    host.innerHTML = '';
+    component.googleLoginReady.set(true);
+
+    component.onGoogleLogin();
+
+    expect(component.googleLoginReady()).toBe(false);
+    expect(component.globalError()).toBe(
+      'Google Login no está disponible para este origen. Revisá la configuración del cliente.',
     );
   });
 });

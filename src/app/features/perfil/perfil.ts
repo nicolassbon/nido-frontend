@@ -6,16 +6,19 @@ import { LucideAngularModule } from 'lucide-angular';
 import { RouterLink } from '@angular/router';
 import { PerfilApiService, PerfilApiResponse } from './perfil-api.service';
 import { OnboardingApiService, RestriccionCatalogo } from '../onboarding/onboarding-api.service';
+import { HogaresApiService } from '../household/hogares-api.service';
+import { EditarPerfil } from '../editar-perfil/editar-perfil';
 
 @Component({
   selector: 'app-perfil',
-  imports: [CommonModule, RouterLink, StatCard, PreferenceCard, LucideAngularModule],
+  imports: [CommonModule, RouterLink, StatCard, PreferenceCard, LucideAngularModule, EditarPerfil],
   templateUrl: './perfil.html',
   styleUrl: './perfil.scss',
 })
 export class PerfilComponent implements OnInit {
   private readonly perfilApi = inject(PerfilApiService);
   private readonly onboardingApi = inject(OnboardingApiService);
+  private readonly hogaresApi = inject(HogaresApiService);
 
   protected readonly usuario = signal<PerfilApiResponse | null>(null);
   protected readonly isLoading = signal(true);
@@ -33,6 +36,45 @@ export class PerfilComponent implements OnInit {
   // --- Selecciones temporales ---
   protected readonly selectedPreferenciaIds = signal<Set<string>>(new Set());
   protected readonly selectedAlergias = signal<RestriccionCatalogo[]>([]);
+
+  // --- Editar perfil (modal) ---
+  protected readonly showEditModal = signal(false);
+
+  protected onEditClosed(saved: boolean): void {
+    this.showEditModal.set(false);
+    if (saved) this.cargarPerfil();
+  }
+
+  // --- Invitar familiar ---
+  protected readonly showInviteModal = signal(false);
+  protected readonly inviteEmail     = signal('');
+  protected readonly inviteState     = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
+  protected readonly inviteErrorMsg  = signal('');
+
+  protected openInviteModal(): void {
+    this.inviteEmail.set('');
+    this.inviteState.set('idle');
+    this.inviteErrorMsg.set('');
+    this.showInviteModal.set(true);
+  }
+
+  protected closeInviteModal(): void {
+    this.showInviteModal.set(false);
+  }
+
+  protected submitInvite(): void {
+    const email = this.inviteEmail().trim();
+    if (!email) return;
+
+    this.inviteState.set('loading');
+    this.hogaresApi.invitar(email).subscribe({
+      next: () => this.inviteState.set('success'),
+      error: (err) => {
+        this.inviteErrorMsg.set(err.error?.message ?? 'Error al enviar la invitación.');
+        this.inviteState.set('error');
+      },
+    });
+  }
 
   // --- Buscador de Alergias ---
   protected readonly alergiaSearch = signal('');
@@ -180,7 +222,7 @@ export class PerfilComponent implements OnInit {
     const base = 'relative flex flex-col items-center gap-2 py-4 px-2 rounded-xl border-[1.5px] border-solid cursor-pointer transition-all duration-150 w-full';
     return selected
       ? `${base} bg-nido-green-dark border-nido-green-dark`
-      : `${base} bg-white border-nido-border hover:border-nido-green`;
+      : `${base} bg-white/[0.51] border-nido-border hover:border-nido-green`;
   }
 
   protected prefIconBgClass(selected: boolean): string {

@@ -1,7 +1,8 @@
-import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { HttpBackend, HttpClient } from '@angular/common/http';
 import { Observable, of, switchMap } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
 export interface FoodProduct {
   name:           string;
@@ -46,7 +47,14 @@ interface UPCItemDBResponse {
 
 @Injectable({ providedIn: 'root' })
 export class OpenFoodFactsService {
-  private readonly http = inject(HttpClient);
+  // HttpBackend bypasea todos los interceptores — necesario para que el interceptor
+  // de auth no agregue Authorization a requests externos (OFF, UPC Item DB),
+  // lo cual dispararía un preflight CORS que esas APIs rechazan.
+  private readonly http: HttpClient;
+
+  constructor(handler: HttpBackend) {
+    this.http = new HttpClient(handler);
+  }
 
   /**
    * Resolves a barcode to product data querying three sources in order:
@@ -63,19 +71,17 @@ export class OpenFoodFactsService {
    * the barcode at all.
    */
   lookup(barcode: string): Observable<FoodProduct> {
-    return this.fetchFromOFF('https://world.openfoodfacts.org', barcode).pipe(
-      // Try OFF Argentina if world had no name
+    return this.fetchFromOFF(environment.offWorldBase, barcode).pipe(
       switchMap(p => p?.name
         ? of(p)
-        : this.fetchFromOFF('https://ar.openfoodfacts.org', barcode).pipe(
-            map(p2 => p2 ?? p),   // keep world result (categories) if AR also null
+        : this.fetchFromOFF(environment.offArBase, barcode).pipe(
+            map(p2 => p2 ?? p),
           ),
       ),
-      // Try UPC Item DB if still no name
       switchMap(p => p?.name
         ? of(p)
         : this.fetchFromUPCItemDB(barcode).pipe(
-            map(p2 => p2 ?? p),   // keep previous result (categories) if UPC also null
+            map(p2 => p2 ?? p),
           ),
       ),
       map(p => p ?? this.emptyProduct()),
@@ -106,7 +112,7 @@ export class OpenFoodFactsService {
   // ── Private: UPC Item DB ──────────────────────────────────
 
   private fetchFromUPCItemDB(barcode: string): Observable<FoodProduct | null> {
-    const url = `https://api.upcitemdb.com/prod/trial/lookup?upc=${encodeURIComponent(barcode)}`;
+    const url = `${environment.upcItemDb}/prod/trial/lookup?upc=${encodeURIComponent(barcode)}`;
     return this.http.get<UPCItemDBResponse>(url).pipe(
       map(res => {
         if (res.code !== 'OK' || !res.items?.length) return null;

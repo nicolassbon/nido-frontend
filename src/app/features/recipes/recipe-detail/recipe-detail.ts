@@ -8,6 +8,7 @@ import { ApiReceta, ApiRecetaIngrediente, RecipesApiService } from '../recipes/s
 import { AuthService } from '../../../core/auth/auth.service';
 import { ProductService } from '../../../core/servicios/agregar-producto.service';
 import { ListaComprasService } from '../../lista-compras/lista-compras.service';
+import { Electrodomestico, ElectrodomesticosService } from '../../electrodomesticos/services/electrodomesticos.service';
 
 @Component({
   selector: 'app-recipe-detail',
@@ -22,6 +23,7 @@ export class RecipeDetail {
   private readonly authService    = inject(AuthService);
   private readonly productService = inject(ProductService);
   private readonly listaService   = inject(ListaComprasService);
+  private readonly electrodomesticosService = inject(ElectrodomesticosService);
   protected readonly router       = inject(Router);
   private readonly destroyRef     = inject(DestroyRef);
 
@@ -37,6 +39,7 @@ export class RecipeDetail {
 
   // Nombres de la alacena del usuario (para name-matching como fallback)
   private readonly pantryNames    = signal<string[]>([]);
+  private readonly householdAppliances = signal<Electrodomestico[]>([]);
 
   protected readonly imageUrl = computed(() =>
     this.resolveImageUrl(this.recipe()?.imagenUrl ?? null)
@@ -63,6 +66,17 @@ export class RecipeDetail {
     (this.recipe()?.ingredientes ?? []).filter(i => !this.isDisponible()(i))
   );
 
+  protected readonly requiredAppliances = computed(() =>
+    (this.recipe()?.electrodomesticos ?? [])
+      .filter(item => !!item.tipoRequerido?.trim())
+      .map(item => ({
+        ...item,
+        label: this.formatApplianceName(item.tipoRequerido),
+        available: this.hasAppliance(item.tipoRequerido),
+        icon: this.getApplianceIcon(item.tipoRequerido),
+      }))
+  );
+
   constructor() {
     // Cargar pantry para el name-matching
     const hogarId = this.authService.getHogarId();
@@ -72,6 +86,12 @@ export class RecipeDetail {
           this.pantryNames.set(items.map(i => i.nombre.toLowerCase()));
         },
       });
+
+      this.electrodomesticosService.getAll()
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: items => this.householdAppliances.set(items),
+        });
     }
 
     this.route.paramMap
@@ -185,6 +205,49 @@ export class RecipeDetail {
     if (normalized === 'facil')   return 'Facil';
     if (normalized === 'dificil') return 'Dificil';
     return value?.trim() || '-';
+  }
+
+  protected formatApplianceName(value: string | null | undefined): string {
+    const clean = value?.trim();
+    if (!clean) return 'Electrodomestico';
+
+    return clean
+      .replace(/[-_]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .replace(/\b\w/g, letter => letter.toUpperCase());
+  }
+
+  private hasAppliance(required: string | null | undefined): boolean {
+    const normalizedRequired = this.normalizeText(required);
+    if (!normalizedRequired) return false;
+
+    return this.householdAppliances().some(item => {
+      const type = this.normalizeText(item.tipo);
+      const name = this.normalizeText(item.nombre);
+      return (type.length > 0 && (type.includes(normalizedRequired) || normalizedRequired.includes(type)))
+        || (name.length > 0 && (name.includes(normalizedRequired) || normalizedRequired.includes(name)));
+    });
+  }
+
+  private getApplianceIcon(value: string | null | undefined): string {
+    const normalized = this.normalizeText(value);
+    if (normalized.includes('horno')) return 'cooking-pot';
+    if (normalized.includes('micro')) return 'microwave';
+    if (normalized.includes('licuadora')) return 'blender';
+    if (normalized.includes('batidora')) return 'hand';
+    if (normalized.includes('heladera')) return 'refrigerator';
+    if (normalized.includes('freezer')) return 'snowflake';
+    return 'plug';
+  }
+
+  private normalizeText(value: string | null | undefined): string {
+    return (value ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
   }
 
   private resolveImageUrl(url: string | null): string | null {

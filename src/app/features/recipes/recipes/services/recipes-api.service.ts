@@ -11,6 +11,7 @@ export interface ApiRecetaIngrediente {
   cantidad: number | null;
   unidad: string | null;
   enStock: boolean;
+  alergenos?: string[];
 }
 
 export interface ApiRecetaPaso {
