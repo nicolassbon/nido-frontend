@@ -1,8 +1,18 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import {
+  afterNextRender,
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  type ElementRef,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
-import { AuthService } from '../../../core/auth/auth.service';
+import { AuthService, type GoogleLoginResponse } from '../../../core/auth/auth.service';
+import { GoogleIdentityService } from '../../../core/auth/google-identity.service';
 import { validatePhotoFile } from '../../../shared/validators/photo';
 import { NidoSelectComponent, NidoSelectOption } from '../../../shared/ui/form/nido-select/nido-select';
 
@@ -14,20 +24,26 @@ export function passwordMatchValidator(control: AbstractControl): ValidationErro
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule, LucideAngularModule, NidoSelectComponent],
+  imports: [ReactiveFormsModule, LucideAngularModule, NidoSelectComponent, RouterLink],
   templateUrl: './register.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Register {
   private readonly fb   = inject(FormBuilder);
   private readonly auth = inject(AuthService);
+  private readonly googleIdentity = inject(GoogleIdentityService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly googleButtonHost = viewChild<ElementRef<HTMLElement>>('googleButtonHost');
   private photoObjectUrl: string | null = null;
 
   constructor() {
     this.destroyRef.onDestroy(() => this.clearSelectedPhoto());
+
+    afterNextRender(() => {
+      void this.initializeGoogleButton();
+    });
   }
 
   readonly steps = [
@@ -146,6 +162,54 @@ export class Register {
         } else {
           this.globalError.set('Ocurrió un error. Intentá de nuevo.');
         }
+      },
+    });
+  }
+
+  onLogoClick(): void {
+    this.router.navigate(['/']);
+  }
+
+  private async initializeGoogleButton(): Promise<void> {
+    const host = this.googleButtonHost()?.nativeElement;
+
+    if (!host) {
+      return;
+    }
+
+    try {
+      await this.googleIdentity.renderButton(host, (idToken) =>
+        this.handleGoogleCredential(idToken),
+      );
+
+      this.globalError.set(null);
+    } catch {
+      this.globalError.set(
+        'Google Login no está disponible para este origen. Revisá la configuración del cliente.',
+      );
+    }
+  }
+
+  private handleGoogleCredential(idToken: string): void {
+    this.submitted.set(false);
+    this.globalError.set(null);
+    this.loading.set(true);
+
+    this.auth.googleLogin(idToken).subscribe({
+      next: (response: GoogleLoginResponse) => {
+        this.loading.set(false);
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+        if (returnUrl) {
+          this.router.navigateByUrl(returnUrl);
+        } else if (response.isNewUser) {
+          this.router.navigate(['/crear-hogar']);
+        } else {
+          this.router.navigate(['/']);
+        }
+      },
+      error: () => {
+        this.loading.set(false);
+        this.globalError.set('Error al iniciar sesión con Google.');
       },
     });
   }
