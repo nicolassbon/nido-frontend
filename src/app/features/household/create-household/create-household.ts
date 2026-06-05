@@ -50,11 +50,26 @@ export class CreateHousehold {
   readonly openMenuId = signal<string | null>(null);
 
   readonly showInviteModal = signal(false);
+  readonly showLeaveModal  = signal(false);
   readonly inviteEmail     = signal('');
   readonly inviteState     = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
   readonly inviteErrorMsg  = signal('');
   readonly saving          = signal(false);
   readonly saveErrorMsg    = signal('');
+
+  onLogoClick(event: Event): void {
+    event.stopPropagation();
+    this.showLeaveModal.set(true);
+  }
+
+  closeLeaveModal(): void {
+    this.showLeaveModal.set(false);
+  }
+
+  confirmLeave(): void {
+    this.showLeaveModal.set(false);
+    this.router.navigate(['/']);
+  }
 
   constructor() {
     const currentUserId = this.auth.getUserId();

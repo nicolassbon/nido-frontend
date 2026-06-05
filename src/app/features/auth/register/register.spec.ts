@@ -5,20 +5,36 @@ import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { Register } from './register';
-import { AuthService } from '../../../core/auth/auth.service';
+import { AuthService, type GoogleLoginResponse } from '../../../core/auth/auth.service';
+import { GoogleIdentityService } from '../../../core/auth/google-identity.service';
 import { appConfig } from '../../../app.config';
 
 class MockAuthService {
   register = vi.fn();
+  googleLogin = vi.fn();
+}
+
+class MockGoogleIdentityService {
+  private credentialHandler: ((idToken: string) => void) | null = null;
+
+  renderButton = vi.fn(async (_host: HTMLElement, onCredential: (idToken: string) => void) => {
+    this.credentialHandler = onCredential;
+  });
+
+  emitCredential(idToken: string): void {
+    this.credentialHandler?.(idToken);
+  }
 }
 
 describe('Register Component', () => {
   let component: Register;
   let fixture: ComponentFixture<Register>;
   let mockAuthService: MockAuthService;
+  let mockGoogleIdentityService: MockGoogleIdentityService;
 
   beforeEach(async () => {
     mockAuthService = new MockAuthService();
+    mockGoogleIdentityService = new MockGoogleIdentityService();
 
     await TestBed.configureTestingModule({
       imports: [Register],
@@ -27,16 +43,22 @@ describe('Register Component', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: mockAuthService },
+        { provide: GoogleIdentityService, useValue: mockGoogleIdentityService },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Register);
     component = fixture.componentInstance;
     fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('should create successfully', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should initialize the Google button on render', () => {
+    expect(mockGoogleIdentityService.renderButton).toHaveBeenCalledTimes(1);
   });
 
   it('should initialize with an invalid form', () => {
@@ -57,20 +79,16 @@ describe('Register Component', () => {
   it('should validate password complexity regex', () => {
     const passwordControl = component.form.controls.password;
 
-    // missing number and capital
     passwordControl.setValue('weakpass');
     expect(passwordControl.valid).toBe(false);
     expect(passwordControl.errors?.['pattern']).toBeTruthy();
 
-    // missing capital
     passwordControl.setValue('weakpass1');
     expect(passwordControl.valid).toBe(false);
 
-    // missing number
     passwordControl.setValue('Weakpass');
     expect(passwordControl.valid).toBe(false);
 
-    // valid
     passwordControl.setValue('ValidPass1!');
     expect(passwordControl.valid).toBe(true);
   });
@@ -111,12 +129,11 @@ describe('Register Component', () => {
     const router = TestBed.inject(Router);
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
-    const mockResponse = {
+    mockAuthService.register.mockReturnValue(of({
       usuarioId: 'u-1',
       hogarId: 'h-1',
       accessToken: 'token-jwt',
-    };
-    mockAuthService.register.mockReturnValue(of(mockResponse));
+    }));
 
     component.form.patchValue({
       nombre: 'Nico',
@@ -245,8 +262,7 @@ describe('Register Component', () => {
   });
 
   it('should handle 409 email already exists error', () => {
-    const mockError = { status: 409, message: 'Conflict' };
-    mockAuthService.register.mockReturnValue(throwError(() => mockError));
+    mockAuthService.register.mockReturnValue(throwError(() => ({ status: 409 })));
 
     component.form.patchValue({
       nombre: 'Nico',
@@ -263,8 +279,7 @@ describe('Register Component', () => {
   });
 
   it('should handle 400 validation error', () => {
-    const mockError = { status: 400, message: 'Bad Request' };
-    mockAuthService.register.mockReturnValue(throwError(() => mockError));
+    mockAuthService.register.mockReturnValue(throwError(() => ({ status: 400 })));
 
     component.form.patchValue({
       nombre: 'Nico',
@@ -277,5 +292,59 @@ describe('Register Component', () => {
     component.onSubmit();
 
     expect(component.globalError()).toBe('Verificá los datos ingresados.');
+  });
+
+  it('should navigate to / when onLogoClick is called', () => {
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    component.onLogoClick();
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/']);
+  });
+
+  it('should exchange the Google credential with the backend and redirect to home for existing users', () => {
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const mockResponse: GoogleLoginResponse = {
+      usuarioId: 'u-google',
+      hogarId: 'h-google',
+      accessToken: 'google-token-jwt',
+      isNewUser: false,
+    };
+    mockAuthService.googleLogin.mockReturnValue(of(mockResponse));
+
+    mockGoogleIdentityService.emitCredential('real-google-id-token');
+
+    expect(mockAuthService.googleLogin).toHaveBeenCalledWith('real-google-id-token');
+    expect(navigateSpy).toHaveBeenCalledWith(['/']);
+    expect(component.loading()).toBe(false);
+  });
+
+  it('should redirect new Google users to /crear-hogar', () => {
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    const mockResponse: GoogleLoginResponse = {
+      usuarioId: 'u-google-new',
+      hogarId: 'h-google-new',
+      accessToken: 'google-token-jwt-new',
+      isNewUser: true,
+    };
+    mockAuthService.googleLogin.mockReturnValue(of(mockResponse));
+
+    mockGoogleIdentityService.emitCredential('real-google-id-token');
+
+    expect(mockAuthService.googleLogin).toHaveBeenCalledWith('real-google-id-token');
+    expect(navigateSpy).toHaveBeenCalledWith(['/crear-hogar']);
+    expect(component.loading()).toBe(false);
+  });
+
+  it('should handle Google login failure', () => {
+    mockAuthService.googleLogin.mockReturnValue(throwError(() => ({ status: 400 })));
+
+    mockGoogleIdentityService.emitCredential('real-google-id-token');
+
+    expect(component.globalError()).toBe('Error al iniciar sesión con Google.');
+    expect(component.loading()).toBe(false);
   });
 });
