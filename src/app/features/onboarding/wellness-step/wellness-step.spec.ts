@@ -13,6 +13,7 @@ describe('WellnessStep', () => {
     getAlergias: ReturnType<typeof vi.fn>;
     getMetas: ReturnType<typeof vi.fn>;
     saveWellnessStep: ReturnType<typeof vi.fn>;
+    getWellness: ReturnType<typeof vi.fn>;
   };
   let mockAuth: {
     getUserId: ReturnType<typeof vi.fn>;
@@ -38,6 +39,7 @@ describe('WellnessStep', () => {
       getAlergias: vi.fn().mockReturnValue(of(mockAlergias)),
       getMetas: vi.fn().mockReturnValue(of(mockMetas)),
       saveWellnessStep: vi.fn().mockReturnValue(of(undefined)),
+      getWellness: vi.fn().mockReturnValue(of({ restriccionIds: [], metaIds: [] })),
     };
     mockAuth = {
       getUserId: vi.fn().mockReturnValue('u1'),
@@ -286,6 +288,88 @@ describe('WellnessStep', () => {
       fixture.componentInstance.skip();
 
       expect(navigateSpy).toHaveBeenCalledWith(['/inicio']);
+    });
+  });
+
+  describe('interacción con logo, modal de salida y botón atrás', () => {
+    it('onLogoClick() abre el modal y frena propagación', () => {
+      const fixture = TestBed.createComponent(WellnessStep);
+      const comp = fixture.componentInstance;
+      const fakeEvent = { stopPropagation: vi.fn() } as unknown as Event;
+
+      comp.onLogoClick(fakeEvent);
+
+      expect(comp.showLeaveModal()).toBe(true);
+      expect(fakeEvent.stopPropagation).toHaveBeenCalled();
+    });
+
+    it('closeLeaveModal() cierra el modal', () => {
+      const fixture = TestBed.createComponent(WellnessStep);
+      const comp = fixture.componentInstance;
+      comp.showLeaveModal.set(true);
+
+      comp.closeLeaveModal();
+
+      expect(comp.showLeaveModal()).toBe(false);
+    });
+
+    it('confirmLeave() cierra el modal y redirige a /', () => {
+      const fixture = TestBed.createComponent(WellnessStep);
+      const comp = fixture.componentInstance;
+      const router = TestBed.inject(Router);
+      const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+      comp.showLeaveModal.set(true);
+
+      comp.confirmLeave();
+
+      expect(comp.showLeaveModal()).toBe(false);
+      expect(navigateSpy).toHaveBeenCalledWith(['/']);
+    });
+
+    it('back() navega a /equipamiento', () => {
+      const fixture = TestBed.createComponent(WellnessStep);
+      const comp = fixture.componentInstance;
+      const router = TestBed.inject(Router);
+      const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+      comp.back();
+
+      expect(navigateSpy).toHaveBeenCalledWith(['/equipamiento']);
+    });
+  });
+
+  describe('precarga de selecciones anteriores', () => {
+    it('ngOnInit() carga y preselecciona restricciones y metas ya guardadas', () => {
+      mockApi.getWellness.mockReturnValue(of({
+        restriccionIds: ['p1', 'a1'],
+        metaIds: ['m2']
+      }));
+
+      const fixture = TestBed.createComponent(WellnessStep);
+      fixture.detectChanges();
+      const comp = fixture.componentInstance;
+
+      expect(comp.isPreferenciaSelected('p1')).toBe(true);
+      expect(comp.isPreferenciaSelected('p2')).toBe(false);
+      expect(comp.selectedAlergias()).toHaveLength(1);
+      expect(comp.selectedAlergias()[0].id).toBe('a1');
+      expect(comp.isMetaSelected('m2')).toBe(true);
+      expect(comp.isMetaSelected('m1')).toBe(false);
+    });
+
+    it('ngOnInit() mantiene los catálogos utilizables si falla getWellness()', () => {
+      mockApi.getWellness.mockReturnValue(throwError(() => new Error('fail')));
+
+      const fixture = TestBed.createComponent(WellnessStep);
+      fixture.detectChanges();
+      const comp = fixture.componentInstance;
+
+      expect(comp.preferencias()).toEqual(mockPreferencias);
+      expect(comp.allAlergias()).toEqual(mockAlergias);
+      expect(comp.metas()).toEqual(mockMetas);
+      expect(comp.selectedAlergias()).toEqual([]);
+      expect(comp.selectedPreferenciaIds().size).toBe(0);
+      expect(comp.selectedMetaIds().size).toBe(0);
     });
   });
 });

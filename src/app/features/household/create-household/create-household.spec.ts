@@ -274,4 +274,40 @@ describe('CreateHousehold', () => {
       expect(fixture.componentInstance.stepLabelClass({ active: false })).toContain('0.45');
     });
   });
+
+  describe('interacción con logo y modal de salida', () => {
+    it('onLogoClick() abre el modal y frena propagación', () => {
+      const fixture = TestBed.createComponent(CreateHousehold);
+      const comp = fixture.componentInstance;
+      const fakeEvent = { stopPropagation: vi.fn() } as unknown as Event;
+
+      comp.onLogoClick(fakeEvent);
+
+      expect(comp.showLeaveModal()).toBe(true);
+      expect(fakeEvent.stopPropagation).toHaveBeenCalled();
+    });
+
+    it('closeLeaveModal() cierra el modal', () => {
+      const fixture = TestBed.createComponent(CreateHousehold);
+      const comp = fixture.componentInstance;
+      comp.showLeaveModal.set(true);
+
+      comp.closeLeaveModal();
+
+      expect(comp.showLeaveModal()).toBe(false);
+    });
+
+    it('confirmLeave() cierra el modal y redirige a /', () => {
+      const fixture = TestBed.createComponent(CreateHousehold);
+      const comp = fixture.componentInstance;
+      const router = TestBed.inject(Router);
+      const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+      comp.showLeaveModal.set(true);
+
+      comp.confirmLeave();
+
+      expect(comp.showLeaveModal()).toBe(false);
+      expect(navigateSpy).toHaveBeenCalledWith(['/']);
+    });
+  });
 });
