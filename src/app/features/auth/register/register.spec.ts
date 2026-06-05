@@ -133,6 +133,8 @@ describe('Register Component', () => {
       usuarioId: 'u-1',
       hogarId: 'h-1',
       accessToken: 'token-jwt',
+      message: 'Registration completed.',
+      isSilentSuccess: false,
     }));
 
     component.form.patchValue({
@@ -163,6 +165,8 @@ describe('Register Component', () => {
       usuarioId: 'u-1',
       hogarId: 'h-1',
       accessToken: 'token-jwt',
+      message: 'Registration completed.',
+      isSilentSuccess: false,
     }));
 
     component.onPhotoSelected({
@@ -261,8 +265,14 @@ describe('Register Component', () => {
     revokeObjectURLSpy.mockRestore();
   });
 
-  it('should handle 409 email already exists error', () => {
-    mockAuthService.register.mockReturnValue(throwError(() => ({ status: 409 })));
+  it('should show a generic inline error when register returns silent success', () => {
+    mockAuthService.register.mockReturnValue(of({
+      usuarioId: null,
+      hogarId: null,
+      accessToken: null,
+      message: 'Generic response.',
+      isSilentSuccess: true,
+    }));
 
     component.form.patchValue({
       nombre: 'Nico',
@@ -274,7 +284,9 @@ describe('Register Component', () => {
 
     component.onSubmit();
 
-    expect(component.globalError()).toBe('Este email ya está registrado.');
+    expect(component.globalError()).toBe('Ocurrió un error al procesar el registro. Intentá de nuevo más tarde.');
+    expect(component.form.controls.password.value).toBe('');
+    expect(component.form.controls.confirmPassword.value).toBe('');
     expect(component.loading()).toBe(false);
   });
 

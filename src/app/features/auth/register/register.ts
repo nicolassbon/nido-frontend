@@ -148,16 +148,24 @@ export class Register {
       sexo,
       foto: this.selectedPhoto(),
     }).subscribe({
-      next: () => {
+      next: (response) => {
         this.loading.set(false);
+
+        if (response.isSilentSuccess) {
+          this.form.patchValue({
+            password: '',
+            confirmPassword: '',
+          });
+          this.globalError.set('Ocurrió un error al procesar el registro. Intentá de nuevo más tarde.');
+          return;
+        }
+
         const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
         returnUrl ? this.router.navigateByUrl(returnUrl) : this.router.navigate(['/crear-hogar']);
       },
       error: (err) => {
         this.loading.set(false);
-        if (err.status === 409) {
-          this.globalError.set('Este email ya está registrado.');
-        } else if (err.status === 400) {
+        if (err.status === 400) {
           this.globalError.set('Verificá los datos ingresados.');
         } else {
           this.globalError.set('Ocurrió un error. Intentá de nuevo.');
