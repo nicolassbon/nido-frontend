@@ -75,14 +75,12 @@
           }
 
           <!-- Avatar -->
-          @if (member.fotoUrl) {
-          <img [src]="member.fotoUrl" [alt]="member.name" class="w-14 h-14 rounded-full object-cover shrink-0" />
-          } @else {
-          <div class="w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-xl shrink-0"
-            [style.background-color]="member.color">
-            {{ member.initials }}
-          </div>
-          }
+          <app-avatar
+            [nombre]="member.name"
+            [fotoUrl]="member.fotoUrl"
+            sizeClass="w-14 h-14"
+            fontSizeClass="text-lg"
+          />
 
           <!-- Name & role -->
           <div class="flex flex-col items-center gap-0.5 text-center">
