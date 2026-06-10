@@ -213,6 +213,7 @@ export class ProductDetail {
       fechaVencimiento: item.fechaVencimiento,
       estaAbierto: item.estaAbierto,
       porcentajeConsumido: item.porcentajeConsumido,
+      cantidadEnvases: item.cantidadEnvases ?? 1,
     };
   }
 

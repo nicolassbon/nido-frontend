@@ -12,6 +12,7 @@ export interface CreateStockHomeRequest {
   fechaVencimiento?:   string;
   estaAbierto?:        boolean;
   porcentajeConsumido?: number;
+  cantidadEnvases?:    number;
 }
 
 export interface ProductManualResponse {
@@ -28,6 +29,7 @@ export interface ProductManualResponse {
   fechaVencimiento: string | null;
   estaAbierto: boolean;
   porcentajeConsumido: number;
+  cantidadEnvases: number;
 }
 
 
@@ -50,4 +52,19 @@ getProductManual(hogarId?: string) {
   );
 }
 
+/** Busca productos en el catálogo global por nombre (substring, case-insensitive). */
+searchProductos(q: string) {
+  return this.http.get<SearchProductoResponse[]>(
+    `${this.baseUrl}/productos/search?q=${encodeURIComponent(q)}`
+  );
+}
+
+}
+
+export interface SearchProductoResponse {
+  nombre:          string;
+  categoriaNombre: string | null;
+  categoriaId:     string | null;
+  unidadMedida:    string | null;
+  ubicacion:       string | null;
 }

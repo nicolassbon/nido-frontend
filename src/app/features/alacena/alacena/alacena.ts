@@ -52,12 +52,14 @@ export interface Product {
   image:            string;
   location:         Exclude<StorageLocation, 'Todos'>;
   expiryDate:       string;   // ISO date string (YYYY-MM-DD)
-  quantity:         number;
+  quantity:         number;   // cantidad por envase
   unit?:            string;
   categoriaNombre?: string;
   isOpened?:        boolean;
   remainingPercent?: number;  // 100 = full, 75 / 50 / 25 = approximate remaining
   barcode?:         string;
+  /** Cantidad de envases idénticos del mismo producto. Default 1. */
+  packagesCount:    number;
 }
 
 interface ProductDraft {
@@ -167,13 +169,6 @@ function fallbackProductImage(name: string | null | undefined): string {
   return catalog[normalized] ?? catalog[aliases[normalized]] ?? '';
 }
 
-function formatCategoryTag(tag: string): string {
-  return tag
-    .replace(/^[a-z]{2}:/, '')
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, c => c.toUpperCase());
-}
-
 function normalizeUnit(value: string | null | undefined): string {
   const normalized = (value ?? '')
     .trim()
@@ -269,12 +264,13 @@ export class Alacena implements OnInit {
   /** Productos conocidos para el autocomplete del form de agregar */
   protected readonly knownProducts = computed<KnownProduct[]>(() =>
     this.products().map(p => ({
-      nombre:          p.name,
-      categoriaNombre: p.categoriaNombre,
-      unidadMedida:    p.unit,
-      ubicacion:       p.location,
-      stockId:         p.id,
-      cantidad:        p.quantity,
+      nombre:           p.name,
+      categoriaNombre:  p.categoriaNombre,
+      unidadMedida:     p.unit,
+      ubicacion:        p.location,
+      stockId:          p.id,
+      cantidad:         p.quantity,
+      cantidadEnvases:  p.packagesCount,
     })),
   );
 
@@ -441,6 +437,7 @@ protected reloadProducts(): void { this.loadProducts(); }
       isOpened:         item.estaAbierto,
       remainingPercent: 100 - item.porcentajeConsumido,
       barcode:          item.codigoBarras ?? undefined,
+      packagesCount:    item.cantidadEnvases ?? 1,
     };
   }
 
@@ -457,6 +454,7 @@ protected reloadProducts(): void { this.loadProducts(); }
     isOpened: item.estaAbierto,
     remainingPercent: 100 - item.porcentajeConsumido,
     barcode: item.codigoBarras ?? undefined,
+    packagesCount: item.cantidadEnvases ?? 1,
   };
 }
 
@@ -627,7 +625,9 @@ protected reloadProducts(): void { this.loadProducts(); }
           return this.offService.lookup(barcode).pipe(
             switchMap(p => {
               const ttl = getTtlForCategory(p.categoriesTags);
-              const category = p.categoriesTags.length > 0 ? formatCategoryTag(p.categoriesTags[0]) : '';
+              // El back mapea los tags crudos a una categoría canónica de Nido
+              // (General, Lácteos, Bebidas, Congelados, Despensa).
+              const category = p.categoriaSugerida || '';
               return of({ name: p.name, image: p.image, category, ttl, fromDb: p.foundInDb });
             }),
           );
@@ -805,6 +805,7 @@ protected reloadProducts(): void { this.loadProducts(); }
               isOpened:         d.isOpened,
               remainingPercent: 100 - d.consumedPercent,
               barcode:          d.barcode || undefined,
+              packagesCount:    1,
             };
             this.products.update(list => [...list, product]);
             this.closeScanner();
@@ -858,23 +859,24 @@ protected reloadProducts(): void { this.loadProducts(); }
 
   /**
    * Etiqueta de cantidad para la card.
-   * - Unidades contables ('unidad' o sin unidad): "x1", "x3", etc.
-   * - Unidades de medida (gr/kg/ml/lt/cda/cdita): "100 g", "1.5 kg", etc.
+   * - 1 envase, unidad contable: "x3"
+   * - 1 envase, unidad de medida: "100 g"
+   * - N envases: "2 × 100 g" (o "2 × x3" para unidades contables)
    */
   protected quantityBadge(product: Product): string {
-    const unit = normalizeUnit(product.unit);
-    const qty  = product.quantity;
-
-    if (unit === 'unidad') {
-      return `x${qty}`;
-    }
+    const unit     = normalizeUnit(product.unit);
+    const qty      = product.quantity;
+    const packages = product.packagesCount ?? 1;
 
     const labels: Record<string, string> = {
       gr: 'g', kg: 'kg', ml: 'ml', lt: 'l', cda: 'cda', cdita: 'cdita',
     };
-    const suffix = labels[unit] ?? unit;
-    const sep = (suffix === 'cda' || suffix === 'cdita') ? ' ' : '';
-    return `${qty}${sep}${suffix}`;
+
+    const perPackage = unit === 'unidad'
+      ? `x${qty}`
+      : `${qty}${(labels[unit] ?? unit) === 'cda' || (labels[unit] ?? unit) === 'cdita' ? ' ' : ''}${labels[unit] ?? unit}`;
+
+    return packages > 1 ? `${packages} × ${perPackage}` : perPackage;
   }
 
   protected getLocationIcon(location: StorageLocation): string {
