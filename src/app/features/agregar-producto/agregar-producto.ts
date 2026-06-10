@@ -10,6 +10,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { ListaComprasService } from '../lista-compras/lista-compras.service';
 import { NidoSelectComponent, NidoSelectOption } from '../../shared/ui/form/nido-select/nido-select';
 import { NidoDatepickerComponent } from '../../shared/ui/form/nido-datepicker/nido-datepicker';
+import { EstimatedDateNoticeComponent } from '../../shared/ui/estimated-date-notice/estimated-date-notice';
 
 /** Producto conocido para autocompletar (proviene de la alacena ya cargada) */
 export interface KnownProduct {
@@ -23,7 +24,7 @@ export interface KnownProduct {
 
 @Component({
   selector: 'app-agregar-producto',
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule, NidoSelectComponent, NidoDatepickerComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule, NidoSelectComponent, NidoDatepickerComponent, EstimatedDateNoticeComponent],
   templateUrl: './agregar-producto.html',
   styleUrl: './agregar-producto.scss',
 })

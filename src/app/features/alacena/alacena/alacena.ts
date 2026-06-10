@@ -31,6 +31,7 @@ import { getTtlForCategory, TtlInfo } from '../ttl.config';
 import { RouterLink } from '@angular/router';
 import { ProductService, ProductManualResponse } from '../../../core/servicios/agregar-producto.service';
 import { AgregarProducto, KnownProduct } from '../../agregar-producto/agregar-producto';
+import { EstimatedDateNoticeComponent } from '../../../shared/ui/estimated-date-notice/estimated-date-notice';
 import { environment } from '../../../../environments/environment';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -241,7 +242,7 @@ const LOCATION_COLORS: Record<string, string> = {
 
 @Component({
   selector: 'app-alacena',
-  imports: [LucideAngularModule, FormsModule, RouterLink, AgregarProducto],
+  imports: [LucideAngularModule, FormsModule, RouterLink, AgregarProducto, EstimatedDateNoticeComponent],
   templateUrl: './alacena.html',
   styleUrl: './alacena.scss',
 })
