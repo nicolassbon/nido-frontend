@@ -9,11 +9,12 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { ProductService } from '../../../core/servicios/agregar-producto.service';
 import { ListaComprasService } from '../../lista-compras/lista-compras.service';
 import { Electrodomestico, ElectrodomesticosService } from '../../electrodomesticos/services/electrodomesticos.service';
+import { RecipeResenasComponent } from '../recipe-resenas/recipe-resenas';
 
 @Component({
   selector: 'app-recipe-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, LucideAngularModule],
+  imports: [CommonModule, RouterModule, LucideAngularModule, RecipeResenasComponent],
   templateUrl: './recipe-detail.html',
   styleUrl: './recipe-detail.scss',
 })

@@ -231,6 +231,11 @@
           </div>
         </section>
       </section>
+
+      <!-- Reseñas -->
+      <div class="mt-4">
+        <app-recipe-resenas [recetaId]="r.id" />
+      </div>
     </div>
     <!-- Modal confirmación cocinar -->
     @if (showCookModal()) {
