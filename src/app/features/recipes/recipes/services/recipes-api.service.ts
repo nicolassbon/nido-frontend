@@ -43,11 +43,34 @@ export interface ApiReceta {
   electrodomesticos?: ApiRecetaElectrodomestico[];
   // Agregado cuando el backend implemente el contador (US-14)
   vecesCocinada?: number;
+  /** Promedio de calificación (1-5, redondeado a 1 decimal). 0 si nadie calificó. */
+  calificacionPromedio?: number;
+  /** Cantidad de reseñas. */
+  calificacionTotal?: number;
 }
 
 export interface CocinarRecetaResponse {
   recetaId: string;
   vecesCocinada: number;
+}
+
+export interface ApiResena {
+  id:             string;
+  recetaId:       string;
+  usuarioId:      string;
+  usuarioNombre:  string;
+  usuarioFotoUrl: string | null;
+  puntuacion:     number;
+  comentario:     string | null;
+  createdAt:      string;
+  updatedAt:      string | null;
+}
+
+export interface ApiResenasReceta {
+  items:    ApiResena[];
+  promedio: number;
+  total:    number;
+  miResena: ApiResena | null;
 }
 
 @Injectable({
@@ -68,5 +91,19 @@ export class RecipesApiService {
   /** POST /recetas/{id}/cocinar — endpoint a implementar por el backend (US-14) */
   cocinar(id: string): Observable<CocinarRecetaResponse> {
     return this.http.post<CocinarRecetaResponse>(`${this.base}/recetas/${id}/cocinar`, {});
+  }
+
+  // ── Reseñas ──────────────────────────────────────────────
+  getResenas(recetaId: string): Observable<ApiResenasReceta> {
+    return this.http.get<ApiResenasReceta>(`${this.base}/recetas/${recetaId}/resenas`);
+  }
+
+  /** Crea o actualiza la reseña del usuario para la receta. */
+  upsertResena(recetaId: string, puntuacion: number, comentario: string | null): Observable<ApiResena> {
+    return this.http.put<ApiResena>(`${this.base}/recetas/${recetaId}/resenas`, { puntuacion, comentario });
+  }
+
+  deleteResena(recetaId: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/recetas/${recetaId}/resenas`);
   }
 }

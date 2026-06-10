@@ -7,6 +7,7 @@ import { ElectrodomesticosService } from '../../electrodomesticos/services/elect
 import { HogaresApiService, MiembroResponse } from '../../household/hogares-api.service';
 import { environment } from '../../../../environments/environment';
 import { ApiReceta, RecipesApiService } from './services/recipes-api.service';
+import { StarRatingComponent } from '../../../shared/ui/star-rating/star-rating';
 import { ProductService } from '../../../core/servicios/agregar-producto.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { PerfilApiService } from '../../perfil/perfil-api.service';
@@ -26,6 +27,7 @@ interface Recipe {
   name: string;
   image: string;
   rating: number;
+  ratingCount: number;
   difficulty: Difficulty;
   timeMinutes: number;
   calories: number;
@@ -101,7 +103,7 @@ const APPLIANCE_ALIASES: Record<string, string[]> = {
 
 @Component({
   selector: 'app-recipes',
-  imports: [LucideAngularModule, FormsModule, RouterModule],
+  imports: [LucideAngularModule, FormsModule, RouterModule, StarRatingComponent],
   templateUrl: './recipes.html',
   styleUrl: './recipes.scss',
 })
@@ -430,7 +432,8 @@ export class Recipes implements OnInit {
       id: receta.id,
       name: receta.nombre,
       image: this.resolveImageUrl(receta.imagenUrl) ?? 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=250&fit=crop',
-      rating: 4.5,
+      rating: receta.calificacionPromedio ?? 0,
+      ratingCount: receta.calificacionTotal ?? 0,
       difficulty: this.mapDifficulty(receta.dificultad),
       timeMinutes: receta.tiempoCoccionMin ?? 0,
       calories: Math.round(receta.calorias ?? 0),
