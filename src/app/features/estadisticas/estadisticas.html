@@ -1,0 +1,132 @@
+<section class="w-full p-4 sm:p-6 flex flex-col gap-5">
+
+  <!-- Banner -->
+  <header class="relative overflow-hidden rounded-[14px] px-6 py-7 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
+    <div class="relative z-10 flex items-center gap-3">
+      <span class="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-[10px] bg-[rgba(247,241,230,0.16)] ring-1 ring-[rgba(247,241,230,0.22)]">
+        <lucide-icon name="chart-pie" [size]="22" class="text-nido-cream/80" />
+      </span>
+      <div>
+        <h1 class="text-nido-cream text-[1.6rem] font-bold leading-tight">Estadísticas de consumo</h1>
+        <p class="text-nido-cream/75 text-[0.875rem] mt-0.5">Mirá qué se gasta más rápido y qué conviene reponer.</p>
+      </div>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="flex items-center justify-center gap-2 py-12 text-nido-brown text-sm">
+      <div class="w-5 h-5 rounded-full border-2 border-solid border-nido-border/50 border-t-nido-green-dark animate-spin"></div>
+      <span>Calculando estadísticas...</span>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="flex flex-col items-center gap-3 py-12 text-center">
+      <lucide-icon name="alert-circle" [size]="32" class="text-nido-red" />
+      <p class="text-nido-red text-sm">{{ errorMessage() }}</p>
+      <button (click)="load()"
+              class="px-4 py-2 bg-nido-green-dark text-nido-cream rounded-lg text-sm font-semibold cursor-pointer hover:bg-nido-green transition-colors">
+        Reintentar
+      </button>
+    </div>
+  } @else if (total() === 0) {
+    <div class="flex flex-col items-center gap-3 py-16 text-center">
+      <lucide-icon name="scan-line" [size]="48" class="text-nido-brown" />
+      <p class="text-nido-brown font-medium">Tu alacena está vacía.</p>
+      <a routerLink="/alacena" class="text-nido-green-dark font-semibold no-underline hover:underline">Ir a cargar productos</a>
+    </div>
+  } @else {
+
+    <!-- Resumen general -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div class="bg-white/[0.51] rounded-[12px] border border-nido-border/60 p-4 flex flex-col gap-1">
+        <span class="text-[0.7rem] text-nido-brown uppercase tracking-wide font-semibold">Total</span>
+        <span class="text-[1.5rem] font-bold text-nido-green-dark leading-none">{{ total() }}</span>
+        <span class="text-[0.75rem] text-nido-muted">productos en stock</span>
+      </div>
+      <div class="bg-white/[0.51] rounded-[12px] border border-nido-border/60 p-4 flex flex-col gap-1">
+        <span class="text-[0.7rem] text-nido-brown uppercase tracking-wide font-semibold">Abiertos</span>
+        <span class="text-[1.5rem] font-bold text-nido-green-dark leading-none">{{ totalAbiertos() }}</span>
+        <span class="text-[0.75rem] text-nido-muted">en consumo</span>
+      </div>
+      <div class="bg-[rgba(217,119,6,0.08)] rounded-[12px] border border-[rgba(217,119,6,0.25)] p-4 flex flex-col gap-1">
+        <span class="text-[0.7rem] uppercase tracking-wide font-semibold" style="color:#d97706">Por vencer</span>
+        <span class="text-[1.5rem] font-bold leading-none" style="color:#d97706">{{ totalPorVencer() }}</span>
+        <span class="text-[0.75rem]" style="color:#d97706">en 7 días o menos</span>
+      </div>
+      <div class="bg-[rgba(180,76,60,0.08)] rounded-[12px] border border-[rgba(180,76,60,0.25)] p-4 flex flex-col gap-1">
+        <span class="text-[0.7rem] uppercase tracking-wide font-semibold text-nido-red">Para reponer</span>
+        <span class="text-[1.5rem] font-bold leading-none text-nido-red">{{ totalParaReponer() }}</span>
+        <span class="text-[0.75rem] text-nido-red">comprar pronto</span>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="flex gap-2 flex-wrap">
+      @for (f of [{ key: 'todos', label: 'Todos' }, { key: 'urgentes', label: 'Para reponer' }, { key: 'abiertos', label: 'Abiertos' }, { key: 'porVencer', label: 'Por vencer' }]; track f.key) {
+        <button type="button"
+                class="px-3.5 py-1.5 rounded-full text-[0.8125rem] font-medium cursor-pointer transition-all duration-150 border-[1.5px] border-solid"
+                [class.bg-nido-green-dark]="filtro() === f.key"
+                [class.text-nido-cream]="filtro() === f.key"
+                [class.border-nido-green-dark]="filtro() === f.key"
+                [class.bg-white]="filtro() !== f.key"
+                [class.text-nido-brown]="filtro() !== f.key"
+                [class.border-nido-border]="filtro() !== f.key"
+                (click)="filtro.set($any(f.key))">
+          {{ f.label }}
+        </button>
+      }
+    </div>
+
+    <!-- Lista de productos -->
+    @if (filtered().length === 0) {
+      <p class="text-nido-muted text-sm text-center py-8">Sin productos en este filtro.</p>
+    } @else {
+      <div class="flex flex-col gap-2.5">
+        @for (item of filtered(); track item.stockId) {
+          <article class="bg-white/[0.51] rounded-[12px] border border-nido-border/60 p-4 flex items-start gap-3 flex-wrap shadow-[0_1px_4px_rgba(38,63,48,0.05)]">
+            <div class="flex-1 min-w-[180px]">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="text-[0.9375rem] font-semibold text-nido-green-dark m-0">{{ item.nombre }}</h3>
+                @if (item.categoriaNombre) {
+                  <span class="text-[0.7rem] text-nido-brown bg-nido-cream rounded-full px-2 py-0.5">{{ item.categoriaNombre }}</span>
+                }
+                @if (item.estaAbierto) {
+                  <span class="text-[0.7rem] text-nido-green-dark bg-[rgba(62,94,74,0.12)] rounded-full px-2 py-0.5 flex items-center gap-1">
+                    <lucide-icon name="package-open" [size]="10" />
+                    Abierto
+                  </span>
+                }
+              </div>
+              <p class="text-[0.8125rem] text-nido-brown m-0 mt-0.5">
+                {{ formatAmount(item.cantidadActual, item.unidadMedida) }} restantes
+                @if (item.ubicacion) { · {{ item.ubicacion }} }
+              </p>
+            </div>
+
+            <div class="flex flex-col items-end gap-1 min-w-[140px]">
+              <span class="text-[0.8125rem] font-semibold" [style.color]="prioridadColor(item.prioridadReposicion)">
+                {{ prioridadLabel(item.prioridadReposicion) }}
+              </span>
+              <div class="text-[0.7rem] text-nido-muted flex flex-col items-end gap-0.5">
+                @if (item.diasHastaAgotamientoEstimado !== null) {
+                  <span>
+                    <lucide-icon name="trending-up" [size]="11" class="inline-block mr-0.5" />
+                    Se agota en ~{{ item.diasHastaAgotamientoEstimado }} {{ item.diasHastaAgotamientoEstimado === 1 ? 'día' : 'días' }}
+                  </span>
+                }
+                @if (item.diasHastaVencimiento !== null) {
+                  <span>
+                    <lucide-icon name="calendar" [size]="11" class="inline-block mr-0.5" />
+                    @if (item.diasHastaVencimiento < 0) { Vencido }
+                    @else if (item.diasHastaVencimiento === 0) { Vence hoy }
+                    @else { Vence en {{ item.diasHastaVencimiento }} {{ item.diasHastaVencimiento === 1 ? 'día' : 'días' }} }
+                  </span>
+                }
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+    }
+
+  }
+</section>
