@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Nido favicon">
+  <circle cx="32" cy="32" r="30" fill="#7A5A45" />
+  <text
+    x="32"
+    y="33"
+    text-anchor="middle"
+    dominant-baseline="middle"
+    font-family="Comfortaa, Arial, sans-serif"
+    font-size="38"
+    font-weight="900"
+    fill="#F4E7D0"
+  >
+    N
+  </text>
+</svg>
