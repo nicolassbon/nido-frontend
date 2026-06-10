@@ -9,6 +9,7 @@ import { environment } from '../../../../environments/environment';
 import { ProductManualResponse, ProductService } from '../../../core/servicios/agregar-producto.service';
 import { ListaComprasService } from '../../lista-compras/lista-compras.service';
 import { AlacenaApiService, StockItemResponse } from '../alacena-api.service';
+import { EstimatedDateNoticeComponent } from '../../../shared/ui/estimated-date-notice/estimated-date-notice';
 
 const SHOPPING_GROUP = 'Productos de alacena';
 
@@ -80,7 +81,7 @@ function clamp(value: number, min: number, max: number): number {
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, RouterLink, AgregarProducto],
+  imports: [CommonModule, LucideAngularModule, RouterLink, AgregarProducto, EstimatedDateNoticeComponent],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.scss',
 })

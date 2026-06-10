@@ -29,7 +29,7 @@ export class Home implements OnInit {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
-    })
+    }).toUpperCase()
   );
 
   protected readonly quickActions: QuickAction[] = [
