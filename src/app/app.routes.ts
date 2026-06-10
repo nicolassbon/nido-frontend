@@ -19,6 +19,7 @@ import { EquipmentStep } from './features/onboarding/equipment-step/equipment-st
 import { ForgotPassword } from './features/auth/forgot-password/forgot-password';
 import { ResetPassword } from './features/auth/reset-password/reset-password';
 import { Configuracion } from './features/configuracion/configuracion';
+import { Estadisticas } from './features/estadisticas/estadisticas';
 import { Landing } from './features/landing/landing';
 
 export const routes: Routes = [
@@ -44,6 +45,7 @@ export const routes: Routes = [
       { path: 'alacena/:id',    component: ProductDetail },
       { path: 'lista-compras',  component: ListaCompras  },
       { path: 'electrodomesticos', component: Electrodomesticos },
+      { path: 'estadisticas', component: Estadisticas },
       { path: 'perfil', component: PerfilComponent },
       { path: 'configuracion', component: Configuracion },
       { path: 'agregar-producto', component: AgregarProducto },

@@ -48,6 +48,7 @@ export class Nav {
     { label: 'Tareas',            route: '/tareas',           icon: 'check-square', disabled: true },
     { label: 'Planificador',      route: '/planificador',     icon: 'calendar',     disabled: true },
     { label: 'Electrodomésticos', route: '/electrodomesticos',icon: 'zap'         },
+    { label: 'Estadísticas',      route: '/estadisticas',     icon: 'chart-pie'   },
     { label: 'Notificaciones',    route: '/notificaciones',   icon: 'bell',         disabled: true },
     { label: 'Mi perfil',         route: '/perfil',           icon: 'user'        },
   ];
