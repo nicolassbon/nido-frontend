@@ -17,6 +17,8 @@ export interface StockItemResponse {
   fechaVencimiento:    string | null;   // ISO yyyy-MM-dd
   estaAbierto:         boolean;
   porcentajeConsumido: number;
+  /** Cantidad de envases idénticos del mismo producto (default 1). */
+  cantidadEnvases:     number;
 }
 
 export interface CreateStockItemRequest {
@@ -29,6 +31,7 @@ export interface CreateStockItemRequest {
   fechaVencimiento:    string | null;
   estaAbierto:         boolean;
   porcentajeConsumido: number;
+  cantidadEnvases?:    number;
 }
 
 export interface UpdateStockItemRequest {
@@ -39,6 +42,7 @@ export interface UpdateStockItemRequest {
   fechaVencimiento?:    string | null;
   estaAbierto?:         boolean;
   porcentajeConsumido?: number;
+  cantidadEnvases?:     number;
 }
 
 export interface ProductoApiResponse {
