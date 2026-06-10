@@ -63,6 +63,14 @@ export class Configuracion {
   readonly members = signal<MiembroResponse[]>([]);
   readonly isLoadingMembers = signal(true);
 
+  // ── Editar nombre del hogar ──────────────────────────────
+  readonly hogarNombre       = signal('');
+  readonly isLoadingHogar    = signal(true);
+  readonly isEditingHogar    = signal(false);
+  readonly hogarNombreInput  = signal('');
+  readonly isSavingHogar     = signal(false);
+  readonly hogarSaveError    = signal<string | null>(null);
+
   // ── Invitar convivente (Giulianna) ───────────────────────
   readonly showInviteModal = signal(false);
   readonly inviteEmail = signal('');
@@ -106,6 +114,63 @@ export class Configuracion {
     this.loadProfile();
     this.loadPreferences();
     this.loadMembers();
+    this.loadHogar();
+  }
+
+  // ── Hogar — load + edit ──────────────────────────────────
+  private loadHogar(): void {
+    this.isLoadingHogar.set(true);
+    this.hogaresApi.getHogar()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: hogar => {
+          this.hogarNombre.set(hogar.nombre);
+          this.isLoadingHogar.set(false);
+        },
+        error: () => this.isLoadingHogar.set(false),
+      });
+  }
+
+  startEditHogar(): void {
+    this.hogarNombreInput.set(this.hogarNombre());
+    this.hogarSaveError.set(null);
+    this.isEditingHogar.set(true);
+  }
+
+  cancelEditHogar(): void {
+    this.isEditingHogar.set(false);
+    this.hogarSaveError.set(null);
+  }
+
+  saveHogarNombre(): void {
+    const nombre = this.hogarNombreInput().trim();
+    if (!nombre || nombre.length > 80) {
+      this.hogarSaveError.set('El nombre debe tener entre 1 y 80 caracteres.');
+      return;
+    }
+    if (nombre === this.hogarNombre()) {
+      this.isEditingHogar.set(false);
+      return;
+    }
+
+    this.isSavingHogar.set(true);
+    this.hogarSaveError.set(null);
+    this.hogaresApi.updateHogarNombre(nombre)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: updated => {
+          this.hogarNombre.set(updated.nombre);
+          this.isEditingHogar.set(false);
+          this.isSavingHogar.set(false);
+        },
+        error: err => {
+          const msg = err?.status === 403
+            ? 'Solo el dueño del hogar puede cambiar el nombre.'
+            : 'No se pudo guardar el cambio. Intentá de nuevo.';
+          this.hogarSaveError.set(msg);
+          this.isSavingHogar.set(false);
+        },
+      });
   }
 
   // ── Load & Async logic ───────────────────────────────────
