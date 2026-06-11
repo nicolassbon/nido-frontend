@@ -6,6 +6,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { PreferenciasApiService } from '../alacena/preferencias-api.service';
 import { HogaresApiService, MiembroResponse } from '../household/hogares-api.service';
 import { PerfilApiService } from '../perfil/perfil-api.service';
+import { Avatar } from '../../shared/ui/avatar/avatar';
 
 export function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
   const password = control.get('newPassword')?.value;
@@ -35,7 +36,7 @@ const MEMBER_COLORS = ['#263F30', '#C78F5A', '#927357', '#5C7A6E', '#8B4513', '#
 
 @Component({
   selector: 'app-configuracion',
-  imports: [ReactiveFormsModule, FormsModule, LucideAngularModule],
+  imports: [ReactiveFormsModule, FormsModule, LucideAngularModule, Avatar],
   templateUrl: './configuracion.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
