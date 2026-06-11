@@ -399,11 +399,14 @@ export class Finanzas implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: gasto => {
-          this.gastosMesActual.update(list => [gasto, ...list]);
-          this.totalMesActual.update(t => t + gasto.monto);
+          if (gasto.fecha >= firstDayOfMonth(now) && gasto.fecha <= lastDayOfMonth(now)) {
+            this.gastosMesActual.update(list => [gasto, ...list]);
+            this.totalMesActual.update(t => t + gasto.monto);
+          }
           this.isSavingGasto.set(false);
           this.showGastoModal.set(false);
           this.refreshBalance(now);
+          if (this.modoAhorro()) this.loadRecomendaciones();
         },
         error: () => {
           this.gastoError.set('No se pudo guardar el gasto. Verificá los datos.');
