@@ -106,6 +106,8 @@ import {
   AirVent,
   Square,
   PlugZap,
+  FileText,
+  Paperclip,
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
@@ -216,6 +218,8 @@ export const appConfig: ApplicationConfig = {
         AirVent,
         Square,
         PlugZap,
+        FileText,
+        Paperclip,
       }),
     },
   ],
