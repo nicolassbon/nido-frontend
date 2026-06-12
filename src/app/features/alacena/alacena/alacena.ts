@@ -257,6 +257,7 @@ export class Alacena implements OnInit {
   // ── List & filters ───────────────────────────────────────
   protected readonly activeLocation  = signal<StorageLocation>('Todos');
   protected readonly searchQuery     = signal('');
+  protected readonly onlyExpiring    = signal<boolean>(false);
   protected readonly locations:        StorageLocation[]                      = ['Todos', 'Alacena', 'Freezer', 'Heladera'];
   protected readonly productLocations: Exclude<StorageLocation, 'Todos'>[]   = ['Alacena', 'Freezer', 'Heladera'];
   protected readonly consumedOptions = CONSUMED_OPTIONS;
@@ -288,8 +289,16 @@ export class Alacena implements OnInit {
     if (this.activeLocation() !== 'Todos') {
       list = list.filter(p => p.location === this.activeLocation());
     }
-    const q = this.searchQuery().trim().toLowerCase();
-    if (q) list = list.filter(p => p.name.toLowerCase().includes(q));
+    if (this.onlyExpiring()) {
+      list = list.filter(p => {
+        const days = this.getDaysRemaining(p.expiryDate);
+        return days >= 0 && days <= this.diasAlerta();
+      });
+    }
+    const q = normalizeProductName(this.searchQuery());
+    if (q) {
+      list = list.filter(p => normalizeProductName(p.name).includes(q));
+    }
     return list;
   });
 

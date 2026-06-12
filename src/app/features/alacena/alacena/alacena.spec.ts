@@ -83,4 +83,47 @@ describe('Alacena', () => {
 
     expect(badge).toBe('1.5kg');
   });
+
+  it('should normalize search query and match accent-containing product names', () => {
+    const fixture = TestBed.createComponent(Alacena);
+    const component = fixture.componentInstance as any;
+
+    component.products.set([
+      { id: '1', name: 'Café de Colombia', location: 'Alacena', expiryDate: '', quantity: 1, unit: 'unidad' },
+      { id: '2', name: 'Yerba Mate', location: 'Alacena', expiryDate: '', quantity: 1, unit: 'unidad' }
+    ]);
+
+    component.searchQuery.set('cafe');
+    let filtered = component.filteredProducts();
+    expect(filtered.length).toBe(1);
+    expect(filtered[0].name).toBe('Café de Colombia');
+
+    component.searchQuery.set('CAFÉ');
+    filtered = component.filteredProducts();
+    expect(filtered.length).toBe(1);
+    expect(filtered[0].name).toBe('Café de Colombia');
+  });
+
+  it('should filter products by next to expire status', () => {
+    const fixture = TestBed.createComponent(Alacena);
+    const component = fixture.componentInstance as any;
+
+    const today = new Date();
+    const expirySoon = new Date(today);
+    expirySoon.setDate(today.getDate() + 3);
+    const expiryLate = new Date(today);
+    expiryLate.setDate(today.getDate() + 20);
+
+    component.products.set([
+      { id: '1', name: 'Leche', location: 'Heladera', expiryDate: expirySoon.toISOString().split('T')[0], quantity: 1, unit: 'unidad' },
+      { id: '2', name: 'Arroz', location: 'Alacena', expiryDate: expiryLate.toISOString().split('T')[0], quantity: 1, unit: 'unidad' }
+    ]);
+
+    component.diasAlerta.set(7);
+    component.onlyExpiring.set(true);
+
+    let filtered = component.filteredProducts();
+    expect(filtered.length).toBe(1);
+    expect(filtered[0].name).toBe('Leche');
+  });
 });
