@@ -8,10 +8,11 @@ import { PerfilApiService, PerfilApiResponse } from './perfil-api.service';
 import { OnboardingApiService, RestriccionCatalogo } from '../onboarding/onboarding-api.service';
 import { HogaresApiService } from '../household/hogares-api.service';
 import { EditarPerfil } from '../editar-perfil/editar-perfil';
+import { Avatar } from '../../shared/ui/avatar/avatar';
 
 @Component({
   selector: 'app-perfil',
-  imports: [CommonModule, RouterLink, StatCard, PreferenceCard, LucideAngularModule, EditarPerfil],
+  imports: [CommonModule, RouterLink, StatCard, PreferenceCard, LucideAngularModule, EditarPerfil, Avatar],
   templateUrl: './perfil.html',
   styleUrl: './perfil.scss',
 })
@@ -235,10 +236,4 @@ export class PerfilComponent implements OnInit {
     return selected ? 'text-nido-cream' : 'text-nido-green';
   }
 
-  protected onImgError(event: Event): void {
-    const img = event.target as HTMLImageElement;
-    if (!img.src.includes('/images/default-avatar.png')) {
-      img.src = '/images/default-avatar.png';
-    }
-  }
 }
