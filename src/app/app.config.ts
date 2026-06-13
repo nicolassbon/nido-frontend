@@ -1,6 +1,7 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { utcOffsetInterceptor } from './core/http/utc-offset.interceptor';
 import { provideRouter } from '@angular/router';
 import {
   LUCIDE_ICONS,
@@ -115,7 +116,7 @@ import { routes } from './app.routes';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor, utcOffsetInterceptor])),
     provideRouter(routes),
     {
       provide: LUCIDE_ICONS,
