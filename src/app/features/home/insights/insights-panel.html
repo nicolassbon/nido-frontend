@@ -1,0 +1,126 @@
+@if (loading()) {
+  <section class="bg-white/[0.51] rounded-[14px] px-6 py-5 shadow-[0_4px_18px_rgba(38,63,48,0.08)]">
+    <div class="h-6 w-56 rounded-md bg-nido-cream/70 animate-pulse mb-4"></div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="h-32 rounded-[10px] bg-nido-cream/60 animate-pulse"></div>
+      <div class="h-32 rounded-[10px] bg-nido-cream/60 animate-pulse"></div>
+      <div class="h-32 rounded-[10px] bg-nido-cream/60 animate-pulse"></div>
+    </div>
+  </section>
+} @else if (error()) {
+  <section class="bg-white/[0.51] rounded-[14px] px-6 py-5 shadow-[0_4px_18px_rgba(38,63,48,0.08)]">
+    <div class="flex items-center gap-3 text-nido-brown">
+      <lucide-icon name="alert-circle" [size]="20" />
+      <p class="text-sm">No pudimos cargar las recomendaciones inteligentes.</p>
+    </div>
+  </section>
+} @else if (data(); as ins) {
+  <section class="bg-white/[0.51] rounded-[14px] px-6 py-5 shadow-[0_4px_18px_rgba(38,63,48,0.08)]">
+
+    <header class="flex items-center justify-between gap-3 mb-4 flex-wrap">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-11 h-11 rounded-[10px] flex items-center justify-center text-nido-cream bg-nido-green-dark shadow-[0_3px_9px_rgba(31,58,58,0.25)]">
+          <lucide-icon name="sparkles" [size]="22" />
+        </div>
+        <div class="min-w-0">
+          <h2 class="text-[1.2rem] font-semibold text-nido-green-dark leading-tight">Recomendaciones inteligentes</h2>
+          <p class="text-[0.78rem] text-nido-brown mt-0.5">Basadas en tus consumos y vencimientos del hogar</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 text-[0.78rem] text-nido-brown">
+        <span class="px-2.5 py-1 rounded-full bg-nido-cream/80 border border-nido-border/50">
+          {{ ins.resumen.consumosUltimos30Dias }} consumos / 30 días
+        </span>
+        <span class="px-2.5 py-1 rounded-full bg-nido-cream/80 border border-nido-border/50">
+          {{ ins.resumen.tasaDesperdicioPorc }}% desperdicio
+        </span>
+      </div>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+      <!-- Comprar pronto -->
+      <article class="rounded-[12px] border border-nido-border/70 bg-white/70 p-4 flex flex-col">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-full bg-nido-gold/20 text-nido-gold flex items-center justify-center">
+            <lucide-icon name="shopping-cart" [size]="16" />
+          </div>
+          <h3 class="text-[0.95rem] font-semibold text-nido-green-dark">Comprá pronto</h3>
+        </div>
+
+        @if (ins.comprarPronto.length === 0) {
+          <p class="text-[0.82rem] text-nido-brown py-2">Nada por reponer todavía.</p>
+        } @else {
+          <ul class="flex flex-col divide-y divide-nido-border/50 -mt-1">
+            @for (item of ins.comprarPronto; track item.productoNombre) {
+              <li class="py-2 flex items-center justify-between gap-2">
+                <div class="min-w-0">
+                  <p class="text-[0.86rem] font-medium text-nido-green-dark truncate m-0">{{ item.productoNombre }}</p>
+                  <p class="text-[0.72rem] text-nido-brown mt-0.5">consumís ~{{ item.tasaDiariaPromedio }} {{ item.unidadMedida || '' }}/día</p>
+                </div>
+                <span class="shrink-0 text-[0.78rem] font-bold text-nido-gold whitespace-nowrap">
+                  ~{{ formatDias(item.diasParaAgotar) }}
+                </span>
+              </li>
+            }
+          </ul>
+        }
+      </article>
+
+      <!-- Por vencer -->
+      <article class="rounded-[12px] border border-nido-border/70 bg-white/70 p-4 flex flex-col">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-full bg-nido-red/15 text-nido-red flex items-center justify-center">
+            <lucide-icon name="clock" [size]="16" />
+          </div>
+          <h3 class="text-[0.95rem] font-semibold text-nido-green-dark">Por vencer</h3>
+        </div>
+
+        @if (ins.porVencer.length === 0) {
+          <p class="text-[0.82rem] text-nido-brown py-2">Sin vencimientos cercanos.</p>
+        } @else {
+          <ul class="flex flex-col divide-y divide-nido-border/50 -mt-1">
+            @for (item of ins.porVencer.slice(0, 5); track item.stockHogarId) {
+              <li class="py-2 flex items-center justify-between gap-2">
+                <a [routerLink]="['/alacena']" class="min-w-0 no-underline text-nido-green-dark hover:text-nido-green">
+                  <p class="text-[0.86rem] font-medium truncate m-0">{{ item.productoNombre }}</p>
+                  <p class="text-[0.72rem] text-nido-brown mt-0.5">{{ item.cantidad }} {{ item.unidadMedida || '' }}</p>
+                </a>
+                <span class="shrink-0 text-[0.78rem] font-bold whitespace-nowrap"
+                      [class.text-nido-red]="item.diasParaVencer <= 2"
+                      [class.text-nido-gold]="item.diasParaVencer > 2">
+                  {{ etiquetaVence(item.diasParaVencer) }}
+                </span>
+              </li>
+            }
+          </ul>
+        }
+      </article>
+
+      <!-- Desperdicios -->
+      <article class="rounded-[12px] border border-nido-border/70 bg-white/70 p-4 flex flex-col">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-8 h-8 rounded-full bg-nido-brown/15 text-nido-brown flex items-center justify-center">
+            <lucide-icon name="trash-2" [size]="16" />
+          </div>
+          <h3 class="text-[0.95rem] font-semibold text-nido-green-dark">Detección de desperdicio</h3>
+        </div>
+
+        @if (ins.desperdicios.length === 0) {
+          <p class="text-[0.82rem] text-nido-brown py-2">No detectamos patrones de desperdicio.</p>
+        } @else {
+          <ul class="flex flex-col gap-3 -mt-1">
+            @for (item of ins.desperdicios; track item.productoNombre) {
+              <li class="flex flex-col">
+                <p class="text-[0.86rem] font-medium text-nido-green-dark m-0">{{ item.productoNombre }}</p>
+                <p class="text-[0.74rem] text-nido-brown mt-0.5 leading-snug">{{ item.sugerencia }}</p>
+              </li>
+            }
+          </ul>
+        }
+      </article>
+
+    </div>
+  </section>
+}

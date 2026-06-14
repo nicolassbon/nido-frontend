@@ -4,6 +4,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/auth/auth.service';
 import { DashboardApiService, DashboardResponse } from './dashboard-api.service';
+import { InsightsPanel } from '../insights/insights-panel';
 
 interface QuickAction {
   label: string;
@@ -14,7 +15,7 @@ interface QuickAction {
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, LucideAngularModule],
+  imports: [RouterLink, LucideAngularModule, InsightsPanel],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })

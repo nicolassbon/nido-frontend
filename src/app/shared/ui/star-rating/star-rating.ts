@@ -7,7 +7,8 @@ import { LucideAngularModule } from 'lucide-angular';
  * - `readonly` (default): solo muestra (puede ser decimal: 3.5 = 3 enteras + media).
  * - `interactive`: permite seleccionar haciendo hover/click.
  *
- * Emite `valueChange` cuando el usuario elige una calificación.
+ * Emite `valueChange` cuando el usuario elige una calificación. Usa signal
+ * interno para que el cambio sea reactivo con OnPush.
  */
 @Component({
   selector: 'app-star-rating',
@@ -17,35 +18,39 @@ import { LucideAngularModule } from 'lucide-angular';
   template: `
     <div class="inline-flex items-center gap-0.5" [class.cursor-pointer]="interactive">
       @for (i of stars; track i) {
-        @let active = hovered() > 0 ? hovered() >= i : value >= i - 0.5;
-        @let half   = !interactive && value >= i - 0.5 && value < i;
+        @let v      = current();
+        @let active = hovered() > 0 ? hovered() >= i : v >= i;
+        @let half   = !interactive && v >= i - 0.5 && v < i && hovered() === 0;
         <button type="button"
-                class="inline-flex items-center justify-center bg-transparent border-none p-0 m-0"
+                class="inline-flex items-center justify-center bg-transparent border-none p-0 m-0 transition-transform"
                 [class.cursor-default]="!interactive"
                 [class.cursor-pointer]="interactive"
+                [class.hover:scale-110]="interactive"
                 [disabled]="!interactive"
                 (mouseenter)="interactive && hovered.set(i)"
                 (mouseleave)="interactive && hovered.set(0)"
                 (click)="onClick(i)">
           <lucide-icon
-            [name]="active ? 'star' : (half ? 'star-half' : 'star')"
+            [name]="half ? 'star-half' : 'star'"
             [size]="iconSize"
-            [strokeWidth]="active ? 1.5 : 1.5"
+            [strokeWidth]="1.75"
             [class.text-nido-gold]="active || half"
             [class.text-nido-border]="!active && !half"
-            [class.fill-nido-gold]="active || half"
-            [class.fill-transparent]="!active && !half" />
+            [style.fill]="active || half ? 'currentColor' : 'transparent'" />
         </button>
       }
-      @if (showValue && value > 0) {
-        <span class="ml-1.5 text-[0.8125rem] font-semibold text-nido-green-dark">{{ value.toFixed(1) }}</span>
+      @if (showValue && current() > 0) {
+        <span class="ml-1.5 text-[0.8125rem] font-semibold text-nido-green-dark">{{ current().toFixed(1) }}</span>
       }
     </div>
   `,
 })
 export class StarRatingComponent {
   /** Valor actual (0-5). Acepta decimales para mostrar promedios (3.5). */
-  @Input() value = 0;
+  @Input() set value(v: number) {
+    this.current.set(v ?? 0);
+  }
+  get value(): number { return this.current(); }
 
   /** Si true permite cliquear estrellas. Si false (default) es solo display. */
   @Input() interactive = false;
@@ -59,11 +64,12 @@ export class StarRatingComponent {
   @Output() valueChange = new EventEmitter<number>();
 
   protected readonly stars   = [1, 2, 3, 4, 5];
+  protected readonly current = signal(0);
   protected readonly hovered = signal(0);
 
   protected onClick(i: number): void {
     if (!this.interactive) return;
-    this.value = i;
+    this.current.set(i);
     this.valueChange.emit(i);
   }
 }
