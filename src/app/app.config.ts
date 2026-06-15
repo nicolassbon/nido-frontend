@@ -108,6 +108,8 @@ import {
   PlugZap,
   FileText,
   Paperclip,
+  TrendingDown,
+  PiggyBank,
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
@@ -220,6 +222,8 @@ export const appConfig: ApplicationConfig = {
         PlugZap,
         FileText,
         Paperclip,
+        TrendingDown,
+        PiggyBank,
       }),
     },
   ],

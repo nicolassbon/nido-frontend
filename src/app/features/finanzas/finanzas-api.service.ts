@@ -72,6 +72,51 @@ export interface PagarFacturaResponse {
   gastoCreado: GastoResponse | null;
 }
 
+export interface SavingsCategoriaResponse {
+  nombre: string;
+  gastoActual: number;
+  mediaHistorica: number;
+  potencialAhorro: number;
+  variacionPct: number;
+  color: string;
+}
+
+export interface SavingsPotencialResponse {
+  totalPotencial: number;
+  periodoBaseMeses: number;
+  categorias: SavingsCategoriaResponse[];
+}
+
+export interface InsightResponse {
+  tipo: 'alerta' | 'tendencia' | 'positivo';
+  categoria: string;
+  titulo: string;
+  detalle: string;
+  accion: string | null;
+  emoji: string;
+  variacionPct: number;
+  tendenciaMeses: number;
+}
+
+export interface InsightsListResponse {
+  insights: InsightResponse[];
+}
+
+export interface ProductoDestacadoResponse {
+  id: string;
+  nombre: string;
+  ubicacion: string;
+  diasParaVencer: number | null;
+  imagen: string | null;
+  porcentajeConsumido: number;
+}
+
+export interface AlacenaOportunidadesResponse {
+  productosDestacados: ProductoDestacadoResponse[];
+  recetasSugeridas: RecetaRecomendadaResponse[];
+  totalProductosEnCasa: number;
+}
+
 // ── Request types ─────────────────────────────────────────────────────────────
 
 export interface CreateGastoRequest {
@@ -158,5 +203,23 @@ export class FinanzasApiService {
 
   deleteFactura(id: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/finanzas/facturas/${id}`);
+  }
+
+  getSavingsPotencial(): Observable<SavingsPotencialResponse> {
+    return this.http
+      .get<SavingsPotencialResponse>(`${this.base}/finanzas/modo-ahorro/potencial`)
+      .pipe(catchError(() => of({ totalPotencial: 0, periodoBaseMeses: 3, categorias: [] })));
+  }
+
+  getInsights(): Observable<InsightsListResponse> {
+    return this.http
+      .get<InsightsListResponse>(`${this.base}/finanzas/modo-ahorro/insights`)
+      .pipe(catchError(() => of({ insights: [] })));
+  }
+
+  getAlacenaOportunidades(): Observable<AlacenaOportunidadesResponse> {
+    return this.http
+      .get<AlacenaOportunidadesResponse>(`${this.base}/finanzas/modo-ahorro/alacena`)
+      .pipe(catchError(() => of({ productosDestacados: [], recetasSugeridas: [], totalProductosEnCasa: 0 })));
   }
 }

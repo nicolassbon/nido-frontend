@@ -32,9 +32,11 @@ import {
   GastoResponse,
   FacturaResponse,
   BalanceMiembroResponse,
-  RecomendacionesResponse,
   CreateGastoRequest,
   CreateFacturaRequest,
+  SavingsPotencialResponse,
+  InsightsListResponse,
+  AlacenaOportunidadesResponse,
 } from '../finanzas-api.service';
 
 Chart.register(
@@ -147,8 +149,11 @@ export class Finanzas implements OnInit {
   protected readonly facturas          = signal<FacturaResponse[]>([]);
   protected readonly balanceMiembros   = signal<BalanceMiembroResponse[]>([]);
   protected readonly miembros          = signal<MiembroResponse[]>([]);
-  protected readonly modoAhorro        = signal(false);
-  protected readonly recomendaciones   = signal<RecomendacionesResponse | null>(null);
+  protected readonly modoAhorro              = signal(false);
+  protected readonly modoAhorroLoading       = signal(false);
+  protected readonly savingsPotencial        = signal<SavingsPotencialResponse | null>(null);
+  protected readonly insights                = signal<InsightsListResponse | null>(null);
+  protected readonly alacenaOportunidades    = signal<AlacenaOportunidadesResponse | null>(null);
   protected readonly totalMesActual    = signal(0);
   protected readonly totalMesAnterior  = signal(0);
 
@@ -265,7 +270,7 @@ export class Finanzas implements OnInit {
           this.miembros.set(miembros);
           this.facturas.set(facturas);
           this.isLoading.set(false);
-          if (modoAhorro.activo) this.loadRecomendaciones();
+          if (modoAhorro.activo) this.loadModoAhorroData();
         },
         error: () => this.isLoading.set(false),
       });
@@ -353,18 +358,33 @@ export class Finanzas implements OnInit {
         next: r => {
           this.modoAhorro.set(r.activo);
           if (r.activo) {
-            this.loadRecomendaciones();
+            this.loadModoAhorroData();
           } else {
-            this.recomendaciones.set(null);
+            this.savingsPotencial.set(null);
+            this.insights.set(null);
+            this.alacenaOportunidades.set(null);
           }
         },
       });
   }
 
-  private loadRecomendaciones(): void {
-    this.finanzasApi.getRecomendaciones()
+  private loadModoAhorroData(): void {
+    this.modoAhorroLoading.set(true);
+    forkJoin({
+      potencial: this.finanzasApi.getSavingsPotencial(),
+      insights:  this.finanzasApi.getInsights(),
+      alacena:   this.finanzasApi.getAlacenaOportunidades(),
+    })
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: r => this.recomendaciones.set(r) });
+      .subscribe({
+        next: ({ potencial, insights, alacena }) => {
+          this.savingsPotencial.set(potencial);
+          this.insights.set(insights);
+          this.alacenaOportunidades.set(alacena);
+          this.modoAhorroLoading.set(false);
+        },
+        error: () => this.modoAhorroLoading.set(false),
+      });
   }
 
   // ── Nuevo gasto ───────────────────────────────────────
@@ -406,7 +426,7 @@ export class Finanzas implements OnInit {
           this.isSavingGasto.set(false);
           this.showGastoModal.set(false);
           this.refreshBalance(now);
-          if (this.modoAhorro()) this.loadRecomendaciones();
+          if (this.modoAhorro()) this.loadModoAhorroData();
         },
         error: () => {
           this.gastoError.set('No se pudo guardar el gasto. Verificá los datos.');
@@ -532,5 +552,37 @@ export class Finanzas implements OnInit {
 
   protected balanceColor(n: number): string {
     return n >= 0 ? 'text-emerald-600' : 'text-red-500';
+  }
+
+  protected ubicacionColor(ubicacion: string): string {
+    const map: Record<string, string> = {
+      Alacena:  '#B48B6A',
+      Freezer:  '#3E5E4A',
+      Heladera: '#927357',
+    };
+    return map[ubicacion] ?? '#9a806c';
+  }
+
+  protected diasVencerLabel(dias: number | null): string {
+    if (dias === null) return '';
+    if (dias < 0)  return 'Vencido';
+    if (dias === 0) return 'Vence hoy';
+    if (dias === 1) return 'Vence mañana';
+    return `Vence en ${dias} días`;
+  }
+
+  protected diasVencerUrgente(dias: number | null): boolean {
+    return dias !== null && dias <= 3;
+  }
+
+  protected potencialBarWidth(potencial: number, totalPotencial: number): number {
+    if (totalPotencial === 0) return 0;
+    return Math.round((potencial / totalPotencial) * 100);
+  }
+
+  protected insightBorderColor(tipo: string): string {
+    if (tipo === 'alerta')    return '#b44c3c';
+    if (tipo === 'tendencia') return '#B48B6A';
+    return '#4a7c59';
   }
 }

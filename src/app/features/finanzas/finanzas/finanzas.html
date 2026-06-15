@@ -15,7 +15,7 @@
       <button (click)="toggleModoAhorro()"
               class="flex items-center gap-2 px-4 py-2 rounded-[20px] border text-[0.8375rem] font-medium cursor-pointer transition-all duration-150 whitespace-nowrap"
               [class]="modoAhorro()
-                ? 'bg-nido-gold/25 border-nido-gold/60 text-nido-gold hover:bg-nido-gold/35'
+                ? 'bg-nido-gold/30 border-nido-gold text-nido-cream hover:bg-nido-gold/45'
                 : 'bg-[rgba(247,241,230,0.15)] border-[rgba(247,241,230,0.3)] text-nido-cream/80 hover:bg-[rgba(247,241,230,0.25)]'">
         <lucide-icon name="leaf" [size]="15"></lucide-icon>
         {{ modoAhorro() ? 'Ahorro ON' : 'Modo ahorro' }}
@@ -155,7 +155,7 @@
     @if (gastosMesActual().length === 0) {
       <div class="py-10 text-center text-nido-muted text-sm">No hay movimientos este mes</div>
     } @else {
-      <div class="divide-y divide-nido-border/30">
+      <div class="divide-y divide-nido-border/30 max-h-[280px] overflow-y-auto">
         @for (gasto of gastosMesActual(); track gasto.id) {
           <div class="flex items-center gap-3 px-5 py-2.5">
             <span class="w-2 h-2 rounded-full shrink-0" [style.background]="catColor(gasto.categoria)"></span>
@@ -172,91 +172,134 @@
     }
   </div>
 
-  <!-- ══ MODO AHORRO (strip compacto full-width) ═══════════════════════════════ -->
-  <div class="bg-white rounded-[18px] border border-nido-border/50 px-5 py-4 flex items-center gap-4"
-       [class]="modoAhorro() ? 'border-nido-green/30 bg-nido-green/[0.03]' : ''">
-    <div class="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0 transition-colors duration-200"
-         [class]="modoAhorro() ? 'bg-nido-green-dark' : 'bg-nido-cream'">
-      <lucide-icon name="leaf" [size]="16"
-                   [class]="modoAhorro() ? 'text-nido-gold' : 'text-nido-green'"></lucide-icon>
+  <!-- ══ MODO AHORRO BANNER ════════════════════════════════════════════════════ -->
+  @if (!modoAhorro()) {
+    <div class="bg-white rounded-[18px] border border-nido-border/50 px-5 py-4 flex items-center gap-4">
+      <div class="w-9 h-9 rounded-[10px] bg-nido-cream flex items-center justify-center shrink-0">
+        <lucide-icon name="leaf" [size]="16" class="text-nido-green"></lucide-icon>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-semibold text-nido-green-dark">Modo ahorro</p>
+        <p class="text-xs text-nido-muted mt-0.5">Analizá tus gastos y aprovechá tu alacena para ahorrar.</p>
+      </div>
+      <button (click)="toggleModoAhorro()"
+              class="flex items-center gap-2.5 px-4 py-2 rounded-[10px] border border-nido-border bg-nido-cream text-nido-green-dark text-xs font-medium hover:border-nido-green transition-all duration-150 shrink-0">
+        Activar
+        <span class="relative w-7 h-[14px] rounded-full bg-nido-border shrink-0">
+          <span class="absolute top-[2px] left-[2px] w-[10px] h-[10px] bg-white rounded-full shadow"></span>
+        </span>
+      </button>
     </div>
-    <div class="flex-1 min-w-0">
-      <p class="text-sm font-semibold text-nido-green-dark">Modo ahorro</p>
-      <p class="text-xs text-nido-muted mt-0.5">Recibí sugerencias para cuidar tu presupuesto hasta fin de mes.</p>
+  } @else {
+
+    <!-- Banner activo compacto -->
+    <div class="rounded-[18px] px-5 py-3.5 flex items-center gap-3 bg-nido-green-dark">
+      <lucide-icon name="leaf" [size]="15" class="text-nido-gold shrink-0"></lucide-icon>
+      <p class="text-sm font-semibold text-nido-cream flex-1">Modo ahorro activo</p>
+      <button (click)="toggleModoAhorro()"
+              class="flex items-center gap-2 text-nido-cream/70 text-xs hover:text-nido-cream transition-colors duration-150 shrink-0">
+        Desactivar
+        <span class="relative w-7 h-[14px] rounded-full bg-nido-gold shrink-0">
+          <span class="absolute top-[2px] right-[2px] w-[10px] h-[10px] bg-white rounded-full shadow"></span>
+        </span>
+      </button>
     </div>
-    <button (click)="toggleModoAhorro()"
-            class="flex items-center gap-2.5 px-4 py-2 rounded-[10px] border text-xs font-medium transition-all duration-150 shrink-0"
-            [class]="modoAhorro()
-              ? 'bg-nido-green-dark border-nido-green-dark text-nido-cream hover:opacity-90'
-              : 'bg-nido-cream border-nido-border text-nido-green-dark hover:border-nido-green'">
-      {{ modoAhorro() ? 'Desactivar' : 'Activar modo ahorro' }}
-      <span class="relative w-7 h-[14px] rounded-full transition-colors duration-200 shrink-0"
-            [class]="modoAhorro() ? 'bg-nido-gold' : 'bg-nido-border'">
-        <span class="absolute top-[2px] left-[2px] w-[10px] h-[10px] bg-white rounded-full shadow transition-transform duration-200"
-              [class]="modoAhorro() ? 'translate-x-[13px]' : 'translate-x-0'"></span>
-      </span>
-    </button>
-  </div>
 
-  <!-- ══ RECOMENDACIONES (visible solo con modo ahorro ON) ════════════════════ -->
-  @if (modoAhorro() && recomendaciones(); as recs) {
-    <div class="flex flex-col gap-4">
+    <!-- Skeleton cargando -->
+    @if (modoAhorroLoading()) {
+      <div class="flex flex-col gap-4">
+        @for (i of [1,2,3]; track i) {
+          <div class="bg-white rounded-[18px] border border-nido-border/50 p-5 animate-pulse">
+            <div class="h-4 bg-nido-border/60 rounded w-1/3 mb-4"></div>
+            <div class="h-3 bg-nido-border/40 rounded w-full mb-2"></div>
+            <div class="h-3 bg-nido-border/40 rounded w-3/4"></div>
+          </div>
+        }
+      </div>
+    } @else {
 
-      <!-- Tips -->
-      @if (recs.tips.length > 0) {
+      <!-- ── SECCIÓN 1: Potencial de ahorro ──────────────────────────────────── -->
+      @if (savingsPotencial(); as pot) {
+        <div class="bg-white rounded-[18px] border border-nido-border/50 p-5">
+          <div class="flex items-center gap-2.5 mb-4">
+            <div class="w-7 h-7 rounded-[8px] bg-nido-green/10 flex items-center justify-center shrink-0">
+              <lucide-icon name="trending-down" [size]="14" class="text-nido-green"></lucide-icon>
+            </div>
+            <p class="text-sm font-semibold text-nido-green-dark">Potencial de ahorro este mes</p>
+          </div>
+
+          <!-- Card central con el total -->
+          @if (pot.totalPotencial > 0) {
+            <div class="rounded-[14px] bg-nido-green-dark px-5 py-4 mb-4 flex items-center justify-between">
+              <div>
+                <p class="text-xs text-nido-cream/70">Podrías ahorrar hasta</p>
+                <p class="font-title text-2xl font-bold text-nido-cream mt-0.5">{{ formatMoney(pot.totalPotencial) }}</p>
+                <p class="text-xs text-nido-cream/60 mt-1">basado en tus últimos {{ pot.periodoBaseMeses }} meses</p>
+              </div>
+              <lucide-icon name="piggy-bank" [size]="32" class="text-nido-gold opacity-80 shrink-0"></lucide-icon>
+            </div>
+          } @else {
+            <div class="rounded-[14px] bg-nido-cream/60 border border-nido-border/40 px-5 py-4 mb-4 text-center">
+              <p class="text-sm font-semibold text-nido-green-dark">¡Tus gastos están bien controlados este mes!</p>
+              <p class="text-xs text-nido-muted mt-1">Sin variaciones significativas respecto a tu historial.</p>
+            </div>
+          }
+
+          <!-- Barras por categoría -->
+          @if (pot.categorias.length > 0) {
+            <p class="text-xs font-medium text-nido-muted mb-3">Por categoría</p>
+            <div class="flex flex-col gap-3">
+              @for (cat of pot.categorias; track cat.nombre) {
+                <div>
+                  <div class="flex items-center justify-between mb-1.5">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full shrink-0" [style.background]="cat.color"></span>
+                      <span class="text-xs font-medium text-nido-green-dark">{{ cat.nombre }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      @if (cat.potencialAhorro > 0) {
+                        <span class="text-xs font-semibold text-nido-green-dark">{{ formatMoney(cat.potencialAhorro) }}</span>
+                      }
+                      <span class="text-[10px] font-medium px-1.5 py-0.5 rounded-full"
+                            [class]="cat.variacionPct > 0 ? 'bg-red-50 text-red-500' : 'bg-emerald-50 text-emerald-600'">
+                        {{ cat.variacionPct > 0 ? '+' : '' }}{{ cat.variacionPct }}%
+                      </span>
+                    </div>
+                  </div>
+                  <div class="h-1.5 rounded-full bg-nido-border/50 overflow-hidden">
+                    <div class="h-full rounded-full transition-all duration-500"
+                         [style.background]="cat.color"
+                         [style.width.%]="potencialBarWidth(cat.potencialAhorro, pot.totalPotencial)">
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- ── SECCIÓN 2: Insights personalizados ─────────────────────────────── -->
+      @if (insights()?.insights?.length) {
         <div class="bg-white rounded-[18px] border border-nido-border/50 p-5">
           <div class="flex items-center gap-2.5 mb-4">
             <div class="w-7 h-7 rounded-[8px] bg-nido-gold/20 flex items-center justify-center shrink-0">
               <lucide-icon name="lightbulb" [size]="14" class="text-nido-gold"></lucide-icon>
             </div>
-            <p class="text-sm font-semibold text-nido-green-dark">Tips de ahorro</p>
+            <p class="text-sm font-semibold text-nido-green-dark">Insights de tus hábitos</p>
           </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            @for (tip of recs.tips; track tip) {
-              <div class="flex items-start gap-2.5 bg-nido-cream/50 rounded-[12px] px-3.5 py-3">
-                <span class="w-1.5 h-1.5 rounded-full bg-nido-gold mt-1.5 shrink-0"></span>
-                <p class="text-xs text-nido-brown leading-relaxed">{{ tip }}</p>
-              </div>
-            }
-          </div>
-        </div>
-      }
-
-      <!-- Recetas recomendadas -->
-      @if (recs.recetas.length > 0) {
-        <div class="bg-white rounded-[18px] border border-nido-border/50 p-5">
-          <div class="flex items-center gap-2.5 mb-4">
-            <div class="w-7 h-7 rounded-[8px] bg-nido-green/10 flex items-center justify-center shrink-0">
-              <lucide-icon name="chef-hat" [size]="14" class="text-nido-green"></lucide-icon>
-            </div>
-            <div>
-              <p class="text-sm font-semibold text-nido-green-dark">Recetas con lo que tenés</p>
-              <p class="text-xs text-nido-muted mt-0.5">Cocinando en casa ahorrás en restaurantes y delivery</p>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            @for (receta of recs.recetas; track receta.id) {
-              <div class="flex items-center gap-3 border border-nido-border/50 rounded-[12px] p-3">
-                @if (receta.imagenUrl) {
-                  <img [src]="receta.imagenUrl" [alt]="receta.nombre"
-                       class="w-12 h-12 rounded-[8px] object-cover shrink-0">
-                } @else {
-                  <div class="w-12 h-12 rounded-[8px] bg-nido-cream flex items-center justify-center shrink-0">
-                    <lucide-icon name="chef-hat" [size]="18" class="text-nido-muted"></lucide-icon>
-                  </div>
-                }
+          <div class="flex flex-col gap-3">
+            @for (insight of insights()!.insights; track insight.categoria + insight.tipo) {
+              <div class="rounded-[12px] border border-nido-border/40 px-4 py-3 flex gap-3"
+                   [style.border-left-width.px]="3"
+                   [style.border-left-color]="insightBorderColor(insight.tipo)">
+                <span class="text-lg shrink-0 mt-0.5">{{ insight.emoji }}</span>
                 <div class="min-w-0">
-                  <p class="text-sm font-medium text-nido-green-dark truncate">{{ receta.nombre }}</p>
-                  <div class="flex items-center gap-1 mt-1">
-                    <div class="h-1.5 rounded-full bg-nido-border overflow-hidden flex-1">
-                      <div class="h-full bg-nido-green rounded-full transition-all duration-300"
-                           [style.width.%]="receta.totalIngredientes > 0 ? (receta.ingredientesEnStock / receta.totalIngredientes) * 100 : 0">
-                      </div>
-                    </div>
-                    <span class="text-[10px] text-nido-muted shrink-0">
-                      {{ receta.ingredientesEnStock }}/{{ receta.totalIngredientes }}
-                    </span>
-                  </div>
+                  <p class="text-sm font-semibold text-nido-green-dark leading-snug">{{ insight.titulo }}</p>
+                  <p class="text-xs text-nido-muted mt-1 leading-relaxed">{{ insight.detalle }}</p>
+                  @if (insight.accion) {
+                    <p class="text-xs text-nido-brown font-medium mt-1.5 leading-relaxed">{{ insight.accion }}</p>
+                  }
                 </div>
               </div>
             }
@@ -264,8 +307,99 @@
         </div>
       }
 
-    </div>
-  }
+      <!-- ── SECCIÓN 3: Tu alacena puede ayudarte ───────────────────────────── -->
+      @if (alacenaOportunidades(); as alacena) {
+        <div class="bg-white rounded-[18px] border border-nido-border/50 p-5">
+          <div class="flex items-center gap-2.5 mb-4">
+            <div class="w-7 h-7 rounded-[8px] bg-nido-gold/10 flex items-center justify-center shrink-0">
+              <lucide-icon name="package" [size]="14" class="text-nido-gold"></lucide-icon>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-nido-green-dark">Tu alacena puede ayudarte</p>
+              @if (alacena.totalProductosEnCasa > 0) {
+                <p class="text-xs text-nido-muted mt-0.5">{{ alacena.totalProductosEnCasa }} producto{{ alacena.totalProductosEnCasa === 1 ? '' : 's' }} disponible{{ alacena.totalProductosEnCasa === 1 ? '' : 's' }} en casa</p>
+              }
+            </div>
+          </div>
+
+          @if (alacena.productosDestacados.length === 0) {
+            <!-- Estado vacío -->
+            <div class="rounded-[12px] bg-nido-cream/50 border border-nido-border/40 px-4 py-5 text-center">
+              <lucide-icon name="shopping-cart" [size]="22" class="text-nido-muted mx-auto mb-2"></lucide-icon>
+              <p class="text-sm font-medium text-nido-green-dark">Cargá tu alacena para ver oportunidades</p>
+              <p class="text-xs text-nido-muted mt-1">Sabiendo qué tenés en casa, podemos sugerirte cómo aprovechar mejor tus compras.</p>
+            </div>
+          } @else {
+            <!-- Productos destacados -->
+            <p class="text-xs text-nido-muted mb-3">Tenés estos productos disponibles antes de comprar más:</p>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 mb-4">
+              @for (prod of alacena.productosDestacados; track prod.id) {
+                <div class="border border-nido-border/50 rounded-[12px] p-3 flex flex-col items-center gap-2 text-center">
+                  @if (prod.imagen) {
+                    <img [src]="prod.imagen" [alt]="prod.nombre"
+                         class="w-10 h-10 rounded-[8px] object-cover shrink-0">
+                  } @else {
+                    <div class="w-10 h-10 rounded-[8px] bg-nido-cream flex items-center justify-center shrink-0">
+                      <lucide-icon name="package" [size]="16" class="text-nido-muted"></lucide-icon>
+                    </div>
+                  }
+                  <p class="text-xs font-medium text-nido-green-dark leading-tight">{{ prod.nombre }}</p>
+                  <span class="text-[10px] font-medium px-1.5 py-0.5 rounded-full text-white"
+                        [style.background]="ubicacionColor(prod.ubicacion)">
+                    {{ prod.ubicacion }}
+                  </span>
+                  @if (prod.diasParaVencer !== null) {
+                    <span class="text-[10px]"
+                          [class]="diasVencerUrgente(prod.diasParaVencer) ? 'text-red-500 font-semibold' : 'text-nido-muted'">
+                      {{ diasVencerLabel(prod.diasParaVencer) }}
+                    </span>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Recetas sugeridas -->
+          @if (alacena.recetasSugeridas.length > 0) {
+            <div class="rounded-[12px] bg-nido-cream/40 border border-nido-border/30 px-4 py-3">
+              <div class="flex items-center gap-2 mb-2.5">
+                <lucide-icon name="chef-hat" [size]="13" class="text-nido-green shrink-0"></lucide-icon>
+                <p class="text-xs font-semibold text-nido-green-dark">Con lo que tenés en casa podés hacer:</p>
+              </div>
+              <div class="flex flex-col gap-2">
+                @for (receta of alacena.recetasSugeridas; track receta.id) {
+                  <div class="flex items-center gap-3">
+                    @if (receta.imagenUrl) {
+                      <img [src]="receta.imagenUrl" [alt]="receta.nombre"
+                           class="w-8 h-8 rounded-[6px] object-cover shrink-0">
+                    } @else {
+                      <div class="w-8 h-8 rounded-[6px] bg-white flex items-center justify-center shrink-0">
+                        <lucide-icon name="chef-hat" [size]="14" class="text-nido-muted"></lucide-icon>
+                      </div>
+                    }
+                    <div class="flex-1 min-w-0">
+                      <p class="text-xs font-medium text-nido-green-dark truncate">{{ receta.nombre }}</p>
+                      <div class="flex items-center gap-1 mt-0.5">
+                        <div class="h-1 rounded-full bg-nido-border/60 overflow-hidden flex-1">
+                          <div class="h-full bg-nido-green rounded-full"
+                               [style.width.%]="receta.totalIngredientes > 0 ? (receta.ingredientesEnStock / receta.totalIngredientes) * 100 : 0">
+                          </div>
+                        </div>
+                        <span class="text-[10px] text-nido-muted shrink-0">
+                          {{ receta.ingredientesEnStock }}/{{ receta.totalIngredientes }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+    } <!-- end @else modoAhorroLoading -->
+  } <!-- end @else modoAhorro -->
 
   <!-- ══ FACTURAS ═══════════════════════════════════════════════════════════════ -->
   <div class="bg-white rounded-[18px] border border-nido-border/50">
@@ -341,60 +475,71 @@
 
 <!-- ══ MODAL: NUEVO GASTO ════════════════════════════════════════════════════ -->
 @if (showGastoModal()) {
-  <div class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-4"
+  <div class="fixed inset-0 bg-[rgba(15,25,20,0.72)] backdrop-blur-[2px] flex items-start justify-center z-[100] overflow-y-auto py-6 px-4"
        (click)="closeGastoModal()">
-    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-    <div class="relative w-full max-w-md bg-white rounded-t-[24px] md:rounded-[24px] px-6 py-6 shadow-2xl"
+    <div class="rounded-[14px] w-full max-w-[480px] overflow-hidden shadow-[0_8px_32px_rgba(38,63,48,0.18)] flex flex-col my-auto"
          (click)="$event.stopPropagation()">
 
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="font-title text-xl text-nido-green-dark">Nuevo gasto</h2>
-        <button (click)="closeGastoModal()" class="p-1.5 rounded-lg hover:bg-nido-cream text-nido-muted transition-colors">
-          <lucide-icon name="x" [size]="18"></lucide-icon>
+      <!-- Header -->
+      <div class="relative overflow-hidden shrink-0 px-5 py-4 flex items-center justify-between [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
+        <div class="flex items-center gap-2.5 relative z-10">
+          <span class="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[10px] bg-[rgba(247,241,230,0.16)] ring-1 ring-[rgba(247,241,230,0.22)]">
+            <lucide-icon name="wallet" [size]="18" class="text-nido-cream/80"></lucide-icon>
+          </span>
+          <div>
+            <h2 class="text-[1.05rem] font-bold leading-tight text-nido-cream m-0">Nuevo gasto</h2>
+            <p class="text-[0.775rem] text-nido-cream/70 m-0">Registrá un movimiento del hogar.</p>
+          </div>
+        </div>
+        <button (click)="closeGastoModal()"
+                class="relative z-10 bg-transparent border-none cursor-pointer text-nido-cream/70 hover:text-nido-cream p-1 rounded transition-colors duration-150">
+          <lucide-icon name="x" [size]="20"></lucide-icon>
         </button>
       </div>
 
-      <div class="space-y-4">
-        <div>
-          <label class="text-xs font-medium text-nido-brown mb-1.5 block">Monto *</label>
+      <!-- Content -->
+      <div class="flex flex-col gap-4 px-6 py-5 bg-white">
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Monto <span class="text-nido-red">*</span></label>
           <input type="number" placeholder="0.00" [(ngModel)]="gastoForm.monto"
-                 class="w-full py-2.5 px-3.5 border-[1.5px] rounded-[10px] text-sm text-nido-green-dark outline-none transition-colors placeholder:text-nido-muted focus:border-nido-green"
-                 [class]="gastoSubmitted() && (gastoForm.monto ?? 0) <= 0 ? 'border-red-400 bg-red-50' : 'border-nido-border bg-white'">
+                 class="py-[0.65rem] px-[0.875rem] border-[1.5px] rounded-lg text-[0.875rem] text-nido-green-dark bg-white outline-none transition-[border-color] duration-150 placeholder:text-nido-muted focus:border-nido-green"
+                 [class]="gastoSubmitted() && (gastoForm.monto ?? 0) <= 0 ? 'border-nido-red' : 'border-nido-border'">
           @if (gastoSubmitted() && (gastoForm.monto ?? 0) <= 0) {
-            <p class="text-xs text-red-500 mt-1">Ingresá un monto mayor a 0</p>
+            <p class="text-[0.775rem] text-nido-red">Ingresá un monto mayor a 0.</p>
           }
         </div>
 
-        <div>
-          <label class="text-xs font-medium text-nido-brown mb-1.5 block">Descripción</label>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Descripción</label>
           <input type="text" placeholder="Ej: Supermercado, nafta..." [(ngModel)]="gastoForm.descripcion"
-                 class="w-full py-2.5 px-3.5 border-[1.5px] border-nido-border rounded-[10px] text-sm text-nido-green-dark outline-none focus:border-nido-green transition-colors placeholder:text-nido-muted">
+                 class="py-[0.65rem] px-[0.875rem] border-[1.5px] border-nido-border rounded-lg text-[0.875rem] text-nido-green-dark bg-white outline-none focus:border-nido-green transition-[border-color] duration-150 placeholder:text-nido-muted">
         </div>
 
         <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="text-xs font-medium text-nido-brown mb-1.5 block">Categoría</label>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Categoría</label>
             <select [(ngModel)]="gastoForm.categoria"
-                    class="w-full py-2.5 px-3.5 border-[1.5px] border-nido-border rounded-[10px] text-sm text-nido-green-dark outline-none focus:border-nido-green transition-colors bg-white appearance-none">
+                    class="py-[0.65rem] px-[0.875rem] border-[1.5px] border-nido-border rounded-lg text-[0.875rem] text-nido-green-dark bg-white outline-none focus:border-nido-green transition-[border-color] duration-150 appearance-none">
               <option value="">Sin categoría</option>
               @for (cat of categorias; track cat) {
                 <option [value]="cat">{{ cat }}</option>
               }
             </select>
           </div>
-          <div>
-            <label class="text-xs font-medium text-nido-brown mb-1.5 block">Fecha *</label>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Fecha <span class="text-nido-red">*</span></label>
             <input type="date" [(ngModel)]="gastoForm.fecha"
-                   class="w-full py-2.5 px-3.5 border-[1.5px] border-nido-border rounded-[10px] text-sm text-nido-green-dark outline-none focus:border-nido-green transition-colors"
-                   [class]="gastoSubmitted() && !gastoForm.fecha ? 'border-red-400' : 'border-nido-border'">
+                   class="py-[0.65rem] px-[0.875rem] border-[1.5px] rounded-lg text-[0.875rem] text-nido-green-dark bg-white outline-none focus:border-nido-green transition-[border-color] duration-150"
+                   [class]="gastoSubmitted() && !gastoForm.fecha ? 'border-nido-red' : 'border-nido-border'">
           </div>
         </div>
 
         @if (otrosMiembros().length > 0) {
-          <div>
-            <label class="text-xs font-medium text-nido-brown mb-1.5 block">Pagó</label>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[0.8125rem] font-semibold text-nido-green-dark">¿Quién pagó?</label>
             <select [(ngModel)]="gastoForm.pagadoPorId"
-                    class="w-full py-2.5 px-3.5 border-[1.5px] border-nido-border rounded-[10px] text-sm text-nido-green-dark outline-none focus:border-nido-green transition-colors bg-white">
+                    class="py-[0.65rem] px-[0.875rem] border-[1.5px] border-nido-border rounded-lg text-[0.875rem] text-nido-green-dark bg-white outline-none focus:border-nido-green transition-[border-color] duration-150">
               <option value="">Yo</option>
               @for (m of otrosMiembros(); track m.usuarioId) {
                 <option [value]="m.usuarioId">{{ m.nombre }}</option>
@@ -404,13 +549,28 @@
         }
 
         @if (gastoError()) {
-          <p class="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-[10px]">{{ gastoError() }}</p>
+          <div class="flex items-center gap-2 rounded-lg border border-[rgba(180,76,60,0.25)] bg-[rgba(180,76,60,0.06)] px-3 py-2 text-[0.8125rem] font-medium text-nido-red">
+            <lucide-icon name="alert-circle" [size]="15"></lucide-icon>
+            {{ gastoError() }}
+          </div>
         }
 
-        <button (click)="submitGasto()" [disabled]="isSavingGasto()"
-                class="w-full py-3 rounded-[12px] bg-nido-green-dark text-nido-cream font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition-opacity duration-150">
-          {{ isSavingGasto() ? 'Guardando...' : 'Guardar gasto' }}
-        </button>
+        <div class="flex gap-3 pt-1">
+          <button type="button" (click)="closeGastoModal()"
+                  class="flex items-center justify-center py-[0.65rem] px-4 bg-transparent text-nido-brown border-[1.5px] border-nido-border rounded-lg text-[0.875rem] font-medium cursor-pointer transition-all duration-150 hover:border-nido-brown hover:text-nido-green-dark">
+            Cancelar
+          </button>
+          <button (click)="submitGasto()" [disabled]="isSavingGasto()"
+                  class="flex-1 flex items-center justify-center gap-1.5 py-[0.65rem] px-5 bg-nido-green-dark text-nido-cream border-none rounded-lg text-[0.875rem] font-semibold cursor-pointer transition-[background] duration-150 hover:bg-nido-green disabled:opacity-60 disabled:cursor-not-allowed">
+            @if (isSavingGasto()) {
+              <span class="h-4 w-4 rounded-full border-2 border-nido-cream/45 border-t-nido-cream animate-spin"></span>
+            } @else {
+              <lucide-icon name="check" [size]="14"></lucide-icon>
+            }
+            {{ isSavingGasto() ? 'Guardando...' : 'Guardar gasto' }}
+          </button>
+        </div>
+
       </div>
     </div>
   </div>
@@ -418,58 +578,69 @@
 
 <!-- ══ MODAL: NUEVA FACTURA ══════════════════════════════════════════════════ -->
 @if (showFacturaModal()) {
-  <div class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-4"
+  <div class="fixed inset-0 bg-[rgba(15,25,20,0.72)] backdrop-blur-[2px] flex items-start justify-center z-[100] overflow-y-auto py-6 px-4"
        (click)="closeFacturaModal()">
-    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-    <div class="relative w-full max-w-md bg-white rounded-t-[24px] md:rounded-[24px] px-6 py-6 shadow-2xl"
+    <div class="rounded-[14px] w-full max-w-[480px] overflow-hidden shadow-[0_8px_32px_rgba(38,63,48,0.18)] flex flex-col my-auto"
          (click)="$event.stopPropagation()">
 
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="font-title text-xl text-nido-green-dark">Nueva factura</h2>
-        <button (click)="closeFacturaModal()" class="p-1.5 rounded-lg hover:bg-nido-cream text-nido-muted transition-colors">
-          <lucide-icon name="x" [size]="18"></lucide-icon>
+      <!-- Header -->
+      <div class="relative overflow-hidden shrink-0 px-5 py-4 flex items-center justify-between [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
+        <div class="flex items-center gap-2.5 relative z-10">
+          <span class="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[10px] bg-[rgba(247,241,230,0.16)] ring-1 ring-[rgba(247,241,230,0.22)]">
+            <lucide-icon name="file-text" [size]="18" class="text-nido-cream/80"></lucide-icon>
+          </span>
+          <div>
+            <h2 class="text-[1.05rem] font-bold leading-tight text-nido-cream m-0">Nueva factura</h2>
+            <p class="text-[0.775rem] text-nido-cream/70 m-0">Cargá un servicio o suscripción.</p>
+          </div>
+        </div>
+        <button (click)="closeFacturaModal()"
+                class="relative z-10 bg-transparent border-none cursor-pointer text-nido-cream/70 hover:text-nido-cream p-1 rounded transition-colors duration-150">
+          <lucide-icon name="x" [size]="20"></lucide-icon>
         </button>
       </div>
 
-      <div class="space-y-4">
-        <div>
-          <label class="text-xs font-medium text-nido-brown mb-1.5 block">Nombre *</label>
+      <!-- Content -->
+      <div class="flex flex-col gap-4 px-6 py-5 bg-white">
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Nombre <span class="text-nido-red">*</span></label>
           <input type="text" placeholder="Ej: Luz, Netflix, Agua..." [(ngModel)]="facturaForm.nombre"
-                 class="w-full py-2.5 px-3.5 border-[1.5px] rounded-[10px] text-sm text-nido-green-dark outline-none transition-colors placeholder:text-nido-muted focus:border-nido-green"
-                 [class]="facturaSubmitted() && !facturaForm.nombre.trim() ? 'border-red-400 bg-red-50' : 'border-nido-border bg-white'">
+                 class="py-[0.65rem] px-[0.875rem] border-[1.5px] rounded-lg text-[0.875rem] text-nido-green-dark bg-white outline-none transition-[border-color] duration-150 placeholder:text-nido-muted focus:border-nido-green"
+                 [class]="facturaSubmitted() && !facturaForm.nombre.trim() ? 'border-nido-red' : 'border-nido-border'">
           @if (facturaSubmitted() && !facturaForm.nombre.trim()) {
-            <p class="text-xs text-red-500 mt-1">Ingresá un nombre</p>
+            <p class="text-[0.775rem] text-nido-red">Ingresá un nombre.</p>
           }
         </div>
 
         <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="text-xs font-medium text-nido-brown mb-1.5 block">Tipo</label>
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Tipo</label>
             <select [(ngModel)]="facturaForm.tipo"
-                    class="w-full py-2.5 px-3.5 border-[1.5px] border-nido-border rounded-[10px] text-sm text-nido-green-dark outline-none focus:border-nido-green transition-colors bg-white appearance-none">
+                    class="py-[0.65rem] px-[0.875rem] border-[1.5px] border-nido-border rounded-lg text-[0.875rem] text-nido-green-dark bg-white outline-none focus:border-nido-green transition-[border-color] duration-150 appearance-none">
               <option value="servicio">Servicio</option>
               <option value="suscripcion">Suscripción</option>
             </select>
           </div>
-          <div>
-            <label class="text-xs font-medium text-nido-brown mb-1.5 block">Monto</label>
-            <input type="number" placeholder="Opcional" [(ngModel)]="facturaForm.monto"
-                   class="w-full py-2.5 px-3.5 border-[1.5px] border-nido-border rounded-[10px] text-sm text-nido-green-dark outline-none focus:border-nido-green transition-colors placeholder:text-nido-muted">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Monto <span class="text-[0.725rem] font-normal text-nido-muted ml-1">opcional</span></label>
+            <input type="number" placeholder="0.00" [(ngModel)]="facturaForm.monto"
+                   class="py-[0.65rem] px-[0.875rem] border-[1.5px] border-nido-border rounded-lg text-[0.875rem] text-nido-green-dark bg-white outline-none focus:border-nido-green transition-[border-color] duration-150 placeholder:text-nido-muted">
           </div>
         </div>
 
-        <div>
-          <label class="text-xs font-medium text-nido-brown mb-1.5 block">Fecha de vencimiento</label>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Fecha de vencimiento <span class="text-[0.725rem] font-normal text-nido-muted ml-1">opcional</span></label>
           <input type="date" [(ngModel)]="facturaForm.fechaVencimiento"
-                 class="w-full py-2.5 px-3.5 border-[1.5px] border-nido-border rounded-[10px] text-sm text-nido-green-dark outline-none focus:border-nido-green transition-colors">
+                 class="py-[0.65rem] px-[0.875rem] border-[1.5px] border-nido-border rounded-lg text-[0.875rem] text-nido-green-dark bg-white outline-none focus:border-nido-green transition-[border-color] duration-150">
         </div>
 
-        <div>
-          <label class="text-xs font-medium text-nido-brown mb-1.5 block">Adjuntar archivo (imagen o PDF)</label>
-          <label class="flex items-center gap-2.5 w-full py-2.5 px-3.5 border-[1.5px] border-dashed border-nido-border rounded-[10px] cursor-pointer hover:border-nido-green transition-colors group">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Archivo <span class="text-[0.725rem] font-normal text-nido-muted ml-1">opcional</span></label>
+          <label class="flex items-center gap-2.5 py-[0.65rem] px-[0.875rem] border-[1.5px] border-dashed border-nido-border rounded-lg cursor-pointer hover:border-nido-green transition-[border-color] duration-150 group">
             <lucide-icon name="paperclip" [size]="15" class="text-nido-muted group-hover:text-nido-green transition-colors shrink-0"></lucide-icon>
-            <span class="text-sm truncate" [class]="facturaForm.archivo ? 'text-nido-green-dark' : 'text-nido-muted'">
-              {{ facturaForm.archivo ? facturaForm.archivo.name : 'Seleccionar archivo...' }}
+            <span class="text-[0.875rem] truncate" [class]="facturaForm.archivo ? 'text-nido-green-dark' : 'text-nido-muted'">
+              {{ facturaForm.archivo ? facturaForm.archivo.name : 'Imagen o PDF...' }}
             </span>
             <input type="file" accept="image/jpeg,image/png,image/webp,application/pdf"
                    class="sr-only" (change)="onArchivoSelected($event)">
@@ -477,13 +648,28 @@
         </div>
 
         @if (facturaError()) {
-          <p class="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-[10px]">{{ facturaError() }}</p>
+          <div class="flex items-center gap-2 rounded-lg border border-[rgba(180,76,60,0.25)] bg-[rgba(180,76,60,0.06)] px-3 py-2 text-[0.8125rem] font-medium text-nido-red">
+            <lucide-icon name="alert-circle" [size]="15"></lucide-icon>
+            {{ facturaError() }}
+          </div>
         }
 
-        <button (click)="submitFactura()" [disabled]="isSavingFactura()"
-                class="w-full py-3 rounded-[12px] bg-nido-green-dark text-nido-cream font-semibold text-sm hover:opacity-90 disabled:opacity-60 transition-opacity duration-150">
-          {{ isSavingFactura() ? 'Guardando...' : 'Guardar factura' }}
-        </button>
+        <div class="flex gap-3 pt-1">
+          <button type="button" (click)="closeFacturaModal()"
+                  class="flex items-center justify-center py-[0.65rem] px-4 bg-transparent text-nido-brown border-[1.5px] border-nido-border rounded-lg text-[0.875rem] font-medium cursor-pointer transition-all duration-150 hover:border-nido-brown hover:text-nido-green-dark">
+            Cancelar
+          </button>
+          <button (click)="submitFactura()" [disabled]="isSavingFactura()"
+                  class="flex-1 flex items-center justify-center gap-1.5 py-[0.65rem] px-5 bg-nido-green-dark text-nido-cream border-none rounded-lg text-[0.875rem] font-semibold cursor-pointer transition-[background] duration-150 hover:bg-nido-green disabled:opacity-60 disabled:cursor-not-allowed">
+            @if (isSavingFactura()) {
+              <span class="h-4 w-4 rounded-full border-2 border-nido-cream/45 border-t-nido-cream animate-spin"></span>
+            } @else {
+              <lucide-icon name="check" [size]="14"></lucide-icon>
+            }
+            {{ isSavingFactura() ? 'Guardando...' : 'Guardar factura' }}
+          </button>
+        </div>
+
       </div>
     </div>
   </div>
