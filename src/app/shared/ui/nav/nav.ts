@@ -44,6 +44,8 @@ export class Nav {
     { label: 'Alacena',           route: '/alacena',          icon: 'refrigerator'},
     { label: 'Recetas',           route: '/recetas',          icon: 'chef-hat'      },
     { label: 'Lista de compras',  route: '/lista-compras',    icon: 'shopping-cart' },
+    { label: 'Finanzas',          route: '/finanzas',         icon: 'wallet'        },
+    { label: 'Tareas',            route: '/tareas',           icon: 'check-square', disabled: true },
     { label: 'Finanzas',          route: '/finanzas',         icon: 'wallet',       disabled: true },
     { label: 'Tareas',            route: '/tareas',           icon: 'check-square' },
     { label: 'Planificador',      route: '/planificador',     icon: 'calendar',     disabled: true },
