@@ -414,4 +414,131 @@ describe('Recipes', () => {
 
     expect(component['filteredRecipes']()).toHaveLength(0);
   });
+
+  describe('Filtros de Dificultad', () => {
+    it('deberia filtrar recetas mostrando solo Fácil', async () => {
+      const recetaFacil = { ...makeReceta('r1', 'Receta Fácil', []), dificultad: 'Fácil' };
+      const recetaMedia = { ...makeReceta('r2', 'Receta Media', []), dificultad: 'Media' };
+      const recetaDificil = { ...makeReceta('r3', 'Receta Difícil', []), dificultad: 'Difícil' };
+
+      await setup([recetaFacil, recetaMedia, recetaDificil], []);
+      
+      component['setFilter']('Fácil');
+      
+      const filtered = component['filteredRecipes']();
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0].name).toBe('Receta Fácil');
+      expect(filtered[0].difficulty).toBe('Fácil');
+    });
+
+    it('deberia filtrar recetas mostrando solo Medio', async () => {
+      const recetaFacil = { ...makeReceta('r1', 'Receta Fácil', []), dificultad: 'Fácil' };
+      const recetaMedia = { ...makeReceta('r2', 'Receta Media', []), dificultad: 'Media' };
+      const recetaDificil = { ...makeReceta('r3', 'Receta Difícil', []), dificultad: 'Difícil' };
+
+      await setup([recetaFacil, recetaMedia, recetaDificil], []);
+      
+      component['setFilter']('Medio');
+      
+      const filtered = component['filteredRecipes']();
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0].name).toBe('Receta Media');
+      expect(filtered[0].difficulty).toBe('Medio');
+    });
+
+    it('deberia filtrar recetas mostrando solo Difícil', async () => {
+      const recetaFacil = { ...makeReceta('r1', 'Receta Fácil', []), dificultad: 'Fácil' };
+      const recetaMedia = { ...makeReceta('r2', 'Receta Media', []), dificultad: 'Media' };
+      const recetaDificil = { ...makeReceta('r3', 'Receta Difícil', []), dificultad: 'Difícil' };
+
+      await setup([recetaFacil, recetaMedia, recetaDificil], []);
+      
+      component['setFilter']('Difícil');
+      
+      const filtered = component['filteredRecipes']();
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0].name).toBe('Receta Difícil');
+      expect(filtered[0].difficulty).toBe('Difícil');
+    });
+
+    it('deberia mostrar todas las recetas cuando se selecciona Todos', async () => {
+      const recetaFacil = { ...makeReceta('r1', 'Receta Fácil', []), dificultad: 'Fácil' };
+      const recetaMedia = { ...makeReceta('r2', 'Receta Media', []), dificultad: 'Media' };
+      const recetaDificil = { ...makeReceta('r3', 'Receta Difícil', []), dificultad: 'Difícil' };
+
+      await setup([recetaFacil, recetaMedia, recetaDificil], []);
+      
+      component['setFilter']('Todos');
+      
+      const filtered = component['filteredRecipes']();
+      expect(filtered).toHaveLength(3);
+    });
+  });
+
+  describe('Ordenamiento de Recetas', () => {
+    it('deberia ordenar por Mejor valoradas (rating) de forma descendente', async () => {
+      const recetaMala = makeReceta('r1', 'Mala', []);
+      const recetaExcelente = makeReceta('r2', 'Excelente', []);
+      const recetaRegular = makeReceta('r3', 'Regular', []);
+      
+      await setup([recetaMala, recetaExcelente, recetaRegular], []);
+      
+      const mapped = component['allRecipes']();
+      mapped[0].rating = 2.0;
+      mapped[1].rating = 5.0;
+      mapped[2].rating = 3.5;
+      
+      component['allRecipes'].set([...mapped]);
+      
+      component['setSort']('rating');
+      
+      const sorted = component['filteredRecipes']();
+      expect(sorted[0].name).toBe('Excelente');
+      expect(sorted[1].name).toBe('Regular');
+      expect(sorted[2].name).toBe('Mala');
+    });
+
+    it('deberia ordenar por Mayor coincidencia (coincidencia) de forma descendente', async () => {
+      const recetaBaja = makeReceta('r1', 'Coincidencia Baja', [
+        { id: 'i1', productoId: 'p1', nombre: 'Arroz', productoNombre: 'Arroz', cantidad: 100, unidad: 'g', enStock: false }
+      ]);
+      const recetaAlta = makeReceta('r2', 'Coincidencia Alta', [
+        { id: 'i2', productoId: 'p2', nombre: 'Leche', productoNombre: 'Leche', cantidad: 100, unidad: 'ml', enStock: true }
+      ]);
+      const recetaMedia = makeReceta('r3', 'Coincidencia Media', [
+        { id: 'i3', productoId: 'p3', nombre: 'Azúcar', productoNombre: 'Azúcar', cantidad: 100, unidad: 'g', enStock: true },
+        { id: 'i4', productoId: 'p4', nombre: 'Harina', productoNombre: 'Harina', cantidad: 100, unidad: 'g', enStock: false }
+      ]);
+      
+      await setup([recetaBaja, recetaAlta, recetaMedia], []);
+      
+      component['setSort']('coincidencia');
+      
+      const sorted = component['filteredRecipes']();
+      expect(sorted[0].name).toBe('Coincidencia Alta');
+      expect(sorted[1].name).toBe('Coincidencia Media');
+      expect(sorted[2].name).toBe('Coincidencia Baja');
+    });
+
+    it('deberia ordenar por defecto (default) manteniendo el orden original de las recetas', async () => {
+      const receta1 = makeReceta('r1', 'Receta 1', [
+        { id: 'i1', productoId: 'p1', nombre: 'Arroz', productoNombre: 'Arroz', cantidad: 100, unidad: 'g', enStock: true }
+      ]);
+      const receta2 = makeReceta('r2', 'Receta 2', [
+        { id: 'i2', productoId: 'p2', nombre: 'Leche', productoNombre: 'Leche', cantidad: 100, unidad: 'ml', enStock: false }
+      ]);
+      const receta3 = makeReceta('r3', 'Receta 3', [
+        { id: 'i3', productoId: 'p3', nombre: 'Queso', productoNombre: 'Queso', cantidad: 100, unidad: 'g', enStock: true }
+      ]);
+      
+      await setup([receta1, receta2, receta3], []);
+      
+      component['setSort']('default');
+      
+      const sorted = component['filteredRecipes']();
+      expect(sorted[0].name).toBe('Receta 1');
+      expect(sorted[1].name).toBe('Receta 2');
+      expect(sorted[2].name).toBe('Receta 3');
+    });
+  });
 });
