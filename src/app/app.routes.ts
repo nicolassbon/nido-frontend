@@ -49,11 +49,8 @@ export const routes: Routes = [
       { path: 'perfil', component: PerfilComponent },
       { path: 'configuracion', component: Configuracion },
       { path: 'agregar-producto', component: AgregarProducto },
-<<<<<<< HEAD
       { path: 'finanzas', component: Finanzas },
-=======
       { path: 'tareas', component: Tareas },
->>>>>>> dev-frontend
     ],
   },
   { path: '**', redirectTo: '' },
