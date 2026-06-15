@@ -8,7 +8,8 @@ export interface ComprarProntoItem {
   stockActual: number;
   unidadMedida: string | null;
   diasParaAgotar: number;
-  tasaDiariaPromedio: number;
+  frecuenciaCompraDias: number;
+  categoria: string;
 }
 
 export interface PorVencerItem {
@@ -25,7 +26,42 @@ export interface DesperdicioItem {
   productoNombre: string;
   vecesVencido: number;
   vecesCocinado: number;
+  tasaDesperdicioPorc: number;
   sugerencia: string;
+}
+
+export interface EnvaseZombieItem {
+  stockHogarId: string;
+  productoNombre: string;
+  diasAbierto: number;
+  sugerencia: string;
+}
+
+export interface ProductoClasificado {
+  productoNombre: string;
+  vecesComprado: number;
+  vecesVencido: number;
+  frecuenciaCompraDias: number;
+}
+
+export interface ClasificacionProductos {
+  esenciales: ProductoClasificado[];
+  recurrentes: ProductoClasificado[];
+  ocasionales: ProductoClasificado[];
+  caprichosos: ProductoClasificado[];
+}
+
+export interface RecetaTopItem {
+  recetaId: string;
+  nombre: string;
+  vecesCocinada: number;
+}
+
+export interface PatronesCocina {
+  diaQueMasCocinan: string | null;
+  cocinadasEnDiaTop: number;
+  ingredientesTop: string[];
+  recetasTop: RecetaTopItem[];
 }
 
 export interface ResumenInsights {
@@ -33,21 +69,27 @@ export interface ResumenInsights {
   productosPorVencerSemana: number;
   consumosUltimos30Dias: number;
   tasaDesperdicioPorc: number;
+  tasaDesperdicioMesAnteriorPorc: number;
+  frecuenciaCompraHogarDias: number;
+  productosEsenciales: number;
 }
 
 export interface InsightsHogarResponse {
   comprarPronto: ComprarProntoItem[];
   porVencer: PorVencerItem[];
   desperdicios: DesperdicioItem[];
+  envasesZombies: EnvaseZombieItem[];
+  clasificacion: ClasificacionProductos;
+  patrones: PatronesCocina;
   resumen: ResumenInsights;
 }
 
 @Injectable({ providedIn: 'root' })
 export class InsightsApiService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiBaseUrl}/api/insights`;
+  private readonly base = environment.apiBaseUrl;
 
   getForHogar(): Observable<InsightsHogarResponse> {
-    return this.http.get<InsightsHogarResponse>(`${this.baseUrl}/hogar`);
+    return this.http.get<InsightsHogarResponse>(`${this.base}/insights/hogar`);
   }
 }
