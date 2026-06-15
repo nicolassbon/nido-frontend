@@ -57,8 +57,11 @@
   display: block;
   position: absolute;
   inset: 0;
-  object-fit: cover;
+  padding: clamp(18px, 2vw, 28px);
+  box-sizing: border-box;
+  object-fit: contain;
   object-position: center;
+  filter: drop-shadow(0 12px 24px rgba(57, 44, 31, 0.16));
 }
 
 .photo-empty {

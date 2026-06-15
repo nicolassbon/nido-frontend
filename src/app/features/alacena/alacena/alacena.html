@@ -209,11 +209,13 @@
           [routerLink]="['/alacena', product.id]"
           class="block no-underline text-inherit bg-white/[0.51] rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition-[transform,box-shadow] duration-[180ms] cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)] group">
 
-          <div class="relative h-40 overflow-hidden bg-nido-cream">
+          <div class="relative h-40 overflow-hidden bg-gradient-to-br from-nido-cream via-white/80 to-[#f3e8d9]">
             @if (product.image) {
-              <img [src]="product.image" [alt]="product.name" loading="lazy" (error)="onImgError($event)"
-                   class="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
-              <div class="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/5 pointer-events-none"></div>
+              <div class="absolute inset-0 p-3 sm:p-4">
+                <img [src]="product.image" [alt]="product.name" loading="lazy" (error)="onImgError($event)"
+                     class="w-full h-full object-contain transition-transform duration-300 group-hover:scale-[1.03] drop-shadow-[0_6px_14px_rgba(43,30,27,0.12)]" />
+              </div>
+              <div class="absolute inset-0 bg-gradient-to-b from-white/18 via-transparent to-black/5 pointer-events-none"></div>
             } @else {
               <div class="w-full h-full flex flex-col items-center justify-center gap-2 p-4 text-nido-gold">
                 <lucide-icon [name]="getLocationIcon(product.location)" [size]="22" />
