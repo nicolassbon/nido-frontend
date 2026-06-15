@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 
@@ -30,6 +31,19 @@ export interface ProductManualResponse {
   porcentajeConsumido: number;
 }
 
+export interface CreateStockHomeResponse {
+  stockHogarId: string;
+  productoId: string;
+  cantidadActual: number;
+  unidadMedida: string;
+  fechaVencimiento: string | null;
+  usuarioIngresoId: string;
+  ubicacion: string;
+  estaAbierto: boolean;
+  porcentajeConsumido: number;
+  categoriaId: string | null;
+}
+
 
 @Injectable({
   providedIn: 'root'
@@ -41,7 +55,7 @@ private readonly baseUrl = environment.apiBaseUrl;
   constructor(private http: HttpClient) {}
 
 createStockHome(payload: CreateStockHomeRequest) {
-  return this.http.post<ProductManualResponse>(`${this.baseUrl}/productos`, payload);
+  return this.http.post<CreateStockHomeResponse>(`${this.baseUrl}/productos`, payload);
 }
 
 getProductManual(hogarId?: string) {
@@ -49,5 +63,12 @@ getProductManual(hogarId?: string) {
     `${this.baseUrl}/productos/manual`
   );
 }
+
+ uploadProductImage(productoId: string, image: File): Observable<void> {
+   const formData = new FormData();
+   formData.append('imagen', image);
+
+   return this.http.post<void>(`${this.baseUrl}/productos/${productoId}/imagen`, formData);
+ }
 
 }
