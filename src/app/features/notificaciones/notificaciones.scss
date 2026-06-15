@@ -1,0 +1,7 @@
+// Estilos específicos de transiciones para notificaciones
+article {
+  user-select: none;
+  
+  // Asegura una transición suave en el hover
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}

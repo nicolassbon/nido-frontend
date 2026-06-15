@@ -395,23 +395,27 @@
       </div>
 
       <div class="modal-mis-body">
-        @if (misTareas().length === 0) {
+        @if (misTareasConResaltada().length === 0) {
           <div class="empty-state">
             <lucide-icon name="check-square" [img]="icons.CheckSquare" size="36"></lucide-icon>
             <p>No tenés tareas asignadas</p>
           </div>
         } @else {
           <ul class="tarea-list">
-            @for (tarea of misTareas(); track tarea.id) {
-              <li class="tarea-item" [class.vencida]="estaVencida(tarea)">
-                <button class="tarea-check" (click)="completarTarea(tarea); cerrarModalMisTareas()" title="Completar">
+            @for (tarea of misTareasConResaltada(); track tarea.id) {
+              <li class="tarea-item" [class.vencida]="estaVencida(tarea)" [class.highlighted]="tarea.id === highlightedTaskId()">
+                <button class="tarea-check" 
+                  [class.completada]="tarea.estado === 'completada'"
+                  [disabled]="tarea.estado === 'completada'"
+                  (click)="tarea.estado !== 'completada' ? completarTarea(tarea) : null; cerrarModalMisTareas()" 
+                  [title]="tarea.estado === 'completada' ? 'Completada' : 'Completar'">
                   <lucide-icon name="check" [img]="icons.Check" size="14"></lucide-icon>
                 </button>
                 <div class="tarea-icon-wrap">
                   <lucide-icon name="clock" [img]="icons.Clock" size="16"></lucide-icon>
                 </div>
                 <div class="tarea-info">
-                  <span class="tarea-titulo">{{ tarea.titulo }}</span>
+                  <span class="tarea-titulo" [class.completada-titulo]="tarea.estado === 'completada'">{{ tarea.titulo }}</span>
                   @if (tarea.descripcion) {
                     <span class="tarea-desc">{{ tarea.descripcion }}</span>
                   }
