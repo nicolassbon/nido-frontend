@@ -253,6 +253,8 @@ export class Alacena implements OnInit {
   // ── List & filters ───────────────────────────────────────
   protected readonly activeLocation  = signal<StorageLocation>('Todos');
   protected readonly searchQuery     = signal('');
+  protected readonly onlyExpiring    = signal<boolean>(false);
+  protected readonly onlyExpired     = signal<boolean>(false);
   protected readonly locations:        StorageLocation[]                      = ['Todos', 'Alacena', 'Freezer', 'Heladera'];
   protected readonly productLocations: Exclude<StorageLocation, 'Todos'>[]   = ['Alacena', 'Freezer', 'Heladera'];
   protected readonly consumedOptions = CONSUMED_OPTIONS;
@@ -285,25 +287,60 @@ export class Alacena implements OnInit {
     if (this.activeLocation() !== 'Todos') {
       list = list.filter(p => p.location === this.activeLocation());
     }
-    const q = this.searchQuery().trim().toLowerCase();
-    if (q) list = list.filter(p => p.name.toLowerCase().includes(q));
+    
+    const showExpiring = this.onlyExpiring();
+    const showExpired = this.onlyExpired();
+
+    if (showExpiring || showExpired) {
+      list = list.filter(p => {
+        const days = this.getDaysRemaining(p.expiryDate);
+        const isExpiring = days >= 0 && days <= this.diasAlerta();
+        const isExpired = days < 0;
+
+        if (showExpiring && showExpired) {
+          return isExpiring || isExpired;
+        }
+        if (showExpiring) {
+          return isExpiring;
+        }
+        return isExpired;
+      });
+    }
+
+    const q = normalizeProductName(this.searchQuery());
+    if (q) {
+      list = list.filter(p => normalizeProductName(p.name).includes(q));
+    }
     return list;
   });
 
   protected readonly urgentCount = computed(() =>
     this.products().filter(p => {
       const days = this.getDaysRemaining(p.expiryDate);
-      return days >= 0 && days <= this.diasAlerta();
+      return days <= this.diasAlerta();
     }).length
   );
 
-  protected readonly expiringProducts = computed(() =>
+  protected readonly expiringSoonProducts = computed(() =>
     this.products()
       .filter(p => {
         const days = this.getDaysRemaining(p.expiryDate);
         return days >= 0 && days <= this.diasAlerta();
       })
       .sort((a, b) => this.getDaysRemaining(a.expiryDate) - this.getDaysRemaining(b.expiryDate))
+  );
+
+  protected readonly expiredProducts = computed(() =>
+    this.products()
+      .filter(p => {
+        const days = this.getDaysRemaining(p.expiryDate);
+        return days < 0;
+      })
+      .sort((a, b) => this.getDaysRemaining(a.expiryDate) - this.getDaysRemaining(b.expiryDate))
+  );
+
+  protected readonly hasAnyWarning = computed(() =>
+    this.expiringSoonProducts().length > 0 || this.expiredProducts().length > 0
   );
 
   // ── Scanner state ────────────────────────────────────────
@@ -846,7 +883,10 @@ protected reloadProducts(): void { this.loadProducts(); }
   }
 
   protected getExpiryLabel(days: number): string {
-    if (days < 0)   return 'Vencido';
+    if (days < 0) {
+      const abs = Math.abs(days);
+      return `Vencido hace ${abs} día${abs === 1 ? '' : 's'}`;
+    }
     if (days === 0) return 'Vence hoy';
     return `Vence en ${days} día${days === 1 ? '' : 's'}`;
   }
@@ -906,6 +946,13 @@ protected reloadProducts(): void { this.loadProducts(); }
     return this.activeLocation() === loc
       ? `${base} bg-nido-green-dark border-nido-green-dark text-nido-cream`
       : `${base} bg-white border-nido-border text-nido-brown hover:border-nido-green hover:text-nido-green`;
+  }
+
+  protected filterButtonClass(active: boolean): string {
+    const base = 'flex items-center gap-1.5 px-3 py-1 rounded-[20px] border text-[0.75rem] font-semibold cursor-pointer transition-all duration-150 border-solid';
+    return active
+      ? `${base} bg-[#b44c3c] border-[#b44c3c] text-white`
+      : `${base} bg-transparent border-[rgba(180,76,60,0.3)] text-[#b44c3c] hover:bg-[rgba(180,76,60,0.1)]`;
   }
 
   protected confirmImageClass(): string {

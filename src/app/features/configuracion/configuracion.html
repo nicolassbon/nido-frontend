@@ -435,15 +435,12 @@
         <ul class="list-none flex flex-col gap-2.5 mb-6">
           @for (miembro of members(); track miembro.usuarioId; let i = $index) {
             <li class="flex items-center gap-3.5 py-2.5 border-b border-nido-border/30 last:border-0">
-              @if (miembro.fotoUrl) {
-                <img [src]="miembro.fotoUrl" [alt]="miembro.nombre"
-                     class="w-10 h-10 rounded-full object-cover shrink-0 shadow-xs border border-nido-border/50" />
-              } @else {
-                <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white text-[0.875rem] font-bold shadow-xs border border-white/20"
-                     [style.background]="memberColor(i)">
-                  {{ memberInitial(miembro.nombre) }}
-                </div>
-              }
+              <app-avatar
+                [nombre]="miembro.nombre"
+                [fotoUrl]="miembro.fotoUrl"
+                sizeClass="w-10 h-10"
+                fontSizeClass="text-sm"
+              />
               <div class="flex-1 min-w-0">
                 <p class="text-[0.875rem] font-semibold text-nido-green-dark truncate m-0 flex items-center gap-1.5">
                   {{ miembro.nombre }}

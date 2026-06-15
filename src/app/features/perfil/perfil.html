@@ -23,9 +23,12 @@
 
       <div class="relative shrink-0 inline-block">
 
-        <img [src]="usuario()?.fotoUrl || '/images/default-avatar.png'" [alt]="usuario()?.nombre"
-          (error)="onImgError($event)"
-          class="w-32 h-32 md:w-[180px] md:h-[180px] rounded-full border-[8px] border-[#F7F1E6] object-cover bg-white shadow-sm">
+        <app-avatar
+          [nombre]="usuario()?.nombre"
+          [fotoUrl]="usuario()?.fotoUrl"
+          sizeClass="w-32 h-32 md:w-[180px] md:h-[180px] border-[8px] border-[#F7F1E6] bg-white shadow-sm"
+          fontSizeClass="text-3xl md:text-5xl"
+        />
         <button (click)="showEditModal.set(true)"
           class="absolute bottom-[3%] right-[6%] bg-nido-green-dark text-nido-bg p-2 rounded-full hover:opacity-90 transition shadow-md border-[3px] border-nido-cream cursor-pointer flex items-center justify-center">
           <lucide-icon name="pencil" class="w-3.5 h-3.5"></lucide-icon>

@@ -29,91 +29,166 @@
   </section>
 
   <!-- Panel de alertas de vencimiento -->
-  @if (expiringProducts().length > 0) {
-    <section class="rounded-[12px] border border-[rgba(180,76,60,0.25)] bg-[rgba(180,76,60,0.05)] px-5 py-4 flex flex-col gap-3">
-      <div class="flex items-center justify-between gap-3">
-        <div class="flex items-center gap-2 text-[#b44c3c]">
-          <lucide-icon name="bell" [size]="16" />
-          <span class="text-[0.8375rem] font-semibold">
-            {{ expiringProducts().length }} producto{{ expiringProducts().length === 1 ? '' : 's' }}
-            vence{{ expiringProducts().length === 1 ? '' : 'n' }} en {{ diasAlerta() }} días o menos
-          </span>
-        </div>
-        <button
-          class="flex items-center gap-1 px-3 py-1 rounded-[20px] border border-[rgba(180,76,60,0.3)] bg-transparent text-[#b44c3c] text-[0.75rem] font-medium cursor-pointer transition-[background] duration-150 hover:bg-[rgba(180,76,60,0.1)]"
-          (click)="showAlertSettings.set(!showAlertSettings())">
-          <lucide-icon name="settings" [size]="12" />
-          Configurar
-        </button>
-      </div>
+  @if (hasAnyWarning()) {
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      
+      <!-- Card 1: Próximos a vencer -->
+      <section class="rounded-[12px] border border-[rgba(180,76,60,0.25)] bg-[rgba(180,76,60,0.05)] px-5 py-4 flex flex-col gap-3 justify-between">
+        <div class="flex flex-col gap-3">
+          <div class="flex items-center justify-between gap-3 pb-1.5 border-b border-[rgba(180,76,60,0.12)]">
+            <div class="flex items-center gap-2 text-nido-green-dark">
+              <lucide-icon name="clock" [size]="16" class="text-nido-green-dark" />
+              <span class="text-[0.8375rem] font-bold">
+                Próximos a vencer (en {{ diasAlerta() }} días o menos)
+              </span>
+            </div>
+            <button
+              class="flex items-center gap-1 px-3 py-1 rounded-[20px] border border-[rgba(180,76,60,0.3)] bg-transparent text-nido-green-dark text-[0.75rem] font-semibold cursor-pointer transition-[background] duration-150 hover:bg-[rgba(180,76,60,0.1)]"
+              (click)="showAlertSettings.set(!showAlertSettings())">
+              <lucide-icon name="settings" [size]="12" />
+              Configurar
+            </button>
+          </div>
 
-      @if (showAlertSettings()) {
-        <div class="flex items-center gap-2 flex-wrap pt-1 border-t border-[rgba(180,76,60,0.15)]">
-          <span class="text-[0.8rem] text-nido-brown">Alertar cuando queden menos de</span>
-          <input
-            class="w-[64px] py-1.5 px-2 border border-nido-border rounded-lg text-[0.875rem] text-nido-green-dark bg-white outline-none transition-[border-color] duration-150 focus:border-nido-green text-center"
-            type="number"
-            min="1"
-            max="365"
-            [ngModel]="diasAlertaInput()"
-            (ngModelChange)="diasAlertaInput.set(+$event)"
-          />
-          <span class="text-[0.8rem] text-nido-brown">días</span>
-          <button
-            class="flex items-center gap-1 px-3 py-1.5 bg-nido-green-dark text-nido-cream rounded-lg text-[0.8rem] font-semibold border-none cursor-pointer transition-[background] duration-150 hover:bg-nido-green disabled:opacity-50"
-            [disabled]="isSavingPrefs()"
-            (click)="saveDiasAlerta()">
-            <lucide-icon name="check" [size]="12" />
-            Guardar
-          </button>
-        </div>
-      }
+          @if (showAlertSettings()) {
+            <div class="flex items-center gap-2 flex-wrap pb-2.5 border-b border-[rgba(180,76,60,0.12)] mb-1">
+              <span class="text-[0.8rem] text-nido-brown">Alertar cuando queden menos de</span>
+              <input
+                class="w-[64px] py-1.5 px-2 border border-nido-border rounded-lg text-[0.875rem] text-nido-green-dark bg-white outline-none transition-[border-color] duration-150 focus:border-nido-green text-center"
+                type="number"
+                min="1"
+                max="365"
+                [ngModel]="diasAlertaInput()"
+                (ngModelChange)="diasAlertaInput.set(+$event)"
+              />
+              <span class="text-[0.8rem] text-nido-brown">días</span>
+              <button
+                class="flex items-center gap-1 px-3 py-1.5 bg-nido-green-dark text-nido-cream rounded-lg text-[0.8rem] font-semibold border-none cursor-pointer transition-[background] duration-150 hover:bg-nido-green disabled:opacity-50"
+                [disabled]="isSavingPrefs()"
+                (click)="saveDiasAlerta()">
+                <lucide-icon name="check" [size]="12" />
+                Guardar
+              </button>
+            </div>
+          }
 
-      <div class="flex flex-col gap-1.5">
-        @for (p of expiringProducts(); track p.id) {
-          @let daysLeft = getDaysRemaining(p.expiryDate);
-          <div class="flex items-center justify-between gap-2 text-[0.8rem]">
-            <span class="text-nido-green-dark font-medium truncate">{{ p.name }}</span>
-            <span class="shrink-0 font-semibold whitespace-nowrap" [style.color]="getExpiryColor(daysLeft)">
-              {{ getExpiryLabel(daysLeft) }}
-            </span>
+          <div class="flex flex-col gap-1.5 flex-1 justify-center min-h-[48px]">
+            @if (expiringSoonProducts().length > 0) {
+              @for (p of expiringSoonProducts().slice(0, 2); track p.id) {
+                @let daysLeft = getDaysRemaining(p.expiryDate);
+                <div class="flex items-center justify-between gap-2 text-[0.8rem]">
+                  <span class="text-nido-green-dark font-medium truncate">{{ p.name }}</span>
+                  <span class="shrink-0 font-semibold whitespace-nowrap text-nido-brown">
+                    {{ getExpiryLabel(daysLeft) }}
+                  </span>
+                </div>
+              }
+              @if (expiringSoonProducts().length > 2) {
+                <div class="text-[0.775rem] text-nido-brown font-medium italic leading-snug">
+                  ... y {{ expiringSoonProducts().length - 2 }} producto{{ expiringSoonProducts().length - 2 === 1 ? '' : 's' }} más por vencer.
+                </div>
+              }
+            } @else {
+              <p class="text-[0.775rem] text-nido-brown/60 italic my-1 text-center">No hay productos próximos a vencer.</p>
+            }
+          </div>
+        </div>
+
+        @if (expiringSoonProducts().length > 0) {
+          <div class="mt-2 pt-2 border-t border-[rgba(180,76,60,0.08)] flex justify-end">
+            <button
+              type="button"
+              (click)="onlyExpiring.set(!onlyExpiring())"
+              [class]="filterButtonClass(onlyExpiring())">
+              <lucide-icon name="filter" [size]="11" />
+              {{ onlyExpiring() ? 'Mostrar todos' : 'Ver todos' }}
+            </button>
           </div>
         }
-      </div>
-
       <app-estimated-date-notice variant="compact" />
     </section>
+
+      <!-- Card 2: Vencidos -->
+      <section class="rounded-[12px] border border-[rgba(180,76,60,0.25)] bg-[rgba(180,76,60,0.05)] px-5 py-4 flex flex-col gap-3 justify-between">
+        <div class="flex flex-col gap-3">
+          <div class="flex items-center gap-2 text-[#b44c3c] pb-1.5 border-b border-[rgba(180,76,60,0.12)]">
+            <lucide-icon name="calendar-x" [size]="16" class="text-[#b44c3c]" />
+            <span class="text-[0.8375rem] font-bold">
+              Vencidos
+            </span>
+          </div>
+
+          <div class="flex flex-col gap-1.5 flex-1 justify-center min-h-[48px]">
+            @if (expiredProducts().length > 0) {
+              @for (p of expiredProducts().slice(0, 2); track p.id) {
+                @let daysLeft = getDaysRemaining(p.expiryDate);
+                <div class="flex items-center justify-between gap-2 text-[0.8rem]">
+                  <span class="text-[#b44c3c] font-medium truncate">{{ p.name }}</span>
+                  <span class="shrink-0 font-semibold whitespace-nowrap text-[#b44c3c]">
+                    {{ getExpiryLabel(daysLeft) }}
+                  </span>
+                </div>
+              }
+              @if (expiredProducts().length > 2) {
+                <div class="text-[0.775rem] text-[#b44c3c] font-medium italic leading-snug">
+                  ... y {{ expiredProducts().length - 2 }} producto{{ expiredProducts().length - 2 === 1 ? '' : 's' }} más vencido{{ expiredProducts().length - 2 === 1 ? '' : 's' }}.
+                </div>
+              }
+            } @else {
+              <p class="text-[0.775rem] text-nido-brown/60 italic my-1 text-center">No hay productos vencidos.</p>
+            }
+          </div>
+        </div>
+
+        @if (expiredProducts().length > 0) {
+          <div class="mt-2 pt-2 border-t border-[rgba(180,76,60,0.08)] flex justify-end">
+            <button
+              type="button"
+              (click)="onlyExpired.set(!onlyExpired())"
+              [class]="filterButtonClass(onlyExpired())">
+              <lucide-icon name="filter" [size]="11" />
+              {{ onlyExpired() ? 'Mostrar todos' : 'Ver todos' }}
+            </button>
+          </div>
+        }
+      </section>
+
+    </div>
   }
 
   <!-- Toolbar: filtros + buscador -->
-  <div class="flex items-center justify-between gap-3 flex-wrap max-sm:flex-col max-sm:items-stretch">
-    <div class="flex gap-2 flex-wrap">
-      @for (loc of locations; track loc) {
-        <button [class]="locationFilterChipClass(loc)" (click)="activeLocation.set(loc)">
-          <lucide-icon [name]="getLocationIcon(loc)" [size]="13" />
-          {{ loc }}
-        </button>
-      }
+  <div class="flex flex-col gap-3.5 bg-white/[0.22] p-4 rounded-[14px] border border-nido-border/30">
+    <div class="flex items-center justify-between gap-3 flex-wrap max-sm:flex-col max-sm:items-stretch">
+      <div class="flex gap-2 flex-wrap">
+        @for (loc of locations; track loc) {
+          <button [class]="locationFilterChipClass(loc)" (click)="activeLocation.set(loc)">
+            <lucide-icon [name]="getLocationIcon(loc)" [size]="13" />
+            {{ loc }}
+          </button>
+        }
+      </div>
+      <div class="relative flex items-center min-w-[220px] max-sm:min-w-0">
+        <span class="absolute inset-y-0 left-3.5 flex w-6 items-center justify-center text-nido-brown pointer-events-none">
+          <lucide-icon name="search" [size]="18" />
+        </span>
+        <input
+          class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-brown rounded-[10px] bg-white/[0.51] text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-brown placeholder:text-nido-muted"
+          type="text"
+          placeholder="Buscar producto..."
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+        />
+        @if (searchQuery()) {
+          <button
+            class="absolute right-2.5 top-1/2 -translate-y-1/2 h-8 w-8 bg-transparent border-none text-nido-brown cursor-pointer flex items-center justify-center rounded hover:text-nido-green-dark"
+            (click)="searchQuery.set('')">
+            <lucide-icon name="x" [size]="16" />
+          </button>
+        }
+      </div>
     </div>
-    <div class="relative flex items-center min-w-[220px] max-sm:min-w-0">
-      <span class="absolute inset-y-0 left-3.5 flex w-6 items-center justify-center text-nido-brown pointer-events-none">
-        <lucide-icon name="search" [size]="18" />
-      </span>
-      <input
-        class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-brown rounded-[10px] bg-white/[0.51] text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-brown placeholder:text-nido-muted"
-        type="text"
-        placeholder="Buscar producto..."
-        [ngModel]="searchQuery()"
-        (ngModelChange)="searchQuery.set($event)"
-      />
-      @if (searchQuery()) {
-        <button
-          class="absolute right-2.5 top-1/2 -translate-y-1/2 h-8 w-8 bg-transparent border-none text-nido-brown cursor-pointer flex items-center justify-center rounded hover:text-nido-green-dark"
-          (click)="searchQuery.set('')">
-          <lucide-icon name="x" [size]="16" />
-        </button>
-      }
-    </div>
+
+
   </div>
 
   <!-- Grid / Empty -->

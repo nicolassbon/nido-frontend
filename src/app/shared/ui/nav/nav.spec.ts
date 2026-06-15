@@ -24,7 +24,7 @@ describe('Nav', () => {
     ) as HTMLElement[];
     const labels = disabledItems.map(item => item.textContent?.trim());
 
-    expect(labels).toEqual(['Finanzas', 'Tareas', 'Planificador', 'Notificaciones']);
+    expect(labels).toEqual(['Tareas', 'Planificador', 'Notificaciones']);
     expect(disabledItems.every(item => item.tagName.toLowerCase() === 'span')).toBe(true);
   });
 });
