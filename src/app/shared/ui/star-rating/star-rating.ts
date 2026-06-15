@@ -34,9 +34,10 @@ import { LucideAngularModule } from 'lucide-angular';
             [name]="half ? 'star-half' : 'star'"
             [size]="iconSize"
             [strokeWidth]="1.75"
+            class="star-icon"
+            [class.is-active]="active || half"
             [class.text-nido-gold]="active || half"
-            [class.text-nido-border]="!active && !half"
-            [style.fill]="active || half ? 'currentColor' : 'transparent'" />
+            [class.text-nido-border]="!active && !half" />
         </button>
       }
       @if (showValue && current() > 0) {
@@ -44,6 +45,10 @@ import { LucideAngularModule } from 'lucide-angular';
       }
     </div>
   `,
+  styles: [`
+    :host ::ng-deep .star-icon svg { fill: transparent; transition: fill .12s ease; }
+    :host ::ng-deep .star-icon.is-active svg { fill: currentColor; }
+  `],
 })
 export class StarRatingComponent {
   /** Valor actual (0-5). Acepta decimales para mostrar promedios (3.5). */

@@ -73,6 +73,21 @@ export interface ApiResenasReceta {
   miResena: ApiResena | null;
 }
 
+export interface ApiNota {
+  id:             string;
+  recetaId:       string;
+  hogarId:        string;
+  usuarioId:      string;
+  usuarioNombre:  string;
+  usuarioFotoUrl: string | null;
+  texto:          string;
+  createdAt:      string;
+}
+
+export interface ApiNotasReceta {
+  items: ApiNota[];
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -105,5 +120,18 @@ export class RecipesApiService {
 
   deleteResena(recetaId: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/recetas/${recetaId}/resenas`);
+  }
+
+  // ── Notas del hogar ──────────────────────────────────────
+  getNotas(recetaId: string): Observable<ApiNotasReceta> {
+    return this.http.get<ApiNotasReceta>(`${this.base}/recetas/${recetaId}/notas`);
+  }
+
+  addNota(recetaId: string, texto: string): Observable<ApiNota> {
+    return this.http.post<ApiNota>(`${this.base}/recetas/${recetaId}/notas`, { texto });
+  }
+
+  deleteNota(recetaId: string, notaId: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/recetas/${recetaId}/notas/${notaId}`);
   }
 }
