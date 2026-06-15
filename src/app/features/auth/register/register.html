@@ -214,6 +214,28 @@
           </div>
         </div>
       </div>
+      <!-- Términos y Condiciones -->
+      <div class="flex flex-col gap-1 mt-2">
+        <label class="flex items-start gap-2.5 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            formControlName="aceptaTerminos"
+            class="mt-0.5 w-4 h-4 accent-nido-green-dark cursor-pointer shrink-0"
+          />
+          <span class="text-[0.8125rem] text-nido-green-dark leading-snug">
+            Acepto los
+            <button type="button" (click)="openTerms($event)"
+                    class="underline font-semibold text-nido-green-dark hover:text-nido-green bg-transparent border-0 p-0 cursor-pointer">
+              Términos y Condiciones
+            </button>
+            y la Política de Privacidad de Nido.
+          </span>
+        </label>
+        @if (submitted() && form.get('aceptaTerminos')?.invalid) {
+          <span class="text-nido-red text-[0.8rem] pl-6">Tenés que aceptar los términos para continuar.</span>
+        }
+      </div>
+
       @if (globalError()) {
         <span class="text-nido-red text-[0.875rem] text-center w-full font-medium mt-1">{{
           globalError()
@@ -238,3 +260,92 @@
     </form>
   </main>
 </div>
+
+@if (showTermsModal()) {
+  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-[200] px-4" (click)="closeTerms()">
+    <div class="bg-white rounded-2xl shadow-[0_8px_40px_rgba(38,63,48,0.18)] w-full max-w-[640px] max-h-[85vh] flex flex-col"
+         (click)="$event.stopPropagation()">
+      <header class="flex items-center justify-between gap-4 px-6 py-4 border-b border-nido-border/40 shrink-0">
+        <h2 class="text-[1.125rem] font-bold text-nido-green-dark m-0">Términos y Condiciones</h2>
+        <button type="button" (click)="closeTerms()"
+                class="w-8 h-8 rounded-full bg-transparent border-0 cursor-pointer text-nido-muted hover:text-nido-brown hover:bg-nido-cream flex items-center justify-center transition-colors">
+          <lucide-icon name="x" [size]="16" />
+        </button>
+      </header>
+
+      <div class="overflow-y-auto px-6 py-5 flex-1 flex flex-col gap-4 text-[0.875rem] text-nido-green-dark leading-relaxed">
+        <p class="text-[0.75rem] text-nido-muted italic m-0">Última actualización: junio 2026</p>
+
+        <section>
+          <h3 class="text-[0.95rem] font-bold text-nido-green-dark m-0 mb-1">1. Aceptación</h3>
+          <p class="m-0">
+            Al crear una cuenta en Nido aceptás estos términos y la Política de Privacidad. Si no estás de acuerdo, no podés usar la aplicación.
+          </p>
+        </section>
+
+        <section>
+          <h3 class="text-[0.95rem] font-bold text-nido-green-dark m-0 mb-1">2. Uso de la cuenta</h3>
+          <p class="m-0">
+            Sos responsable de mantener la confidencialidad de tu contraseña y de toda la actividad que ocurra dentro de tu cuenta. Debés ser mayor de 18 años, o contar con autorización de tu tutor legal, para crear una cuenta.
+          </p>
+        </section>
+
+        <section>
+          <h3 class="text-[0.95rem] font-bold text-nido-green-dark m-0 mb-1">3. Datos del hogar</h3>
+          <p class="m-0">
+            La información de tu hogar (stock de alacena, recetas cocinadas, notas privadas, miembros invitados) es visible únicamente para los miembros del mismo hogar. No compartimos esos datos con terceros.
+          </p>
+        </section>
+
+        <section>
+          <h3 class="text-[0.95rem] font-bold text-nido-green-dark m-0 mb-1">4. Contenido del usuario</h3>
+          <p class="m-0">
+            Sos dueño de las notas, fotos y datos que cargues. Al usar Nido nos otorgás una licencia limitada para almacenarlos y mostrarlos a los miembros de tu hogar exclusivamente con el fin de prestar el servicio.
+          </p>
+        </section>
+
+        <section>
+          <h3 class="text-[0.95rem] font-bold text-nido-green-dark m-0 mb-1">5. Privacidad</h3>
+          <p class="m-0">
+            Tratamos tus datos personales (nombre, email, foto, preferencias alimenticias) bajo las leyes de protección de datos vigentes. Podés solicitar el borrado completo de tu cuenta en cualquier momento desde Configuración.
+          </p>
+        </section>
+
+        <section>
+          <h3 class="text-[0.95rem] font-bold text-nido-green-dark m-0 mb-1">6. Disponibilidad del servicio</h3>
+          <p class="m-0">
+            Nido se ofrece "tal cual está". Podemos modificar, suspender o discontinuar funcionalidades sin previo aviso. Hacemos lo razonable para mantener la app disponible y los datos seguros.
+          </p>
+        </section>
+
+        <section>
+          <h3 class="text-[0.95rem] font-bold text-nido-green-dark m-0 mb-1">7. Recomendaciones inteligentes</h3>
+          <p class="m-0">
+            Las sugerencias de compra, recetas o detección de desperdicio son orientativas y se basan en tu historial. Nido no garantiza precisión ni se hace responsable por decisiones tomadas en base a ellas.
+          </p>
+        </section>
+
+        <section>
+          <h3 class="text-[0.95rem] font-bold text-nido-green-dark m-0 mb-1">8. Modificaciones</h3>
+          <p class="m-0">
+            Podemos actualizar estos términos. Te avisaremos por email o dentro de la app. El uso continuo implica aceptación de los cambios.
+          </p>
+        </section>
+
+        <section>
+          <h3 class="text-[0.95rem] font-bold text-nido-green-dark m-0 mb-1">9. Contacto</h3>
+          <p class="m-0">
+            Ante dudas sobre estos términos: <a href="mailto:contacto@nido.app" class="text-nido-green-dark font-semibold underline">contacto&#64;nido.app</a>
+          </p>
+        </section>
+      </div>
+
+      <footer class="flex justify-end gap-2 px-6 py-3 border-t border-nido-border/40 shrink-0">
+        <button type="button" (click)="closeTerms()"
+                class="px-5 py-2 rounded-full text-[0.875rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors">
+          Entendido
+        </button>
+      </footer>
+    </div>
+  </div>
+}

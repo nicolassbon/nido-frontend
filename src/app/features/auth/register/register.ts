@@ -78,7 +78,19 @@ export class Register {
     ]],
     confirmPassword: ['', Validators.required],
     sexo:            ['', Validators.required],
+    aceptaTerminos:  [false, Validators.requiredTrue],
   }, { validators: passwordMatchValidator });
+
+  readonly showTermsModal = signal(false);
+
+  openTerms(event?: Event): void {
+    event?.preventDefault();
+    this.showTermsModal.set(true);
+  }
+
+  closeTerms(): void {
+    this.showTermsModal.set(false);
+  }
 
   togglePassword(): void {
     this.showPassword.update(v => !v);
