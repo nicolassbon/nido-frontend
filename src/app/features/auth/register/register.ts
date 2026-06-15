@@ -159,6 +159,7 @@ export class Register {
       password,
       sexo,
       foto: this.selectedPhoto(),
+      aceptaTerminos: true,
     }).subscribe({
       next: (response) => {
         this.loading.set(false);
