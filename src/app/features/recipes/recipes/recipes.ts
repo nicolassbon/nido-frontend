@@ -123,6 +123,8 @@ export class Recipes implements OnInit {
   protected readonly excludeAllergens         = signal(false);
   protected readonly excludeMissingAppliances = signal(false);
   protected readonly filterByIngredients      = signal(false);
+  protected readonly isLoadingIa              = signal(false);
+  protected readonly iaFilteredRecipes        = signal<any[]>([]);
 
   protected readonly filterOptions: FilterOption[] = ['Todos', 'Fácil', 'Medio', 'Difícil'];
 
@@ -266,30 +268,40 @@ export class Recipes implements OnInit {
     });
   });
 
-  protected readonly filteredRecipes = computed(() => {
-    let result = [...this.recipesWithAvailability()];
+protected readonly filteredRecipes = computed(() => {
+    // 🌟 LA MAGIA DE LA BIFURCACIÓN:
+    // Si la IA tiene resultados guardados, arranca el filtro desde ahí. Si no, usa el catálogo base de siempre.
+    let result = this.iaFilteredRecipes().length > 0 
+      ? [...this.iaFilteredRecipes()] 
+      : [...this.recipesWithAvailability()];
 
+    // 1. Filtro por Categorías/Dificultad (¡Ahora también aplica sobre las de la IA!)
     if (this.activeFilter() !== 'Todos') {
       result = result.filter(recipe => recipe.difficulty === this.activeFilter());
     }
 
+    // 2. Filtro por input de texto tradicional (Sólo actúa si no está la IA mediando)
     const query = this.searchQuery().trim().toLowerCase();
-    if (query) {
+    if (query && this.iaFilteredRecipes().length === 0) {
       result = result.filter(recipe => recipe.name.toLowerCase().includes(query));
     }
 
+    // 3. Filtro de Alérgenos
     if (this.excludeAllergens()) {
       result = result.filter(recipe => !recipe.hasAllergen);
     }
 
+    // 4. Filtro de Electrodomésticos faltantes
     if (this.excludeMissingAppliances()) {
       result = result.filter(recipe => !recipe.hasMissingAppliance);
     }
 
+    // 5. Filtro por disponibilidad de ingredientes
     if (this.filterByIngredients()) {
       result = result.filter(recipe => recipe.availabilityPercent > 0);
     }
 
+    // 6. Lógica de Ordenamiento (Rating, Coincidencia, Alacena)
     if (this.sortBy() === 'rating') {
       result.sort((a, b) => b.rating - a.rating);
     } else if (this.sortBy() === 'coincidencia') {
@@ -541,4 +553,59 @@ export class Recipes implements OnInit {
 
     return `${baseUrl}${path}`;
   }
+
+  // =====================================================================
+  // 🔥 BUSCADOR INTELIGENTE CON IA - CONECTA CON .NET Y PYTHON
+  // =====================================================================
+onSearchSubmit(textoIngresado: string): void {
+    const textoUsuario = textoIngresado.trim();
+    if (!textoUsuario) return;
+
+    // Determinamos si es una búsqueda compleja para la IA
+    const esFraseLarga = textoUsuario.split(/\s+/).length > 2;
+
+    if (esFraseLarga) {
+      this.isLoadingIa.set(true);
+      console.log('🔮 Conectando con el microservicio de IA para:', textoUsuario);
+      
+      this.recipesApi.recomendarPorIa(textoUsuario).subscribe({
+        next: (recetasResultantes: any) => {
+          if (recetasResultantes && recetasResultantes.length > 0) {
+            console.log(`✅ IA exitosa! Encontró ${recetasResultantes.length} recetas.`);
+            
+            // 🌟 TRANSFORMACIÓN DE PROPIEDADES (Mapeo Quirúrgico):
+            // Convertimos lo que viene de .NET al formato exacto que tus tarjetas esperan
+            const recetasMapeadas = recetasResultantes.map((r: any) => ({
+              id: r.id,
+              name: r.nombre || r.name, // Soporta ambos por las dudas
+              image: r.imagenUrl || r.image || '/images/default-recipe.png', // Tu propiedad de imagen
+              difficulty: r.dificultad || r.difficulty || 'Medio',
+              rating: r.rating || 5.0, // Tu propiedad de estrellas
+              timeMinutes: r.tiempoCoccionMin || r.timeMinutes || 20,
+              calories: r.calorias || r.calories || 0,
+              vecesCocinada: r.vecesCocinada || 0,
+              availabilityPercent: r.availabilityPercent || 100, // Tu barra de progreso
+              hasMissingAppliance: r.hasMissingAppliance || false
+            }));
+
+            // Guardamos la lista ya formateada en el Signal de la IA
+            this.iaFilteredRecipes.set(recetasMapeadas);
+          }
+          this.isLoadingIa.set(false);
+        },
+        error: (err) => {
+          console.error('❌ La IA no encontró coincidencias o los peajes están caídos:', err);
+          this.isLoadingIa.set(false);
+          this.iaFilteredRecipes.set([]);
+          this.searchQuery.set(textoUsuario);
+        }
+      });
+    } else {
+      // 1. Si hace una búsqueda común, LIMPIAMOS el filtro de la IA anterior
+      this.iaFilteredRecipes.set([]);
+      
+      // 2. Seteamos el query común al toque
+      this.searchQuery.set(textoUsuario);
+    }
+}
 }
