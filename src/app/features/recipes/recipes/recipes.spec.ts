@@ -1,8 +1,31 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
+import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
+import {
+  AlarmClock,
+  AlertTriangle,
+  Check,
+  CheckSquare,
+  ChefHat,
+  ChevronDown,
+  Clock,
+  Eye,
+  Flame,
+  LUCIDE_ICONS,
+  LucideIconProvider,
+  Pencil,
+  Search,
+  Shield,
+  ShoppingBasket,
+  Shuffle,
+  SlidersHorizontal,
+  Star,
+  X,
+  Zap,
+} from 'lucide-angular';
 import { Recipes } from './recipes';
 import { RecipesApiService, ApiReceta } from './services/recipes-api.service';
 import { ProductService, ProductManualResponse } from '../../../core/servicios/agregar-producto.service';
@@ -17,11 +40,13 @@ const makeReceta = (
   id: string,
   nombre: string,
   ingredientes: ApiReceta['ingredientes'],
+  overrides: Partial<ApiReceta> = {},
 ): ApiReceta => ({
   id, nombre, ingredientes,
   descripcion: null, tiempoCoccionMin: 30, dificultad: 'Fácil', porciones: 2,
   fuenteId: null, imagenUrl: null, calorias: 200,
   proteinas: null, carbohidratos: null, grasas: null,
+  ...overrides,
 });
 
 const mockRecetaArroz = makeReceta('r1', 'Arroz con leche', [
@@ -86,12 +111,37 @@ describe('Recipes', () => {
       schemas:   [NO_ERRORS_SCHEMA],
       providers: [
         provideHttpClient(),
+        provideRouter([]),
         { provide: RecipesApiService,       useValue: recipesApiMock        },
         { provide: ProductService,          useValue: productSvcMock        },
         { provide: AuthService,             useValue: authServiceMock       },
         { provide: ElectrodomesticosService, useValue: electrodomesticosMock },
         { provide: HogaresApiService,       useValue: hogaresApiMock        },
         { provide: PerfilApiService,        useValue: perfilApiMock         },
+        {
+          provide: LUCIDE_ICONS,
+          multi: true,
+          useValue: new LucideIconProvider({
+            AlarmClock,
+            AlertTriangle,
+            Check,
+            CheckSquare,
+            ChefHat,
+            ChevronDown,
+            Clock,
+            Eye,
+            Flame,
+            Pencil,
+            Search,
+            Shield,
+            ShoppingBasket,
+            Shuffle,
+            SlidersHorizontal,
+            Star,
+            X,
+            Zap,
+          }),
+        },
       ],
     }).compileComponents();
 
@@ -182,6 +232,7 @@ describe('Recipes', () => {
 
   it('buscarPorIngredientes debería cambiar el orden a coincidencia si era default', async () => {
     await setup();
+    component['setSort']('default');
     expect(component['sortBy']()).toBe('default');
 
     component['buscarPorIngredientes']();
@@ -476,6 +527,85 @@ describe('Recipes', () => {
   });
 
   describe('Ordenamiento de Recetas', () => {
+    it('deberia ordenar por urgencia por defecto', async () => {
+      const normal = makeReceta('r1', 'Normal', []);
+      const urgente = makeReceta('r2', 'Urgente', [], {
+        tieneProductosPorVencer: true,
+        fechaVencimientoMasProxima: '2026-06-18',
+        diasHastaVencimiento: 2,
+      });
+
+      await setup([normal, urgente], []);
+
+      expect(component['sortBy']()).toBe('urgencia');
+      expect(component['filteredRecipes']()[0].name).toBe('Urgente');
+    });
+
+    it('deberia desempatar urgentes por menor cantidad de dias hasta vencimiento', async () => {
+      const venceDespues = makeReceta('r1', 'Vence despues', [], {
+        tieneProductosPorVencer: true,
+        fechaVencimientoMasProxima: '2026-06-21',
+        diasHastaVencimiento: 5,
+      });
+      const venceAntes = makeReceta('r2', 'Vence antes', [], {
+        tieneProductosPorVencer: true,
+        fechaVencimientoMasProxima: '2026-06-17',
+        diasHastaVencimiento: 1,
+      });
+
+      await setup([venceDespues, venceAntes], []);
+
+      expect(component['filteredRecipes']().map(recipe => recipe.name)).toEqual(['Vence antes', 'Vence despues']);
+    });
+
+    it('deberia mostrar badge URGENTE en la card', async () => {
+      const urgente = makeReceta('r1', 'Tarta urgente', [], {
+        tieneProductosPorVencer: true,
+        fechaVencimientoMasProxima: '2026-06-17',
+        diasHastaVencimiento: 1,
+        productosPorVencer: [
+          { productoId: 'p1', nombre: 'Leche', fechaVencimiento: '2026-06-17', diasHastaVencimiento: 1 },
+        ],
+      });
+
+      await setup([urgente], []);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.textContent).toContain('URGENTE');
+    });
+
+    it('deberia listar productos por vencer en el hover del badge urgente', async () => {
+      const urgente = makeReceta('r1', 'Panqueques', [], {
+        tieneProductosPorVencer: true,
+        fechaVencimientoMasProxima: '2026-06-18',
+        diasHastaVencimiento: 2,
+        productosPorVencer: [
+          { productoId: 'p1', nombre: 'Leche', fechaVencimiento: '2026-06-18', diasHastaVencimiento: 2 },
+          { productoId: 'p2', nombre: 'Huevos', fechaVencimiento: '2026-06-19', diasHastaVencimiento: 3 },
+        ],
+      });
+
+      await setup([urgente], []);
+      fixture.detectChanges();
+
+      const text = fixture.nativeElement.textContent;
+      expect(text).toContain('Productos por vencer');
+      expect(text).toContain('Leche');
+      expect(text).toContain('Vence en 2 días');
+      expect(text).toContain('Huevos');
+      expect(text).toContain('Vence en 3 días');
+    });
+
+    it('deberia mostrar la opcion Mayor urgencia y actualizar el sort', async () => {
+      await setup([], []);
+
+      expect(component['getSortLabel']()).toBe('Mayor urgencia');
+      component['setSort']('rating');
+      expect(component['getSortLabel']()).toBe('Mejor valoradas');
+      component['setSort']('urgencia');
+      expect(component['getSortLabel']()).toBe('Mayor urgencia');
+    });
+
     it('deberia ordenar por Mejor valoradas (rating) de forma descendente', async () => {
       const recetaMala = makeReceta('r1', 'Mala', []);
       const recetaExcelente = makeReceta('r2', 'Excelente', []);
