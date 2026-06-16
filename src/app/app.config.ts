@@ -113,6 +113,7 @@ import {
   Paperclip,
   TrendingDown,
   PiggyBank,
+  AlarmClock,
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
@@ -229,6 +230,7 @@ export const appConfig: ApplicationConfig = {
         Paperclip,
         TrendingDown,
         PiggyBank,
+        AlarmClock,
       }),
     },
   ],

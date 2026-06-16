@@ -75,6 +75,7 @@
       </button>
       @if (showSortDropdown()) {
         <div class="absolute top-[calc(100%+6px)] right-0 bg-white border border-nido-border rounded-[10px] shadow-[0_4px_16px_rgba(38,63,48,0.12)] overflow-hidden z-10 min-w-[180px]">
+          <button [class]="sortOptionClass('urgencia')" (click)="setSort('urgencia')">Mayor urgencia</button>
           <button [class]="sortOptionClass('default')" (click)="setSort('default')">Por defecto</button>
           <button [class]="sortOptionClass('rating')" (click)="setSort('rating')">Mejor valoradas</button>
           <button [class]="sortOptionClass('coincidencia')" (click)="setSort('coincidencia')">Mayor coincidencia</button>
@@ -112,6 +113,29 @@
                   [alt]="recipe.name"
                   loading="lazy"
                   class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.04]" />
+                @if (recipe.tieneProductosPorVencer) {
+                  <div class="group/urgent absolute left-2 top-2 z-10">
+                    <span class="inline-flex items-center gap-1 rounded-[20px] bg-nido-red px-2.5 py-0.5 text-[0.68rem] font-bold uppercase tracking-[0.04em] text-white shadow-[0_2px_8px_rgba(180,76,60,0.22)]">
+                      <lucide-icon name="alarm-clock" [size]="11" />
+                      URGENTE
+                    </span>
+                    <div class="pointer-events-none absolute left-0 top-[calc(100%+6px)] w-[210px] rounded-[8px] border border-[rgba(180,76,60,0.18)] bg-white px-3 py-2 text-left opacity-0 shadow-[0_8px_22px_rgba(38,63,48,0.18)] transition-opacity duration-150 group-hover/urgent:opacity-100">
+                      <p class="mb-1 text-[0.68rem] font-semibold uppercase tracking-[0.04em] text-nido-red">Productos por vencer</p>
+                      @if (recipe.productosPorVencer.length > 0) {
+                        <ul class="flex flex-col gap-1">
+                          @for (producto of recipe.productosPorVencer; track producto.productId) {
+                            <li class="grid grid-cols-[1fr_auto] items-center gap-2 text-[0.72rem] leading-snug">
+                              <span class="min-w-0 truncate font-medium text-nido-green-dark">{{ producto.name }}</span>
+                              <span class="whitespace-nowrap text-nido-brown">{{ formatExpiringProductDays(producto.daysUntilExpiration) }}</span>
+                            </li>
+                          }
+                        </ul>
+                      } @else {
+                        <p class="text-[0.72rem] text-nido-brown">{{ getUrgencyFallbackText(recipe) }}</p>
+                      }
+                    </div>
+                  </div>
+                }
                 <span [class]="difficultyBadgeClass(recipe.difficulty)">{{ recipe.difficulty }}</span>
               </div>
 
