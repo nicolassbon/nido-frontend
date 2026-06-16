@@ -4,11 +4,19 @@
      [class.is-disabled]="isDisabled()">
 
   <!-- ── Trigger ─────────────────────────────────────────────── -->
-  <div class="nido-dp__trigger" (click)="open()">
+  <div class="nido-dp__trigger" (click)="onTriggerClick($event)">
     <lucide-icon name="calendar" [size]="17" class="nido-dp__cal-icon" />
-    <span class="nido-dp__label" [class.is-placeholder]="!displayValue">
-      {{ displayValue || placeholder }}
-    </span>
+    <input
+      #dateInput
+      type="text"
+      [placeholder]="placeholder"
+      [disabled]="isDisabled()"
+      [value]="inputValue()"
+      (input)="onInputChange(dateInput, dateInput.value)"
+      (blur)="onInputBlur()"
+      class="nido-dp__input"
+      autocomplete="off"
+    />
     @if (value()) {
       <button type="button" class="nido-dp__clear" (click)="clear($event)" title="Limpiar">
         <lucide-icon name="x" [size]="13" />
