@@ -6,6 +6,7 @@ import { Recipes } from './features/recipes/recipes/recipes';
 import { RecipeDetail } from './features/recipes/recipe-detail/recipe-detail';
 import { Alacena } from './features/alacena/alacena/alacena';
 import { ProductDetail } from './features/alacena/product-detail/product-detail';
+import { TicketScan } from './features/alacena/ticket-scan/ticket-scan';
 import { ListaCompras } from './features/lista-compras/lista-compras';
 import { CreateHousehold } from './features/household/create-household/create-household';
 import { AcceptInvitation } from './features/household/accept-invitation/accept-invitation';
@@ -41,6 +42,7 @@ export const routes: Routes = [
       { path: 'recetas', component: Recipes },
       { path: 'recetas/:id',    component: RecipeDetail  },
       { path: 'alacena',        component: Alacena       },
+      { path: 'alacena/escanear-ticket', component: TicketScan },
       { path: 'alacena/:id',    component: ProductDetail },
       { path: 'lista-compras',  component: ListaCompras  },
       { path: 'electrodomesticos', component: Electrodomesticos },
