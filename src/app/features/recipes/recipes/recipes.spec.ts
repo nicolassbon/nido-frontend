@@ -68,7 +68,7 @@ const makePantry = (
   stockHogarId, productoId, nombre, cantidad,
   categoriaId: null, categoriaNombre: null, codigoBarras: null, imagenUrl: null,
   ubicacion: 'despensa', unidadMedida: 'gramos', fechaVencimiento: null,
-  estaAbierto: false, porcentajeConsumido: 0,
+  estaAbierto: false, porcentajeConsumido: 0, cantidadEnvases: 1,
 });
 
 const arrozPantry = makePantry('s1', 'p1', 'Arroz');

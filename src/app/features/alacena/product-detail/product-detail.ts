@@ -8,9 +8,43 @@ import { forkJoin } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ProductManualResponse, ProductService } from '../../../core/servicios/agregar-producto.service';
 import { ListaComprasService } from '../../lista-compras/lista-compras.service';
-import { AlacenaApiService, StockItemResponse } from '../alacena-api.service';
+import { AlacenaApiService, DeleteStockMotivo, StockItemResponse } from '../alacena-api.service';
 
 const SHOPPING_GROUP = 'Productos de alacena';
+
+interface DeleteConfirmation {
+  title:        string;
+  message:      string;
+  confirmLabel: string;
+}
+
+interface DeleteMotivoOption {
+  value:       DeleteStockMotivo;
+  label:       string;
+  description: string;
+  icon:        string;
+}
+
+const DELETE_MOTIVO_OPTIONS: Record<DeleteStockMotivo, DeleteMotivoOption> = {
+  consumido: {
+    value: 'consumido',
+    label: 'Consumido',
+    description: 'Lo usaron o se terminó.',
+    icon: 'check-circle',
+  },
+  descartado: {
+    value: 'descartado',
+    label: 'Descartado',
+    description: 'Lo tiraron o ya no sirve.',
+    icon: 'trash-2',
+  },
+  vencido: {
+    value: 'vencido',
+    label: 'Vencido',
+    description: 'Salió por fecha vencida.',
+    icon: 'alert-triangle',
+  },
+};
 
 function resolveImageUrl(imageUrl: string | null | undefined): string {
   if (!imageUrl) return '';
@@ -99,6 +133,9 @@ export class ProductDetail {
   protected readonly listMessage = signal<string | null>(null);
   protected readonly finishing    = signal(false);
   protected readonly showEditModal = signal(false);
+  protected readonly deleteConfirmation = signal<DeleteConfirmation | null>(null);
+  protected readonly deleteError = signal<string | null>(null);
+  protected readonly deleteMotivo = signal<DeleteStockMotivo>('consumido');
 
   protected readonly imageUrl = computed(() =>
     this.imageFailed()
@@ -109,6 +146,13 @@ export class ProductDetail {
   protected readonly remainingPercent = computed(() =>
     clamp(100 - (this.product()?.porcentajeConsumido ?? 0), 0, 100),
   );
+
+  protected readonly expiredDays = computed(() => {
+    const days = this.daysUntilExpiry(this.product()?.fechaVencimiento);
+    return Number.isFinite(days) && days < 0 ? Math.abs(days) : 0;
+  });
+
+  protected readonly isExpired = computed(() => this.expiredDays() > 0);
 
   protected readonly brand = computed(() => {
     const name = this.product()?.nombre.trim() ?? '';
@@ -213,6 +257,7 @@ export class ProductDetail {
       fechaVencimiento: item.fechaVencimiento,
       estaAbierto: item.estaAbierto,
       porcentajeConsumido: item.porcentajeConsumido,
+      cantidadEnvases: item.cantidadEnvases,
     };
   }
 
@@ -270,17 +315,51 @@ export class ProductDetail {
 
   protected finishProduct(): void {
     const product = this.product();
-    if (!product || this.finishing()) return;
+    if (!product) return;
+
+    this.deleteError.set(null);
+    this.deleteMotivo.set('consumido');
+    this.deleteConfirmation.set({
+      title: 'Registrar salida de stock',
+      message: `${product.nombre} se va a quitar de tu alacena. Elegi que paso con este producto.`,
+      confirmLabel: 'Confirmar salida',
+    });
+  }
+
+  protected deleteExpiredProduct(): void {
+    const product = this.product();
+    if (!product) return;
+
+    this.deleteError.set(null);
+    this.deleteMotivo.set('vencido');
+    this.deleteConfirmation.set({
+      title: 'Registrar salida de stock',
+      message: `${product.nombre} se va a quitar de tu alacena. Elegi que paso con este producto.`,
+      confirmLabel: 'Confirmar salida',
+    });
+  }
+
+  protected cancelDeleteConfirmation(): void {
+    if (this.finishing()) return;
+    this.deleteConfirmation.set(null);
+    this.deleteError.set(null);
+  }
+
+  protected confirmDeleteProduct(): void {
+    const product = this.product();
+    const pending = this.deleteConfirmation();
+    if (!product || !pending || this.finishing()) return;
 
     this.finishing.set(true);
+    this.deleteError.set(null);
     this.alacenaApi
-      .deleteStock(product.id)
+      .deleteStock(product.id, this.deleteMotivo())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => this.router.navigate(['/alacena']),
         error: () => {
           this.finishing.set(false);
-          this.errorMessage.set('No se pudo marcar como terminado. Intenta de nuevo.');
+          this.deleteError.set('No se pudo completar la accion. Intenta de nuevo.');
         },
       });
   }
@@ -312,6 +391,24 @@ export class ProductDetail {
       month: 'long',
       year: 'numeric',
     }).format(date);
+  }
+
+  protected expiredText(): string {
+    const days = this.expiredDays();
+    return `Producto vencido hace ${days} dia${days === 1 ? '' : 's'}.`;
+  }
+
+  protected deleteMotivoOptions(): DeleteMotivoOption[] {
+    const base = [DELETE_MOTIVO_OPTIONS.consumido, DELETE_MOTIVO_OPTIONS.descartado];
+    return this.isExpired()
+      ? [DELETE_MOTIVO_OPTIONS.vencido, ...base]
+      : base;
+  }
+
+  protected deleteMotivoButtonClass(value: DeleteStockMotivo): string {
+    return this.deleteMotivo() === value
+      ? 'motivo-option motivo-option--active'
+      : 'motivo-option';
   }
 
   protected consumptionText(product: StockItemResponse): string {

@@ -44,6 +44,7 @@ describe('ProductService', () => {
       estaAbierto: false,
       porcentajeConsumido: 0,
       categoriaId: '33333333-3333-3333-3333-333333333333',
+      cantidadEnvases: 1,
     };
 
     const resultPromise = firstValueFrom(service.createStockHome(payload));
