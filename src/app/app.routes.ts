@@ -22,6 +22,7 @@ import { Configuracion } from './features/configuracion/configuracion';
 import { Landing } from './features/landing/landing';
 import { Finanzas } from './features/finanzas/finanzas/finanzas';
 import { Tareas } from './features/tareas/tareas';
+import { Notificaciones } from './features/notificaciones/notificaciones';
 
 export const routes: Routes = [
   { path: '', component: Landing, pathMatch: 'full', canActivate: [guestGuard] },
@@ -51,6 +52,7 @@ export const routes: Routes = [
       { path: 'agregar-producto', component: AgregarProducto },
       { path: 'finanzas', component: Finanzas },
       { path: 'tareas', component: Tareas },
+      { path: 'notificaciones', component: Notificaciones },
     ],
   },
   { path: '**', redirectTo: '' },
