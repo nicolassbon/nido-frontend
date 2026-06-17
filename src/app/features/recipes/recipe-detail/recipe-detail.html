@@ -64,6 +64,9 @@
                   <small>Calorias</small>
                   <strong>{{ formatNutrition(r.calorias) }} kcal</strong>
                   <em>por porcion</em>
+                  @if (nutritionSourceLabel(r.fuenteId); as source) {
+                    <em class="nutrition-source">Fuente: {{ source }}</em>
+                  }
                 </span>
               </div>
             </div>
@@ -180,6 +183,9 @@
               <small>Grasas</small>
             </div>
           </div>
+          @if (nutritionSourceLabel(r.fuenteId); as source) {
+            <p class="nutrition-source-note">Fuente de datos nutricionales: {{ source }}.</p>
+          }
         </section>
 
       </aside>

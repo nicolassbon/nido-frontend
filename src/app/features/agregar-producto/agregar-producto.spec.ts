@@ -47,6 +47,7 @@ describe('AgregarProducto', () => {
       fechaVencimiento: null,
       estaAbierto: false,
       porcentajeConsumido: 0,
+      cantidadEnvases: 1,
     } satisfies StockItemResponse;
 
     component.ngOnInit();
@@ -69,6 +70,7 @@ describe('AgregarProducto', () => {
       fechaVencimiento: null,
       estaAbierto: false,
       porcentajeConsumido: 0,
+      cantidadEnvases: 1,
     };
     const updatedFromApi: StockItemResponse = {
       ...original,
@@ -100,6 +102,7 @@ describe('AgregarProducto', () => {
       estaAbierto: false,
       porcentajeConsumido: 0,
       categoriaId: '33333333-3333-3333-3333-333333333333',
+      cantidadEnvases: 1,
     };
     const createSpy = vi.spyOn(productService, 'createStockHome').mockReturnValue(of(createResponse));
     const uploadSpy = vi.spyOn(productService, 'uploadProductImage').mockReturnValue(of(void 0));
@@ -141,6 +144,7 @@ describe('AgregarProducto', () => {
       estaAbierto: false,
       porcentajeConsumido: 0,
       categoriaId: '33333333-3333-3333-3333-333333333333',
+      cantidadEnvases: 1,
     };
 
     vi.spyOn(productService, 'createStockHome').mockReturnValue(of(createResponse));

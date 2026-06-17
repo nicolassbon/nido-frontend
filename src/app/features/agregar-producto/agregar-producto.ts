@@ -421,6 +421,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
           fechaVencimiento: patch.fechaVencimiento,
           estaAbierto: patch.estaAbierto,
           porcentajeConsumido: patch.porcentajeConsumido,
+          cantidadEnvases: updated.cantidadEnvases,
         };
         this.isSaving = false;
         this.closed.emit(edited);

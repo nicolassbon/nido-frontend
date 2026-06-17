@@ -13,6 +13,7 @@ export interface CreateStockHomeRequest {
   fechaVencimiento?:   string;
   estaAbierto?:        boolean;
   porcentajeConsumido?: number;
+  cantidadEnvases?:    number;
 }
 
 export interface ProductManualResponse {
@@ -29,6 +30,7 @@ export interface ProductManualResponse {
   fechaVencimiento: string | null;
   estaAbierto: boolean;
   porcentajeConsumido: number;
+  cantidadEnvases: number;
 }
 
 export interface CreateStockHomeResponse {
@@ -42,6 +44,7 @@ export interface CreateStockHomeResponse {
   estaAbierto: boolean;
   porcentajeConsumido: number;
   categoriaId: string | null;
+  cantidadEnvases: number;
 }
 
 
