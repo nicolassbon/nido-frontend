@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, OnInit, OnDestroy } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import {
   LucideAngularModule, LucideIconData,
@@ -7,6 +7,7 @@ import {
   User, Settings, LogOut, ShoppingCart,
 } from 'lucide-angular';
 import { AuthService } from '../../../core/auth/auth.service';
+import { NotificacionesApiService } from '../../../features/notificaciones/services/notificaciones-api.service';
 
 interface NavItem {
   label: string;
@@ -21,10 +22,23 @@ interface NavItem {
   templateUrl: './nav.html',
   styleUrl:    './nav.scss',
 })
-export class Nav {
+export class Nav implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
+  private readonly notificacionesApi = inject(NotificacionesApiService);
 
   readonly isOpen = input(false);
+
+  protected readonly unreadNotificationsCount = this.notificacionesApi.unreadCount;
+
+  ngOnInit(): void {
+    if (this.authService.isAuthenticated()) {
+      this.notificacionesApi.iniciarPolleo(30000);
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.notificacionesApi.detenerPolleo();
+  }
 
   protected readonly sidebarClass = computed(() => {
     const base = [
