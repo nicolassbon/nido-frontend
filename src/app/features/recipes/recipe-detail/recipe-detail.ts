@@ -175,16 +175,18 @@ export class RecipeDetail {
       nombre:   i.productoNombre || i.nombre,
       cantidad: i.cantidad,
       unidad:   i.unidad,
-      checked:  false,
     }));
 
-    // Guardar en el servicio (persiste en localStorage)
-    this.listaService.addToLista(receta.nombre, items);
+    this.listaService.addGroupToLista(receta.nombre, items).subscribe({
+      next: () => {
+        this.router.navigate(['/lista-compras']);
+      },
+      error: () => {
+        this.errorMessage.set('No se pudo agregar los faltantes a la lista de compras.');
+      },
+    });
 
     // Pasar también por router state para garantizar el primer render
-    this.router.navigate(['/lista-compras'], {
-      state: { recetaNombre: receta.nombre, items },
-    });
   }
 
   protected goBack(): void {

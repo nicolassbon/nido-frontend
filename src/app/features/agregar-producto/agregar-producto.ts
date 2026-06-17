@@ -4,7 +4,7 @@ import { switchMap, of, Subject, debounceTime, distinctUntilChanged, takeUntil, 
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ProductService } from '../../core/servicios/agregar-producto.service';
 import { AlacenaApiService, StockItemResponse } from '../alacena/alacena-api.service';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../core/auth/auth.service';
 import { ListaComprasService } from '../lista-compras/lista-compras.service';
@@ -24,7 +24,7 @@ export interface KnownProduct {
 
 @Component({
   selector: 'app-agregar-producto',
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule, NidoSelectComponent, NidoDatepickerComponent],
+  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule, NidoSelectComponent, NidoDatepickerComponent],
   templateUrl: './agregar-producto.html',
   styleUrl: './agregar-producto.scss',
 })
