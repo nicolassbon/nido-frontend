@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { AgregarProducto } from '../../agregar-producto/agregar-producto';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { forkJoin } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -10,7 +10,7 @@ import { ProductManualResponse, ProductService } from '../../../core/servicios/a
 import { ListaComprasService } from '../../lista-compras/lista-compras.service';
 import { AlacenaApiService, DeleteStockMotivo, StockItemResponse } from '../alacena-api.service';
 
-const SHOPPING_GROUP = 'Productos de alacena';
+const SHOPPING_GROUP = 'Productos agregados';
 
 interface DeleteConfirmation {
   title:        string;
@@ -114,7 +114,7 @@ function clamp(value: number, min: number, max: number): number {
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, RouterLink, AgregarProducto],
+  imports: [CommonModule, LucideAngularModule, AgregarProducto],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.scss',
 })
@@ -297,20 +297,16 @@ export class ProductDetail {
     const currentGroup = this.listaService.snapshot.find(group => group.recetaNombre === SHOPPING_GROUP);
     const existingItems = currentGroup?.items ?? [];
     const exists = existingItems.some(item => item.nombre.trim().toLowerCase() === product.nombre.trim().toLowerCase());
-    const nextItems = exists
-      ? existingItems
-      : [
-          ...existingItems,
-          {
-            nombre: product.nombre,
-            cantidad: product.cantidad || 1,
-            unidad: this.displayUnit(product.unidadMedida),
-            checked: false,
-          },
-        ];
 
-    this.listaService.addToLista(SHOPPING_GROUP, nextItems);
-    this.listMessage.set(exists ? 'Ya estaba en tu lista.' : 'Agregado a la lista.');
+    if (exists) {
+      this.listMessage.set('Ya estaba en tu lista.');
+      return;
+    }
+
+    this.listaService.addManualItem(product.nombre, product.cantidad || 1, this.displayUnit(product.unidadMedida)).subscribe({
+      next: () => this.listMessage.set('Agregado a la lista.'),
+      error: () => this.listMessage.set('No se pudo agregar a la lista.'),
+    });
   }
 
   protected finishProduct(): void {
