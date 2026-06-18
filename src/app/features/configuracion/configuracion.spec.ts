@@ -10,6 +10,8 @@ import { PerfilApiService } from '../perfil/perfil-api.service';
 import { PreferenciasApiService } from '../alacena/preferencias-api.service';
 import { HogaresApiService } from '../household/hogares-api.service';
 import { appConfig } from '../../app.config';
+import { SwPush } from '@angular/service-worker';
+import { NotificacionesApiService } from '../notificaciones/services/notificaciones-api.service';
 
 describe('Configuracion', () => {
   let component: Configuracion;
@@ -18,6 +20,8 @@ describe('Configuracion', () => {
   let mockPerfilApiService: any;
   let mockPreferenciasApiService: any;
   let mockHogaresApiService: any;
+  let mockSwPush: any;
+  let mockNotificacionesApiService: any;
 
   beforeEach(async () => {
     mockAuthService = {
@@ -50,6 +54,17 @@ describe('Configuracion', () => {
       invitar: vi.fn().mockReturnValue(of({ token: 'mock-token' })),
     };
 
+    mockSwPush = {
+      isEnabled: false,
+      subscription: of(null),
+      requestSubscription: vi.fn(),
+      unsubscribe: vi.fn(),
+    };
+
+    mockNotificacionesApiService = {
+      subscribePush: vi.fn().mockReturnValue(of(undefined)),
+    };
+
     await TestBed.configureTestingModule({
       imports: [Configuracion, ReactiveFormsModule, LucideAngularModule],
       providers: [
@@ -58,6 +73,8 @@ describe('Configuracion', () => {
         { provide: PerfilApiService, useValue: mockPerfilApiService },
         { provide: PreferenciasApiService, useValue: mockPreferenciasApiService },
         { provide: HogaresApiService, useValue: mockHogaresApiService },
+        { provide: SwPush, useValue: mockSwPush },
+        { provide: NotificacionesApiService, useValue: mockNotificacionesApiService },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
       ],
     }).compileComponents();

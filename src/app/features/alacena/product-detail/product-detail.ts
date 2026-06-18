@@ -110,6 +110,12 @@ export class ProductDetail {
     clamp(100 - (this.product()?.porcentajeConsumido ?? 0), 0, 100),
   );
 
+  protected readonly isExpired = computed(() => {
+    const p = this.product();
+    if (!p || !p.fechaVencimiento) return false;
+    return this.daysUntilExpiry(p.fechaVencimiento) < 0;
+  });
+
   protected readonly brand = computed(() => {
     const name = this.product()?.nombre.trim() ?? '';
     if (!name) return 'Sin marca';

@@ -143,6 +143,11 @@
   font-size: 15px;
   font-weight: 500;
   text-align: right;
+
+  &.vencido {
+    color: #b44c3c;
+    font-weight: 700;
+  }
 }
 
 .info-label {

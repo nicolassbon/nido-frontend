@@ -82,6 +82,14 @@ export class NotificacionesApiService implements OnDestroy {
     return this.http.delete<void>(`${this.base}/notificaciones/${id}`);
   }
 
+  subscribePush(endpoint: string, p256dh: string, auth: string): Observable<void> {
+    return this.http.post<void>(`${this.base}/notificaciones/suscripciones`, {
+      endpoint,
+      p256dh,
+      auth
+    });
+  }
+
   ngOnDestroy(): void {
     this.detenerPolleo();
   }

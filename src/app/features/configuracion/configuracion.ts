@@ -7,6 +7,8 @@ import { PreferenciasApiService } from '../alacena/preferencias-api.service';
 import { HogaresApiService, MiembroResponse } from '../household/hogares-api.service';
 import { PerfilApiService } from '../perfil/perfil-api.service';
 import { Avatar } from '../../shared/ui/avatar/avatar';
+import { SwPush } from '@angular/service-worker';
+import { NotificacionesApiService } from '../notificaciones/services/notificaciones-api.service';
 
 export function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
   const password = control.get('newPassword')?.value;
@@ -46,6 +48,8 @@ export class Configuracion {
   private readonly perfilApi = inject(PerfilApiService);
   private readonly preferenciasApi = inject(PreferenciasApiService);
   private readonly hogaresApi = inject(HogaresApiService);
+  private readonly swPush = inject(SwPush);
+  private readonly notifApi = inject(NotificacionesApiService);
   private readonly destroyRef = inject(DestroyRef);
 
   // ── Cuenta (Giulianna) ───────────────────────────────────
@@ -59,6 +63,9 @@ export class Configuracion {
   readonly isSavingPrefs = signal(false);
   readonly saveSuccess = signal(false);
   readonly isLoadingPrefs = signal(true);
+  readonly isWebPushEnabled = signal(false);
+  readonly isWebPushLoading = signal(false);
+  readonly webPushError = signal<string | null>(null);
 
   // ── Miembros del hogar (Giulianna) ───────────────────────
   readonly members = signal<MiembroResponse[]>([]);
@@ -107,6 +114,7 @@ export class Configuracion {
     this.loadProfile();
     this.loadPreferences();
     this.loadMembers();
+    this.checkWebPushStatus();
   }
 
   // ── Load & Async logic ───────────────────────────────────
@@ -315,5 +323,87 @@ export class Configuracion {
         this.showAddConfirmPassword.update(value => !value);
         return;
     }
+  }
+
+  private checkWebPushStatus(): void {
+    if (!this.swPush.isEnabled) {
+      this.isWebPushEnabled.set(false);
+      this.webPushError.set('Los Service Workers están desactivados en modo de desarrollo local. Para probarlos, cambia a "enabled: true" en app.config.ts.');
+      return;
+    }
+
+    this.swPush.subscription
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(sub => {
+        this.isWebPushEnabled.set(!!sub);
+      });
+  }
+
+  toggleWebPushNotifications(): void {
+    if (!this.swPush.isEnabled) {
+      this.webPushError.set('Los Service Workers no están habilitados o soportados en este navegador.');
+      return;
+    }
+
+    this.webPushError.set(null);
+    this.isWebPushLoading.set(true);
+
+    if (this.isWebPushEnabled()) {
+      this.swPush.unsubscribe()
+        .then(() => {
+          this.isWebPushEnabled.set(false);
+          this.isWebPushLoading.set(false);
+        })
+        .catch(err => {
+          console.error('Error al desuscribirse:', err);
+          this.webPushError.set('No se pudo desactivar las notificaciones.');
+          this.isWebPushLoading.set(false);
+        });
+    } else {
+      const publicKey = 'BAteOm10_UH08u7RbvEZGU7ogo4ss8IQ9Gf4uu9B0ZEIUv4OiJJm3lBDsA9euwVapq6umtggVUoZBEM1mk6TUgo';
+      this.swPush.requestSubscription({ serverPublicKey: publicKey })
+        .then(sub => {
+          const p256dhRaw = sub.getKey('p256dh');
+          const authRaw = sub.getKey('auth');
+
+          if (!p256dhRaw || !authRaw) {
+            throw new Error('No se obtuvieron las claves criptográficas de la suscripción.');
+          }
+
+          const p256dh = this.arrayBufferToBase64Url(p256dhRaw);
+          const auth = this.arrayBufferToBase64Url(authRaw);
+
+          this.notifApi.subscribePush(sub.endpoint, p256dh, auth)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: () => {
+                this.isWebPushEnabled.set(true);
+                this.isWebPushLoading.set(false);
+              },
+              error: (err) => {
+                console.error('Error al enviar la suscripción al servidor:', err);
+                this.webPushError.set('Error al registrar las notificaciones en el servidor.');
+                this.isWebPushLoading.set(false);
+              }
+            });
+        })
+        .catch(err => {
+          console.error('Error al solicitar suscripción push:', err);
+          if (Notification.permission === 'denied') {
+            this.webPushError.set('Permiso de notificaciones denegado. Actívalo en los ajustes de tu navegador.');
+          } else {
+            this.webPushError.set('No se pudo activar las notificaciones.');
+          }
+          this.isWebPushLoading.set(false);
+        });
+    }
+  }
+
+  private arrayBufferToBase64Url(buffer: ArrayBuffer): string {
+    const binary = String.fromCharCode(...new Uint8Array(buffer));
+    return btoa(binary)
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
   }
 }

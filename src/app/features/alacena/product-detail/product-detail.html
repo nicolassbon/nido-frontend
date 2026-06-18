@@ -56,7 +56,7 @@
                 <span class="info-icon"><lucide-icon name="calendar" [size]="18" /></span>
                 Fecha de vencimiento:
               </span>
-              <strong>{{ formatDate(p.fechaVencimiento) }}</strong>
+              <strong [class.vencido]="isExpired()" [title]="isExpired() ? 'Vencido' : ''">{{ formatDate(p.fechaVencimiento) }}</strong>
             </div>
           }
 
