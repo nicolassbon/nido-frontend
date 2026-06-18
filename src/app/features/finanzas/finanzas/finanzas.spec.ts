@@ -22,22 +22,6 @@ describe('Finanzas', () => {
     expect(component).toBeTruthy();
   });
 
-  // ── ahorroEstimado ────────────────────────────────────────────────────────
-
-  it('ahorroEstimado devuelve la diferencia entre el mes anterior y el actual', () => {
-    component['totalMesAnterior'].set(5000);
-    component['totalMesActual'].set(3000);
-
-    expect(component['ahorroEstimado']()).toBe(2000);
-  });
-
-  it('ahorroEstimado es negativo cuando el mes actual supera al anterior', () => {
-    component['totalMesAnterior'].set(3000);
-    component['totalMesActual'].set(4000);
-
-    expect(component['ahorroEstimado']()).toBe(-1000);
-  });
-
   // ── pctVsMesAnterior ──────────────────────────────────────────────────────
 
   it('pctVsMesAnterior devuelve null cuando el mes anterior es cero', () => {
@@ -253,6 +237,69 @@ describe('Finanzas', () => {
     expect(component['formatFecha']('2026-01-15')).toBe('15 ene');
     expect(component['formatFecha']('2026-12-31')).toBe('31 dic');
   });
+
+  // ── absPct ────────────────────────────────────────────────────────────────
+
+  it('absPct devuelve el valor absoluto de un número positivo', () => {
+    expect(component['absPct'](30)).toBe(30);
+  });
+
+  it('absPct devuelve el valor absoluto de un número negativo', () => {
+    expect(component['absPct'](-83)).toBe(83);
+  });
+
+  // ── openEditGastoModal ────────────────────────────────────────────────────
+
+  it('openEditGastoModal pre-carga el formulario y activa el modo edición', () => {
+    const gasto = makeGasto(1500, 'Comida');
+
+    component['openEditGastoModal'](gasto);
+
+    expect(component['editingGasto']()).toEqual(gasto);
+    expect(component['gastoForm'].monto).toBe(1500);
+    expect(component['gastoForm'].categoria).toBe('Comida');
+    expect(component['gastoForm'].pagadoPorId).toBe('u1');
+    expect(component['showGastoModal']()).toBe(true);
+  });
+
+  it('closeGastoModal limpia el gasto en edición', () => {
+    component['editingGasto'].set(makeGasto(500, null));
+    component['showGastoModal'].set(true);
+
+    component['closeGastoModal']();
+
+    expect(component['editingGasto']()).toBeNull();
+    expect(component['showGastoModal']()).toBe(false);
+  });
+
+  // ── openPresupuestoModal ──────────────────────────────────────────────────
+
+  it('openPresupuestoModal deja presupuestoMonto en null cuando no hay presupuesto', () => {
+    component['presupuesto'].set(null);
+
+    component['openPresupuestoModal']();
+
+    expect(component['presupuestoMonto']).toBeNull();
+    expect(component['showPresupuestoModal']()).toBe(true);
+  });
+
+  it('openPresupuestoModal carga el monto del presupuesto existente', () => {
+    component['presupuesto'].set({ monto: 5000, gastoActual: 1000, restante: 4000, anio: 2026, mes: 6 });
+
+    component['openPresupuestoModal']();
+
+    expect(component['presupuestoMonto']).toBe(5000);
+  });
+
+  // ── closePresupuestoModal ─────────────────────────────────────────────────
+
+  it('closePresupuestoModal cierra el modal de presupuesto', () => {
+    component['showPresupuestoModal'].set(true);
+
+    component['closePresupuestoModal']();
+
+    expect(component['showPresupuestoModal']()).toBe(false);
+  });
 });
 
 // ── Helpers de test ───────────────────────────────────────────────────────────
@@ -267,6 +314,7 @@ function makeGasto(monto: number, categoria: string | null): GastoResponse {
     pagadoPorId: 'u1',
     pagadoPorNombre: 'Ana',
     createdAt: '',
+    facturaId: null,
   };
 }
 

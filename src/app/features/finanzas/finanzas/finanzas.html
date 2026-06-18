@@ -44,24 +44,35 @@
         @if (pctVsMesAnterior() !== null) {
           <p class="text-xs mt-1 font-medium"
              [class]="(pctVsMesAnterior() ?? 0) <= 0 ? 'text-emerald-600' : 'text-red-400'">
-            {{ (pctVsMesAnterior() ?? 0) > 0 ? '+' : '' }}{{ pctVsMesAnterior() }}% vs mes anterior
+            {{ absPct(pctVsMesAnterior()!) }}% {{ (pctVsMesAnterior() ?? 0) <= 0 ? 'menos' : 'más' }} que el mes anterior
           </p>
         }
       </div>
     </div>
 
-    <!-- Ahorro estimado -->
-    <div class="bg-white rounded-[18px] border border-nido-border/50 p-5 flex items-start gap-4">
+    <!-- Presupuesto mensual -->
+    <div class="bg-white rounded-[18px] border border-nido-border/50 p-5 flex items-start gap-4 cursor-pointer hover:border-nido-green/40 transition-colors duration-150"
+         (click)="openPresupuestoModal()">
       <div class="w-11 h-11 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0">
-        <lucide-icon name="trending-up" [size]="18" class="text-nido-cream"></lucide-icon>
+        <lucide-icon name="target" [size]="18" class="text-nido-cream"></lucide-icon>
       </div>
-      <div class="min-w-0">
-        <p class="text-xs text-nido-muted font-medium">Ahorro estimado</p>
-        <p class="font-title text-xl mt-0.5 truncate"
-           [class]="ahorroEstimado() >= 0 ? 'text-emerald-600' : 'text-red-500'">
-          {{ ahorroEstimado() >= 0 ? '+' : '' }}{{ formatMoney(ahorroEstimado()) }}
-        </p>
-        <p class="text-xs text-nido-muted mt-1">vs mes anterior</p>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center justify-between gap-2">
+          <p class="text-xs text-nido-muted font-medium">Presupuesto mensual</p>
+          <lucide-icon name="pencil" [size]="12" class="text-nido-muted shrink-0"></lucide-icon>
+        </div>
+        @if (presupuesto(); as p) {
+          <p class="font-title text-xl mt-0.5 truncate"
+             [class]="(p.restante ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-500'">
+            {{ formatMoney(p.restante!) }}
+          </p>
+          <p class="text-xs text-nido-muted mt-1 truncate">
+            de {{ formatMoney(p.monto!) }} · gastado {{ formatMoney(p.gastoActual) }}
+          </p>
+        } @else {
+          <p class="text-sm text-nido-green-dark font-medium mt-1">Sin presupuesto</p>
+          <p class="text-xs text-nido-brown mt-0.5">Tocá para configurar</p>
+        }
       </div>
     </div>
 
@@ -157,15 +168,32 @@
     } @else {
       <div class="divide-y divide-nido-border/30 max-h-[280px] overflow-y-auto">
         @for (gasto of gastosMesActual(); track gasto.id) {
-          <div class="flex items-center gap-3 px-5 py-2.5">
+          <div class="flex items-center gap-3 px-5 py-2.5 group">
             <span class="w-2 h-2 rounded-full shrink-0" [style.background]="catColor(gasto.categoria)"></span>
             <div class="flex-1 min-w-0">
-              <p class="text-sm text-nido-green-dark font-medium truncate">
-                {{ gasto.descripcion || gasto.categoria || 'Gasto' }}
-              </p>
+              <div class="flex items-center gap-1.5">
+                <p class="text-sm text-nido-green-dark font-medium truncate">
+                  {{ gasto.descripcion || gasto.categoria || 'Gasto' }}
+                </p>
+                @if (gasto.facturaId) {
+                  <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-nido-cream text-nido-brown shrink-0">factura</span>
+                }
+              </div>
               <p class="text-xs text-nido-muted mt-0.5">{{ formatFecha(gasto.fecha) }} · {{ gasto.pagadoPorNombre }}</p>
             </div>
             <p class="text-sm font-semibold text-nido-green-dark shrink-0">{{ formatMoney(gasto.monto) }}</p>
+            <div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0">
+              <button (click)="openEditGastoModal(gasto)"
+                      class="p-1.5 rounded-lg hover:bg-nido-cream text-nido-muted hover:text-nido-green transition-colors duration-150"
+                      title="Editar">
+                <lucide-icon name="pencil" [size]="14"></lucide-icon>
+              </button>
+              <button (click)="deleteGasto(gasto)"
+                      class="p-1.5 rounded-lg hover:bg-red-50 text-nido-muted hover:text-red-500 transition-colors duration-150"
+                      title="Eliminar">
+                <lucide-icon name="trash-2" [size]="14"></lucide-icon>
+              </button>
+            </div>
           </div>
         }
       </div>
@@ -487,8 +515,12 @@
             <lucide-icon name="wallet" [size]="18" class="text-nido-cream/80"></lucide-icon>
           </span>
           <div>
-            <h2 class="text-[1.05rem] font-bold leading-tight text-nido-cream m-0">Nuevo gasto</h2>
-            <p class="text-[0.775rem] text-nido-cream/70 m-0">Registrá un movimiento del hogar.</p>
+            <h2 class="text-[1.05rem] font-bold leading-tight text-nido-cream m-0">
+              {{ editingGasto() ? 'Editar gasto' : 'Nuevo gasto' }}
+            </h2>
+            <p class="text-[0.775rem] text-nido-cream/70 m-0">
+              {{ editingGasto() ? 'Modificá los datos del gasto.' : 'Registrá un movimiento del hogar.' }}
+            </p>
           </div>
         </div>
         <button (click)="closeGastoModal()"
@@ -567,7 +599,82 @@
             } @else {
               <lucide-icon name="check" [size]="14"></lucide-icon>
             }
-            {{ isSavingGasto() ? 'Guardando...' : 'Guardar gasto' }}
+            {{ isSavingGasto() ? 'Guardando...' : (editingGasto() ? 'Guardar cambios' : 'Guardar gasto') }}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ══ MODAL: PRESUPUESTO MENSUAL ════════════════════════════════════════════ -->
+@if (showPresupuestoModal()) {
+  <div class="fixed inset-0 bg-[rgba(15,25,20,0.72)] backdrop-blur-[2px] flex items-start justify-center z-[100] overflow-y-auto py-6 px-4"
+       (click)="closePresupuestoModal()">
+    <div class="rounded-[14px] w-full max-w-[440px] overflow-hidden shadow-[0_8px_32px_rgba(38,63,48,0.18)] flex flex-col my-auto"
+         (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="relative overflow-hidden shrink-0 px-5 py-4 flex items-center justify-between [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
+        <div class="flex items-center gap-2.5 relative z-10">
+          <span class="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[10px] bg-[rgba(247,241,230,0.16)] ring-1 ring-[rgba(247,241,230,0.22)]">
+            <lucide-icon name="target" [size]="18" class="text-nido-cream/80"></lucide-icon>
+          </span>
+          <div>
+            <h2 class="text-[1.05rem] font-bold leading-tight text-nido-cream m-0">Presupuesto mensual</h2>
+            <p class="text-[0.775rem] text-nido-cream/70 m-0">Definí cuánto querés gastar este mes.</p>
+          </div>
+        </div>
+        <button (click)="closePresupuestoModal()"
+                class="relative z-10 bg-transparent border-none cursor-pointer text-nido-cream/70 hover:text-nido-cream p-1 rounded transition-colors duration-150">
+          <lucide-icon name="x" [size]="20"></lucide-icon>
+        </button>
+      </div>
+
+      <!-- Content -->
+      <div class="flex flex-col gap-4 px-6 py-5 bg-white">
+
+        @if (presupuesto(); as p) {
+          <div class="rounded-[12px] bg-nido-cream/50 border border-nido-border/40 px-4 py-3 flex items-center justify-between">
+            <div>
+              <p class="text-xs text-nido-muted">Gastado este mes</p>
+              <p class="text-sm font-semibold text-nido-green-dark mt-0.5">{{ formatMoney(p.gastoActual) }}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-xs text-nido-muted">Restante actual</p>
+              <p class="text-sm font-semibold mt-0.5" [class]="(p.restante ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-500'">
+                {{ formatMoney(p.restante!) }}
+              </p>
+            </div>
+          </div>
+        }
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[0.8125rem] font-semibold text-nido-green-dark">
+            Monto del presupuesto <span class="text-nido-red">*</span>
+          </label>
+          <input type="number" placeholder="0.00" [(ngModel)]="presupuestoMonto"
+                 class="py-[0.65rem] px-[0.875rem] border-[1.5px] rounded-lg text-[0.875rem] text-nido-green-dark bg-white outline-none transition-[border-color] duration-150 placeholder:text-nido-muted focus:border-nido-green"
+                 [class]="presupuestoError() ? 'border-nido-red' : 'border-nido-border'">
+          @if (presupuestoError()) {
+            <p class="text-[0.775rem] text-nido-red">{{ presupuestoError() }}</p>
+          }
+        </div>
+
+        <div class="flex gap-3 pt-1">
+          <button type="button" (click)="closePresupuestoModal()"
+                  class="flex items-center justify-center py-[0.65rem] px-4 bg-transparent text-nido-brown border-[1.5px] border-nido-border rounded-lg text-[0.875rem] font-medium cursor-pointer transition-all duration-150 hover:border-nido-brown hover:text-nido-green-dark">
+            Cancelar
+          </button>
+          <button (click)="submitPresupuesto()" [disabled]="isSavingPresupuesto()"
+                  class="flex-1 flex items-center justify-center gap-1.5 py-[0.65rem] px-5 bg-nido-green-dark text-nido-cream border-none rounded-lg text-[0.875rem] font-semibold cursor-pointer transition-[background] duration-150 hover:bg-nido-green disabled:opacity-60 disabled:cursor-not-allowed">
+            @if (isSavingPresupuesto()) {
+              <span class="h-4 w-4 rounded-full border-2 border-nido-cream/45 border-t-nido-cream animate-spin"></span>
+            } @else {
+              <lucide-icon name="check" [size]="14"></lucide-icon>
+            }
+            {{ isSavingPresupuesto() ? 'Guardando...' : 'Guardar presupuesto' }}
           </button>
         </div>
 
