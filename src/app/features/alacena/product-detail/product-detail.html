@@ -39,6 +39,18 @@
           <p>Marca: <strong>{{ brand() }}</strong></p>
         </header>
 
+        @if (isExpired()) {
+          <section class="expired-alert">
+            <span class="expired-alert__icon">
+              <lucide-icon name="alert-triangle" [size]="20" />
+            </span>
+            <div>
+              <strong>{{ expiredText() }}</strong>
+              <small>Revisalo antes de consumirlo o quitalo de la alacena.</small>
+            </div>
+          </section>
+        }
+
         <div class="divider"></div>
 
         <div class="info-list">
@@ -136,15 +148,16 @@
             <span class="action-label">Editar</span>
           </button>
 
+          @if (isExpired()) {
+            <button type="button" class="danger-action finish-action" [disabled]="finishing()" (click)="deleteExpiredProduct()">
+              <lucide-icon name="trash-2" [size]="16" />
+              <span class="action-label">Eliminar vencido</span>
+            </button>
+          }
+
           <button type="button" class="secondary-action finish-action" [disabled]="finishing()" (click)="finishProduct()">
-            <span class="action-symbol">x</span>
-            <span class="action-label">
-              @if (finishing()) {
-                Marcando...
-              } @else {
-                Marcar como terminado
-              }
-            </span>
+            <lucide-icon name="check-circle" [size]="16" />
+            <span class="action-label">Marcar como consumido</span>
           </button>
         </div>
 
@@ -155,6 +168,64 @@
     </div>
   }
 </div>
+
+@if (deleteConfirmation()) {
+  @let pending = deleteConfirmation()!;
+  <div class="confirm-overlay" (click)="cancelDeleteConfirmation()">
+    <section class="confirm-dialog" (click)="$event.stopPropagation()">
+      <header class="confirm-header">
+        <span class="confirm-icon">
+          <lucide-icon [name]="deleteMotivo() === 'vencido' ? 'alert-triangle' : deleteMotivo() === 'descartado' ? 'trash-2' : 'check-circle'" [size]="18" />
+        </span>
+        <div>
+          <h2>{{ pending.title }}</h2>
+          <p>{{ pending.message }}</p>
+        </div>
+      </header>
+
+      <div class="confirm-body">
+        <div class="motivo-options">
+          @for (option of deleteMotivoOptions(); track option.value) {
+            <button
+              type="button"
+              [class]="deleteMotivoButtonClass(option.value)"
+              [disabled]="finishing()"
+              (click)="deleteMotivo.set(option.value)">
+              <lucide-icon [name]="option.icon" [size]="15" />
+              <span>
+                <strong>{{ option.label }}</strong>
+                <small>{{ option.description }}</small>
+              </span>
+            </button>
+          }
+        </div>
+
+        @if (deleteError()) {
+          <p class="confirm-error">{{ deleteError() }}</p>
+        }
+
+        <div class="confirm-actions">
+          <button type="button" class="confirm-cancel" [disabled]="finishing()" (click)="cancelDeleteConfirmation()">
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="confirm-submit"
+            [class.confirm-submit--danger]="deleteMotivo() === 'vencido' || deleteMotivo() === 'descartado'"
+            [disabled]="finishing()"
+            (click)="confirmDeleteProduct()">
+            @if (finishing()) {
+              <span class="confirm-spinner"></span>
+            } @else {
+              <lucide-icon [name]="deleteMotivo() === 'vencido' ? 'alert-triangle' : deleteMotivo() === 'descartado' ? 'trash-2' : 'check-circle'" [size]="14" />
+            }
+            {{ pending.confirmLabel }}
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+}
 
 @if (showEditModal() && product()) {
   <app-agregar-producto

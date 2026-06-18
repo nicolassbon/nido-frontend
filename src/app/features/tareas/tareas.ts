@@ -3,39 +3,35 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
-  LucideAngularModule, Plus, Check, X, Trash2, User,
-  Calendar, ChevronRight, ChevronDown, LayoutGrid, List, Clock, AlertCircle,
-  CheckSquare, ClipboardList,
+  LucideAngularModule, Plus, Check, X,
+  Calendar, ChevronRight, ChevronDown, Clock, AlertCircle,
+  CheckSquare, ClipboardList, History,
 } from 'lucide-angular';
 import { TareasApiService, TareaResponse, DistribucionSemanalResponse } from './services/tareas-api.service';
 import { HogaresApiService, MiembroResponse } from '../household/hogares-api.service';
-import { AuthService } from '../../core/auth/auth.service';
 import { NidoDatepickerComponent } from '../../shared/ui/form/nido-datepicker/nido-datepicker';
 import { NidoSelectComponent, NidoSelectOption } from '../../shared/ui/form/nido-select/nido-select';
-
-type Vista = 'lista' | 'tablero';
 
 @Component({
   selector: 'app-tareas',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LucideAngularModule, NidoDatepickerComponent, NidoSelectComponent],
+  imports: [CommonModule, FormsModule, LucideAngularModule, NidoDatepickerComponent, NidoSelectComponent],
   templateUrl: './tareas.html',
   styleUrl: './tareas.scss',
 })
 export class Tareas implements OnInit {
   private readonly api = inject(TareasApiService);
   private readonly hogaresApi = inject(HogaresApiService);
-  private readonly authService = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
   protected readonly icons = {
-    Plus, Check, X, Trash2, User, Calendar, ChevronRight, ChevronDown, LayoutGrid, List, Clock, AlertCircle,
-    CheckSquare, ClipboardList,
+    Plus, Check, X, Calendar, ChevronRight, ChevronDown, Clock, AlertCircle,
+    CheckSquare, ClipboardList, History,
   };
 
   // ── Estado principal ─────────────────────────────────────
@@ -55,8 +51,6 @@ export class Tareas implements OnInit {
   protected readonly distribucion = signal<DistribucionSemanalResponse | null>(null);
   protected readonly miembros = signal<MiembroResponse[]>([]);
   protected readonly loading = signal(false);
-  protected readonly vistaActual = signal<Vista>('lista');
-  protected readonly filtroAsignado = signal<string | null>(null);
   protected readonly mostrarModal = signal(false);
   protected readonly mostrarModalMisTareas = signal(false);
   protected readonly highlightedTaskId = signal<string | null>(null);
@@ -72,7 +66,17 @@ export class Tareas implements OnInit {
         if (!b.fechaLimite) return -1;
         return new Date(a.fechaLimite).getTime() - new Date(b.fechaLimite).getTime();
       })
-      .slice(0, 4)
+  );
+
+  protected readonly historialTareas = computed(() =>
+    this.todasTareas()
+      .filter(t => t.estado === 'completada')
+      .sort((a, b) => {
+        if (!a.fechaCompletado && !b.fechaCompletado) return 0;
+        if (!a.fechaCompletado) return 1;
+        if (!b.fechaCompletado) return -1;
+        return new Date(b.fechaCompletado).getTime() - new Date(a.fechaCompletado).getTime();
+      })
   );
 
   protected readonly miembrosOpts = computed<NidoSelectOption[]>(() => [
@@ -86,24 +90,6 @@ export class Tareas implements OnInit {
   protected nuevaFechaLimite = '';
   protected nuevoAsignadoA: string | null = null;
   protected guardando = false;
-
-  // ── Usuario actual ───────────────────────────────────────
-  protected readonly nombreUsuario = computed(() => this.authService.getNombre() ?? '');
-
-  // ── Tablero: tareas filtradas por columna ────────────────
-  private readonly tareasFiltradas = computed(() => {
-    const filtro = this.filtroAsignado();
-    return filtro
-      ? this.todasTareas().filter(t => t.asignadoA?.usuarioId === filtro)
-      : this.todasTareas();
-  });
-
-  protected readonly pendientes = computed(() =>
-    this.tareasFiltradas().filter(t => t.estado === 'pendiente'));
-  protected readonly enProgreso = computed(() =>
-    this.tareasFiltradas().filter(t => t.estado === 'en_progreso'));
-  protected readonly completadasTablero = computed(() =>
-    this.tareasFiltradas().filter(t => t.estado === 'completada'));
 
   // ── Chart: escala dinámica ───────────────────────────────
   protected readonly maxCompletadas = computed(() => {
@@ -165,10 +151,6 @@ export class Tareas implements OnInit {
     this.hogaresApi.getMiembros()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: m => this.miembros.set(m), error: () => {} });
-  }
-
-  protected cambiarVista(v: Vista): void {
-    this.vistaActual.set(v);
   }
 
   protected abrirModal(): void {
@@ -237,20 +219,6 @@ export class Tareas implements OnInit {
       });
   }
 
-  protected cambiarEstado(tarea: TareaResponse, estado: string): void {
-    this.api.updateTarea(tarea.id, { estado })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: updated => {
-          this.todasTareas.update(ts => ts.map(t => t.id === updated.id ? updated : t));
-          if (estado === 'completada') {
-            this.misTareas.update(ts => ts.filter(t => t.id !== updated.id));
-          }
-        },
-        error: () => {},
-      });
-  }
-
   protected eliminarTarea(id: string): void {
     this.api.deleteTarea(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -261,10 +229,6 @@ export class Tareas implements OnInit {
         },
         error: () => {},
       });
-  }
-
-  protected setFiltro(usuarioId: string | null): void {
-    this.filtroAsignado.set(usuarioId);
   }
 
   protected toggleReasignacion(tareaId: string, event: MouseEvent): void {
@@ -320,6 +284,16 @@ export class Tareas implements OnInit {
     return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
   }
 
+  protected formatFechaHora(fecha: string | null): string {
+    if (!fecha) return '';
+    return new Intl.DateTimeFormat('es-AR', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date(fecha));
+  }
+
   protected estaVencida(tarea: TareaResponse): boolean {
     return tarea.vencida;
   }
@@ -328,7 +302,4 @@ export class Tareas implements OnInit {
     return { pendiente: 'Pendiente', en_progreso: 'En progreso', completada: 'Completada' }[estado] ?? estado;
   }
 
-  protected estadoSiguiente(estado: string): string | null {
-    return { pendiente: 'en_progreso', en_progreso: 'completada', completada: null }[estado] ?? null;
-  }
 }

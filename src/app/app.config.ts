@@ -27,9 +27,11 @@ import {
   ClipboardList,
   Info,
   Search,
+  History,
   Filter,
   Loader,
   Clock,
+  RefreshCw,
   Flame,
   Star,
   Shuffle,
@@ -113,6 +115,7 @@ import {
   Paperclip,
   TrendingDown,
   PiggyBank,
+  AlarmClock,
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
@@ -149,9 +152,11 @@ export const appConfig: ApplicationConfig = {
         ClipboardList,
         Info,
         Search,
+        History,
         Filter,
         Loader,
         Clock,
+        RefreshCw,
         Flame,
         Star,
         Shuffle,
@@ -231,6 +236,7 @@ export const appConfig: ApplicationConfig = {
         Paperclip,
         TrendingDown,
         PiggyBank,
+        AlarmClock,
       }),
     },
     provideServiceWorker('ngsw-worker.js', {

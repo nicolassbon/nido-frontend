@@ -1,7 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { of } from 'rxjs';
+import { vi } from 'vitest';
 import { appConfig } from '../../../app.config';
 import { Alacena } from './alacena';
+import { AlacenaApiService } from '../alacena-api.service';
 
 describe('Alacena', () => {
   beforeEach(async () => {
@@ -212,5 +215,51 @@ describe('Alacena', () => {
 
     expect(component.getExpiryLabel(-2)).toBe('Vencido hace 2 días');
     expect(component.getExpiryLabel(-1)).toBe('Vencido hace 1 día');
+  });
+
+  it('should delete an expired product with vencido motive after confirmation', () => {
+    const fixture = TestBed.createComponent(Alacena);
+    const component = fixture.componentInstance as any;
+    const alacenaApi = TestBed.inject(AlacenaApiService);
+    const deleteSpy = vi.spyOn(alacenaApi, 'deleteStock').mockReturnValue(of(void 0));
+    const event = new MouseEvent('click');
+    const preventSpy = vi.spyOn(event, 'preventDefault');
+    const stopSpy = vi.spyOn(event, 'stopPropagation');
+
+    const today = new Date();
+    const expired = new Date(today);
+    expired.setDate(today.getDate() - 1);
+
+    component.products.set([
+      { id: 'expired-1', name: 'Yogur', image: '', location: 'Heladera', expiryDate: expired.toISOString().split('T')[0], quantity: 1, unit: 'unidad' },
+      { id: 'ok-1', name: 'Arroz', image: '', location: 'Alacena', expiryDate: '', quantity: 1, unit: 'unidad' },
+    ]);
+
+    component.requestDeleteExpired(event, component.products()[0]);
+    component.confirmDeleteProduct();
+
+    expect(preventSpy).toHaveBeenCalled();
+    expect(stopSpy).toHaveBeenCalled();
+    expect(deleteSpy).toHaveBeenCalledWith('expired-1', 'vencido');
+    expect(component.products().map((product: any) => product.id)).toEqual(['ok-1']);
+  });
+
+  it('should render history filters with initial labels on first switch', () => {
+    const fixture = TestBed.createComponent(Alacena);
+    const component = fixture.componentInstance as any;
+    const alacenaApi = TestBed.inject(AlacenaApiService);
+    vi.spyOn(alacenaApi, 'getMovimientos').mockReturnValue(of([]));
+
+    component.switchView('historial');
+    fixture.detectChanges();
+
+    const selects = fixture.nativeElement.querySelectorAll('select') as NodeListOf<HTMLSelectElement>;
+
+    expect(selects.length).toBe(2);
+    expect(selects[0].value).toBe('todos');
+    expect(selects[0].selectedOptions[0].textContent?.trim()).toBe('Todos');
+    expect(selects[1].value).toBe('30');
+    expect(selects[1].selectedOptions[0].textContent?.trim()).toBe('30 días');
+    expect(fixture.nativeElement.textContent).toContain('Todavía no hay movimientos.');
   });
 });

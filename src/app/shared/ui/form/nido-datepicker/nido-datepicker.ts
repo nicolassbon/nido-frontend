@@ -4,9 +4,9 @@ import {
   forwardRef,
   signal,
   computed,
-  HostListener,
   ElementRef,
   ChangeDetectionStrategy,
+  OnDestroy,
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
@@ -37,13 +37,14 @@ interface CalendarCell {
     },
   ],
 })
-export class NidoDatepickerComponent implements ControlValueAccessor {
+export class NidoDatepickerComponent implements ControlValueAccessor, OnDestroy {
   @Input() placeholder = 'Seleccionar fecha';
   @Input() hasError    = false;
 
   protected isOpen     = signal(false);
   protected isDisabled = signal(false);
   protected value      = signal<string>(''); // YYYY-MM-DD
+  protected inputValue = signal<string>(''); // DD/MM/YYYY
 
   protected viewYear  = signal(new Date().getFullYear());
   protected viewMonth = signal(new Date().getMonth()); // 0-indexed
@@ -90,6 +91,13 @@ export class NidoDatepickerComponent implements ControlValueAccessor {
 
   protected openUp = signal(false);
 
+  private onDocumentClick = (e: MouseEvent): void => {
+    const target = e.target as HTMLElement | null;
+    if (target && !this.el.nativeElement.contains(target) && this.isOpen()) {
+      this.close();
+    }
+  };
+
   protected open(): void {
     if (this.isDisabled()) return;
     if (this.value()) {
@@ -97,11 +105,21 @@ export class NidoDatepickerComponent implements ControlValueAccessor {
       this.viewYear.set(y);
       this.viewMonth.set(m - 1);
     }
-    // Detectar si hay más espacio arriba o abajo
+    // Detect space below to open upwards if needed
     const rect = (this.el.nativeElement as HTMLElement).getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
     this.openUp.set(spaceBelow < 320);
     this.isOpen.set(true);
+
+    // Register capture click listener on document to handle outside click correctly
+    // bypassing any stopPropagation inside parent elements/modals
+    document.addEventListener('click', this.onDocumentClick, true);
+  }
+
+  protected close(): void {
+    this.isOpen.set(false);
+    this.onTouched();
+    document.removeEventListener('click', this.onDocumentClick, true);
   }
 
   protected prevMonth(): void {
@@ -125,32 +143,126 @@ export class NidoDatepickerComponent implements ControlValueAccessor {
   protected selectDate(date: string | null): void {
     if (!date) return;
     this.value.set(date);
+    const [y, m, d] = date.split('-');
+    this.inputValue.set(`${d}/${m}/${y}`);
     this.onChange(date);
     this.onTouched();
-    this.isOpen.set(false);
+    this.close();
   }
 
   protected clear(e: Event): void {
     e.stopPropagation();
     this.value.set('');
+    this.inputValue.set('');
     this.onChange('');
     this.onTouched();
   }
 
-  @HostListener('document:click', ['$event'])
-  onOutsideClick(e: MouseEvent): void {
-    const target = e.target as HTMLElement | null;
-    if (target && !this.el.nativeElement.contains(target) && this.isOpen()) {
-      this.isOpen.set(false);
-      this.onTouched();
+  protected onTriggerClick(e: MouseEvent): void {
+    if (this.isDisabled()) return;
+
+    const target = e.target as HTMLElement;
+    if (target.closest('.nido-dp__clear') || target.closest('.nido-dp__panel')) {
+      return;
     }
+
+    const inputEl = (this.el.nativeElement as HTMLElement).querySelector('.nido-dp__input') as HTMLInputElement | null;
+    if (inputEl && document.activeElement !== inputEl) {
+      inputEl.focus();
+    }
+
+    if (!this.isOpen()) {
+      this.open();
+    }
+  }
+
+  protected onInputChange(inputEl: HTMLInputElement, val: string): void {
+    // 1. Clean non-digit characters
+    let cleaned = val.replace(/\D/g, '');
+
+    // 2. Apply formatting mask: DD/MM/YYYY
+    let formatted = '';
+    if (cleaned.length > 0) {
+      formatted += cleaned.substring(0, 2);
+    }
+    if (cleaned.length > 2) {
+      formatted += '/' + cleaned.substring(2, 4);
+    }
+    if (cleaned.length > 4) {
+      formatted += '/' + cleaned.substring(4, 8);
+    }
+
+    // Direct DOM manipulation guarantees display consistency during input filtering
+    inputEl.value = formatted;
+    this.inputValue.set(formatted);
+
+    // If completely cleared, propagate empty value immediately
+    if (cleaned === '') {
+      if (this.value()) {
+        this.value.set('');
+        this.onChange('');
+      }
+      return;
+    }
+
+    // 3. Try parsing valid date
+    if (formatted.length === 10) {
+      const [dStr, mStr, yStr] = formatted.split('/');
+      const d = parseInt(dStr, 10);
+      const m = parseInt(mStr, 10);
+      const y = parseInt(yStr, 10);
+
+      if (y >= 1000 && y <= 9999 && m >= 1 && m <= 12 && d >= 1) {
+        const daysInMonth = new Date(y, m, 0).getDate();
+        if (d <= daysInMonth) {
+          const ymd = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+          this.value.set(ymd);
+          this.onChange(ymd);
+
+          // Update calendar views
+          this.viewYear.set(y);
+          this.viewMonth.set(m - 1);
+        }
+      }
+    }
+  }
+
+  protected onInputBlur(): void {
+    this.onTouched();
+    const val = this.value();
+    let formatted = '';
+    if (val) {
+      const [y, m, d] = val.split('-');
+      formatted = `${d}/${m}/${y}`;
+    }
+    this.inputValue.set(formatted);
+
+    // Explicitly update DOM input value on blur to revert any half-typed invalid strings
+    const inputEl = (this.el.nativeElement as HTMLElement).querySelector('.nido-dp__input') as HTMLInputElement | null;
+    if (inputEl) {
+      inputEl.value = formatted;
+    }
+  }
+
+  ngOnDestroy(): void {
+    document.removeEventListener('click', this.onDocumentClick, true);
   }
 
   private toYMD(date: Date): string {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   }
 
-  writeValue(v: string): void          { this.value.set(v ?? ''); }
+  writeValue(v: string): void {
+    const val = v ?? '';
+    this.value.set(val);
+    if (val) {
+      const [y, m, d] = val.split('-');
+      this.inputValue.set(`${d}/${m}/${y}`);
+    } else {
+      this.inputValue.set('');
+    }
+  }
+
   registerOnChange(fn: any): void      { this.onChange = fn; }
   registerOnTouched(fn: any): void     { this.onTouched = fn; }
   setDisabledState(d: boolean): void   { this.isDisabled.set(d); }

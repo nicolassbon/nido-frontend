@@ -3,7 +3,6 @@ import { StatCard } from '../../shared/ui/stat-card/stat-card';
 import { PreferenceCard } from '../../shared/ui/preference-card/preference-card';
 import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
-import { RouterLink } from '@angular/router';
 import { PerfilApiService, PerfilApiResponse } from './perfil-api.service';
 import { OnboardingApiService, RestriccionCatalogo } from '../onboarding/onboarding-api.service';
 import { HogaresApiService } from '../household/hogares-api.service';
@@ -12,7 +11,7 @@ import { Avatar } from '../../shared/ui/avatar/avatar';
 
 @Component({
   selector: 'app-perfil',
-  imports: [CommonModule, RouterLink, StatCard, PreferenceCard, LucideAngularModule, EditarPerfil, Avatar],
+  imports: [CommonModule, StatCard, PreferenceCard, LucideAngularModule, EditarPerfil, Avatar],
   templateUrl: './perfil.html',
   styleUrl: './perfil.scss',
 })
