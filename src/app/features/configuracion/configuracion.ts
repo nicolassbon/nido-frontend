@@ -328,7 +328,7 @@ export class Configuracion {
   private checkWebPushStatus(): void {
     if (!this.swPush.isEnabled) {
       this.isWebPushEnabled.set(false);
-      this.webPushError.set('Los Service Workers están desactivados en modo de desarrollo local. Para probarlos, cambia a "enabled: true" en app.config.ts.');
+      this.webPushError.set('Los Service Workers están desactivados en modo de desarrollo local. Para probarlos, ejecutá "npm run start:pwa" en vez de "npm start".');
       return;
     }
 
