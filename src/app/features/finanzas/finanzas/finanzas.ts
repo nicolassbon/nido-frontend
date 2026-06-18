@@ -7,7 +7,6 @@ import {
   ElementRef,
   effect,
   DestroyRef,
-  OnInit,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
@@ -33,10 +32,12 @@ import {
   FacturaResponse,
   BalanceMiembroResponse,
   CreateGastoRequest,
+  UpdateGastoRequest,
   CreateFacturaRequest,
   SavingsPotencialResponse,
   InsightsListResponse,
   AlacenaOportunidadesResponse,
+  PresupuestoResponse,
 } from '../finanzas-api.service';
 
 Chart.register(
@@ -116,7 +117,7 @@ function emptyFacturaForm(): NuevaFacturaForm {
   imports: [LucideAngularModule, FormsModule],
   templateUrl: './finanzas.html',
 })
-export class Finanzas implements OnInit {
+export class Finanzas {
   private readonly authService = inject(AuthService);
   private readonly hogaresApi  = inject(HogaresApiService);
   private readonly finanzasApi = inject(FinanzasApiService);
@@ -133,15 +134,19 @@ export class Finanzas implements OnInit {
   private   readonly currentUserId = this.authService.getUserId() ?? '';
 
   // ── UI state ──────────────────────────────────────────
-  protected readonly isLoading        = signal(true);
-  protected readonly showGastoModal   = signal(false);
-  protected readonly showFacturaModal = signal(false);
-  protected readonly isSavingGasto    = signal(false);
-  protected readonly isSavingFactura  = signal(false);
-  protected readonly gastoError       = signal<string | null>(null);
-  protected readonly facturaError     = signal<string | null>(null);
-  protected readonly gastoSubmitted   = signal(false);
-  protected readonly facturaSubmitted = signal(false);
+  protected readonly isLoading            = signal(true);
+  protected readonly showGastoModal       = signal(false);
+  protected readonly showFacturaModal     = signal(false);
+  protected readonly showPresupuestoModal = signal(false);
+  protected readonly isSavingGasto        = signal(false);
+  protected readonly isSavingFactura      = signal(false);
+  protected readonly isSavingPresupuesto  = signal(false);
+  protected readonly gastoError           = signal<string | null>(null);
+  protected readonly facturaError         = signal<string | null>(null);
+  protected readonly presupuestoError     = signal<string | null>(null);
+  protected readonly gastoSubmitted       = signal(false);
+  protected readonly facturaSubmitted     = signal(false);
+  protected readonly editingGasto         = signal<GastoResponse | null>(null);
 
   // ── Data ──────────────────────────────────────────────
   protected readonly gastosMesActual   = signal<GastoResponse[]>([]);
@@ -156,19 +161,17 @@ export class Finanzas implements OnInit {
   protected readonly alacenaOportunidades    = signal<AlacenaOportunidadesResponse | null>(null);
   protected readonly totalMesActual    = signal(0);
   protected readonly totalMesAnterior  = signal(0);
+  protected readonly presupuesto       = signal<PresupuestoResponse | null>(null);
 
   // ── Forms ─────────────────────────────────────────────
-  protected gastoForm   = emptyGastoForm();
-  protected facturaForm = emptyFacturaForm();
+  protected gastoForm        = emptyGastoForm();
+  protected facturaForm      = emptyFacturaForm();
+  protected presupuestoMonto: number | null = null;
 
   // ── Constants ────────────────────────────────────────
   protected readonly categorias = CATEGORIAS;
 
   // ── Computed ──────────────────────────────────────────
-  protected readonly ahorroEstimado = computed(() =>
-    this.totalMesAnterior() - this.totalMesActual()
-  );
-
   protected readonly pctVsMesAnterior = computed(() => {
     const prev = this.totalMesAnterior();
     if (prev === 0) return null;
@@ -241,9 +244,7 @@ export class Finanzas implements OnInit {
       this.lineChart?.destroy();
       this.donutChart?.destroy();
     });
-  }
 
-  ngOnInit(): void {
     this.loadAll();
   }
 
@@ -251,16 +252,17 @@ export class Finanzas implements OnInit {
     const now = new Date();
 
     forkJoin({
-      gastosMes:  this.finanzasApi.getGastos(firstDayOfMonth(now), lastDayOfMonth(now)),
-      gastosPrev: this.finanzasApi.getGastos(firstDayOfPrevMonth(now), lastDayOfPrevMonth(now)),
-      balance:    this.finanzasApi.getBalance(firstDayOfMonth(now), lastDayOfMonth(now)),
-      modoAhorro: this.finanzasApi.getModoAhorro(),
-      miembros:   this.hogaresApi.getMiembros(),
-      facturas:   this.finanzasApi.getFacturas(),
+      gastosMes:   this.finanzasApi.getGastos(firstDayOfMonth(now), lastDayOfMonth(now)),
+      gastosPrev:  this.finanzasApi.getGastos(firstDayOfPrevMonth(now), lastDayOfPrevMonth(now)),
+      balance:     this.finanzasApi.getBalance(firstDayOfMonth(now), lastDayOfMonth(now)),
+      modoAhorro:  this.finanzasApi.getModoAhorro(),
+      miembros:    this.hogaresApi.getMiembros(),
+      facturas:    this.finanzasApi.getFacturas(),
+      presupuesto: this.finanzasApi.getPresupuesto(),
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: ({ gastosMes, gastosPrev, balance, modoAhorro, miembros, facturas }) => {
+        next: ({ gastosMes, gastosPrev, balance, modoAhorro, miembros, facturas, presupuesto }) => {
           this.gastosMesActual.set(gastosMes.gastos);
           this.totalMesActual.set(gastosMes.totalPeriodo);
           this.gastosMesAnterior.set(gastosPrev.gastos);
@@ -269,6 +271,7 @@ export class Finanzas implements OnInit {
           this.modoAhorro.set(modoAhorro.activo);
           this.miembros.set(miembros);
           this.facturas.set(facturas);
+          this.presupuesto.set(presupuesto.monto !== null ? presupuesto : null);
           this.isLoading.set(false);
           if (modoAhorro.activo) this.loadModoAhorroData();
         },
@@ -396,7 +399,10 @@ export class Finanzas implements OnInit {
     this.showGastoModal.set(true);
   }
 
-  protected closeGastoModal(): void { this.showGastoModal.set(false); }
+  protected closeGastoModal(): void {
+    this.showGastoModal.set(false);
+    this.editingGasto.set(null);
+  }
 
   protected submitGasto(): void {
     this.gastoSubmitted.set(true);
@@ -405,32 +411,124 @@ export class Finanzas implements OnInit {
     this.isSavingGasto.set(true);
     this.gastoError.set(null);
 
-    const req: CreateGastoRequest = {
-      monto:       this.gastoForm.monto!,
-      descripcion: this.gastoForm.descripcion || null,
-      categoria:   this.gastoForm.categoria || null,
-      fecha:       this.gastoForm.fecha,
-      pagadoPorId: this.gastoForm.pagadoPorId || null,
-    };
-
     const now = new Date();
+    const editing = this.editingGasto();
 
-    this.finanzasApi.createGasto(req)
+    if (editing) {
+      const req: UpdateGastoRequest = {
+        monto:       this.gastoForm.monto!,
+        descripcion: this.gastoForm.descripcion || null,
+        categoria:   this.gastoForm.categoria || null,
+        fecha:       this.gastoForm.fecha,
+        pagadoPorId: this.gastoForm.pagadoPorId || null,
+      };
+
+      this.finanzasApi.updateGasto(editing.id, req)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: gasto => {
+            this.gastosMesActual.update(list => list.map(g => g.id === gasto.id ? gasto : g));
+
+            const oldInMonth = editing.fecha >= firstDayOfMonth(now) && editing.fecha <= lastDayOfMonth(now);
+            const newInMonth = gasto.fecha >= firstDayOfMonth(now) && gasto.fecha <= lastDayOfMonth(now);
+            const montoDiff = (newInMonth ? gasto.monto : 0) - (oldInMonth ? editing.monto : 0);
+
+            if (montoDiff !== 0) {
+              this.totalMesActual.update(t => t + montoDiff);
+              this.presupuesto.update(p => {
+                if (!p || p.monto === null) return p;
+                const nuevoGasto = p.gastoActual + montoDiff;
+                return { ...p, gastoActual: nuevoGasto, restante: Math.round((p.monto - nuevoGasto) * 100) / 100 };
+              });
+            }
+
+            this.isSavingGasto.set(false);
+            this.showGastoModal.set(false);
+            this.editingGasto.set(null);
+            this.refreshBalance(now);
+          },
+          error: () => {
+            this.gastoError.set('No se pudo guardar el gasto. Verificá los datos.');
+            this.isSavingGasto.set(false);
+          },
+        });
+    } else {
+      const req: CreateGastoRequest = {
+        monto:       this.gastoForm.monto!,
+        descripcion: this.gastoForm.descripcion || null,
+        categoria:   this.gastoForm.categoria || null,
+        fecha:       this.gastoForm.fecha,
+        pagadoPorId: this.gastoForm.pagadoPorId || null,
+      };
+
+      this.finanzasApi.createGasto(req)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: gasto => {
+            this.gastosMesActual.update(list => [gasto, ...list]);
+            if (gasto.fecha >= firstDayOfMonth(now) && gasto.fecha <= lastDayOfMonth(now)) {
+              this.totalMesActual.update(t => t + gasto.monto);
+              this.presupuesto.update(p => {
+                if (!p || p.monto === null) return p;
+                const nuevoGasto = p.gastoActual + gasto.monto;
+                return { ...p, gastoActual: nuevoGasto, restante: Math.round((p.monto - nuevoGasto) * 100) / 100 };
+              });
+            }
+            this.isSavingGasto.set(false);
+            this.showGastoModal.set(false);
+            this.refreshBalance(now);
+            if (this.modoAhorro()) this.loadModoAhorroData();
+          },
+          error: () => {
+            this.gastoError.set('No se pudo guardar el gasto. Verificá los datos.');
+            this.isSavingGasto.set(false);
+          },
+        });
+    }
+  }
+
+  // ── Editar / eliminar gasto ───────────────────────────
+
+  protected openEditGastoModal(gasto: GastoResponse): void {
+    this.editingGasto.set(gasto);
+    this.gastoForm = {
+      monto:       gasto.monto,
+      descripcion: gasto.descripcion ?? '',
+      categoria:   gasto.categoria ?? '',
+      fecha:       gasto.fecha,
+      pagadoPorId: gasto.pagadoPorId,
+    };
+    this.gastoError.set(null);
+    this.gastoSubmitted.set(false);
+    this.showGastoModal.set(true);
+  }
+
+  protected deleteGasto(gasto: GastoResponse): void {
+    const now = new Date();
+    const inCurrentMonth = gasto.fecha >= firstDayOfMonth(now) && gasto.fecha <= lastDayOfMonth(now);
+
+    this.finanzasApi.deleteGasto(gasto.id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: gasto => {
-          if (gasto.fecha >= firstDayOfMonth(now) && gasto.fecha <= lastDayOfMonth(now)) {
-            this.gastosMesActual.update(list => [gasto, ...list]);
-            this.totalMesActual.update(t => t + gasto.monto);
+        next: result => {
+          this.gastosMesActual.update(list => list.filter(g => g.id !== gasto.id));
+
+          if (inCurrentMonth) {
+            this.totalMesActual.update(t => Math.max(0, t - gasto.monto));
+            this.presupuesto.update(p => {
+              if (!p || p.monto === null) return p;
+              const nuevoGasto = p.gastoActual - gasto.monto;
+              return { ...p, gastoActual: nuevoGasto, restante: Math.round((p.monto - nuevoGasto) * 100) / 100 };
+            });
           }
-          this.isSavingGasto.set(false);
-          this.showGastoModal.set(false);
+
+          if (result.facturaRevertida && result.facturaId) {
+            this.facturas.update(list =>
+              list.map(f => f.id === result.facturaId ? { ...f, pagada: false } : f)
+            );
+          }
+
           this.refreshBalance(now);
-          if (this.modoAhorro()) this.loadModoAhorroData();
-        },
-        error: () => {
-          this.gastoError.set('No se pudo guardar el gasto. Verificá los datos.');
-          this.isSavingGasto.set(false);
         },
       });
   }
@@ -492,6 +590,11 @@ export class Finanzas implements OnInit {
         if (result.gastoCreado) {
           this.gastosMesActual.update(list => [result.gastoCreado!, ...list]);
           this.totalMesActual.update(t => t + result.gastoCreado!.monto);
+          this.presupuesto.update(p => {
+            if (!p || p.monto === null) return p;
+            const nuevoGasto = p.gastoActual + result.gastoCreado!.monto;
+            return { ...p, gastoActual: nuevoGasto, restante: Math.round((p.monto - nuevoGasto) * 100) / 100 };
+          });
           this.refreshBalance(now);
         }
       }});
@@ -505,9 +608,45 @@ export class Finanzas implements OnInit {
       }});
   }
 
+  // ── Presupuesto ───────────────────────────────────────
+
+  protected openPresupuestoModal(): void {
+    this.presupuestoMonto = this.presupuesto()?.monto ?? null;
+    this.presupuestoError.set(null);
+    this.showPresupuestoModal.set(true);
+  }
+
+  protected closePresupuestoModal(): void { this.showPresupuestoModal.set(false); }
+
+  protected submitPresupuesto(): void {
+    const monto = this.presupuestoMonto;
+    if (!monto || monto <= 0) {
+      this.presupuestoError.set('Ingresá un monto mayor a 0.');
+      return;
+    }
+
+    this.isSavingPresupuesto.set(true);
+    this.presupuestoError.set(null);
+
+    this.finanzasApi.setPresupuesto(monto)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: result => {
+          this.presupuesto.set(result);
+          this.isSavingPresupuesto.set(false);
+          this.showPresupuestoModal.set(false);
+        },
+        error: () => {
+          this.presupuestoError.set('No se pudo guardar el presupuesto.');
+          this.isSavingPresupuesto.set(false);
+        },
+      });
+  }
+
   // ── Display helpers ───────────────────────────────────
 
   protected readonly formatMoney = formatMoney;
+  protected absPct(n: number): number { return Math.abs(n); }
 
   protected formatFecha(fecha: string): string {
     const parts = fecha.split('-');

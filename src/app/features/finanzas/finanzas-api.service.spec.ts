@@ -148,4 +148,55 @@ describe('FinanzasApiService', () => {
     expect(req.request.body).toEqual({ activo: true });
     req.flush({ activo: true });
   });
+
+  // ── getPresupuesto ─────────────────────────────────────────────────────────
+
+  it('getPresupuesto() hace GET a /finanzas/presupuesto', () => {
+    service.getPresupuesto().subscribe();
+
+    const req = http.expectOne(`${base}/finanzas/presupuesto`);
+    expect(req.request.method).toBe('GET');
+    req.flush({ monto: 5000, gastoActual: 1200, restante: 3800, anio: 2026, mes: 6 });
+  });
+
+  it('getPresupuesto() devuelve fallback con monto null ante un error', async () => {
+    const promise = firstValueFrom(service.getPresupuesto());
+    http.expectOne(`${base}/finanzas/presupuesto`).error(new ProgressEvent('error'));
+    const res = await promise;
+    expect(res.monto).toBeNull();
+    expect(res.gastoActual).toBe(0);
+  });
+
+  // ── setPresupuesto ─────────────────────────────────────────────────────────
+
+  it('setPresupuesto() hace PUT a /finanzas/presupuesto con el monto', () => {
+    service.setPresupuesto(5000).subscribe();
+
+    const req = http.expectOne(`${base}/finanzas/presupuesto`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({ monto: 5000 });
+    req.flush({ monto: 5000, gastoActual: 0, restante: 5000, anio: 2026, mes: 6 });
+  });
+
+  // ── updateGasto ────────────────────────────────────────────────────────────
+
+  it('updateGasto() hace PATCH a /finanzas/gastos/:id con el cuerpo correcto', () => {
+    const cuerpo = { monto: 800, descripcion: 'Editado', categoria: 'Comida', fecha: '2026-06-15', pagadoPorId: null };
+    service.updateGasto('gasto-1', cuerpo).subscribe();
+
+    const req = http.expectOne(`${base}/finanzas/gastos/gasto-1`);
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual(cuerpo);
+    req.flush({ id: 'gasto-1', monto: 800, descripcion: 'Editado', categoria: 'Comida', fecha: '2026-06-15', pagadoPorId: 'u1', pagadoPorNombre: 'Ana', createdAt: '', facturaId: null });
+  });
+
+  // ── deleteGasto ────────────────────────────────────────────────────────────
+
+  it('deleteGasto() hace DELETE a /finanzas/gastos/:id', () => {
+    service.deleteGasto('gasto-2').subscribe();
+
+    const req = http.expectOne(`${base}/finanzas/gastos/gasto-2`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush({ facturaRevertida: false, facturaId: null });
+  });
 });
