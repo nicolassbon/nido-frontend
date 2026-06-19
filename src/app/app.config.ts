@@ -7,6 +7,7 @@ import {
   LUCIDE_ICONS,
   LucideIconProvider,
   House,
+  HousePlus,
   Refrigerator,
   ChefHat,
   Wallet,
@@ -132,6 +133,7 @@ export const appConfig: ApplicationConfig = {
       multi: true,
       useValue: new LucideIconProvider({
         House,
+        HousePlus,
         Refrigerator,
         ChefHat,
         Wallet,
