@@ -388,6 +388,13 @@ export class ProductDetail {
     }).format(date);
   }
 
+  protected expiredDays(): number {
+    const p = this.product();
+    if (!p || !p.fechaVencimiento) return 0;
+    const days = this.daysUntilExpiry(p.fechaVencimiento);
+    return days < 0 ? Math.abs(days) : 0;
+  }
+
   protected expiredText(): string {
     const days = this.expiredDays();
     return `Producto vencido hace ${days} dia${days === 1 ? '' : 's'}.`;
