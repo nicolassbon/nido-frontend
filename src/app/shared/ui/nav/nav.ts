@@ -60,7 +60,7 @@ export class Nav implements OnInit, OnDestroy {
     { label: 'Lista de compras',  route: '/lista-compras',    icon: 'shopping-cart' },
     { label: 'Finanzas',          route: '/finanzas',         icon: 'wallet'        },
     { label: 'Tareas',            route: '/tareas',           icon: 'check-square' },
-    { label: 'Planificador',      route: '/planificador',     icon: 'calendar',     disabled: true },
+    { label: 'Planificador',      route: '/planificador',     icon: 'calendar' },
     { label: 'Electrodomésticos', route: '/electrodomesticos',icon: 'zap'         },
     { label: 'Notificaciones',    route: '/notificaciones',   icon: 'bell'        },
     { label: 'Mi perfil',         route: '/perfil',           icon: 'user'        },

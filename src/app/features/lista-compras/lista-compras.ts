@@ -89,15 +89,22 @@ export class ListaCompras implements OnInit, OnDestroy {
     if (!nombre || this.isSaving) return;
 
     this.isSaving = true;
+    const creating = !this.editingListId;
     const request = this.editingListId
       ? this.service.updateList(this.editingListId, nombre)
       : this.service.createList(nombre);
 
     request.subscribe({
-      next: () => {
+      next: listas => {
+        if (creating) {
+          const created = [...listas].reverse().find(lista => lista.recetaNombre === nombre);
+          this.activeListId = created?.id ?? this.activeListId;
+        }
+
         this.showListForm = false;
         this.editingListId = null;
         this.listName = '';
+        this.errorMessage = null;
         this.isSaving = false;
         this.cdr.markForCheck();
       },

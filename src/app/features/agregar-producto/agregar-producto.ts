@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, Output, EventEmitter, Input, signal, OnInit, OnDestroy } from '@angular/core';
-import { switchMap, of, Subject, debounceTime, distinctUntilChanged, takeUntil, map, catchError } from 'rxjs';
+import { switchMap, of, Subject, debounceTime, distinctUntilChanged, takeUntil, map, catchError, forkJoin } from 'rxjs';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ProductService } from '../../core/servicios/agregar-producto.service';
 import { AlacenaApiService, StockItemResponse } from '../alacena/alacena-api.service';
@@ -9,6 +9,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../core/auth/auth.service';
 import { ListaComprasService } from '../lista-compras/lista-compras.service';
 import { NidoSelectComponent, NidoSelectOption } from '../../shared/ui/form/nido-select/nido-select';
+import { CatalogoService, UbicacionDto } from '../../core/servicios/catalogo.service';
 import { NidoDatepickerComponent } from '../../shared/ui/form/nido-datepicker/nido-datepicker';
 import { validatePhotoFile } from '../../shared/validators/photo';
 
@@ -44,6 +45,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
   private readonly router              = inject(Router);
   private readonly authService         = inject(AuthService);
   private readonly listaComprasService = inject(ListaComprasService);
+  private readonly catalogoService     = inject(CatalogoService);
 
   protected isSaving     = false;
   protected errorMessage = '';
@@ -62,41 +64,13 @@ export class AgregarProducto implements OnInit, OnDestroy {
 
   protected get isEditMode(): boolean { return !!this.stockItem; }
 
-  // ── Opciones ──────────────────────────────────────────────
-  protected readonly categoriasOpts: NidoSelectOption[] = [
-    { value: '33333333-3333-3333-3333-333333333333', label: 'General' },
-    { value: '44444444-4444-4444-4444-444444444444', label: 'Lácteos' },
-    { value: '55555555-5555-5555-5555-555555555555', label: 'Bebidas' },
-    { value: '66666666-6666-6666-6666-666666666666', label: 'Congelados' },
-    { value: '77777777-7777-7777-7777-777777777777', label: 'Despensa' },
-  ];
+  // ── Opciones dinámicas (desde la BD) ─────────────────────
+  protected categoriasOpts = signal<NidoSelectOption[]>([]);
+  protected unidadesOpts   = signal<NidoSelectOption[]>([]);
+  protected ubicaciones    = signal<UbicacionDto[]>([]);
 
-  protected readonly unidadesOpts: NidoSelectOption[] = [
-    { value: 'unidad', label: 'Unidad' },
-    { value: 'gr',     label: 'Gramos (gr)' },
-    { value: 'kg',     label: 'Kilogramos (kg)' },
-    { value: 'ml',     label: 'Mililitros (ml)' },
-    { value: 'lt',     label: 'Litros (lt)' },
-    { value: 'cdita',  label: 'Cucharadita' },
-    { value: 'cda',    label: 'Cucharada' },
-  ];
-
-  protected readonly ubicaciones = ['Alacena', 'Freezer', 'Heladera'] as const;
-
-  private readonly locationIcons: Record<string, string> = {
-    Alacena:  'tag',
-    Freezer:  'snowflake',
-    Heladera: 'refrigerator',
-  };
-
-  private readonly locationColors: Record<string, string> = {
-    Alacena:  '#B48B6A',
-    Freezer:  '#3E5E4A',
-    Heladera: '#927357',
-  };
-
-  getLocationIcon(loc: string): string  { return this.locationIcons[loc]  ?? 'package'; }
-  getLocationColor(loc: string): string { return this.locationColors[loc] ?? '#263F30'; }
+  getLocationIcon(loc: UbicacionDto): string  { return loc.icono  ?? 'package'; }
+  getLocationColor(loc: UbicacionDto): string { return loc.color  ?? '#263F30'; }
 
   private normalizeUnit(value: string | null | undefined): string {
     const normalized = (value ?? '')
@@ -152,6 +126,17 @@ export class AgregarProducto implements OnInit, OnDestroy {
   // ── Lifecycle ─────────────────────────────────────────────
   ngOnInit(): void {
     document.body.style.overflow = 'hidden';
+
+    // Cargar cat\u00e1logos desde la API
+    forkJoin({
+      cats:  this.catalogoService.getCategorias(),
+      units: this.catalogoService.getUnidadesMedida(),
+      locs:  this.catalogoService.getUbicaciones(),
+    }).subscribe(({ cats, units, locs }) => {
+      this.categoriasOpts.set(CatalogoService.toCategoriasOpts(cats));
+      this.unidadesOpts.set(CatalogoService.toUnidadesOpts(units));
+      this.ubicaciones.set(locs);
+    });
 
     // Autocomplete: filtra los productos ya cargados en la alacena (localmente,
     // sin consultar la BD). Deduplica por nombre.
@@ -210,7 +195,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
 
   selectSuggestion(s: KnownProduct): void {
     // Mapear el nombre de categoría al id correspondiente
-    const catId = this.categoriasOpts.find(
+    const catId = this.categoriasOpts().find(
       o => o.label.toLowerCase() === (s.categoriaNombre ?? '').toLowerCase(),
     )?.value ?? '';
 
@@ -296,6 +281,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
     const consumedPct = this.consumedPct();
     const payload = {
       nombre:              this.form.value.nombre!,
+      categoriaId:         this.form.value.categoriaId || null,
       codigoBarras:        null,
       imagen:              null,
       ubicacion:           this.form.value.ubicacion!,
