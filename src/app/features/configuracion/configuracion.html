@@ -118,6 +118,109 @@
               }
             </div>
           </div>
+
+          <div class="border-t border-nido-border/30 pt-4 flex flex-col gap-3">
+            <div class="flex flex-col gap-1.5">
+              <span class="text-[0.9375rem] font-semibold text-nido-green-dark leading-tight">
+                Telegram
+              </span>
+              <p class="text-xs text-nido-brown opacity-95 leading-relaxed">
+                Conectá tu cuenta para abrir el bot de Telegram y terminar la vinculación desde ahí.
+              </p>
+            </div>
+
+            <div class="flex flex-col gap-3 items-start">
+              @if (telegramIsLinked()) {
+                <div class="flex items-center gap-2 rounded-xl border border-nido-green/30 bg-nido-green/5 px-3.5 py-2 text-nido-green-dark">
+                  <lucide-icon name="check-circle" [size]="18" class="text-nido-green" />
+                  <span class="text-[0.9375rem] font-semibold">Telegram conectado</span>
+                </div>
+
+                @if (telegramPairedAt()) {
+                  <span class="text-xs text-nido-brown">
+                    Vinculado el {{ telegramPairedAt() | date:'dd/MM/yyyy, HH:mm' }}
+                  </span>
+                }
+
+                <button
+                  type="button"
+                  (click)="disconnectTelegram()"
+                  [disabled]="telegramUnlinkStatus() === 'loading'"
+                  class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-nido-green-dark text-nido-cream text-[0.875rem] font-bold border-none cursor-pointer transition-all duration-150 hover:bg-nido-green active:scale-[0.98] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                  @if (telegramUnlinkStatus() === 'loading') {
+                    <div class="w-4 h-4 rounded-full border-2 border-solid border-transparent border-t-current animate-spin"></div>
+                    <span>Desconectando...</span>
+                  } @else {
+                    <lucide-icon name="unlink" [size]="16" />
+                    <span>Desconectar</span>
+                  }
+                </button>
+
+                @if (telegramUnlinkError()) {
+                  <span class="text-[0.8125rem] text-nido-red font-semibold flex items-center gap-1.5">
+                    <lucide-icon name="alert-circle" [size]="14" />
+                    {{ telegramUnlinkError() }}
+                  </span>
+                }
+              } @else {
+                <button
+                  type="button"
+                  (click)="connectTelegram()"
+                  [disabled]="telegramPairingStatus() === telegramPairingStatusValues.LOADING"
+                  class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-nido-green-dark text-nido-cream text-[0.875rem] font-bold border-none cursor-pointer transition-all duration-150 hover:bg-nido-green active:scale-[0.98] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                  @if (telegramPairingStatus() === telegramPairingStatusValues.LOADING) {
+                    <div class="w-4 h-4 rounded-full border-2 border-solid border-transparent border-t-current animate-spin"></div>
+                    <span>Abriendo Telegram...</span>
+                  } @else {
+                    <lucide-icon name="send" [size]="16" />
+                    <span>Conectar Telegram</span>
+                  }
+                </button>
+
+                @if (telegramUnlinkStatus() === 'success') {
+                  <span class="text-[0.8125rem] text-nido-green font-bold flex items-center gap-1">
+                    <lucide-icon name="check" [size]="14" />
+                    Desconectado correctamente
+                  </span>
+                }
+
+                @if (telegramPairingMessage()) {
+                  <div
+                    [class]="telegramPairingStatus() === telegramPairingStatusValues.ERROR ? 'text-nido-red bg-nido-red/5 border-nido-red/20' : 'text-nido-green-dark bg-nido-green/5 border-nido-green/20'"
+                    class="w-full rounded-xl border px-3.5 py-3 text-[0.8125rem] font-medium leading-relaxed">
+                    {{ telegramPairingMessage() }}
+                  </div>
+                }
+
+                @if (telegramPairingCode()) {
+                  <div class="flex flex-col gap-1 rounded-xl border border-nido-border/50 bg-white px-3.5 py-3 text-[0.8125rem] text-nido-green-dark">
+                    <span class="font-semibold">Código de vinculación</span>
+                    <code class="font-mono text-sm font-bold tracking-[0.2em]">{{ telegramPairingCode() }}</code>
+                  </div>
+                }
+
+                @if (telegramPairingStatus() === telegramPairingStatusValues.SUCCESS && !telegramIsLinked()) {
+                  <button
+                    type="button"
+                    (click)="refreshTelegramStatus()"
+                    class="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-nido-green/30 bg-nido-green/5 text-nido-green-dark text-[0.875rem] font-bold cursor-pointer transition-all duration-150 hover:bg-nido-green/10 active:scale-[0.98] shadow-sm">
+                    <lucide-icon name="refresh-cw" [size]="16" />
+                    <span>Verificar conexión</span>
+                  </button>
+                  <span class="text-[0.8125rem] text-nido-brown">
+                    Volvé acá después de vincular Telegram y tocá para actualizar el estado.
+                  </span>
+                }
+              }
+
+              @if (telegramStatusError()) {
+                <span class="text-[0.8125rem] text-nido-red font-semibold flex items-center gap-1.5">
+                  <lucide-icon name="alert-circle" [size]="14" />
+                  {{ telegramStatusError() }}
+                </span>
+              }
+            </div>
+          </div>
         </div>
       }
     </section>

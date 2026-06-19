@@ -1,3 +1,5 @@
+import { DatePipe } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, FormsModule, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
@@ -9,6 +11,7 @@ import { PerfilApiService } from '../perfil/perfil-api.service';
 import { Avatar } from '../../shared/ui/avatar/avatar';
 import { SwPush } from '@angular/service-worker';
 import { NotificacionesApiService } from '../notificaciones/services/notificaciones-api.service';
+import { TelegramApiService } from '../telegram/telegram-api';
 
 export function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
   const password = control.get('newPassword')?.value;
@@ -35,10 +38,36 @@ export function changePasswordValidator(control: AbstractControl): ValidationErr
 }
 
 const MEMBER_COLORS = ['#263F30', '#C78F5A', '#927357', '#5C7A6E', '#8B4513', '#4A7C59'];
+const TELEGRAM_PAIRING_STATUS = {
+  IDLE: 'idle',
+  LOADING: 'loading',
+  SUCCESS: 'success',
+  ERROR: 'error',
+} as const;
+
+type TelegramPairingStatus = (typeof TELEGRAM_PAIRING_STATUS)[keyof typeof TELEGRAM_PAIRING_STATUS];
+
+const TELEGRAM_UNLINK_STATUS = {
+  IDLE: 'idle',
+  LOADING: 'loading',
+  SUCCESS: 'success',
+  ERROR: 'error',
+} as const;
+
+type TelegramUnlinkStatus = (typeof TELEGRAM_UNLINK_STATUS)[keyof typeof TELEGRAM_UNLINK_STATUS];
+
+const TELEGRAM_INVALID_DEEP_LINK_MESSAGE = 'No pudimos abrir Telegram porque el enlace devuelto no es válido. Probá de nuevo.';
+const TELEGRAM_STATUS_CHECK_ERROR_MESSAGE = 'No pudimos comprobar el estado de Telegram. Conservamos la última conexión conocida. Probá de nuevo en unos segundos.';
+const TELEGRAM_BOT_USERNAME = 'nido_bot';
+
+interface TelegramPairingErrorBody {
+  code?: string;
+  title?: string;
+}
 
 @Component({
   selector: 'app-configuracion',
-  imports: [ReactiveFormsModule, FormsModule, LucideAngularModule, Avatar],
+  imports: [ReactiveFormsModule, FormsModule, LucideAngularModule, Avatar, DatePipe],
   templateUrl: './configuracion.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -50,7 +79,16 @@ export class Configuracion {
   private readonly hogaresApi = inject(HogaresApiService);
   private readonly swPush = inject(SwPush);
   private readonly notifApi = inject(NotificacionesApiService);
+  private readonly telegramApi = inject(TelegramApiService);
   private readonly destroyRef = inject(DestroyRef);
+
+  private telegramUnlinkSuccessTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private telegramStatusRequestSeq = 0;
+  private readonly handleTelegramVisibilityChange = (): void => {
+    if (document.visibilityState === 'visible') {
+      this.refreshTelegramStatus();
+    }
+  };
 
   // ── Cuenta (Giulianna) ───────────────────────────────────
   readonly userName = signal(this.auth.getNombre() ?? '');
@@ -66,6 +104,16 @@ export class Configuracion {
   readonly isWebPushEnabled = signal(false);
   readonly isWebPushLoading = signal(false);
   readonly webPushError = signal<string | null>(null);
+  readonly telegramPairingStatus = signal<TelegramPairingStatus>(TELEGRAM_PAIRING_STATUS.IDLE);
+  readonly telegramPairingMessage = signal<string | null>(null);
+  readonly telegramPairingCode = signal<string | null>(null);
+  protected readonly telegramPairingStatusValues = TELEGRAM_PAIRING_STATUS;
+
+  readonly telegramIsLinked = signal(false);
+  readonly telegramPairedAt = signal<string | null>(null);
+  readonly telegramStatusError = signal<string | null>(null);
+  readonly telegramUnlinkStatus = signal<TelegramUnlinkStatus>(TELEGRAM_UNLINK_STATUS.IDLE);
+  readonly telegramUnlinkError = signal<string | null>(null);
 
   // ── Miembros del hogar (Giulianna) ───────────────────────
   readonly members = signal<MiembroResponse[]>([]);
@@ -115,6 +163,16 @@ export class Configuracion {
     this.loadPreferences();
     this.loadMembers();
     this.checkWebPushStatus();
+    this.loadTelegramStatus();
+
+    window.addEventListener('focus', this.refreshTelegramStatus);
+    document.addEventListener('visibilitychange', this.handleTelegramVisibilityChange);
+
+    this.destroyRef.onDestroy(() => {
+      window.removeEventListener('focus', this.refreshTelegramStatus);
+      document.removeEventListener('visibilitychange', this.handleTelegramVisibilityChange);
+      this.clearTelegramUnlinkSuccessTimeout();
+    });
   }
 
   // ── Load & Async logic ───────────────────────────────────
@@ -163,6 +221,10 @@ export class Configuracion {
   }
 
   // ── Actions ──────────────────────────────────────────────
+  readonly refreshTelegramStatus = (): void => {
+    this.loadTelegramStatus();
+  };
+
   saveDiasAlerta(): void {
     const dias = Math.max(1, Math.min(365, Math.round(this.diasAlertaInput()) || 7));
     this.isSavingPrefs.set(true);
@@ -339,6 +401,99 @@ export class Configuracion {
       });
   }
 
+  private loadTelegramStatus(): void {
+    const requestSeq = ++this.telegramStatusRequestSeq;
+    this.telegramStatusError.set(null);
+
+    this.telegramApi.getStatus()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (status) => {
+          if (requestSeq !== this.telegramStatusRequestSeq) {
+            return;
+          }
+
+          this.applyTelegramStatus(status);
+        },
+        error: () => {
+          if (requestSeq !== this.telegramStatusRequestSeq) {
+            return;
+          }
+
+          this.telegramStatusError.set(TELEGRAM_STATUS_CHECK_ERROR_MESSAGE);
+        },
+      });
+  }
+
+  private applyTelegramStatus(status: { isLinked: boolean; pairedAt?: string }): void {
+    this.telegramIsLinked.set(status.isLinked);
+    this.telegramPairedAt.set(status.pairedAt ?? null);
+    this.telegramStatusError.set(null);
+  }
+
+  private resetTelegramLinkState(): void {
+    this.telegramIsLinked.set(false);
+    this.telegramPairedAt.set(null);
+  }
+
+  private clearTelegramUnlinkSuccessTimeout(): void {
+    if (this.telegramUnlinkSuccessTimeoutId) {
+      clearTimeout(this.telegramUnlinkSuccessTimeoutId);
+      this.telegramUnlinkSuccessTimeoutId = null;
+    }
+  }
+
+  private invalidateTelegramStatusRequests(): void {
+    this.telegramStatusRequestSeq += 1;
+  }
+
+  disconnectTelegram(): void {
+    if (this.telegramUnlinkStatus() === TELEGRAM_UNLINK_STATUS.LOADING) {
+      return;
+    }
+
+    this.clearTelegramUnlinkSuccessTimeout();
+    this.invalidateTelegramStatusRequests();
+    this.telegramUnlinkStatus.set(TELEGRAM_UNLINK_STATUS.LOADING);
+    this.telegramUnlinkError.set(null);
+
+    this.telegramApi.unlink()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.resetTelegramLinkState();
+          this.telegramPairingMessage.set(null);
+          this.telegramPairingCode.set(null);
+          this.telegramStatusError.set(null);
+          this.telegramUnlinkStatus.set(TELEGRAM_UNLINK_STATUS.SUCCESS);
+          this.clearTelegramUnlinkSuccessTimeout();
+          this.telegramUnlinkSuccessTimeoutId = setTimeout(() => {
+            this.telegramUnlinkStatus.set(TELEGRAM_UNLINK_STATUS.IDLE);
+            this.telegramUnlinkSuccessTimeoutId = null;
+          }, 2500);
+        },
+        error: (error: HttpErrorResponse) => {
+          if (error.status === 404) {
+            this.resetTelegramLinkState();
+            this.telegramPairingMessage.set(null);
+            this.telegramPairingCode.set(null);
+            this.telegramStatusError.set(null);
+          }
+
+          this.telegramUnlinkError.set(this.getTelegramUnlinkErrorMessage(error));
+          this.telegramUnlinkStatus.set(TELEGRAM_UNLINK_STATUS.ERROR);
+        },
+      });
+  }
+
+  private getTelegramUnlinkErrorMessage(error: HttpErrorResponse): string {
+    if (error.status === 404) {
+      return 'No encontramos una cuenta de Telegram vinculada.';
+    }
+
+    return 'No pudimos desvincular Telegram. Intentá de nuevo.';
+  }
+
   toggleWebPushNotifications(): void {
     if (!this.swPush.isEnabled) {
       this.webPushError.set('Los Service Workers no están habilitados o soportados en este navegador.');
@@ -399,11 +554,91 @@ export class Configuracion {
     }
   }
 
+  connectTelegram(): void {
+    if (this.telegramPairingStatus() === TELEGRAM_PAIRING_STATUS.LOADING) {
+      return;
+    }
+
+    this.invalidateTelegramStatusRequests();
+    this.telegramPairingStatus.set(TELEGRAM_PAIRING_STATUS.LOADING);
+    this.telegramPairingMessage.set(null);
+    this.telegramPairingCode.set(null);
+    this.telegramStatusError.set(null);
+    this.resetTelegramLinkState();
+    this.telegramUnlinkStatus.set(TELEGRAM_UNLINK_STATUS.IDLE);
+    this.telegramUnlinkError.set(null);
+
+    this.telegramApi.startPairing()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: ({ deepLinkUrl, pairingCode }) => {
+          this.telegramPairingCode.set(pairingCode);
+
+          if (!this.isAllowedTelegramDeepLink(deepLinkUrl)) {
+            this.telegramPairingMessage.set(TELEGRAM_INVALID_DEEP_LINK_MESSAGE);
+            this.telegramPairingStatus.set(TELEGRAM_PAIRING_STATUS.ERROR);
+            return;
+          }
+
+          const telegramWindow = window.open(deepLinkUrl, '_blank', 'noopener,noreferrer');
+          this.telegramPairingMessage.set(
+            telegramWindow === null
+              ? `No pudimos abrir Telegram automáticamente. Abrí este enlace: ${deepLinkUrl} o usá el código ${pairingCode}.`
+              : 'Abrimos Telegram para completar la vinculación. Si no se abre, usá el código manual debajo.'
+          );
+          this.telegramPairingStatus.set(TELEGRAM_PAIRING_STATUS.SUCCESS);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.telegramPairingMessage.set(this.getTelegramPairingErrorMessage(error));
+          this.telegramPairingStatus.set(TELEGRAM_PAIRING_STATUS.ERROR);
+        },
+      });
+  }
+
   private arrayBufferToBase64Url(buffer: ArrayBuffer): string {
     const binary = String.fromCharCode(...new Uint8Array(buffer));
     return btoa(binary)
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/, '');
+  }
+
+  private getTelegramPairingErrorMessage(error: HttpErrorResponse): string {
+    const errorBody = this.isTelegramPairingErrorBody(error.error) ? error.error : null;
+    const errorCode = errorBody?.code ?? errorBody?.title ?? null;
+
+    if (error.status === 429 || errorCode === 'TELEGRAM_PAIRING_RATE_LIMIT_EXCEEDED') {
+      return 'Ya generaste un intento hace poco. Esperá un momento y volvé a probar.';
+    }
+
+    if (error.status === 503 || errorCode === 'TELEGRAM_CONFIGURATION') {
+      return 'Telegram no está disponible en este momento. Intentá nuevamente más tarde.';
+    }
+
+    return 'No pudimos iniciar la vinculación con Telegram. Intentá de nuevo.';
+  }
+
+  private isAllowedTelegramDeepLink(value: string): boolean {
+    try {
+      const parsedUrl = new URL(value);
+
+      if (parsedUrl.protocol !== 'https:' || parsedUrl.hostname !== 't.me') {
+        return false;
+      }
+
+      if (parsedUrl.pathname !== `/${TELEGRAM_BOT_USERNAME}`) {
+        return false;
+      }
+
+      const searchParams = Array.from(parsedUrl.searchParams.entries());
+
+      return searchParams.length === 1 && searchParams[0]?.[0] === 'start' && searchParams[0]?.[1].trim() !== '';
+    } catch {
+      return false;
+    }
+  }
+
+  private isTelegramPairingErrorBody(value: unknown): value is TelegramPairingErrorBody {
+    return typeof value === 'object' && value !== null;
   }
 }
