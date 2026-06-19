@@ -147,12 +147,11 @@ export class ProductDetail {
     clamp(100 - (this.product()?.porcentajeConsumido ?? 0), 0, 100),
   );
 
-  protected readonly expiredDays = computed(() => {
-    const days = this.daysUntilExpiry(this.product()?.fechaVencimiento);
-    return Number.isFinite(days) && days < 0 ? Math.abs(days) : 0;
+  protected readonly isExpired = computed(() => {
+    const p = this.product();
+    if (!p || !p.fechaVencimiento) return false;
+    return this.daysUntilExpiry(p.fechaVencimiento) < 0;
   });
-
-  protected readonly isExpired = computed(() => this.expiredDays() > 0);
 
   protected readonly brand = computed(() => {
     const name = this.product()?.nombre.trim() ?? '';
@@ -387,6 +386,13 @@ export class ProductDetail {
       month: 'long',
       year: 'numeric',
     }).format(date);
+  }
+
+  protected expiredDays(): number {
+    const p = this.product();
+    if (!p || !p.fechaVencimiento) return 0;
+    const days = this.daysUntilExpiry(p.fechaVencimiento);
+    return days < 0 ? Math.abs(days) : 0;
   }
 
   protected expiredText(): string {
