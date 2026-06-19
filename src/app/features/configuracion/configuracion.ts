@@ -58,7 +58,7 @@ type TelegramUnlinkStatus = (typeof TELEGRAM_UNLINK_STATUS)[keyof typeof TELEGRA
 
 const TELEGRAM_INVALID_DEEP_LINK_MESSAGE = 'No pudimos abrir Telegram porque el enlace devuelto no es válido. Probá de nuevo.';
 const TELEGRAM_STATUS_CHECK_ERROR_MESSAGE = 'No pudimos comprobar el estado de Telegram. Conservamos la última conexión conocida. Probá de nuevo en unos segundos.';
-const TELEGRAM_BOT_USERNAME = 'nido_bot';
+const TELEGRAM_BOT_USERNAME = 'nido_app_bot';
 
 interface TelegramPairingErrorBody {
   code?: string;

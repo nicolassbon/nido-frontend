@@ -26,7 +26,7 @@ describe('TelegramApiService', () => {
 
   it('POSTs to start telegram pairing', () => {
     const response: TelegramPairingResponse = {
-      deepLinkUrl: 'https://t.me/nido_bot?start=abc123',
+      deepLinkUrl: 'https://t.me/nido_app_bot?start=abc123',
       pairingCode: 'ABC123',
       expiresAt: '2026-06-19T12:00:00.000Z',
     };

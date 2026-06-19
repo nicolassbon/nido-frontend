@@ -70,7 +70,7 @@ describe('Configuracion', () => {
 
     mockTelegramApiService = {
       startPairing: vi.fn().mockReturnValue(of({
-        deepLinkUrl: 'https://t.me/nido_bot?start=abc123',
+        deepLinkUrl: 'https://t.me/nido_app_bot?start=abc123',
         pairingCode: 'ABC123',
         expiresAt: '2026-06-19T12:00:00.000Z',
       })),
@@ -247,7 +247,7 @@ describe('Configuracion', () => {
       component.connectTelegram();
 
       expect(mockTelegramApiService.startPairing).toHaveBeenCalled();
-      expect(windowOpenSpy).toHaveBeenCalledWith('https://t.me/nido_bot?start=abc123', '_blank', 'noopener,noreferrer');
+      expect(windowOpenSpy).toHaveBeenCalledWith('https://t.me/nido_app_bot?start=abc123', '_blank', 'noopener,noreferrer');
       expect(component.telegramPairingStatus()).toBe('success');
       expect(component.telegramPairingCode()).toBe('ABC123');
       expect(component.telegramPairingMessage()).toContain('Abrimos Telegram');
@@ -261,7 +261,7 @@ describe('Configuracion', () => {
       expect(component.telegramPairingStatus()).toBe('success');
       expect(component.telegramPairingCode()).toBe('ABC123');
       expect(component.telegramPairingMessage()).toBe(
-        'No pudimos abrir Telegram automáticamente. Abrí este enlace: https://t.me/nido_bot?start=abc123 o usá el código ABC123.'
+        'No pudimos abrir Telegram automáticamente. Abrí este enlace: https://t.me/nido_app_bot?start=abc123 o usá el código ABC123.'
       );
     });
 
