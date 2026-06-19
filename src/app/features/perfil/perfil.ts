@@ -6,6 +6,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import { PerfilApiService, PerfilApiResponse } from './perfil-api.service';
 import { OnboardingApiService, RestriccionCatalogo } from '../onboarding/onboarding-api.service';
 import { HogaresApiService } from '../household/hogares-api.service';
+import { AuthService } from '../../core/auth/auth.service';
 import { EditarPerfil } from '../editar-perfil/editar-perfil';
 import { Avatar } from '../../shared/ui/avatar/avatar';
 
@@ -19,10 +20,12 @@ export class PerfilComponent implements OnInit {
   private readonly perfilApi = inject(PerfilApiService);
   private readonly onboardingApi = inject(OnboardingApiService);
   private readonly hogaresApi = inject(HogaresApiService);
+  private readonly authService = inject(AuthService);
 
   protected readonly usuario = signal<PerfilApiResponse | null>(null);
   protected readonly isLoading = signal(true);
   protected readonly apiError = signal<string | null>(null);
+  protected readonly nombreHogar = signal<string | null>(null);
 
   // --- Estados de Edición ---
   protected readonly isEditingAlergias = signal(false);
@@ -43,6 +46,43 @@ export class PerfilComponent implements OnInit {
   protected onEditClosed(saved: boolean): void {
     this.showEditModal.set(false);
     if (saved) this.cargarPerfil();
+  }
+
+  // --- Crear hogar adicional ---
+  protected readonly showCrearHogarModal = signal(false);
+  protected readonly crearHogarNombre    = signal('');
+  protected readonly crearHogarState     = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
+  protected readonly crearHogarErrorMsg  = signal('');
+  protected readonly crearHogarNombreCreado = signal('');
+
+  protected openCrearHogarModal(): void {
+    this.showCrearHogarModal.set(true);
+  }
+
+  protected closeCrearHogarModal(): void {
+    this.showCrearHogarModal.set(false);
+    this.crearHogarNombre.set('');
+    this.crearHogarState.set('idle');
+    this.crearHogarErrorMsg.set('');
+  }
+
+  protected submitCrearHogar(): void {
+    const nombre = this.crearHogarNombre().trim();
+    if (!nombre) return;
+
+    this.crearHogarState.set('loading');
+    this.hogaresApi.crearHogar(nombre).subscribe({
+      next: (res) => {
+        this.authService.setToken(res.accessToken);
+        this.crearHogarNombreCreado.set(res.hogarNombre);
+        this.nombreHogar.set(res.hogarNombre);
+        this.crearHogarState.set('success');
+      },
+      error: (err) => {
+        this.crearHogarErrorMsg.set(err.error?.message ?? 'Error al crear el hogar.');
+        this.crearHogarState.set('error');
+      },
+    });
   }
 
   // --- Invitar familiar ---
@@ -94,6 +134,10 @@ export class PerfilComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarPerfil();
+
+    this.hogaresApi.getHogar().subscribe({
+      next: hogar => this.nombreHogar.set(hogar.nombre),
+    });
 
     // Precargar catálogos
     this.onboardingApi.getPreferenciasAlimentarias().subscribe({

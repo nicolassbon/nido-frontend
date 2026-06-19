@@ -4,7 +4,7 @@ import { AbstractControl, FormBuilder, FormsModule, ReactiveFormsModule, Validat
 import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../core/auth/auth.service';
 import { PreferenciasApiService } from '../alacena/preferencias-api.service';
-import { HogaresApiService, MiembroResponse } from '../household/hogares-api.service';
+import { HogaresApiService, HogarResumenResponse, MiembroResponse } from '../household/hogares-api.service';
 import { PerfilApiService } from '../perfil/perfil-api.service';
 import { Avatar } from '../../shared/ui/avatar/avatar';
 import { SwPush } from '@angular/service-worker';
@@ -71,6 +71,27 @@ export class Configuracion {
   readonly members = signal<MiembroResponse[]>([]);
   readonly isLoadingMembers = signal(true);
 
+  // ── Mis hogares ──────────────────────────────────────────
+  readonly hogares = signal<HogarResumenResponse[]>([]);
+  readonly isLoadingHogares = signal(true);
+  readonly hogarActivoId = signal(this.auth.getHogarId() ?? '');
+  readonly switchingHogarId = signal<string | null>(null);
+  readonly editingHogarId   = signal<string | null>(null);
+  readonly editHogarNombre  = signal('');
+  readonly savingHogarRename = signal(false);
+  readonly renameHogarError = signal('');
+
+  readonly hogarToDelete = signal<HogarResumenResponse | null>(null);
+  readonly deletingHogar = signal(false);
+  readonly deleteHogarError = signal('');
+
+  // ── Crear hogar (desde configuración) ────────────────────
+  readonly showCrearHogarModal = signal(false);
+  readonly crearHogarNombre    = signal('');
+  readonly crearHogarState     = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
+  readonly crearHogarErrorMsg  = signal('');
+  readonly crearHogarNombreCreado = signal('');
+
   // ── Invitar convivente (Giulianna) ───────────────────────
   readonly showInviteModal = signal(false);
   readonly inviteEmail = signal('');
@@ -114,6 +135,7 @@ export class Configuracion {
     this.loadProfile();
     this.loadPreferences();
     this.loadMembers();
+    this.loadHogares();
     this.checkWebPushStatus();
   }
 
@@ -159,6 +181,137 @@ export class Configuracion {
           this.isLoadingMembers.set(false);
         },
         error: () => this.isLoadingMembers.set(false),
+      });
+  }
+
+  // ── Load & Async logic ───────────────────────────────────
+  private loadHogares(): void {
+    this.hogaresApi.getMisHogares()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: lista => {
+          this.hogares.set(lista);
+          this.isLoadingHogares.set(false);
+        },
+        error: () => this.isLoadingHogares.set(false),
+      });
+  }
+
+  activarHogar(hogarId: string): void {
+    if (hogarId === this.hogarActivoId() || this.switchingHogarId() !== null) return;
+    this.switchingHogarId.set(hogarId);
+
+    this.hogaresApi.activarHogar(hogarId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.auth.setToken(res.accessToken);
+          this.hogarActivoId.set(res.hogarId);
+          this.switchingHogarId.set(null);
+          this.loadMembers();
+        },
+        error: () => this.switchingHogarId.set(null),
+      });
+  }
+
+  openEditHogar(hogar: HogarResumenResponse): void {
+    this.editingHogarId.set(hogar.id);
+    this.editHogarNombre.set(hogar.nombre);
+    this.renameHogarError.set('');
+  }
+
+  cancelEditHogar(): void {
+    this.editingHogarId.set(null);
+    this.editHogarNombre.set('');
+    this.renameHogarError.set('');
+  }
+
+  saveEditHogar(): void {
+    const nombre = this.editHogarNombre().trim();
+    const hogarId = this.editingHogarId();
+    if (!nombre || !hogarId || this.savingHogarRename()) return;
+
+    this.savingHogarRename.set(true);
+    this.renameHogarError.set('');
+
+    this.hogaresApi.renombrarHogar(hogarId, nombre)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.hogares.update(list =>
+            list.map(h => h.id === hogarId ? { ...h, nombre: res.nombre } : h)
+          );
+          this.savingHogarRename.set(false);
+          this.editingHogarId.set(null);
+        },
+        error: err => {
+          this.renameHogarError.set(err.error?.message ?? 'No se pudo guardar el nombre.');
+          this.savingHogarRename.set(false);
+        },
+      });
+  }
+
+  openEliminarHogarConfirm(hogar: HogarResumenResponse): void {
+    this.deleteHogarError.set('');
+    this.hogarToDelete.set(hogar);
+  }
+
+  closeEliminarHogarConfirm(): void {
+    this.hogarToDelete.set(null);
+    this.deleteHogarError.set('');
+  }
+
+  confirmarEliminarHogar(): void {
+    const hogar = this.hogarToDelete();
+    if (!hogar || this.deletingHogar()) return;
+    this.deletingHogar.set(true);
+    this.deleteHogarError.set('');
+
+    this.hogaresApi.eliminarHogar(hogar.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.hogarToDelete.set(null);
+          this.deletingHogar.set(false);
+          this.loadHogares();
+        },
+        error: err => {
+          this.deleteHogarError.set(err.error?.detail ?? 'No se pudo eliminar el hogar.');
+          this.deletingHogar.set(false);
+        },
+      });
+  }
+
+  openCrearHogarModal(): void {
+    this.showCrearHogarModal.set(true);
+  }
+
+  closeCrearHogarModal(): void {
+    this.showCrearHogarModal.set(false);
+    this.crearHogarNombre.set('');
+    this.crearHogarState.set('idle');
+    this.crearHogarErrorMsg.set('');
+  }
+
+  submitCrearHogar(): void {
+    const nombre = this.crearHogarNombre().trim();
+    if (!nombre) return;
+    this.crearHogarState.set('loading');
+
+    this.hogaresApi.crearHogar(nombre)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.auth.setToken(res.accessToken);
+          this.hogarActivoId.set(res.hogarId);
+          this.crearHogarNombreCreado.set(res.hogarNombre);
+          this.crearHogarState.set('success');
+          this.loadHogares();
+        },
+        error: err => {
+          this.crearHogarErrorMsg.set(err.error?.message ?? 'Error al crear el hogar.');
+          this.crearHogarState.set('error');
+        },
       });
   }
 
