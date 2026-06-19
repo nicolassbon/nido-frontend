@@ -86,7 +86,7 @@
           </label>
           <nido-select
             formControlName="categoriaId"
-            [options]="categoriasOpts"
+            [options]="categoriasOpts()"
             placeholder="Seleccionar categoría"
             [hasError]="form.controls.categoriaId.invalid && form.controls.categoriaId.touched" />
           @if (form.controls.categoriaId.invalid && form.controls.categoriaId.touched) {
@@ -120,7 +120,7 @@
           <div class="flex-1 min-w-[160px]">
             <nido-select
               formControlName="unidadMedida"
-              [options]="unidadesOpts"
+              [options]="unidadesOpts()"
               placeholder="Unidad de medida"
               [hasError]="form.controls.unidadMedida.invalid && form.controls.unidadMedida.touched" />
           </div>
@@ -139,15 +139,15 @@
           ¿Dónde lo guardás? <span class="text-nido-red">*</span>
         </label>
         <div class="flex gap-2">
-          @for (loc of ubicaciones; track loc) {
+          @for (loc of ubicaciones(); track loc.id) {
             <button type="button"
               class="flex-1 flex flex-col items-center gap-1.5 py-3 px-2 rounded-[10px] border-[1.5px] border-solid text-[0.8rem] font-medium cursor-pointer transition-all duration-150"
-              [style.background]="form.controls.ubicacion.value === loc ? getLocationColor(loc) : '#fff'"
-              [style.border-color]="form.controls.ubicacion.value === loc ? getLocationColor(loc) : '#d8c6b2'"
-              [style.color]="form.controls.ubicacion.value === loc ? '#fff' : '#927357'"
-              (click)="form.patchValue({ ubicacion: loc })">
+              [style.background]="form.controls.ubicacion.value === loc.nombre ? getLocationColor(loc) : '#fff'"
+              [style.border-color]="form.controls.ubicacion.value === loc.nombre ? getLocationColor(loc) : '#d8c6b2'"
+              [style.color]="form.controls.ubicacion.value === loc.nombre ? '#fff' : '#927357'"
+              (click)="form.patchValue({ ubicacion: loc.nombre })">
               <lucide-icon [name]="getLocationIcon(loc)" [size]="16" />
-              {{ loc }}
+              {{ loc.nombre }}
             </button>
           }
         </div>

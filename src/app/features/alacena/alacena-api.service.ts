@@ -26,6 +26,7 @@ export type StockMovementMotivo = DeleteStockMotivo | 'cocinado';
 
 export interface CreateStockItemRequest {
   nombre:              string;
+  categoriaId?:        string | null;
   codigoBarras:        string | null;
   imagen:              string | null;
   ubicacion:           string;
