@@ -24,6 +24,11 @@
             class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-nido-cream/60 no-underline text-[0.8125rem] transition-colors duration-150 hover:bg-nido-green hover:text-nido-cream">
             <lucide-icon [img]="icons[item.icon]" [size]="18" class="shrink-0" />
             <span>{{ item.label }}</span>
+            @if (item.icon === 'bell' && unreadNotificationsCount() > 0) {
+              <span class="ml-auto bg-nido-red text-white text-[0.7rem] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center text-center">
+                {{ unreadNotificationsCount() }}
+              </span>
+            }
           </a>
         }
       </li>

@@ -56,6 +56,8 @@ describe('AuthService', () => {
         usuarioId: 'user-123',
         hogarId: 'hogar-123',
         accessToken: 'mock-jwt-token',
+        message: 'Registration completed.',
+        isSilentSuccess: false,
       };
 
       service.register(mockRequest).subscribe((res) => {
@@ -93,7 +95,25 @@ describe('AuthService', () => {
       expect(req.request.body).toBeInstanceOf(FormData);
       expect(req.request.body.get('foto')).toBe(foto);
       expect((req.request.body.get('foto') as File).name).toBe('avatar.webp');
-      req.flush({ usuarioId: 'user-123', hogarId: 'hogar-123', accessToken: 'mock-jwt-token' });
+      req.flush({ usuarioId: 'user-123', hogarId: 'hogar-123', accessToken: 'mock-jwt-token', message: 'Registration completed.', isSilentSuccess: false });
+    });
+
+    it('should not store a token when register returns silent success', () => {
+      const mockRequest: RegisterRequest = {
+        nombre: 'Test User',
+        email: 'test@example.com',
+        password: 'Password123!',
+        sexo: 'Masculino',
+        foto: null,
+      };
+
+      service.register(mockRequest).subscribe((res) => {
+        expect(res.isSilentSuccess).toBe(true);
+        expect(service.getToken()).toBeNull();
+      });
+
+      const req = httpMock.expectOne(`${environment.apiBaseUrl}/auth/register`);
+      req.flush({ usuarioId: null, hogarId: null, accessToken: null, message: 'Generic response.', isSilentSuccess: true });
     });
   });
 

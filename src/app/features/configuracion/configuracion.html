@@ -82,6 +82,42 @@
               </span>
             }
           </div>
+
+          <!-- Web Push Notifications Toggle -->
+          <div class="border-t border-nido-border/30 pt-4 flex flex-col gap-3">
+            <div class="flex flex-col gap-1.5">
+              <span class="text-[0.9375rem] font-semibold text-nido-green-dark leading-tight">
+                Notificaciones en segundo plano
+              </span>
+              <p class="text-xs text-nido-brown opacity-95 leading-relaxed">
+                Permite recibir alertas de stock bajo, vencimiento y aviso de tareas asignadas incluso si el navegador está cerrado.
+              </p>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <button
+                type="button"
+                (click)="toggleWebPushNotifications()"
+                [disabled]="isWebPushLoading()"
+                [class]="isWebPushEnabled() ? 'bg-nido-green text-white hover:bg-nido-green-dark' : 'bg-transparent text-nido-brown border border-nido-border hover:bg-nido-cream'"
+                class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[0.875rem] font-bold cursor-pointer transition-all duration-150 active:scale-[0.98] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                @if (isWebPushLoading()) {
+                  <div class="w-4 h-4 rounded-full border-2 border-solid border-transparent border-t-current animate-spin"></div>
+                  <span>Procesando...</span>
+                } @else {
+                  <lucide-icon [name]="isWebPushEnabled() ? 'shield-check' : 'bell'" [size]="16" />
+                  <span>{{ isWebPushEnabled() ? 'Notificaciones activadas' : 'Activar en este dispositivo' }}</span>
+                }
+              </button>
+
+              @if (webPushError()) {
+                <span class="text-[0.8125rem] text-nido-red font-semibold flex items-center gap-1.5">
+                  <lucide-icon name="alert-circle" [size]="14" />
+                  {{ webPushError() }}
+                </span>
+              }
+            </div>
+          </div>
         </div>
       }
     </section>
@@ -370,15 +406,12 @@
         <ul class="list-none flex flex-col gap-2.5 mb-6">
           @for (miembro of members(); track miembro.usuarioId; let i = $index) {
             <li class="flex items-center gap-3.5 py-2.5 border-b border-nido-border/30 last:border-0">
-              @if (miembro.fotoUrl) {
-                <img [src]="miembro.fotoUrl" [alt]="miembro.nombre"
-                     class="w-10 h-10 rounded-full object-cover shrink-0 shadow-xs border border-nido-border/50" />
-              } @else {
-                <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white text-[0.875rem] font-bold shadow-xs border border-white/20"
-                     [style.background]="memberColor(i)">
-                  {{ memberInitial(miembro.nombre) }}
-                </div>
-              }
+              <app-avatar
+                [nombre]="miembro.nombre"
+                [fotoUrl]="miembro.fotoUrl"
+                sizeClass="w-10 h-10"
+                fontSizeClass="text-sm"
+              />
               <div class="flex-1 min-w-0">
                 <p class="text-[0.875rem] font-semibold text-nido-green-dark truncate m-0 flex items-center gap-1.5">
                   {{ miembro.nombre }}

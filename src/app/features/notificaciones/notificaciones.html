@@ -1,0 +1,141 @@
+<div class="w-full p-4 sm:p-6 flex flex-col gap-6">
+
+  <!-- Banner -->
+  <section class="relative overflow-hidden rounded-[14px] px-8 py-7 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
+    <div class="absolute inset-0 bg-[url('/images/banners/home.png')] bg-center bg-cover"></div>
+    
+    <div class="relative z-10">
+      <h1 class="text-nido-cream text-[1.6rem] font-bold font-title">
+        Notificaciones
+      </h1>
+      <p class="text-nido-cream/70 text-sm mt-0.5 font-sans">
+        Mantente al tanto de lo importante en tu hogar
+      </p>
+    </div>
+
+    <div class="relative z-10" *ngIf="countNoLeidas() > 0">
+      <button
+        class="flex items-center gap-2 bg-[rgba(31,58,58,0.65)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition hover:bg-[rgba(31,58,58,0.85)]"
+        (click)="marcarTodasLeidas()">
+        <lucide-icon name="check" [img]="icons.Check" [size]="15" />
+        Marcar todas como leídas
+      </button>
+    </div>
+  </section>
+
+  <!-- Toolbar / Filtros -->
+  <div class="flex items-center justify-between gap-3 flex-wrap max-sm:flex-col max-sm:items-stretch">
+    <!-- Info -->
+    <span class="text-[0.875rem] text-nido-brown font-semibold font-sans">
+      @if (countNoLeidas() > 0) {
+        Tenés {{ countNoLeidas() }} {{ countNoLeidas() === 1 ? 'notificación pendiente' : 'notificaciones pendientes' }}
+      } @else {
+        No tenés notificaciones pendientes
+      }
+    </span>
+
+    <!-- Filtro -->
+    <div class="relative z-20">
+      <button
+        class="flex items-center gap-2 bg-white/[0.51] border-[1.5px] border-solid border-nido-border text-nido-green-dark px-4 py-2.5 rounded-[10px] text-[0.875rem] font-medium cursor-pointer transition hover:border-nido-gold"
+        (click)="toggleFiltros()">
+        <span class="font-sans">Filtrar: {{ filtroActual() === 'todas' ? 'Todas' : 'No leídas' }}</span>
+        <lucide-icon name="chevron-down" [img]="icons.ChevronDown" [size]="14" />
+      </button>
+
+      @if (mostrarFiltros()) {
+        <div class="absolute right-0 top-[calc(100%+4px)] bg-white border border-nido-border rounded-[8px] shadow-[0_4px_12px_rgba(38,63,48,0.1)] min-w-[130px] overflow-hidden">
+          <button class="w-full text-left px-4 py-2.5 text-[0.825rem] border-none bg-transparent text-nido-green-dark cursor-pointer hover:bg-[#f7f3ef] font-sans" [class.font-bold]="filtroActual() === 'todas'" (click)="setFiltro('todas')">Todas</button>
+          <button class="w-full text-left px-4 py-2.5 text-[0.825rem] border-none bg-transparent text-nido-green-dark cursor-pointer hover:bg-[#f7f3ef] font-sans" [class.font-bold]="filtroActual() === 'no-leidas'" (click)="setFiltro('no-leidas')">No leídas</button>
+        </div>
+      }
+    </div>
+  </div>
+
+  @if (mostrarFiltros()) {
+    <div class="fixed inset-0 z-10 bg-transparent" (click)="toggleFiltros()"></div>
+  }
+
+  <!-- Contenido Principal -->
+  <main class="w-full flex flex-col gap-4">
+    @if (loading()) {
+      <div class="py-16 text-center text-nido-brown font-sans">
+        Cargando notificaciones...
+      </div>
+    } @else if (notificacionesFiltradas().length === 0) {
+      <div class="flex flex-col items-center justify-center gap-2 py-16 px-8 text-nido-brown text-center font-sans">
+        <lucide-icon name="bell" [img]="icons.Bell" [size]="48" class="text-nido-muted" />
+        <p class="text-[0.9rem] font-medium">
+          Sin notificaciones.
+        </p>
+        <span class="text-[0.8125rem] text-nido-muted">
+          No tenés notificaciones para mostrar aquí.
+        </span>
+      </div>
+    } @else {
+      <div class="flex flex-col gap-3">
+        @for (n of notificacionesFiltradas(); track n.id) {
+          <article
+            class="rounded-[14px] border border-solid border-[rgba(180,139,106,0.15)] p-4 flex items-center gap-4 shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition duration-[180ms] hover:-translate-y-[2px] hover:shadow-[0_6px_16px_rgba(38,63,48,0.08)] hover:opacity-100 cursor-pointer"
+            [class.border-l-4]="!n.leida"
+            [class.border-l-nido-gold]="!n.leida"
+            [class.bg-white]="!n.leida"
+            [class.bg-white/60]="n.leida"
+            [class.opacity-70]="n.leida"
+            (click)="verRecurso(n)">
+            
+            <!-- Icono círculo -->
+            <div [className]="'w-11 h-11 rounded-full flex items-center justify-center shrink-0 ' + getIconBgClass(n.tipo, n.mensaje)">
+              <lucide-icon name="bell" [img]="getIconName(n.tipo, n.mensaje)" [size]="18" />
+            </div>
+ 
+            <!-- Contenido textual -->
+            <div class="flex-1 min-w-0 flex flex-col gap-0.5 font-sans">
+              <h3 class="text-[0.95rem] font-semibold text-nido-green-dark leading-snug font-title">
+                {{ getCategoriaTitle(n.tipo, n.mensaje) }}
+              </h3>
+              <p class="text-[0.875rem] text-nido-muted truncate">
+                {{ n.mensaje }}
+              </p>
+              <span class="text-[0.725rem] text-nido-muted/80">
+                {{ formatFecha(n.createdAt) }}
+              </span>
+            </div>
+ 
+            <!-- Acciones -->
+            <div class="flex items-center gap-3 shrink-0">
+              @if (!n.leida) {
+                <button
+                  class="w-8 h-8 rounded-full border border-solid border-nido-border flex items-center justify-center bg-white text-nido-muted hover:border-nido-gold hover:text-nido-gold hover:bg-[#f7f3ef] transition duration-150 cursor-pointer"
+                  (click)="marcarComoLeida(n.id, $event)"
+                  title="Marcar como leída">
+                  <lucide-icon name="check" [img]="icons.Check" [size]="14" />
+                </button>
+              }
+              <button
+                class="w-8 h-8 rounded-full border border-solid border-nido-border flex items-center justify-center bg-white text-nido-muted hover:border-nido-red hover:text-nido-red hover:bg-red-50 transition duration-150 cursor-pointer"
+                (click)="eliminar(n.id, $event)"
+                title="Eliminar">
+                <lucide-icon name="trash-2" [img]="icons.Trash2" [size]="14" />
+              </button>
+ 
+              @if (n.referenciaTipo === 'tarea') {
+                <button
+                  class="bg-nido-green-dark text-white text-[0.825rem] font-semibold px-5 py-2 rounded-[20px] transition hover:opacity-90 max-sm:px-3 max-sm:text-[0.78rem] cursor-pointer"
+                  (click)="$event.stopPropagation(); verRecurso(n)">
+                  Ver Tareas
+                </button>
+              } @else if (n.referenciaTipo === 'alacena') {
+                <button
+                  class="bg-nido-green-dark text-white text-[0.825rem] font-semibold px-5 py-2 rounded-[20px] transition hover:opacity-90 max-sm:px-3 max-sm:text-[0.78rem] cursor-pointer"
+                  (click)="$event.stopPropagation(); verRecurso(n)">
+                  Ver alacena
+                </button>
+              }
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </main>
+</div>

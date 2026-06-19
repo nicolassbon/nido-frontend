@@ -5,10 +5,11 @@ import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { PerfilApiService } from '../perfil/perfil-api.service';
 import { validatePhotoFile } from '../../shared/validators/photo';
+import { Avatar } from '../../shared/ui/avatar/avatar';
 
 @Component({
   selector: 'app-editar-perfil',
-  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule, Avatar],
   templateUrl: './editar-perfil.html',
   styleUrl: './editar-perfil.scss',
 })
@@ -147,10 +148,4 @@ export class EditarPerfil implements OnInit {
     }
   }
 
-  protected onImgError(event: Event): void {
-    const img = event.target as HTMLImageElement;
-    if (!img.src.includes('/images/default-avatar.png')) {
-      img.src = '/images/default-avatar.png';
-    }
-  }
 }

@@ -1,6 +1,7 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { utcOffsetInterceptor } from './core/http/utc-offset.interceptor';
 import { provideRouter } from '@angular/router';
 import {
   LUCIDE_ICONS,
@@ -26,8 +27,11 @@ import {
   ClipboardList,
   Info,
   Search,
+  History,
+  Filter,
   Loader,
   Clock,
+  RefreshCw,
   Flame,
   Star,
   Shuffle,
@@ -59,6 +63,7 @@ import {
   SearchX,
   CalendarClock,
   CalendarCheck,
+  CalendarX,
   PackageOpen,
   LockOpen,
   Minus,
@@ -106,14 +111,21 @@ import {
   AirVent,
   Square,
   PlugZap,
+  FileText,
+  Paperclip,
+  TrendingDown,
+  PiggyBank,
+  AlarmClock,
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
+import { provideServiceWorker } from '@angular/service-worker';
+import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor, utcOffsetInterceptor])),
     provideRouter(routes),
     {
       provide: LUCIDE_ICONS,
@@ -140,8 +152,11 @@ export const appConfig: ApplicationConfig = {
         ClipboardList,
         Info,
         Search,
+        History,
+        Filter,
         Loader,
         Clock,
+        RefreshCw,
         Flame,
         Star,
         Shuffle,
@@ -172,6 +187,7 @@ export const appConfig: ApplicationConfig = {
         SearchX,
         CalendarClock,
         CalendarCheck,
+        CalendarX,
         PackageOpen,
         LockOpen,
         Minus,
@@ -216,7 +232,16 @@ export const appConfig: ApplicationConfig = {
         AirVent,
         Square,
         PlugZap,
+        FileText,
+        Paperclip,
+        TrendingDown,
+        PiggyBank,
+        AlarmClock,
       }),
     },
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: environment.production,
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
   ],
 };

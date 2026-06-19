@@ -11,6 +11,7 @@ export interface Electrodomestico {
   estado: string | null;
   imagenUrl: string | null;
   marca: string | null;
+  catalogoId?: string | null;
 }
 
 export interface CrearElectrodomesticoRequest {
@@ -32,6 +33,8 @@ interface ApiElectrodomestico {
   marca: string | null;
   ImagenUrl?: string | null;
   imagenUrl?: string | null;
+  catalogoId?: string | null;
+  CatalogoId?: string | null;
 }
 
 export interface ElectrodomesticoCatalogo {
@@ -61,6 +64,7 @@ export class ElectrodomesticosService {
       estado: item.estado,
       marca: item.marca,
       imagenUrl: item.imagenUrl ?? item.ImagenUrl ?? null,
+      catalogoId: item.catalogoId ?? item.CatalogoId ?? null,
     };
   }
 

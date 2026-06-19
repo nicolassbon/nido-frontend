@@ -6,6 +6,7 @@ import { switchMap, timer } from 'rxjs';
 import { HogaresApiService } from '../hogares-api.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { OnboardingApiService } from '../../onboarding/onboarding-api.service';
+import { Avatar } from '../../../shared/ui/avatar/avatar';
 
 const MEMBER_COLORS = ['#263F30', '#B48B6A', '#927357', '#5C7A6E', '#8B4513', '#4A7C59'];
 
@@ -21,7 +22,7 @@ interface FamilyMember {
 
 @Component({
   selector: 'app-create-household',
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, Avatar],
   templateUrl: './create-household.html',
   styleUrl: './create-household.scss',
 })
@@ -50,11 +51,26 @@ export class CreateHousehold {
   readonly openMenuId = signal<string | null>(null);
 
   readonly showInviteModal = signal(false);
+  readonly showLeaveModal  = signal(false);
   readonly inviteEmail     = signal('');
   readonly inviteState     = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
   readonly inviteErrorMsg  = signal('');
   readonly saving          = signal(false);
   readonly saveErrorMsg    = signal('');
+
+  onLogoClick(event: Event): void {
+    event.stopPropagation();
+    this.showLeaveModal.set(true);
+  }
+
+  closeLeaveModal(): void {
+    this.showLeaveModal.set(false);
+  }
+
+  confirmLeave(): void {
+    this.showLeaveModal.set(false);
+    this.router.navigate(['/']);
+  }
 
   constructor() {
     const currentUserId = this.auth.getUserId();

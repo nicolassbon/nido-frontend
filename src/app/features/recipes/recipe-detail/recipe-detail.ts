@@ -10,6 +10,12 @@ import { ProductService } from '../../../core/servicios/agregar-producto.service
 import { ListaComprasService } from '../../lista-compras/lista-compras.service';
 import { Electrodomestico, ElectrodomesticosService } from '../../electrodomesticos/services/electrodomesticos.service';
 
+const SOURCE_LABELS: Record<string, string> = {
+  spoonacular: 'Spoonacular',
+  manual: 'Nido',
+  nido: 'Nido',
+};
+
 @Component({
   selector: 'app-recipe-detail',
   standalone: true,
@@ -169,16 +175,18 @@ export class RecipeDetail {
       nombre:   i.productoNombre || i.nombre,
       cantidad: i.cantidad,
       unidad:   i.unidad,
-      checked:  false,
     }));
 
-    // Guardar en el servicio (persiste en localStorage)
-    this.listaService.addToLista(receta.nombre, items);
+    this.listaService.addGroupToLista(receta.nombre, items).subscribe({
+      next: () => {
+        this.router.navigate(['/lista-compras']);
+      },
+      error: () => {
+        this.errorMessage.set('No se pudo agregar los faltantes a la lista de compras.');
+      },
+    });
 
     // Pasar también por router state para garantizar el primer render
-    this.router.navigate(['/lista-compras'], {
-      state: { recetaNombre: receta.nombre, items },
-    });
   }
 
   protected goBack(): void {
@@ -205,6 +213,13 @@ export class RecipeDetail {
     if (normalized === 'facil')   return 'Facil';
     if (normalized === 'dificil') return 'Dificil';
     return value?.trim() || '-';
+  }
+
+  protected nutritionSourceLabel(fuenteId: string | null | undefined): string | null {
+    const sourceKey = fuenteId?.trim().split('-')[0]?.toLowerCase();
+    if (!sourceKey) return null;
+
+    return SOURCE_LABELS[sourceKey] ?? this.toTitleCase(sourceKey);
   }
 
   protected formatApplianceName(value: string | null | undefined): string {
@@ -248,6 +263,13 @@ export class RecipeDetail {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, ' ')
       .trim();
+  }
+
+  private toTitleCase(value: string): string {
+    return value
+      .replace(/[_\s]+/g, ' ')
+      .trim()
+      .replace(/\b\w/g, letter => letter.toUpperCase());
   }
 
   private resolveImageUrl(url: string | null): string | null {

@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { forkJoin } from 'rxjs';
 import {
   OnboardingApiService,
   RestriccionCatalogo,
@@ -53,16 +54,69 @@ export class WellnessStep implements OnInit {
 
   // ── Estado guardado ─────────────────────────────────────────
   readonly saveState = signal<'idle' | 'saving' | 'error'>('idle');
+  readonly showLeaveModal = signal(false);
+
+  onLogoClick(event: Event): void {
+    event.stopPropagation();
+    this.showLeaveModal.set(true);
+  }
+
+  closeLeaveModal(): void {
+    this.showLeaveModal.set(false);
+  }
+
+  confirmLeave(): void {
+    this.showLeaveModal.set(false);
+    this.router.navigate(['/']);
+  }
+
+  back(): void {
+    this.router.navigate(['/equipamiento']);
+  }
 
   ngOnInit(): void {
-    this.onboardingApi.getPreferenciasAlimentarias().subscribe({
-      next: data => this.preferencias.set(data),
-    });
-    this.onboardingApi.getAlergias().subscribe({
-      next: data => this.allAlergias.set(data),
-    });
-    this.onboardingApi.getMetas().subscribe({
-      next: data => this.metas.set(data),
+    forkJoin({
+      preferencias: this.onboardingApi.getPreferenciasAlimentarias(),
+      alergias: this.onboardingApi.getAlergias(),
+      metas: this.onboardingApi.getMetas()
+    }).subscribe({
+      next: ({ preferencias, alergias, metas }) => {
+        this.preferencias.set(preferencias);
+        this.allAlergias.set(alergias);
+        this.metas.set(metas);
+
+        this.onboardingApi.getWellness().subscribe({
+          next: ({ restriccionIds, metaIds }) => {
+            const prefSet = new Set<string>();
+            const allergyList: RestriccionCatalogo[] = [];
+            const metaSet = new Set<string>();
+
+            const prefCatalogIds = new Set(preferencias.map(p => p.id));
+            const allergyMap = new Map(alergias.map(a => [a.id, a]));
+
+            restriccionIds.forEach(id => {
+              if (prefCatalogIds.has(id)) {
+                prefSet.add(id);
+              } else if (allergyMap.has(id)) {
+                allergyList.push(allergyMap.get(id)!);
+              }
+            });
+
+            metaIds.forEach(id => {
+              metaSet.add(id);
+            });
+
+            this.selectedPreferenciaIds.set(prefSet);
+            this.selectedAlergias.set(allergyList);
+            this.selectedMetaIds.set(metaSet);
+          },
+          error: () => {
+            this.selectedPreferenciaIds.set(new Set());
+            this.selectedAlergias.set([]);
+            this.selectedMetaIds.set(new Set());
+          },
+        });
+      }
     });
   }
 

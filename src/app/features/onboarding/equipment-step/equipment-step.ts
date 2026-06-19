@@ -25,6 +25,7 @@ export class EquipmentStep implements OnInit {
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly error = signal('');
+  readonly showLeaveModal = signal(false);
 
   readonly steps = [
     { number: 1, label: 'Tu cuenta', completed: true, active: false },
@@ -33,11 +34,44 @@ export class EquipmentStep implements OnInit {
     { number: 4, label: 'Preferencias', completed: false, active: false },
   ];
 
+  onLogoClick(event: Event): void {
+    event.stopPropagation();
+    this.showLeaveModal.set(true);
+  }
+
+  closeLeaveModal(): void {
+    this.showLeaveModal.set(false);
+  }
+
+  confirmLeave(): void {
+    this.showLeaveModal.set(false);
+    this.router.navigate(['/']);
+  }
+
+  back(): void {
+    this.router.navigate(['/crear-hogar']);
+  }
+
   ngOnInit(): void {
     this.electrodomesticos.getCatalogo().subscribe({
       next: data => {
         this.catalogo.set(data);
-        this.loading.set(false);
+
+        this.electrodomesticos.getAll().subscribe({
+          next: userEquipments => {
+            const savedIds = new Set<string>();
+            userEquipments.forEach(eq => {
+              if (eq.catalogoId) {
+                savedIds.add(eq.catalogoId);
+              }
+            });
+            this.selectedIds.set(savedIds);
+            this.loading.set(false);
+          },
+          error: () => {
+            this.loading.set(false);
+          }
+        });
       },
       error: () => {
         this.error.set('No pudimos cargar el catálogo.');
@@ -95,46 +129,46 @@ export class EquipmentStep implements OnInit {
     });
   }
 
- iconName(item: ElectrodomesticoCatalogo): string {
-  const icons: Record<string, string> = {
-    blender: 'blend',
-    microwave: 'microwave',
-    'cooking-pot': 'cooking-pot',
-    blend: 'blend',
-    cog: 'cog',
-    'air-vent': 'air-vent',
-    coffee: 'coffee',
-    square: 'square',
-    'pressure-cooker': 'cooking-pot',
-    grill: 'flame',
-  };
+  iconName(item: ElectrodomesticoCatalogo): string {
+    const icons: Record<string, string> = {
+      blender: 'blend',
+      microwave: 'microwave',
+      'cooking-pot': 'cooking-pot',
+      blend: 'blend',
+      cog: 'cog',
+      'air-vent': 'air-vent',
+      coffee: 'coffee',
+      square: 'square',
+      'pressure-cooker': 'cooking-pot',
+      grill: 'flame',
+    };
 
-  return icons[item.icono ?? ''] ?? 'plug-zap';
-}
-
-cardClass(selected: boolean): string {
-  const base = 'relative flex flex-col items-center justify-center gap-2 rounded-xl border-[1.5px] min-h-[110px] p-4 transition';
-
-  return selected
-    ? `${base} bg-nido-green-dark text-nido-cream border-nido-green-dark shadow-[0_6px_18px_rgba(38,63,48,0.18)]`
-    : `${base} bg-white/[0.51] text-nido-green-dark border-nido-border hover:border-nido-green hover:bg-[rgba(62,94,74,0.04)]`;
-}
-
-iconClass(selected: boolean): string {
-  return selected ? 'text-nido-cream' : 'text-nido-green-dark';
-}
-
-stepCircleClass(step: { completed: boolean; active: boolean }): string {
-  if (step.completed || step.active) {
-    return 'w-8 h-8 rounded-full bg-nido-cream flex items-center justify-center shrink-0';
+    return icons[item.icono ?? ''] ?? 'plug-zap';
   }
 
-  return 'w-8 h-8 rounded-full border-2 border-solid border-[rgba(247,241,230,0.35)] flex items-center justify-center shrink-0';
-}
+  cardClass(selected: boolean): string {
+    const base = 'relative flex flex-col items-center justify-center gap-2 rounded-xl border-[1.5px] min-h-[110px] p-4 transition';
 
-stepLabelClass(step: { active: boolean }): string {
-  return step.active
-    ? 'hidden text-[0.65rem] whitespace-nowrap text-nido-cream font-semibold sm:block'
-    : 'hidden text-[0.65rem] whitespace-nowrap text-[rgba(247,241,230,0.45)] sm:block';
-}
+    return selected
+      ? `${base} bg-nido-green-dark text-nido-cream border-nido-green-dark shadow-[0_6px_18px_rgba(38,63,48,0.18)]`
+      : `${base} bg-white/[0.51] text-nido-green-dark border-nido-border hover:border-nido-green hover:bg-[rgba(62,94,74,0.04)]`;
+  }
+
+  iconClass(selected: boolean): string {
+    return selected ? 'text-nido-cream' : 'text-nido-green-dark';
+  }
+
+  stepCircleClass(step: { completed: boolean; active: boolean }): string {
+    if (step.completed || step.active) {
+      return 'w-8 h-8 rounded-full bg-nido-cream flex items-center justify-center shrink-0';
+    }
+
+    return 'w-8 h-8 rounded-full border-2 border-solid border-[rgba(247,241,230,0.35)] flex items-center justify-center shrink-0';
+  }
+
+  stepLabelClass(step: { active: boolean }): string {
+    return step.active
+      ? 'hidden text-[0.65rem] whitespace-nowrap text-nido-cream font-semibold sm:block'
+      : 'hidden text-[0.65rem] whitespace-nowrap text-[rgba(247,241,230,0.45)] sm:block';
+  }
 }

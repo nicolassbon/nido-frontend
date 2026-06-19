@@ -20,6 +20,9 @@ import { ForgotPassword } from './features/auth/forgot-password/forgot-password'
 import { ResetPassword } from './features/auth/reset-password/reset-password';
 import { Configuracion } from './features/configuracion/configuracion';
 import { Landing } from './features/landing/landing';
+import { Finanzas } from './features/finanzas/finanzas/finanzas';
+import { Tareas } from './features/tareas/tareas';
+import { Notificaciones } from './features/notificaciones/notificaciones';
 
 export const routes: Routes = [
   { path: '', component: Landing, pathMatch: 'full', canActivate: [guestGuard] },
@@ -47,6 +50,9 @@ export const routes: Routes = [
       { path: 'perfil', component: PerfilComponent },
       { path: 'configuracion', component: Configuracion },
       { path: 'agregar-producto', component: AgregarProducto },
+      { path: 'finanzas', component: Finanzas },
+      { path: 'tareas', component: Tareas },
+      { path: 'notificaciones', component: Notificaciones },
     ],
   },
   { path: '**', redirectTo: '' },

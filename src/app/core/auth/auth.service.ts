@@ -34,9 +34,11 @@ export interface RegisterRequest {
 }
 
 export interface RegisterResponse {
-  usuarioId: string;
-  hogarId: string;
-  accessToken: string;
+  usuarioId: string | null;
+  hogarId: string | null;
+  accessToken: string | null;
+  message: string;
+  isSilentSuccess: boolean;
 }
 
 export interface ForgotPasswordRequest {
@@ -146,7 +148,11 @@ export class AuthService {
 
     return this.http
       .post<RegisterResponse>(`${this.base}/auth/register`, formData, { withCredentials: true })
-      .pipe(tap(res => this.setToken(res.accessToken)));
+      .pipe(tap((res) => {
+        if (res.accessToken) {
+          this.setToken(res.accessToken);
+        }
+      }));
   }
 
   forgotPassword(email: string): Observable<{ message: string }> {

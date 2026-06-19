@@ -164,6 +164,50 @@
           placeholder="Seleccionar fecha" />
       </div>
 
+      @if (!isEditMode) {
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[0.8125rem] font-semibold text-nido-green-dark">
+            Imagen del producto
+            <span class="text-[0.725rem] font-normal text-nido-muted ml-1">opcional</span>
+          </label>
+          <div
+            class="border-[1.5px] border-dashed border-nido-border rounded-lg px-4 py-3 flex items-center justify-between gap-3 cursor-pointer hover:border-nido-green hover:bg-[rgba(62,94,74,0.03)] transition-all duration-150"
+            (click)="imageInput.click()">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nido-cream text-nido-green-dark">
+                <lucide-icon name="camera" [size]="16" />
+              </span>
+              <div class="min-w-0">
+                <p class="m-0 text-[0.8125rem] font-semibold text-nido-green-dark truncate">
+                  {{ selectedImage()?.name ?? 'Seleccionar imagen' }}
+                </p>
+                <p class="m-0 text-[0.72rem] text-nido-muted">
+                  JPG, PNG o WebP, hasta 5 MB.
+                </p>
+              </div>
+            </div>
+            @if (selectedImage()) {
+              <button
+                type="button"
+                class="border-none bg-transparent text-nido-brown hover:text-nido-green-dark cursor-pointer p-1"
+                (click)="$event.stopPropagation(); removeSelectedImage()"
+                title="Quitar imagen seleccionada">
+                <lucide-icon name="x" [size]="16" />
+              </button>
+            }
+            <input
+              #imageInput
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              class="hidden"
+              (change)="onImageSelected($event)" />
+          </div>
+          @if (imageError()) {
+            <p class="text-[0.775rem] text-nido-red">{{ imageError() }}</p>
+          }
+        </div>
+      }
+
       <!-- ¿Ya está abierto? -->
       <div class="flex flex-col gap-1.5">
         <div class="flex items-center justify-between gap-2">
@@ -217,6 +261,13 @@
         <div class="flex items-center gap-2 rounded-lg border border-[rgba(180,76,60,0.25)] bg-[rgba(180,76,60,0.06)] px-3 py-2 text-[0.8125rem] font-medium text-nido-red">
           <lucide-icon name="alert-circle" [size]="15" />
           {{ errorMessage }}
+        </div>
+      }
+
+      @if (warningMessage) {
+        <div class="flex items-center gap-2 rounded-lg border border-[rgba(146,115,87,0.28)] bg-[rgba(146,115,87,0.09)] px-3 py-2 text-[0.8125rem] font-medium text-nido-brown">
+          <lucide-icon name="alert-circle" [size]="15" />
+          {{ warningMessage }}
         </div>
       }
 

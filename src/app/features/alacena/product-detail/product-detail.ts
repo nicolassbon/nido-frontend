@@ -2,15 +2,49 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { AgregarProducto } from '../../agregar-producto/agregar-producto';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { forkJoin } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ProductManualResponse, ProductService } from '../../../core/servicios/agregar-producto.service';
 import { ListaComprasService } from '../../lista-compras/lista-compras.service';
-import { AlacenaApiService, StockItemResponse } from '../alacena-api.service';
+import { AlacenaApiService, DeleteStockMotivo, StockItemResponse } from '../alacena-api.service';
 
-const SHOPPING_GROUP = 'Productos de alacena';
+const SHOPPING_GROUP = 'Productos agregados';
+
+interface DeleteConfirmation {
+  title:        string;
+  message:      string;
+  confirmLabel: string;
+}
+
+interface DeleteMotivoOption {
+  value:       DeleteStockMotivo;
+  label:       string;
+  description: string;
+  icon:        string;
+}
+
+const DELETE_MOTIVO_OPTIONS: Record<DeleteStockMotivo, DeleteMotivoOption> = {
+  consumido: {
+    value: 'consumido',
+    label: 'Consumido',
+    description: 'Lo usaron o se terminó.',
+    icon: 'check-circle',
+  },
+  descartado: {
+    value: 'descartado',
+    label: 'Descartado',
+    description: 'Lo tiraron o ya no sirve.',
+    icon: 'trash-2',
+  },
+  vencido: {
+    value: 'vencido',
+    label: 'Vencido',
+    description: 'Salió por fecha vencida.',
+    icon: 'alert-triangle',
+  },
+};
 
 function resolveImageUrl(imageUrl: string | null | undefined): string {
   if (!imageUrl) return '';
@@ -80,7 +114,7 @@ function clamp(value: number, min: number, max: number): number {
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, RouterLink, AgregarProducto],
+  imports: [CommonModule, LucideAngularModule, AgregarProducto],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.scss',
 })
@@ -99,6 +133,9 @@ export class ProductDetail {
   protected readonly listMessage = signal<string | null>(null);
   protected readonly finishing    = signal(false);
   protected readonly showEditModal = signal(false);
+  protected readonly deleteConfirmation = signal<DeleteConfirmation | null>(null);
+  protected readonly deleteError = signal<string | null>(null);
+  protected readonly deleteMotivo = signal<DeleteStockMotivo>('consumido');
 
   protected readonly imageUrl = computed(() =>
     this.imageFailed()
@@ -109,6 +146,12 @@ export class ProductDetail {
   protected readonly remainingPercent = computed(() =>
     clamp(100 - (this.product()?.porcentajeConsumido ?? 0), 0, 100),
   );
+
+  protected readonly isExpired = computed(() => {
+    const p = this.product();
+    if (!p || !p.fechaVencimiento) return false;
+    return this.daysUntilExpiry(p.fechaVencimiento) < 0;
+  });
 
   protected readonly brand = computed(() => {
     const name = this.product()?.nombre.trim() ?? '';
@@ -213,6 +256,7 @@ export class ProductDetail {
       fechaVencimiento: item.fechaVencimiento,
       estaAbierto: item.estaAbierto,
       porcentajeConsumido: item.porcentajeConsumido,
+      cantidadEnvases: item.cantidadEnvases,
     };
   }
 
@@ -252,35 +296,65 @@ export class ProductDetail {
     const currentGroup = this.listaService.snapshot.find(group => group.recetaNombre === SHOPPING_GROUP);
     const existingItems = currentGroup?.items ?? [];
     const exists = existingItems.some(item => item.nombre.trim().toLowerCase() === product.nombre.trim().toLowerCase());
-    const nextItems = exists
-      ? existingItems
-      : [
-          ...existingItems,
-          {
-            nombre: product.nombre,
-            cantidad: product.cantidad || 1,
-            unidad: this.displayUnit(product.unidadMedida),
-            checked: false,
-          },
-        ];
 
-    this.listaService.addToLista(SHOPPING_GROUP, nextItems);
-    this.listMessage.set(exists ? 'Ya estaba en tu lista.' : 'Agregado a la lista.');
+    if (exists) {
+      this.listMessage.set('Ya estaba en tu lista.');
+      return;
+    }
+
+    this.listaService.addManualItem(product.nombre, product.cantidad || 1, this.displayUnit(product.unidadMedida)).subscribe({
+      next: () => this.listMessage.set('Agregado a la lista.'),
+      error: () => this.listMessage.set('No se pudo agregar a la lista.'),
+    });
   }
 
   protected finishProduct(): void {
     const product = this.product();
-    if (!product || this.finishing()) return;
+    if (!product) return;
+
+    this.deleteError.set(null);
+    this.deleteMotivo.set('consumido');
+    this.deleteConfirmation.set({
+      title: 'Registrar salida de stock',
+      message: `${product.nombre} se va a quitar de tu alacena. Elegi que paso con este producto.`,
+      confirmLabel: 'Confirmar salida',
+    });
+  }
+
+  protected deleteExpiredProduct(): void {
+    const product = this.product();
+    if (!product) return;
+
+    this.deleteError.set(null);
+    this.deleteMotivo.set('vencido');
+    this.deleteConfirmation.set({
+      title: 'Registrar salida de stock',
+      message: `${product.nombre} se va a quitar de tu alacena. Elegi que paso con este producto.`,
+      confirmLabel: 'Confirmar salida',
+    });
+  }
+
+  protected cancelDeleteConfirmation(): void {
+    if (this.finishing()) return;
+    this.deleteConfirmation.set(null);
+    this.deleteError.set(null);
+  }
+
+  protected confirmDeleteProduct(): void {
+    const product = this.product();
+    const pending = this.deleteConfirmation();
+    if (!product || !pending || this.finishing()) return;
 
     this.finishing.set(true);
+    this.deleteError.set(null);
     this.alacenaApi
-      .deleteStock(product.id)
+      .deleteStock(product.id, this.deleteMotivo())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => this.router.navigate(['/alacena']),
         error: () => {
           this.finishing.set(false);
-          this.errorMessage.set('No se pudo marcar como terminado. Intenta de nuevo.');
+          this.deleteError.set('No se pudo completar la accion. Intenta de nuevo.');
         },
       });
   }
@@ -312,6 +386,31 @@ export class ProductDetail {
       month: 'long',
       year: 'numeric',
     }).format(date);
+  }
+
+  protected expiredDays(): number {
+    const p = this.product();
+    if (!p || !p.fechaVencimiento) return 0;
+    const days = this.daysUntilExpiry(p.fechaVencimiento);
+    return days < 0 ? Math.abs(days) : 0;
+  }
+
+  protected expiredText(): string {
+    const days = this.expiredDays();
+    return `Producto vencido hace ${days} dia${days === 1 ? '' : 's'}.`;
+  }
+
+  protected deleteMotivoOptions(): DeleteMotivoOption[] {
+    const base = [DELETE_MOTIVO_OPTIONS.consumido, DELETE_MOTIVO_OPTIONS.descartado];
+    return this.isExpired()
+      ? [DELETE_MOTIVO_OPTIONS.vencido, ...base]
+      : base;
+  }
+
+  protected deleteMotivoButtonClass(value: DeleteStockMotivo): string {
+    return this.deleteMotivo() === value
+      ? 'motivo-option motivo-option--active'
+      : 'motivo-option';
   }
 
   protected consumptionText(product: StockItemResponse): string {

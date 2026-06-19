@@ -1,8 +1,31 @@
 import { TestBed, ComponentFixture } from '@angular/core/testing';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { provideHttpClient } from '@angular/common/http';
+import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
+import {
+  AlarmClock,
+  AlertTriangle,
+  Check,
+  CheckSquare,
+  ChefHat,
+  ChevronDown,
+  Clock,
+  Eye,
+  Flame,
+  LUCIDE_ICONS,
+  LucideIconProvider,
+  Pencil,
+  Search,
+  Shield,
+  ShoppingBasket,
+  Shuffle,
+  SlidersHorizontal,
+  Star,
+  X,
+  Zap,
+} from 'lucide-angular';
 import { Recipes } from './recipes';
 import { RecipesApiService, ApiReceta } from './services/recipes-api.service';
 import { ProductService, ProductManualResponse } from '../../../core/servicios/agregar-producto.service';
@@ -17,11 +40,13 @@ const makeReceta = (
   id: string,
   nombre: string,
   ingredientes: ApiReceta['ingredientes'],
+  overrides: Partial<ApiReceta> = {},
 ): ApiReceta => ({
   id, nombre, ingredientes,
   descripcion: null, tiempoCoccionMin: 30, dificultad: 'Fácil', porciones: 2,
   fuenteId: null, imagenUrl: null, calorias: 200,
   proteinas: null, carbohidratos: null, grasas: null,
+  ...overrides,
 });
 
 const mockRecetaArroz = makeReceta('r1', 'Arroz con leche', [
@@ -43,7 +68,7 @@ const makePantry = (
   stockHogarId, productoId, nombre, cantidad,
   categoriaId: null, categoriaNombre: null, codigoBarras: null, imagenUrl: null,
   ubicacion: 'despensa', unidadMedida: 'gramos', fechaVencimiento: null,
-  estaAbierto: false, porcentajeConsumido: 0,
+  estaAbierto: false, porcentajeConsumido: 0, cantidadEnvases: 1,
 });
 
 const arrozPantry = makePantry('s1', 'p1', 'Arroz');
@@ -86,12 +111,37 @@ describe('Recipes', () => {
       schemas:   [NO_ERRORS_SCHEMA],
       providers: [
         provideHttpClient(),
+        provideRouter([]),
         { provide: RecipesApiService,       useValue: recipesApiMock        },
         { provide: ProductService,          useValue: productSvcMock        },
         { provide: AuthService,             useValue: authServiceMock       },
         { provide: ElectrodomesticosService, useValue: electrodomesticosMock },
         { provide: HogaresApiService,       useValue: hogaresApiMock        },
         { provide: PerfilApiService,        useValue: perfilApiMock         },
+        {
+          provide: LUCIDE_ICONS,
+          multi: true,
+          useValue: new LucideIconProvider({
+            AlarmClock,
+            AlertTriangle,
+            Check,
+            CheckSquare,
+            ChefHat,
+            ChevronDown,
+            Clock,
+            Eye,
+            Flame,
+            Pencil,
+            Search,
+            Shield,
+            ShoppingBasket,
+            Shuffle,
+            SlidersHorizontal,
+            Star,
+            X,
+            Zap,
+          }),
+        },
       ],
     }).compileComponents();
 
@@ -182,6 +232,7 @@ describe('Recipes', () => {
 
   it('buscarPorIngredientes debería cambiar el orden a coincidencia si era default', async () => {
     await setup();
+    component['setSort']('default');
     expect(component['sortBy']()).toBe('default');
 
     component['buscarPorIngredientes']();
@@ -413,5 +464,211 @@ describe('Recipes', () => {
     component['toggleAllergens']();
 
     expect(component['filteredRecipes']()).toHaveLength(0);
+  });
+
+  describe('Filtros de Dificultad', () => {
+    it('deberia filtrar recetas mostrando solo Fácil', async () => {
+      const recetaFacil = { ...makeReceta('r1', 'Receta Fácil', []), dificultad: 'Fácil' };
+      const recetaMedia = { ...makeReceta('r2', 'Receta Media', []), dificultad: 'Media' };
+      const recetaDificil = { ...makeReceta('r3', 'Receta Difícil', []), dificultad: 'Difícil' };
+
+      await setup([recetaFacil, recetaMedia, recetaDificil], []);
+      
+      component['setFilter']('Fácil');
+      
+      const filtered = component['filteredRecipes']();
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0].name).toBe('Receta Fácil');
+      expect(filtered[0].difficulty).toBe('Fácil');
+    });
+
+    it('deberia filtrar recetas mostrando solo Medio', async () => {
+      const recetaFacil = { ...makeReceta('r1', 'Receta Fácil', []), dificultad: 'Fácil' };
+      const recetaMedia = { ...makeReceta('r2', 'Receta Media', []), dificultad: 'Media' };
+      const recetaDificil = { ...makeReceta('r3', 'Receta Difícil', []), dificultad: 'Difícil' };
+
+      await setup([recetaFacil, recetaMedia, recetaDificil], []);
+      
+      component['setFilter']('Medio');
+      
+      const filtered = component['filteredRecipes']();
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0].name).toBe('Receta Media');
+      expect(filtered[0].difficulty).toBe('Medio');
+    });
+
+    it('deberia filtrar recetas mostrando solo Difícil', async () => {
+      const recetaFacil = { ...makeReceta('r1', 'Receta Fácil', []), dificultad: 'Fácil' };
+      const recetaMedia = { ...makeReceta('r2', 'Receta Media', []), dificultad: 'Media' };
+      const recetaDificil = { ...makeReceta('r3', 'Receta Difícil', []), dificultad: 'Difícil' };
+
+      await setup([recetaFacil, recetaMedia, recetaDificil], []);
+      
+      component['setFilter']('Difícil');
+      
+      const filtered = component['filteredRecipes']();
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0].name).toBe('Receta Difícil');
+      expect(filtered[0].difficulty).toBe('Difícil');
+    });
+
+    it('deberia mostrar todas las recetas cuando se selecciona Todos', async () => {
+      const recetaFacil = { ...makeReceta('r1', 'Receta Fácil', []), dificultad: 'Fácil' };
+      const recetaMedia = { ...makeReceta('r2', 'Receta Media', []), dificultad: 'Media' };
+      const recetaDificil = { ...makeReceta('r3', 'Receta Difícil', []), dificultad: 'Difícil' };
+
+      await setup([recetaFacil, recetaMedia, recetaDificil], []);
+      
+      component['setFilter']('Todos');
+      
+      const filtered = component['filteredRecipes']();
+      expect(filtered).toHaveLength(3);
+    });
+  });
+
+  describe('Ordenamiento de Recetas', () => {
+    it('deberia ordenar por urgencia por defecto', async () => {
+      const normal = makeReceta('r1', 'Normal', []);
+      const urgente = makeReceta('r2', 'Urgente', [], {
+        tieneProductosPorVencer: true,
+        fechaVencimientoMasProxima: '2026-06-18',
+        diasHastaVencimiento: 2,
+      });
+
+      await setup([normal, urgente], []);
+
+      expect(component['sortBy']()).toBe('urgencia');
+      expect(component['filteredRecipes']()[0].name).toBe('Urgente');
+    });
+
+    it('deberia desempatar urgentes por menor cantidad de dias hasta vencimiento', async () => {
+      const venceDespues = makeReceta('r1', 'Vence despues', [], {
+        tieneProductosPorVencer: true,
+        fechaVencimientoMasProxima: '2026-06-21',
+        diasHastaVencimiento: 5,
+      });
+      const venceAntes = makeReceta('r2', 'Vence antes', [], {
+        tieneProductosPorVencer: true,
+        fechaVencimientoMasProxima: '2026-06-17',
+        diasHastaVencimiento: 1,
+      });
+
+      await setup([venceDespues, venceAntes], []);
+
+      expect(component['filteredRecipes']().map(recipe => recipe.name)).toEqual(['Vence antes', 'Vence despues']);
+    });
+
+    it('deberia mostrar badge URGENTE en la card', async () => {
+      const urgente = makeReceta('r1', 'Tarta urgente', [], {
+        tieneProductosPorVencer: true,
+        fechaVencimientoMasProxima: '2026-06-17',
+        diasHastaVencimiento: 1,
+        productosPorVencer: [
+          { productoId: 'p1', nombre: 'Leche', fechaVencimiento: '2026-06-17', diasHastaVencimiento: 1 },
+        ],
+      });
+
+      await setup([urgente], []);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.textContent).toContain('URGENTE');
+    });
+
+    it('deberia listar productos por vencer en el hover del badge urgente', async () => {
+      const urgente = makeReceta('r1', 'Panqueques', [], {
+        tieneProductosPorVencer: true,
+        fechaVencimientoMasProxima: '2026-06-18',
+        diasHastaVencimiento: 2,
+        productosPorVencer: [
+          { productoId: 'p1', nombre: 'Leche', fechaVencimiento: '2026-06-18', diasHastaVencimiento: 2 },
+          { productoId: 'p2', nombre: 'Huevos', fechaVencimiento: '2026-06-19', diasHastaVencimiento: 3 },
+        ],
+      });
+
+      await setup([urgente], []);
+      fixture.detectChanges();
+
+      const text = fixture.nativeElement.textContent;
+      expect(text).toContain('Productos por vencer');
+      expect(text).toContain('Leche');
+      expect(text).toContain('Vence en 2 días');
+      expect(text).toContain('Huevos');
+      expect(text).toContain('Vence en 3 días');
+    });
+
+    it('deberia mostrar la opcion Mayor urgencia y actualizar el sort', async () => {
+      await setup([], []);
+
+      expect(component['getSortLabel']()).toBe('Mayor urgencia');
+      component['setSort']('rating');
+      expect(component['getSortLabel']()).toBe('Mejor valoradas');
+      component['setSort']('urgencia');
+      expect(component['getSortLabel']()).toBe('Mayor urgencia');
+    });
+
+    it('deberia ordenar por Mejor valoradas (rating) de forma descendente', async () => {
+      const recetaMala = makeReceta('r1', 'Mala', []);
+      const recetaExcelente = makeReceta('r2', 'Excelente', []);
+      const recetaRegular = makeReceta('r3', 'Regular', []);
+      
+      await setup([recetaMala, recetaExcelente, recetaRegular], []);
+      
+      const mapped = component['allRecipes']();
+      mapped[0].rating = 2.0;
+      mapped[1].rating = 5.0;
+      mapped[2].rating = 3.5;
+      
+      component['allRecipes'].set([...mapped]);
+      
+      component['setSort']('rating');
+      
+      const sorted = component['filteredRecipes']();
+      expect(sorted[0].name).toBe('Excelente');
+      expect(sorted[1].name).toBe('Regular');
+      expect(sorted[2].name).toBe('Mala');
+    });
+
+    it('deberia ordenar por Mayor coincidencia (coincidencia) de forma descendente', async () => {
+      const recetaBaja = makeReceta('r1', 'Coincidencia Baja', [
+        { id: 'i1', productoId: 'p1', nombre: 'Arroz', productoNombre: 'Arroz', cantidad: 100, unidad: 'g', enStock: false }
+      ]);
+      const recetaAlta = makeReceta('r2', 'Coincidencia Alta', [
+        { id: 'i2', productoId: 'p2', nombre: 'Leche', productoNombre: 'Leche', cantidad: 100, unidad: 'ml', enStock: true }
+      ]);
+      const recetaMedia = makeReceta('r3', 'Coincidencia Media', [
+        { id: 'i3', productoId: 'p3', nombre: 'Azúcar', productoNombre: 'Azúcar', cantidad: 100, unidad: 'g', enStock: true },
+        { id: 'i4', productoId: 'p4', nombre: 'Harina', productoNombre: 'Harina', cantidad: 100, unidad: 'g', enStock: false }
+      ]);
+      
+      await setup([recetaBaja, recetaAlta, recetaMedia], []);
+      
+      component['setSort']('coincidencia');
+      
+      const sorted = component['filteredRecipes']();
+      expect(sorted[0].name).toBe('Coincidencia Alta');
+      expect(sorted[1].name).toBe('Coincidencia Media');
+      expect(sorted[2].name).toBe('Coincidencia Baja');
+    });
+
+    it('deberia ordenar por defecto (default) manteniendo el orden original de las recetas', async () => {
+      const receta1 = makeReceta('r1', 'Receta 1', [
+        { id: 'i1', productoId: 'p1', nombre: 'Arroz', productoNombre: 'Arroz', cantidad: 100, unidad: 'g', enStock: true }
+      ]);
+      const receta2 = makeReceta('r2', 'Receta 2', [
+        { id: 'i2', productoId: 'p2', nombre: 'Leche', productoNombre: 'Leche', cantidad: 100, unidad: 'ml', enStock: false }
+      ]);
+      const receta3 = makeReceta('r3', 'Receta 3', [
+        { id: 'i3', productoId: 'p3', nombre: 'Queso', productoNombre: 'Queso', cantidad: 100, unidad: 'g', enStock: true }
+      ]);
+      
+      await setup([receta1, receta2, receta3], []);
+      
+      component['setSort']('default');
+      
+      const sorted = component['filteredRecipes']();
+      expect(sorted[0].name).toBe('Receta 1');
+      expect(sorted[1].name).toBe('Receta 2');
+      expect(sorted[2].name).toBe('Receta 3');
+    });
   });
 });

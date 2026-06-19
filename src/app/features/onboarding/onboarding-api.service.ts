@@ -72,6 +72,10 @@ export class OnboardingApiService {
   }
 
   saveEquipmentStep(body: SaveEquipmentRequest): Observable<void> {
-  return this.http.patch<void>(`${this.base}/onboarding/step-3`, body);
-}
+    return this.http.patch<void>(`${this.base}/onboarding/step-3`, body);
+  }
+
+  getWellness(): Observable<{ restriccionIds: string[]; metaIds: string[] }> {
+    return this.http.get<{ restriccionIds: string[]; metaIds: string[] }>(`${this.base}/onboarding/wellness`);
+  }
 }
