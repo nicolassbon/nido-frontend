@@ -267,7 +267,11 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  overflow: hidden;
+  overflow: visible;
+}
+
+.plan-slot--filled {
+  justify-content: stretch;
 }
 
 .plan-card {
@@ -275,10 +279,19 @@
   border-radius: 8px;
   background: var(--paper);
   border: 1px solid rgba(216, 198, 178, 0.84);
-  overflow: hidden;
+  overflow: visible;
   position: relative;
   display: grid;
   grid-template-rows: 58px auto;
+  z-index: 1;
+}
+
+.plan-slot--filled .plan-card {
+  flex: 1;
+}
+
+.plan-card:has(.card-actions-menu) {
+  z-index: 8;
 }
 
 .plan-card img,
@@ -290,6 +303,16 @@
 .plan-card img {
   object-fit: cover;
   display: block;
+  border-radius: 8px 8px 0 0;
+}
+
+.plan-slot--filled .plan-card:not(.plan-card--task) {
+  grid-template-rows: minmax(58px, 1fr) auto;
+}
+
+.plan-slot--filled .plan-card:not(.plan-card--task) img,
+.plan-slot--filled .plan-card:not(.plan-card--task) .plan-card__empty {
+  height: 100%;
 }
 
 .plan-card__empty {
@@ -378,6 +401,53 @@
   position: static;
   opacity: 0.75;
   background: transparent;
+}
+
+.plan-slot--filled .plan-card--task {
+  min-height: 100%;
+  background: rgba(248, 243, 234, 0.42);
+  border: 1px solid rgba(216, 198, 178, 0.56);
+}
+
+.card-actions-menu {
+  position: absolute;
+  top: 24px;
+  right: 4px;
+  z-index: 20;
+  min-width: 112px;
+  padding: 4px;
+  border: 1px solid rgba(216, 198, 178, 0.9);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(31, 39, 34, 0.16);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card-actions-menu button {
+  min-height: 28px;
+  width: 100%;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--green-ink);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.card-actions-menu button:hover {
+  background: var(--paper-2);
+}
+
+.card-actions-menu__danger {
+  color: var(--danger) !important;
 }
 
 .slot-add {

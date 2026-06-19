@@ -1,4 +1,4 @@
-<div class="planificador-page">
+<div class="planificador-page" (click)="closeItemMenu()">
   <header class="plan-hero">
     <div class="plan-hero__content">
       <div>
@@ -60,8 +60,12 @@
             </header>
 
             @for (tipo of TIPOS; track tipo) {
-              <div class="plan-slot" [class.plan-slot--tasks]="tipo === 'tarea'">
-                @for (item of getItems(dia.isoDate, tipo); track item.id) {
+              @let slotItems = getItems(dia.isoDate, tipo);
+              <div
+                class="plan-slot"
+                [class.plan-slot--tasks]="tipo === 'tarea'"
+                [class.plan-slot--filled]="slotItems.length > 0">
+                @for (item of slotItems; track item.id) {
                   <article class="plan-card" [class.plan-card--task]="tipo === 'tarea'">
                     @if (tipo !== 'tarea') {
                       @if (itemImage(item); as img) {
@@ -82,22 +86,37 @@
                       }
                     </div>
 
-                    <button type="button" class="card-menu" (click)="deleteItem(item.id)" title="Eliminar">
+                    <button type="button" class="card-menu" (click)="toggleItemMenu(item.id, $event)" title="Opciones">
                       <lucide-icon name="ellipsis-vertical" [size]="15" />
                     </button>
+
+                    @if (openMenuItemId() === item.id) {
+                      <div class="card-actions-menu" (click)="$event.stopPropagation()">
+                        <button type="button" (click)="openEditModal(item)">
+                          <lucide-icon name="pencil" [size]="13" />
+                          <span>Editar</span>
+                        </button>
+                        <button type="button" class="card-actions-menu__danger" (click)="deleteItem(item.id, $event)">
+                          <lucide-icon name="trash-2" [size]="13" />
+                          <span>Eliminar</span>
+                        </button>
+                      </div>
+                    }
                   </article>
                 }
 
-                <button
-                  type="button"
-                  class="slot-add"
-                  (click)="openModal(dia.isoDate, tipo)"
-                  [title]="'Agregar ' + TIPO_LABELS[tipo]">
-                  <lucide-icon name="plus" [size]="14" />
-                  @if (tipo === 'tarea' && getItems(dia.isoDate, tipo).length === 0) {
-                    <span>Aniadir tarea</span>
-                  }
-                </button>
+                @if (slotItems.length === 0) {
+                  <button
+                    type="button"
+                    class="slot-add"
+                    (click)="openModal(dia.isoDate, tipo)"
+                    [title]="'Agregar ' + TIPO_LABELS[tipo]">
+                    <lucide-icon name="plus" [size]="14" />
+                    @if (tipo === 'tarea') {
+                      <span>Aniadir tarea</span>
+                    }
+                  </button>
+                }
               </div>
             }
           </article>
@@ -121,7 +140,7 @@
           <lucide-icon [name]="TIPO_ICONS[modalSlot()!.tipoComida]" [size]="18" />
         </span>
         <div>
-          <h2>{{ modalSlot()!.tipoComida === 'tarea' ? 'Agregar tarea' : 'Elegir receta' }}</h2>
+          <h2>{{ modalTitle() }}</h2>
           <p>{{ TIPO_LABELS[modalSlot()!.tipoComida] }} - {{ modalDateLabel() }}</p>
         </div>
         <button type="button" class="icon-btn icon-btn--light" (click)="closeModal()" title="Cerrar">
@@ -218,7 +237,7 @@
           } @else {
             <lucide-icon name="check" [size]="15" />
           }
-          Guardar
+          {{ editingItem() ? 'Guardar cambios' : 'Guardar' }}
         </button>
       </footer>
     </div>

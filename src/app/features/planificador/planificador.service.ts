@@ -30,6 +30,12 @@ export interface AddItemRequest {
   hora?:       string | null;
 }
 
+export interface UpdateItemRequest {
+  recetaId?:    string | null;
+  tituloLibre?: string | null;
+  hora?:        string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PlanificadorService {
   private readonly http = inject(HttpClient);
@@ -44,6 +50,12 @@ export class PlanificadorService {
   addItem(request: AddItemRequest): Observable<PlanificadorItemDto> {
     return this.http.post<PlanificadorItemDto>(
       `${this.base}/planificador/items`, request
+    );
+  }
+
+  updateItem(id: string, request: UpdateItemRequest): Observable<PlanificadorItemDto> {
+    return this.http.patch<PlanificadorItemDto>(
+      `${this.base}/planificador/items/${id}`, request
     );
   }
 

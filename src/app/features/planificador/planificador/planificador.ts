@@ -10,6 +10,7 @@ import {
   PlanificadorItemDto,
   PlanificadorSemanaDto,
   PlanificadorService,
+  UpdateItemRequest,
 } from '../planificador.service';
 
 type TipoComida = 'desayuno' | 'almuerzo' | 'cena' | 'tarea';
@@ -45,6 +46,8 @@ export class Planificador implements OnInit, OnDestroy {
 
   protected readonly showModal = signal(false);
   protected readonly modalSlot = signal<SlotModal | null>(null);
+  protected readonly editingItem = signal<PlanificadorItemDto | null>(null);
+  protected readonly openMenuItemId = signal<string | null>(null);
 
   protected readonly TIPOS: TipoComida[] = ['desayuno', 'almuerzo', 'cena', 'tarea'];
   protected readonly TIPO_LABELS: Record<TipoComida, string> = {
@@ -158,6 +161,8 @@ export class Planificador implements OnInit, OnDestroy {
   }
 
   protected openModal(fecha: string, tipo: TipoComida): void {
+    this.editingItem.set(null);
+    this.openMenuItemId.set(null);
     this.modalSlot.set({
       fecha,
       tipoComida: tipo,
@@ -170,10 +175,36 @@ export class Planificador implements OnInit, OnDestroy {
     this.showModal.set(true);
   }
 
+  protected openEditModal(item: PlanificadorItemDto): void {
+    const tipo = item.tipoComida as TipoComida;
+    this.editingItem.set(item);
+    this.openMenuItemId.set(null);
+    this.modalSlot.set({
+      fecha: item.fecha,
+      tipoComida: tipo,
+      tituloLibre: item.tituloLibre ?? '',
+      recetaId: item.recetaId ?? '',
+      hora: this.formatTime(item.hora) || this.DEFAULT_HOURS[tipo],
+    });
+    this.recipeQuery.set(item.recetaNombre ?? '');
+    this.errorMessage.set(null);
+    this.showModal.set(true);
+  }
+
   protected closeModal(): void {
     this.showModal.set(false);
     this.modalSlot.set(null);
+    this.editingItem.set(null);
     this.recipeQuery.set('');
+  }
+
+  protected closeItemMenu(): void {
+    this.openMenuItemId.set(null);
+  }
+
+  protected toggleItemMenu(itemId: string, event: Event): void {
+    event.stopPropagation();
+    this.openMenuItemId.update(current => current === itemId ? null : itemId);
   }
 
   protected selectRecipe(receta: ApiReceta): void {
@@ -210,20 +241,28 @@ export class Planificador implements OnInit, OnDestroy {
 
     this.isSaving.set(true);
     this.errorMessage.set(null);
-    const req: AddItemRequest = {
-      fecha: slot.fecha,
-      tipoComida: slot.tipoComida,
+    const req: AddItemRequest | UpdateItemRequest = {
+      ...(this.editingItem() ? {} : { fecha: slot.fecha, tipoComida: slot.tipoComida }),
       recetaId: isTask ? null : slot.recetaId,
       tituloLibre: isTask ? slot.tituloLibre.trim() : null,
       hora: slot.hora || null,
     };
+    const editing = this.editingItem();
+    const request$ = editing
+      ? this.svc.updateItem(editing.id, req as UpdateItemRequest)
+      : this.svc.addItem(req as AddItemRequest);
 
-    this.svc.addItem(req)
+    request$
       .pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: newItem => {
+        next: savedItem => {
           const s = this.semana();
-          if (s) this.semana.set({ ...s, items: [...s.items, newItem] });
+          if (s) {
+            const items = editing
+              ? s.items.map(item => item.id === savedItem.id ? savedItem : item)
+              : [...s.items, savedItem];
+            this.semana.set({ ...s, items });
+          }
           this.isSaving.set(false);
           this.closeModal();
         },
@@ -234,7 +273,9 @@ export class Planificador implements OnInit, OnDestroy {
       });
   }
 
-  protected deleteItem(itemId: string): void {
+  protected deleteItem(itemId: string, event?: Event): void {
+    event?.stopPropagation();
+    this.openMenuItemId.set(null);
     this.svc.deleteItem(itemId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -242,7 +283,19 @@ export class Planificador implements OnInit, OnDestroy {
           const s = this.semana();
           if (s) this.semana.set({ ...s, items: s.items.filter(i => i.id !== itemId) });
         },
+        error: () => this.errorMessage.set('No se pudo eliminar el item. Volve a intentar.'),
       });
+  }
+
+  protected modalTitle(): string {
+    const slot = this.modalSlot();
+    if (!slot) return '';
+
+    if (this.editingItem()) {
+      return slot.tipoComida === 'tarea' ? 'Editar tarea' : 'Editar comida';
+    }
+
+    return slot.tipoComida === 'tarea' ? 'Agregar tarea' : 'Elegir receta';
   }
 
   protected modalDateLabel(): string {
