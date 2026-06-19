@@ -37,6 +37,7 @@ export class RecipeDetail {
   protected readonly loading          = signal(false);
   protected readonly errorMessage     = signal<string | null>(null);
   protected readonly imageFailed      = signal(false);
+  protected readonly savingRecipe     = signal(false);
 
   // Modal de confirmación para cocinar
   protected readonly showCookModal    = signal(false);
@@ -162,6 +163,29 @@ export class RecipeDetail {
         },
         error: () => {
           this.cookingState.set('error');
+        },
+      });
+  }
+
+  protected toggleSaved(): void {
+    const receta = this.recipe();
+    if (!receta || this.savingRecipe()) return;
+
+    this.savingRecipe.set(true);
+    const request = receta.guardada
+      ? this.recipesService.unsave(receta.id)
+      : this.recipesService.save(receta.id);
+
+    request
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.recipe.set({ ...receta, guardada: !receta.guardada });
+          this.savingRecipe.set(false);
+        },
+        error: () => {
+          this.errorMessage.set('No se pudo actualizar la receta guardada.');
+          this.savingRecipe.set(false);
         },
       });
   }

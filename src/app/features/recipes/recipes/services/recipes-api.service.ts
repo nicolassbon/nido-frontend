@@ -54,6 +54,7 @@ export interface ApiReceta {
   fechaVencimientoMasProxima?: string | null;
   diasHastaVencimiento?: number | null;
   productosPorVencer?: ApiRecetaProductoPorVencer[];
+  guardada?: boolean;
 }
 
 export interface CocinarRecetaResponse {
@@ -79,5 +80,17 @@ export class RecipesApiService {
   /** POST /recetas/{id}/cocinar — endpoint a implementar por el backend (US-14) */
   cocinar(id: string): Observable<CocinarRecetaResponse> {
     return this.http.post<CocinarRecetaResponse>(`${this.base}/recetas/${id}/cocinar`, {});
+  }
+
+  getSaved(): Observable<ApiReceta[]> {
+    return this.http.get<ApiReceta[]>(`${this.base}/recetas/guardadas`);
+  }
+
+  save(id: string): Observable<void> {
+    return this.http.post<void>(`${this.base}/recetas/${id}/guardar`, {});
+  }
+
+  unsave(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/recetas/${id}/guardar`);
   }
 }

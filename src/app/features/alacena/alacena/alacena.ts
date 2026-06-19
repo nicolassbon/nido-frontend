@@ -988,6 +988,7 @@ protected reloadProducts(): void { this.loadProducts(); }
           fechaVencimiento:    d.expiryDate || null,
           estaAbierto:         d.isOpened,
           porcentajeConsumido: d.consumedPercent,
+          origenCarga:         d.barcode ? 'codigo_barras' : 'manual',
         })
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({

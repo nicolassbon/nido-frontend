@@ -76,9 +76,9 @@
                 <lucide-icon name="play" [size]="16" />
                 Cocinar receta
               </button>
-              <button type="button" class="secondary-action">
-                <lucide-icon name="bookmark" [size]="16" />
-                Guardar receta
+              <button type="button" class="secondary-action" [disabled]="savingRecipe()" (click)="toggleSaved()">
+                <lucide-icon [name]="r.guardada ? 'bookmark-check' : 'bookmark'" [size]="16" />
+                {{ r.guardada ? 'Guardada' : 'Guardar receta' }}
               </button>
             </div>
 

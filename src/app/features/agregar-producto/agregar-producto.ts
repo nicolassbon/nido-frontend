@@ -292,17 +292,21 @@ export class AgregarProducto implements OnInit, OnDestroy {
   }
 
   private submitCreate(): void {
+    const isOpened    = this.isOpened();
+    const consumedPct = this.consumedPct();
     const payload = {
       nombre:              this.form.value.nombre!,
-      categoriaId:         this.form.value.categoriaId!,
+      codigoBarras:        null,
+      imagen:              null,
       ubicacion:           this.form.value.ubicacion!,
       cantidad:            this.parseCantidad(this.form.value.cantidad),
       unidadMedida:        this.normalizeUnit(this.form.value.unidadMedida),
-      fechaVencimiento:    this.form.value.fechaVencimiento || undefined,
+      fechaVencimiento:    this.form.value.fechaVencimiento || null,
+      estaAbierto:         isOpened,
+      porcentajeConsumido: consumedPct,
+      origenCarga:         'manual' as const,
     };
 
-    const isOpened    = this.isOpened();
-    const consumedPct = this.consumedPct();
     let imageUploadFailed = false;
 
     // ¿Ya existe en la alacena con el mismo nombre y unidad? → sumar cantidad
@@ -342,7 +346,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
     // Primero creamos el producto, luego si tiene datos de consumo
     // hacemos un PATCH inmediato porque el endpoint de creación
     // no acepta esos campos (los maneja /alacena/productos).
-    this.productService.createStockHome(payload).pipe(
+    this.alacenaApi.createStock(payload).pipe(
       switchMap(created => {
         const selectedImage = this.selectedImage();
         if (!selectedImage || !created?.productoId) {
@@ -357,16 +361,6 @@ export class AgregarProducto implements OnInit, OnDestroy {
             return of(created);
           }),
         );
-      }),
-      switchMap(created => {
-        const needsPatch = isOpened || consumedPct > 0;
-        if (!needsPatch) return of(null);
-        const id = created?.stockHogarId;
-        if (!id) return of(null);
-        return this.alacenaApi.updateStock(id, {
-          estaAbierto:         isOpened,
-          porcentajeConsumido: consumedPct,
-        });
       }),
     ).subscribe({
       next: () => {
@@ -422,6 +416,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
           estaAbierto: patch.estaAbierto,
           porcentajeConsumido: patch.porcentajeConsumido,
           cantidadEnvases: updated.cantidadEnvases,
+          origenCarga: updated.origenCarga,
         };
         this.isSaving = false;
         this.closed.emit(edited);

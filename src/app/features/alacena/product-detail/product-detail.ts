@@ -257,6 +257,7 @@ export class ProductDetail {
       estaAbierto: item.estaAbierto,
       porcentajeConsumido: item.porcentajeConsumido,
       cantidadEnvases: item.cantidadEnvases,
+      origenCarga: item.origenCarga ?? 'manual',
     };
   }
 

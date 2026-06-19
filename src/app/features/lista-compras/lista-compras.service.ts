@@ -5,30 +5,31 @@ import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface ShoppingItem {
-  id:         string;
-  productoId: string;
-  nombre:    string;
-  cantidad:  number | null;
-  unidad:    string | null;
-  checked:   boolean;
+  id: string;
+  productoId: string | null;
+  nombre: string;
+  cantidad: number | null;
+  unidad: string | null;
+  checked: boolean;
   compradoEn?: string | null;
-  orden?:     number;
+  orden?: number;
 }
 
 export interface RecipeShoppingList {
+  id: string;
   recetaNombre: string;
   grupoNombre?: string;
-  items:        ShoppingItem[];
+  items: ShoppingItem[];
 }
 
 export interface ShoppingHistoryItem {
-  id:          string;
-  productoId:  string;
-  nombre:      string;
-  cantidad:    number | null;
-  unidad:      string | null;
+  id: string;
+  productoId: string | null;
+  nombre: string;
+  cantidad: number | null;
+  unidad: string | null;
   grupoNombre: string;
-  compradoEn:  string;
+  compradoEn: string;
   compradoPor: string | null;
 }
 
@@ -38,14 +39,11 @@ type AddItemInput = {
   unidad: string | null;
 };
 
-const STORAGE_KEY = 'nido_listas_compras';
-const MIGRATION_FLAG = 'nido_listas_compras_migrated_to_api';
-const MANUAL_GROUP = 'Productos agregados';
-
 @Injectable({ providedIn: 'root' })
 export class ListaComprasService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = `${environment.apiBaseUrl}/lista-compras`;
+  private readonly baseUrl = `${environment.apiBaseUrl}/listas-compra`;
+  private readonly legacyBaseUrl = `${environment.apiBaseUrl}/lista-compras`;
 
   private readonly _listas$ = new BehaviorSubject<RecipeShoppingList[]>([]);
   private readonly _historial$ = new BehaviorSubject<ShoppingHistoryItem[]>([]);
@@ -57,7 +55,6 @@ export class ListaComprasService {
   );
 
   constructor() {
-    this.migrateLegacyStorage();
     this.refresh().subscribe();
     this.refreshHistory().subscribe();
   }
@@ -66,14 +63,10 @@ export class ListaComprasService {
     return this._listas$.value;
   }
 
-  get historySnapshot(): ShoppingHistoryItem[] {
-    return this._historial$.value;
-  }
-
   refresh() {
-    return this.http.get<ApiShoppingGroup[]>(this.baseUrl).pipe(
-      map(groups => groups.map(toShoppingList)),
-      tap(groups => this._listas$.next(groups)),
+    return this.http.get<ApiShoppingList[]>(this.baseUrl).pipe(
+      map(lists => lists.map(toShoppingList)),
+      tap(lists => this._listas$.next(lists)),
       catchError(() => {
         this._listas$.next([]);
         return of([]);
@@ -92,17 +85,85 @@ export class ListaComprasService {
     );
   }
 
-  addGroupToLista(recetaNombre: string, faltantes: AddItemInput[]) {
-    return this.http.post<ApiShoppingGroup[]>(`${this.baseUrl}/grupos`, {
-      grupoNombre: recetaNombre,
-      items: faltantes.map(item => ({
-        nombre: item.nombre,
-        cantidad: item.cantidad,
-        unidad: item.unidad,
-      })),
+  createList(nombre: string) {
+    return this.http.post<ApiShoppingList>(this.baseUrl, { nombre }).pipe(
+      switchMap(() => this.refresh()),
+    );
+  }
+
+  updateList(id: string, nombre: string) {
+    return this.http.patch<ApiShoppingList>(`${this.baseUrl}/${encodeURIComponent(id)}`, { nombre }).pipe(
+      switchMap(() => this.refresh()),
+    );
+  }
+
+  deleteList(id: string) {
+    return this.http.delete<void>(`${this.baseUrl}/${encodeURIComponent(id)}`).pipe(
+      switchMap(() => this.refresh()),
+    );
+  }
+
+  addItem(listaId: string, nombre: string, cantidad: number | null, unidad: string | null) {
+    return this.http.post<ApiShoppingItem>(`${this.baseUrl}/${encodeURIComponent(listaId)}/items`, {
+      nombre,
+      cantidad,
+      unidad,
     }).pipe(
-      map(groups => groups.map(toShoppingList)),
-      tap(groups => this._listas$.next(groups)),
+      switchMap(() => this.refresh()),
+    );
+  }
+
+  addManualItem(nombre: string, cantidad: number | null, unidad: string | null) {
+    const target = this.snapshot[0];
+    if (target) {
+      return this.addItem(target.id, nombre, cantidad, unidad);
+    }
+
+    return this.createList('Principal').pipe(
+      switchMap(listas => {
+        const created = listas[0];
+        return created ? this.addItem(created.id, nombre, cantidad, unidad) : of([]);
+      }),
+    );
+  }
+
+  updateItem(
+    listaId: string,
+    itemId: string,
+    changes: { nombre?: string; cantidad?: number | null; unidad?: string | null; comprado?: boolean },
+  ) {
+    return this.http.patch<ApiShoppingItem>(
+      `${this.baseUrl}/${encodeURIComponent(listaId)}/items/${encodeURIComponent(itemId)}`,
+      changes,
+    ).pipe(
+      switchMap(() => this.refresh()),
+      tap(() => {
+        if (changes.comprado !== undefined) this.refreshHistory().subscribe();
+      }),
+    );
+  }
+
+  markPurchased(listaId: string, itemId: string, comprado = true) {
+    return this.updateItem(listaId, itemId, { comprado });
+  }
+
+  removeItem(listaId: string, itemId: string) {
+    return this.http.delete<void>(
+      `${this.baseUrl}/${encodeURIComponent(listaId)}/items/${encodeURIComponent(itemId)}`,
+    ).pipe(
+      switchMap(() => this.refresh()),
+    );
+  }
+
+  addGroupToLista(recetaNombre: string, faltantes: AddItemInput[]) {
+    return this.http.post<ApiShoppingList>(this.baseUrl, { nombre: recetaNombre }).pipe(
+      switchMap(lista => {
+        const requests = faltantes.map(item =>
+          this.http.post<ApiShoppingItem>(`${this.baseUrl}/${encodeURIComponent(lista.id)}/items`, item),
+        );
+        return requests.length > 0 ? forkJoin(requests) : of([]);
+      }),
+      switchMap(() => this.refresh()),
     );
   }
 
@@ -110,107 +171,29 @@ export class ListaComprasService {
     this.addGroupToLista(recetaNombre, faltantes).subscribe();
   }
 
-  addManualItem(nombre: string, cantidad: number | null, unidad: string | null) {
-    return this.http.post<ApiShoppingItem>(`${this.baseUrl}/items`, {
-      nombre,
-      cantidad,
-      unidad,
-      grupoNombre: MANUAL_GROUP,
-    }).pipe(
-      switchMap(() => this.refresh()),
-    );
-  }
-
-  markPurchased(itemId: string) {
-    return this.http.patch<ApiShoppingItem>(`${this.baseUrl}/items/${encodeURIComponent(itemId)}/comprado`, {}).pipe(
-      switchMap(() => this.refresh()),
-      tap(() => this.refreshHistory().subscribe()),
-    );
-  }
-
-  toggleItem(recetaNombre: string, itemIndex: number): void {
-    const item = this.snapshot.find(l => l.recetaNombre === recetaNombre)?.items[itemIndex];
-    if (!item || item.checked) return;
-    this.markPurchased(item.id).subscribe();
-  }
-
   marcarCompradoPorNombre(nombre: string): void {
     const trimmed = nombre.trim();
     if (!trimmed) return;
 
-    this.http.patch<ApiShoppingItem[]>(`${this.baseUrl}/items/comprado-por-nombre`, { nombre: trimmed }).pipe(
+    this.http.patch<ApiShoppingItem[]>(`${this.legacyBaseUrl}/items/comprado-por-nombre`, { nombre: trimmed }).pipe(
       switchMap(() => this.refresh()),
       tap(() => this.refreshHistory().subscribe()),
-      catchError(() => of([])),
-    ).subscribe();
-  }
-
-  removeItem(itemId: string) {
-    return this.http.delete<void>(`${this.baseUrl}/items/${encodeURIComponent(itemId)}`).pipe(
-      switchMap(() => this.refresh()),
-    );
-  }
-
-  removeRecetaLista(recetaNombre: string): void {
-    const group = this.snapshot.find(lista => lista.recetaNombre === recetaNombre);
-    if (!group) return;
-
-    forkJoin(group.items.map(item => this.http.delete<void>(`${this.baseUrl}/items/${encodeURIComponent(item.id)}`))).pipe(
-      switchMap(() => this.refresh()),
-      catchError(() => of([])),
-    ).subscribe();
-  }
-
-  clearAll() {
-    return this.http.delete<void>(this.baseUrl).pipe(
-      tap(() => this._listas$.next([])),
-      switchMap(() => this.refreshHistory()),
-    );
-  }
-
-  private migrateLegacyStorage(): void {
-    if (localStorage.getItem(MIGRATION_FLAG)) return;
-
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      localStorage.setItem(MIGRATION_FLAG, 'true');
-      return;
-    }
-
-    let legacy: Array<{ recetaNombre: string; items: AddItemInput[] }> = [];
-    try {
-      legacy = JSON.parse(raw);
-    } catch {
-      localStorage.setItem(MIGRATION_FLAG, 'true');
-      return;
-    }
-
-    const valid = legacy.filter(lista => lista.recetaNombre && Array.isArray(lista.items) && lista.items.length > 0);
-    if (valid.length === 0) {
-      localStorage.setItem(MIGRATION_FLAG, 'true');
-      localStorage.removeItem(STORAGE_KEY);
-      return;
-    }
-
-    forkJoin(valid.map(lista => this.addGroupToLista(lista.recetaNombre, lista.items))).pipe(
-      switchMap(() => this.refresh()),
-      tap(() => {
-        localStorage.setItem(MIGRATION_FLAG, 'true');
-        localStorage.removeItem(STORAGE_KEY);
-      }),
       catchError(() => of([])),
     ).subscribe();
   }
 }
 
-interface ApiShoppingGroup {
-  grupoNombre: string;
+interface ApiShoppingList {
+  id: string;
+  nombre: string;
+  createdAt: string;
+  updatedAt: string | null;
   items: ApiShoppingItem[];
 }
 
 interface ApiShoppingItem {
   id: string;
-  productoId: string;
+  productoId: string | null;
   nombre: string;
   cantidad: number | null;
   unidad: string | null;
@@ -221,7 +204,7 @@ interface ApiShoppingItem {
 
 interface ApiHistoryItem {
   id: string;
-  productoId: string;
+  productoId: string | null;
   nombre: string;
   cantidad: number | null;
   unidad: string | null;
@@ -230,11 +213,12 @@ interface ApiHistoryItem {
   compradoPor: string | null;
 }
 
-function toShoppingList(group: ApiShoppingGroup): RecipeShoppingList {
+function toShoppingList(list: ApiShoppingList): RecipeShoppingList {
   return {
-    recetaNombre: group.grupoNombre,
-    grupoNombre: group.grupoNombre,
-    items: group.items.map(item => ({
+    id: list.id,
+    recetaNombre: list.nombre,
+    grupoNombre: list.nombre,
+    items: list.items.map(item => ({
       id: item.id,
       productoId: item.productoId,
       nombre: item.nombre,
@@ -259,4 +243,3 @@ function toHistoryItem(item: ApiHistoryItem): ShoppingHistoryItem {
     compradoPor: item.compradoPor,
   };
 }
-
