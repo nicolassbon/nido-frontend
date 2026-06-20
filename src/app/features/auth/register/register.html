@@ -214,6 +214,22 @@
           </div>
         </div>
       </div>
+      <div class="w-full flex flex-col gap-1.5 mt-2">
+        <label class="flex items-start gap-2.5 cursor-pointer text-[0.875rem] text-nido-green-dark select-none">
+          <input
+            type="checkbox"
+            formControlName="aceptaTerminos"
+            class="mt-1 w-4 h-4 rounded border border-nido-border text-nido-green accent-nido-green cursor-pointer focus:outline-none"
+          />
+          <span class="leading-relaxed">
+            Acepto los <a href="/terminos" target="_blank" class="text-nido-green font-semibold hover:underline">términos y condiciones</a> y la <a href="/privacidad" target="_blank" class="text-nido-green font-semibold hover:underline">política de privacidad</a>.
+          </span>
+        </label>
+        @if (submitted() && form.get('aceptaTerminos')?.invalid) {
+          <span class="text-nido-red text-[0.8rem] ml-7">Debés aceptar los términos y condiciones para continuar.</span>
+        }
+      </div>
+
       @if (globalError()) {
         <span class="text-nido-red text-[0.875rem] text-center w-full font-medium mt-1">{{
           globalError()
