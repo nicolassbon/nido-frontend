@@ -29,6 +29,9 @@ interface Recipe {
   difficulty: Difficulty;
   timeMinutes: number;
   calories: number;
+  proteinas: number;
+  carbohidratos: number;
+  grasas: number;
   ingredients: RecipeIngredient[];
   requiredAppliances: string[];
   vecesCocinada: number;
@@ -446,6 +449,9 @@ protected readonly filteredRecipes = computed(() => {
       difficulty: this.mapDifficulty(receta.dificultad),
       timeMinutes: receta.tiempoCoccionMin ?? 0,
       calories: Math.round(receta.calorias ?? 0),
+      proteinas: Math.round(receta.proteinas ?? 0),
+      carbohidratos: Math.round(receta.carbohidratos ?? 0),
+      grasas: Math.round(receta.grasas ?? 0),
       vecesCocinada: receta.vecesCocinada ?? 0,
       ingredients: receta.ingredientes.map(ingrediente => {
         const ingredientName = ingrediente.productoNombre || ingrediente.nombre;
@@ -557,39 +563,42 @@ protected readonly filteredRecipes = computed(() => {
   // =====================================================================
   // 🔥 BUSCADOR INTELIGENTE CON IA - CONECTA CON .NET Y PYTHON
   // =====================================================================
-onSearchSubmit(textoIngresado: string): void {
+onSearchSubmit(textoIngresado: string, objetivoNutricional: string): void {
     const textoUsuario = textoIngresado.trim();
-    if (!textoUsuario) return;
+    
+    console.log("Texto buscado:", textoUsuario);
+    console.log("Objetivo seleccionado:", objetivoNutricional);
 
-    // Determinamos si es una búsqueda compleja para la IA
-    const esFraseLarga = textoUsuario.split(/\s+/).length > 2;
+    // Activamos la IA si es una frase larga O si el usuario eligió un objetivo nutricional
+    const requiereIA = (textoUsuario.split(/\s+/).length > 2) || objetivoNutricional !== '';
 
-    if (esFraseLarga) {
+    if (requiereIA) {
       this.isLoadingIa.set(true);
-      console.log('🔮 Conectando con el microservicio de IA para:', textoUsuario);
+      console.log(`🔮 Conectando con IA. Buscando: "${textoUsuario}" | Objetivo: "${objetivoNutricional}"`);
       
-      this.recipesApi.recomendarPorIa(textoUsuario).subscribe({
+      // 🌟 Le pasamos ambos parámetros al servicio
+      this.recipesApi.recomendarPorIa(textoUsuario, objetivoNutricional).subscribe({
         next: (recetasResultantes: any) => {
           if (recetasResultantes && recetasResultantes.length > 0) {
             console.log(`✅ IA exitosa! Encontró ${recetasResultantes.length} recetas.`);
             
-            // 🌟 TRANSFORMACIÓN DE PROPIEDADES (Mapeo Quirúrgico):
-            // Convertimos lo que viene de .NET al formato exacto que tus tarjetas esperan
             const recetasMapeadas = recetasResultantes.map((r: any) => ({
               id: r.id,
-              name: r.nombre || r.name, // Soporta ambos por las dudas
-              image: r.imagenUrl || r.image || '/images/default-recipe.png', // Tu propiedad de imagen
+              name: r.nombre || r.name, 
+              image: r.imagenUrl || r.image || '/images/default-recipe.png', 
               difficulty: r.dificultad || r.difficulty || 'Medio',
-              rating: r.rating || 5.0, // Tu propiedad de estrellas
+              rating: r.rating || 5.0, 
               timeMinutes: r.tiempoCoccionMin || r.timeMinutes || 20,
               calories: r.calorias || r.calories || 0,
+              proteinas: r.proteinas || r.proteinas || 0,
               vecesCocinada: r.vecesCocinada || 0,
-              availabilityPercent: r.availabilityPercent || 100, // Tu barra de progreso
+              availabilityPercent: r.availabilityPercent || 100, 
               hasMissingAppliance: r.hasMissingAppliance || false
             }));
 
-            // Guardamos la lista ya formateada en el Signal de la IA
             this.iaFilteredRecipes.set(recetasMapeadas);
+          } else {
+            this.iaFilteredRecipes.set([]);
           }
           this.isLoadingIa.set(false);
         },
@@ -601,10 +610,8 @@ onSearchSubmit(textoIngresado: string): void {
         }
       });
     } else {
-      // 1. Si hace una búsqueda común, LIMPIAMOS el filtro de la IA anterior
+      // Búsqueda común de texto simple en el frontend sin objetivos nutricionales
       this.iaFilteredRecipes.set([]);
-      
-      // 2. Seteamos el query común al toque
       this.searchQuery.set(textoUsuario);
     }
 }

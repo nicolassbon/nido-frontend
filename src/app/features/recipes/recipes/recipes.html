@@ -1,41 +1,20 @@
 <div class="w-full p-4 sm:p-6 flex flex-col gap-5">
 
-  <!-- Banner -->
-<section class="relative overflow-hidden rounded-[14px] px-8 py-7 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
-    <div class="absolute inset-0 bg-[url('/images/banners/recetas.png')] bg-center bg-cover ']"></div>
-    <div class="relative z-10">
-      <h1 class="text-nido-cream text-[1.6rem] font-bold">Recetas inteligentes</h1>
-      <p class="text-nido-cream/70 text-sm mt-0.5">
-        @if (iaFilteredRecipes().length > 0) {
-          {{ iaFilteredRecipes().length }} recetas encontradas por IA
-        } @else {
-          {{ filteredRecipes().length }} recetas disponibles
-        }
-        
-        @if (filterByIngredients()) {
-          <span class="text-nido-cream font-medium">- filtrando por tu alacena</span>
-        }
-      </p>
-    </div>
-    <button
-      type="button"
-      class="relative z-10 flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]"
-      (click)="openRoulettePopup()">
-      <lucide-icon name="shuffle" [size]="16" />
-      Ruleta de comidas
-    </button>
-  </section> <div class="relative flex items-center">
+  <!-- Buscador -->
+<div class="flex flex-col sm:flex-row gap-3 items-stretch w-full mt-4">
+  
+  <div class="relative flex-1 flex items-center">
     <span class="absolute inset-y-0 left-3.5 flex w-6 items-center justify-center text-nido-brown pointer-events-none">
       <lucide-icon name="search" [size]="18" />
     </span>
     <input
-  class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-brown rounded-[10px] bg-white/[0.51] text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-brown placeholder:text-nido-muted"
-  type="text"
-  placeholder="Buscar receta o preguntale a Nido (ej: 'Tengo fideos y pescado')..."
-  #searchInput
-  [value]="searchQuery()"
-  (keydown.enter)="onSearchSubmit(searchInput.value)"
-/>
+      class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-brown rounded-[10px] bg-white/[0.51] text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-brown placeholder:text-nido-muted"
+      type="text"
+      placeholder="Buscar receta o preguntale a Nido (ej: 'Tengo fideos y pescado')..."
+      #searchInput
+      [value]="searchQuery()"
+      (keydown.enter)="onSearchSubmit(searchInput.value, nutritionalFilter.value)"
+    />
     @if (searchQuery()) {
       <button class="absolute right-2.5 top-1/2 -translate-y-1/2 h-8 w-8 bg-transparent border-none text-nido-brown cursor-pointer flex items-center justify-center rounded hover:text-nido-green-dark" (click)="clearSearch()">
         <lucide-icon name="x" [size]="16" />
@@ -43,24 +22,22 @@
     }
   </div>
 
-  <!-- Buscador -->
-  <!-- <div class="relative flex items-center">
-    <span class="absolute inset-y-0 left-3.5 flex w-6 items-center justify-center text-nido-brown pointer-events-none">
-      <lucide-icon name="search" [size]="18" />
+  <div class="relative min-w-[190px] max-sm:w-full">
+    <select
+      #nutritionalFilter
+      (change)="onSearchSubmit(searchInput.value, nutritionalFilter.value)"
+      class="w-full h-full py-3 px-4 border-[1.5px] border-solid border-nido-brown rounded-[10px] bg-white/[0.51] text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-brown appearance-none cursor-pointer font-medium">
+      <option value="">Sin objetivo nutricional</option>
+      <option value="alta-proteina">Alta Proteína</option>
+      <option value="bajo-calorias">Bajo en Calorías</option>
+      <option value="vegetariano">Vegetariano</option>
+    </select>
+    <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-nido-brown pointer-events-none">
+      <lucide-icon name="chevron-down" [size]="16" />
     </span>
-    <input
-      class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-brown rounded-[10px] bg-white/[0.51] text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-brown placeholder:text-nido-muted"
-      type="text"
-      placeholder="Buscar receta..."
-      [ngModel]="searchQuery()"
-      (ngModelChange)="searchQuery.set($event)"
-    />
-    @if (searchQuery()) {
-      <button class="absolute right-2.5 top-1/2 -translate-y-1/2 h-8 w-8 bg-transparent border-none text-nido-brown cursor-pointer flex items-center justify-center rounded hover:text-nido-green-dark" (click)="clearSearch()">
-        <lucide-icon name="x" [size]="16" />
-      </button>
-    }
-  </div> -->
+  </div>
+
+</div>
 
   <!-- Filtros -->
   <div class="flex items-center justify-between gap-3 flex-wrap">
@@ -146,27 +123,53 @@
             </div>
 
             <div class="px-4 py-3.5 flex flex-1 flex-col gap-1.5">
-              <h3 class="min-h-[2.45rem] text-[0.875rem] font-semibold text-nido-green-dark leading-snug line-clamp-2">
-                {{ recipe.name }}
-              </h3>
+            <h3 class="min-h-[2.45rem] text-[0.875rem] font-semibold text-nido-green-dark leading-snug line-clamp-2">
+              {{ recipe.name }}
+            </h3>
 
-              <div class="grid min-h-[1.25rem] grid-cols-[auto_1fr] items-center gap-3.5">
-                <span class="flex items-center gap-1.5 text-[0.8rem] text-nido-green-dark font-medium">
-                  <lucide-icon name="star" [size]="13" class="text-nido-gold" />
-                  {{ recipe.rating }}
-                </span>
-                <span class="flex items-center gap-1 text-[0.775rem] text-nido-brown">
-                  <lucide-icon name="clock" [size]="13" />
-                  {{ recipe.timeMinutes }} min
-                </span>
-              </div>
+            <div class="flex items-center gap-3.5 min-h-[1.25rem]">
+              <span class="flex items-center gap-1.5 text-[0.8rem] text-nido-green-dark font-medium">
+                <lucide-icon name="star" [size]="13" class="text-nido-gold" />
+                {{ recipe.rating }}
+              </span>
+              <span class="flex items-center gap-1 text-[0.775rem] text-nido-brown">
+                <lucide-icon name="clock" [size]="13" />
+                {{ recipe.timeMinutes }} min
+              </span>
+            </div>
 
-              <div class="flex min-h-[1.15rem] items-center gap-3.5">
-                <span class="flex items-center gap-1 text-[0.775rem] text-nido-brown">
-                  <lucide-icon name="flame" [size]="13" />
+            <div class="flex flex-col gap-1 mt-1.5">
+              <span class="text-[0.68rem] font-bold tracking-wider text-nido-green-dark/60 uppercase mb-1">
+                Información Nutricional <span class="lowercase font-normal text-nido-brown">(por 100g)</span>
+              </span>
+
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="flex items-center gap-1 text-[0.72rem] text-nido-brown bg-nido-brown/5 px-1.5 py-0.5 rounded-[4px] font-medium">
+                  <lucide-icon name="flame" [size]="12" />
                   {{ recipe.calories }} kcal
                 </span>
+
+                <span class="text-[0.72rem] text-nido-green-dark bg-nido-green/10 border border-nido-green/20 px-1.5 py-0.5 rounded-[4px] font-semibold">
+                  💪 {{ recipe.proteinas }} Prot
+                </span>
+
+                <span class="text-[0.72rem] text-nido-brown bg-nido-border/40 px-1.5 py-0.5 rounded-[4px]">
+                  🌾 {{ recipe.carbohidratos }} Carb
+                </span>
+
+                <span class="text-[0.72rem] text-nido-brown bg-nido-border/40 px-1.5 py-0.5 rounded-[4px]">
+                  🥑 {{ recipe.grasas }} Gras
+                </span>
               </div>
+            </div>
+
+
+@for (recipe of iaFilteredRecipes(); track recipe.id) {
+  <div class="recipe-card">
+   
+
+    </div>
+}
 
               <div class="mt-0.5 flex min-h-[1.15rem] items-center gap-1">
                 @if (recipe.vecesCocinada > 0) {

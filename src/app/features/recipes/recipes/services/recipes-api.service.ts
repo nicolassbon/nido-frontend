@@ -73,8 +73,8 @@ export class RecipesApiService {
   // =====================================================================
   // 🔥 NUEVO MÉTODO: CONEXIÓN CON EL ENDPOINT DE IA EN .NET
   // =====================================================================
-  recomendarPorIa(mensaje: string): Observable<ApiReceta> {
-    // Le pega a: http://localhost:8080/api/recetas/ia-recomendar mandando el JSON { mensaje: '...' }
-    return this.http.post<ApiReceta>(`${this.base}/recetas/ia-recomendar`, { mensaje });
+  recomendarPorIa(busqueda: string, objetivo: string): Observable<any> {
+    // Sumamos '/recetas' a la ruta y cambiamos a '&objetivo='
+    return this.http.get<any>(`${this.base}/recetas/ia/recomendar?busqueda=${busqueda}&objetivo=${objetivo}`);
   }
 }
