@@ -11,6 +11,12 @@ import { ListaComprasService } from '../../lista-compras/lista-compras.service';
 import { Electrodomestico, ElectrodomesticosService } from '../../electrodomesticos/services/electrodomesticos.service';
 import { RecipeResenasComponent } from '../recipe-resenas/recipe-resenas';
 
+const SOURCE_LABELS: Record<string, string> = {
+  spoonacular: 'Spoonacular',
+  manual: 'Nido',
+  nido: 'Nido',
+};
+
 @Component({
   selector: 'app-recipe-detail',
   standalone: true,
@@ -208,6 +214,13 @@ export class RecipeDetail {
     return value?.trim() || '-';
   }
 
+  protected nutritionSourceLabel(fuenteId: string | null | undefined): string | null {
+    const sourceKey = fuenteId?.trim().split('-')[0]?.toLowerCase();
+    if (!sourceKey) return null;
+
+    return SOURCE_LABELS[sourceKey] ?? this.toTitleCase(sourceKey);
+  }
+
   protected formatApplianceName(value: string | null | undefined): string {
     const clean = value?.trim();
     if (!clean) return 'Electrodomestico';
@@ -249,6 +262,13 @@ export class RecipeDetail {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, ' ')
       .trim();
+  }
+
+  private toTitleCase(value: string): string {
+    return value
+      .replace(/[_\s]+/g, ' ')
+      .trim()
+      .replace(/\b\w/g, letter => letter.toUpperCase());
   }
 
   private resolveImageUrl(url: string | null): string | null {

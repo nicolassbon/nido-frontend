@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface StockItemResponse {
@@ -20,6 +20,9 @@ export interface StockItemResponse {
   /** Cantidad de envases idénticos del mismo producto (default 1). */
   cantidadEnvases:     number;
 }
+
+export type DeleteStockMotivo = 'consumido' | 'descartado' | 'vencido';
+export type StockMovementMotivo = DeleteStockMotivo | 'cocinado';
 
 export interface CreateStockItemRequest {
   nombre:              string;
@@ -52,6 +55,25 @@ export interface ProductoApiResponse {
   imagen:          string | null;
   categoriaNombre: string | null;
   ttlDias:         number | null;
+}
+
+export interface StockMovementResponse {
+  id:             string;
+  productoId:     string | null;
+  productoNombre: string;
+  cantidad:       number;
+  unidadMedida:   string | null;
+  motivo:         StockMovementMotivo;
+  fechaConsumo:   string;
+  usuarioId:      string | null;
+}
+
+export interface StockMovementFilters {
+  motivo?: StockMovementMotivo | 'todos';
+  desde?:  string | null;
+  hasta?:  string | null;
+  q?:      string | null;
+  limit?:  number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -98,7 +120,25 @@ export class AlacenaApiService {
     );
   }
 
-  deleteStock(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.base}/alacena/productos/${id}`);
+  deleteStock(id: string, motivo?: DeleteStockMotivo): Observable<void> {
+    const options = motivo ? { params: { motivo } } : undefined;
+    return this.http.delete<void>(`${this.base}/alacena/productos/${id}`, options);
+  }
+
+  getMovimientos(filters: StockMovementFilters = {}): Observable<StockMovementResponse[]> {
+    const params: Record<string, string> = {};
+
+    if (filters.motivo && filters.motivo !== 'todos') params['motivo'] = filters.motivo;
+    if (filters.desde) params['desde'] = filters.desde;
+    if (filters.hasta) params['hasta'] = filters.hasta;
+    if (filters.q?.trim()) params['q'] = filters.q.trim();
+    if (filters.limit) params['limit'] = String(filters.limit);
+
+    return this.http
+      .get<StockMovementResponse[]>(`${this.base}/alacena/movimientos`, { params })
+      .pipe(
+        map(response => Array.isArray(response) ? response : []),
+        catchError(() => of([])),
+      );
   }
 }

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, Output, EventEmitter, Input, signal, OnInit, OnDestroy } from '@angular/core';
-import { switchMap, of, Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { switchMap, of, Subject, debounceTime, distinctUntilChanged, takeUntil, map, catchError } from 'rxjs';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ProductService, SearchProductoResponse } from '../../core/servicios/agregar-producto.service';
 import { AlacenaApiService, StockItemResponse } from '../alacena/alacena-api.service';
@@ -11,6 +11,7 @@ import { ListaComprasService } from '../lista-compras/lista-compras.service';
 import { NidoSelectComponent, NidoSelectOption } from '../../shared/ui/form/nido-select/nido-select';
 import { NidoDatepickerComponent } from '../../shared/ui/form/nido-datepicker/nido-datepicker';
 import { EstimatedDateNoticeComponent } from '../../shared/ui/estimated-date-notice/estimated-date-notice';
+import { validatePhotoFile } from '../../shared/validators/photo';
 
 /** Producto conocido para autocompletar (proviene de la alacena ya cargada) */
 export interface KnownProduct {
@@ -48,6 +49,9 @@ export class AgregarProducto implements OnInit, OnDestroy {
 
   protected isSaving     = false;
   protected errorMessage = '';
+  protected warningMessage = '';
+  protected selectedImage = signal<File | null>(null);
+  protected imageError = signal<string | null>(null);
 
   protected isOpened    = signal(false);
   protected consumedPct = signal(0);
@@ -260,6 +264,35 @@ export class AgregarProducto implements OnInit, OnDestroy {
     if (!this.isModal) this.router.navigate(['/alacena']);
   }
 
+  onImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+
+    if (!file) {
+      return;
+    }
+
+    this.imageError.set(null);
+    this.warningMessage = '';
+
+    const validationError = validatePhotoFile(file);
+    if (validationError) {
+      this.selectedImage.set(null);
+      this.imageError.set(validationError);
+      input.value = '';
+      return;
+    }
+
+    this.selectedImage.set(file);
+    input.value = '';
+  }
+
+  removeSelectedImage(): void {
+    this.selectedImage.set(null);
+    this.imageError.set(null);
+    this.warningMessage = '';
+  }
+
   updateQuantity(delta: number): void {
     const current = this.parseCantidad(this.form.get('cantidad')?.value) || 1;
     this.form.patchValue({ cantidad: Math.max(1, current + delta) });
@@ -278,6 +311,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
 
     this.isSaving     = true;
     this.errorMessage = '';
+    this.warningMessage = '';
 
     if (this.isEditMode) {
       this.submitEdit();
@@ -306,6 +340,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
 
     const isOpened    = this.isOpened();
     const consumedPct = this.consumedPct();
+    let imageUploadFailed = false;
 
     // ¿Ya existe en la alacena con el mismo nombre, unidad y cantidad-por-envase?
     // → en vez de duplicar la tarjeta, sumamos cantidad de envases al existente.
@@ -319,8 +354,15 @@ export class AgregarProducto implements OnInit, OnDestroy {
     );
 
     if (existing?.stockId) {
+      if (this.selectedImage()) {
+        this.imageError.set('Este producto ya existe en tu alacena. Quitá la imagen seleccionada para sumar cantidad sin crear duplicados.');
+        this.isSaving = false;
+        return;
+      }
+
       const nuevosEnvases = (existing.cantidadEnvases ?? 1) + cantidadEnvasesInput;
-      this.alacenaApi.updateStock(existing.stockId, { cantidadEnvases: nuevosEnvases }).subscribe({
+      const nuevaCantidad = (existing.cantidad ?? 0) + payload.cantidad;
+      this.alacenaApi.updateStock(existing.stockId, { cantidadEnvases: nuevosEnvases, cantidad: nuevaCantidad }).subscribe({
         next: () => {
           this.listaComprasService.marcarCompradoPorNombre(payload.nombre);
           this.form.reset({ cantidad: null, ubicacion: 'Alacena', cantidadEnvases: 1 });
@@ -344,6 +386,21 @@ export class AgregarProducto implements OnInit, OnDestroy {
     // no acepta esos campos (los maneja /alacena/productos).
     this.productService.createStockHome(payload).pipe(
       switchMap(created => {
+        const selectedImage = this.selectedImage();
+        if (!selectedImage || !created?.productoId) {
+          return of(created);
+        }
+
+        return this.productService.uploadProductImage(created.productoId, selectedImage).pipe(
+          map(() => created),
+          catchError((error) => {
+            imageUploadFailed = true;
+            console.warn('Product was created but image upload failed.', error);
+            return of(created);
+          }),
+        );
+      }),
+      switchMap(created => {
         const needsPatch = isOpened || consumedPct > 0;
         if (!needsPatch) return of(null);
         const id = created?.stockHogarId;
@@ -355,10 +412,15 @@ export class AgregarProducto implements OnInit, OnDestroy {
       }),
     ).subscribe({
       next: () => {
+        if (imageUploadFailed) {
+          this.listaComprasService.marcarCompradoPorNombre(payload.nombre);
+          this.resetCreateForm();
+          this.warningMessage = 'El producto se guardó, pero no se pudo subir la imagen.';
+          this.isSaving = false;
+          return;
+        }
         this.listaComprasService.marcarCompradoPorNombre(payload.nombre);
-        this.form.reset({ cantidad: null, ubicacion: 'Alacena', cantidadEnvases: 1 });
-        this.isOpened.set(false);
-        this.consumedPct.set(0);
+        this.resetCreateForm();
         this.isSaving = false;
         this.closed.emit();
         if (!this.isModal) this.router.navigate(['/alacena']);
@@ -369,6 +431,14 @@ export class AgregarProducto implements OnInit, OnDestroy {
         this.isSaving     = false;
       },
     });
+  }
+
+  private resetCreateForm(): void {
+    this.form.reset({ cantidad: null, ubicacion: 'Alacena', cantidadEnvases: 1 });
+    this.isOpened.set(false);
+    this.consumedPct.set(0);
+    this.selectedImage.set(null);
+    this.imageError.set(null);
   }
 
   private submitEdit(): void {
@@ -394,6 +464,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
           fechaVencimiento: patch.fechaVencimiento,
           estaAbierto: patch.estaAbierto,
           porcentajeConsumido: patch.porcentajeConsumido,
+          cantidadEnvases: updated.cantidadEnvases,
         };
         this.isSaving = false;
         this.closed.emit(edited);

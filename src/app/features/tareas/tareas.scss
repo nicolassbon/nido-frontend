@@ -184,6 +184,13 @@
   transition: all 0.15s;
 
   &:hover { border-color: var(--color-nido-gold); color: var(--color-nido-gold); }
+
+  &.completada {
+    border-color: #3a8a4a;
+    background: #3a8a4a;
+    color: #fff;
+    cursor: default;
+  }
 }
 
 .tarea-icon-wrap {
@@ -655,8 +662,9 @@
   display: none;
 }
 
-/* hover más visible dentro del modal mis tareas */
-.modal-mis-body .tarea-item:hover {
+/* hover más visible dentro del modal mis tareas y elemento resaltado */
+.modal-mis-body .tarea-item:hover,
+.modal-mis-body .tarea-item.highlighted {
   background: #ede3d8;
 }
 

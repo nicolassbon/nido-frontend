@@ -25,6 +25,13 @@ export interface ApiRecetaElectrodomestico {
   tipoRequerido: string | null;
 }
 
+export interface ApiRecetaProductoPorVencer {
+  productoId: string;
+  nombre: string;
+  fechaVencimiento: string;
+  diasHastaVencimiento: number;
+}
+
 export interface ApiReceta {
   id: string;
   nombre: string;
@@ -47,6 +54,10 @@ export interface ApiReceta {
   calificacionPromedio?: number;
   /** Cantidad de reseñas. */
   calificacionTotal?: number;
+  tieneProductosPorVencer?: boolean;
+  fechaVencimientoMasProxima?: string | null;
+  diasHastaVencimiento?: number | null;
+  productosPorVencer?: ApiRecetaProductoPorVencer[];
 }
 
 export interface CocinarRecetaResponse {

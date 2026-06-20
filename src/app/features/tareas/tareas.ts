@@ -3,7 +3,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   LucideAngularModule, Plus, Check, X, Trash2, User,
@@ -30,6 +30,8 @@ export class Tareas implements OnInit {
   private readonly hogaresApi = inject(HogaresApiService);
   private readonly authService = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   protected readonly icons = {
     Plus, Check, X, Trash2, User, Calendar, ChevronRight, ChevronDown, LayoutGrid, List, Clock, AlertCircle,
@@ -39,6 +41,17 @@ export class Tareas implements OnInit {
   // ── Estado principal ─────────────────────────────────────
   protected readonly misTareas = signal<TareaResponse[]>([]);
   protected readonly todasTareas = signal<TareaResponse[]>([]);
+  protected readonly misTareasConResaltada = computed(() => {
+    const list = [...this.misTareas()];
+    const highlightedId = this.highlightedTaskId();
+    if (highlightedId && !list.some(t => t.id === highlightedId)) {
+      const highlightedTask = this.todasTareas().find(t => t.id === highlightedId);
+      if (highlightedTask) {
+        list.push(highlightedTask);
+      }
+    }
+    return list;
+  });
   protected readonly distribucion = signal<DistribucionSemanalResponse | null>(null);
   protected readonly miembros = signal<MiembroResponse[]>([]);
   protected readonly loading = signal(false);
@@ -46,6 +59,7 @@ export class Tareas implements OnInit {
   protected readonly filtroAsignado = signal<string | null>(null);
   protected readonly mostrarModal = signal(false);
   protected readonly mostrarModalMisTareas = signal(false);
+  protected readonly highlightedTaskId = signal<string | null>(null);
   protected readonly reasignandoTareaId = signal<string | null>(null);
   protected readonly reasignandoPos = signal<{ top: number; left: number } | null>(null);
 
@@ -110,13 +124,35 @@ export class Tareas implements OnInit {
 
   ngOnInit(): void {
     this.cargarDatos();
+    this.route.queryParams
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const taskId = params['taskId'];
+        if (taskId) {
+          this.highlightedTaskId.set(taskId);
+          this.abrirModalMisTareas();
+        }
+      });
   }
 
   private cargarDatos(): void {
     this.loading.set(true);
     this.api.getMisTareas()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: t => this.misTareas.set(t), error: () => {} });
+      .subscribe({
+        next: t => {
+          this.misTareas.set(t);
+          if (this.mostrarModalMisTareas() && this.highlightedTaskId()) {
+            setTimeout(() => {
+              const el = document.querySelector('.modal-mis-body .tarea-item.highlighted');
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            }, 100);
+          }
+        },
+        error: () => {}
+      });
 
     this.api.getTareas()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -149,10 +185,24 @@ export class Tareas implements OnInit {
 
   protected abrirModalMisTareas(): void {
     this.mostrarModalMisTareas.set(true);
+    if (this.misTareasConResaltada().length > 0 && this.highlightedTaskId()) {
+      setTimeout(() => {
+        const el = document.querySelector('.modal-mis-body .tarea-item.highlighted');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+    }
   }
 
   protected cerrarModalMisTareas(): void {
     this.mostrarModalMisTareas.set(false);
+    this.highlightedTaskId.set(null);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { taskId: null },
+      queryParamsHandling: 'merge',
+    });
   }
 
   protected guardarTarea(): void {

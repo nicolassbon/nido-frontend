@@ -32,14 +32,26 @@
     color: var(--color-nido-muted);
   }
 
-  &__label {
+  &__input {
     flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    min-width: 0;
+    height: 100%;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    padding: 0;
+    cursor: text;
 
-    &.is-placeholder {
+    &::placeholder {
       color: var(--color-nido-muted);
+      opacity: 1;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
     }
   }
 
