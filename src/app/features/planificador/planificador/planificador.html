@@ -65,6 +65,22 @@
                 class="plan-slot"
                 [class.plan-slot--tasks]="tipo === 'tarea'"
                 [class.plan-slot--filled]="slotItems.length > 0">
+                <div class="slot-mobile-label">
+                  <span>
+                    <lucide-icon [name]="TIPO_ICONS[tipo]" [size]="15" />
+                    {{ TIPO_LABELS[tipo] }}
+                  </span>
+                  @if (slotItems.length > 0) {
+                    <button
+                      type="button"
+                      class="slot-mobile-add"
+                      (click)="openModal(dia.isoDate, tipo)"
+                      [title]="'Agregar ' + TIPO_LABELS[tipo]">
+                      <lucide-icon name="plus" [size]="14" />
+                    </button>
+                  }
+                </div>
+
                 @for (item of slotItems; track item.id) {
                   <article class="plan-card" [class.plan-card--task]="tipo === 'tarea'">
                     @if (tipo !== 'tarea') {

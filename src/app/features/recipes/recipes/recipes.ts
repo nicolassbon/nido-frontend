@@ -2,7 +2,28 @@ import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { LucideAngularModule } from 'lucide-angular';
+import {
+  AlarmClock,
+  AlertTriangle,
+  Bookmark,
+  Check,
+  CheckSquare,
+  ChevronDown,
+  ChefHat,
+  Clock,
+  Eye,
+  Flame,
+  LucideAngularModule,
+  Pencil,
+  Search,
+  Shield,
+  ShoppingBasket,
+  Shuffle,
+  SlidersHorizontal,
+  Star,
+  X,
+  Zap,
+} from 'lucide-angular';
 import { ElectrodomesticosService } from '../../electrodomesticos/services/electrodomesticos.service';
 import { HogaresApiService, MiembroResponse } from '../../household/hogares-api.service';
 import { environment } from '../../../../environments/environment';
@@ -126,6 +147,28 @@ export class Recipes implements OnInit {
   private readonly hogaresApi        = inject(HogaresApiService);
   private readonly perfilApi         = inject(PerfilApiService);
   private readonly destroyRef        = inject(DestroyRef);
+
+  protected readonly icons = {
+    AlarmClock,
+    AlertTriangle,
+    Bookmark,
+    Check,
+    CheckSquare,
+    ChevronDown,
+    ChefHat,
+    Clock,
+    Eye,
+    Flame,
+    Pencil,
+    Search,
+    Shield,
+    ShoppingBasket,
+    Shuffle,
+    SlidersHorizontal,
+    Star,
+    X,
+    Zap,
+  };
 
   protected readonly searchQuery              = signal('');
   protected readonly activeFilter             = signal<FilterOption>('Todos');

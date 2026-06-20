@@ -26,6 +26,39 @@ export class PerfilComponent implements OnInit {
   protected readonly isLoading = signal(true);
   protected readonly apiError = signal<string | null>(null);
   protected readonly nombreHogar = signal<string | null>(null);
+  protected readonly statCards = computed(() => {
+    const profile = this.usuario();
+    const tareasCompletadas = profile?.tareasCompletadas ?? 0;
+    const productosEscaneados = profile?.productosEscaneados ?? 0;
+    const logros = profile?.logros ?? 0;
+
+    return [
+      {
+        icon: 'check-square',
+        value: tareasCompletadas,
+        title: 'Tareas completadas',
+        subtitle: tareasCompletadas > 0
+          ? 'Tareas terminadas por vos en este hogar.'
+          : 'Todavia no hay tareas completadas.',
+      },
+      {
+        icon: 'scan-line',
+        value: productosEscaneados,
+        title: 'Productos escaneados',
+        subtitle: productosEscaneados > 0
+          ? 'Productos cargados con codigo de barras.'
+          : 'Todavia no hay productos escaneados.',
+      },
+      {
+        icon: 'trophy',
+        value: logros,
+        title: 'Logros',
+        subtitle: logros > 0
+          ? 'Logros desbloqueados en tu cuenta.'
+          : 'Todavia no hay logros desbloqueados.',
+      },
+    ];
+  });
 
   // --- Estados de Edición ---
   protected readonly isEditingAlergias = signal(false);

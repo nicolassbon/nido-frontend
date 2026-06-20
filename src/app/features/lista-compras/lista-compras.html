@@ -78,7 +78,7 @@
   }
 
   @if (activeList(); as lista) {
-    <section class="bg-white/[0.51] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] overflow-hidden">
+    <section class="bg-white/[0.51] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] overflow-visible">
       <div class="flex flex-col gap-3 px-4 py-3.5 border-b border-nido-border/40 bg-nido-cream/30 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div class="flex min-w-0 flex-wrap items-center gap-2.5">
           <lucide-icon name="shopping-basket" [size]="16" class="text-nido-green-dark shrink-0" />
@@ -106,7 +106,16 @@
         </label>
         <label class="flex flex-col gap-1.5 text-[0.75rem] font-semibold text-nido-brown">
           Unidad
-          <input class="h-10 rounded-[10px] border border-nido-border bg-white px-3 text-[0.875rem] font-medium text-nido-green-dark outline-none focus:border-nido-green-dark" [(ngModel)]="itemUnidad" name="itemUnidad" placeholder="unidad">
+          <nido-select
+            [(ngModel)]="itemUnidad"
+            name="itemUnidad"
+            [options]="unidadesOpts"
+            [style.--nido-select-height]="'2.5rem'"
+            [style.--nido-select-radius]="'0.625rem'"
+            [style.--nido-select-border-color]="'var(--color-nido-border)'"
+            [style.--nido-select-background]="'#fff'"
+            [style.--nido-select-font-size]="'0.875rem'"
+            placeholder="Unidad" />
         </label>
         <button class="h-10 rounded-[20px] bg-nido-green-dark px-4 text-[0.8rem] font-semibold text-nido-cream disabled:cursor-not-allowed disabled:opacity-50" [disabled]="!itemNombre.trim() || isSaving" (click)="saveItem(lista.id)">
           {{ editingItem ? 'Guardar' : 'Agregar' }}

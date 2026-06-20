@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { LucideAngularModule } from 'lucide-angular';
+import { Bookmark, BookmarkCheck, LucideAngularModule } from 'lucide-angular';
 import { environment } from '../../../../environments/environment';
 import { ApiReceta, ApiRecetaIngrediente, RecipesApiService } from '../recipes/services/recipes-api.service';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -32,6 +32,8 @@ export class RecipeDetail {
   private readonly electrodomesticosService = inject(ElectrodomesticosService);
   protected readonly router       = inject(Router);
   private readonly destroyRef     = inject(DestroyRef);
+  protected readonly bookmarkIcon = Bookmark;
+  protected readonly bookmarkCheckIcon = BookmarkCheck;
 
   protected readonly recipe           = signal<ApiReceta | null>(null);
   protected readonly loading          = signal(false);
@@ -273,8 +275,8 @@ export class RecipeDetail {
     const normalized = this.normalizeText(value);
     if (normalized.includes('horno')) return 'cooking-pot';
     if (normalized.includes('micro')) return 'microwave';
-    if (normalized.includes('licuadora')) return 'blender';
-    if (normalized.includes('batidora')) return 'hand';
+    if (normalized.includes('licuadora')) return 'blend';
+    if (normalized.includes('batidora')) return 'cog';
     if (normalized.includes('heladera')) return 'refrigerator';
     if (normalized.includes('freezer')) return 'snowflake';
     return 'plug';
