@@ -7,7 +7,7 @@ import { appConfig } from '../../app.config';
 
 import { AgregarProducto } from './agregar-producto';
 import { AlacenaApiService, StockItemResponse } from '../alacena/alacena-api.service';
-import { ProductService, type CreateStockHomeResponse } from '../../core/servicios/agregar-producto.service';
+import { ProductService } from '../../core/servicios/agregar-producto.service';
 import { ListaComprasService } from '../lista-compras/lista-compras.service';
 
 describe('AgregarProducto', () => {
@@ -48,6 +48,7 @@ describe('AgregarProducto', () => {
       estaAbierto: false,
       porcentajeConsumido: 0,
       cantidadEnvases: 1,
+      origenCarga: 'manual',
     } satisfies StockItemResponse;
 
     component.ngOnInit();
@@ -71,6 +72,7 @@ describe('AgregarProducto', () => {
       estaAbierto: false,
       porcentajeConsumido: 0,
       cantidadEnvases: 1,
+      origenCarga: 'manual',
     };
     const updatedFromApi: StockItemResponse = {
       ...original,
@@ -91,20 +93,24 @@ describe('AgregarProducto', () => {
 
   it('should upload the selected image after creating a manual product', () => {
     const productService = TestBed.inject(ProductService);
-    const createResponse: CreateStockHomeResponse = {
-      stockHogarId: 'stock-1',
+    const alacenaApi = TestBed.inject(AlacenaApiService);
+    const createResponse: StockItemResponse = {
+      id: 'stock-1',
       productoId: 'prod-1',
-      cantidadActual: 1,
+      nombre: 'Yerba',
+      imagen: null,
+      codigoBarras: null,
+      categoriaNombre: null,
+      cantidad: 1,
       unidadMedida: 'kg',
       fechaVencimiento: null,
-      usuarioIngresoId: 'user-1',
       ubicacion: 'Alacena',
       estaAbierto: false,
       porcentajeConsumido: 0,
-      categoriaId: '33333333-3333-3333-3333-333333333333',
       cantidadEnvases: 1,
+      origenCarga: 'manual',
     };
-    const createSpy = vi.spyOn(productService, 'createStockHome').mockReturnValue(of(createResponse));
+    const createSpy = vi.spyOn(alacenaApi, 'createStock').mockReturnValue(of(createResponse));
     const uploadSpy = vi.spyOn(productService, 'uploadProductImage').mockReturnValue(of(void 0));
 
     const image = new File(['image'], 'yerba.png', { type: 'image/png' });
@@ -126,28 +132,32 @@ describe('AgregarProducto', () => {
 
     component.onSubmit();
 
-    expect(createSpy).toHaveBeenCalled();
+    expect(createSpy).toHaveBeenCalledWith(expect.objectContaining({ origenCarga: 'manual' }));
     expect(uploadSpy).toHaveBeenCalledWith('prod-1', image);
   });
 
   it('should keep the create flow successful when image upload fails', () => {
     const productService = TestBed.inject(ProductService);
+    const alacenaApi = TestBed.inject(AlacenaApiService);
     const shoppingListService = TestBed.inject(ListaComprasService);
-    const createResponse: CreateStockHomeResponse = {
-      stockHogarId: 'stock-1',
+    const createResponse: StockItemResponse = {
+      id: 'stock-1',
       productoId: 'prod-1',
-      cantidadActual: 1,
+      nombre: 'Yerba',
+      imagen: null,
+      codigoBarras: null,
+      categoriaNombre: null,
+      cantidad: 1,
       unidadMedida: 'kg',
       fechaVencimiento: null,
-      usuarioIngresoId: 'user-1',
       ubicacion: 'Alacena',
       estaAbierto: false,
       porcentajeConsumido: 0,
-      categoriaId: '33333333-3333-3333-3333-333333333333',
       cantidadEnvases: 1,
+      origenCarga: 'manual',
     };
 
-    vi.spyOn(productService, 'createStockHome').mockReturnValue(of(createResponse));
+    vi.spyOn(alacenaApi, 'createStock').mockReturnValue(of(createResponse));
     vi.spyOn(productService, 'uploadProductImage').mockReturnValue(throwError(() => new Error('upload failed')));
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const closedSpy = vi.spyOn(component.closed, 'emit');

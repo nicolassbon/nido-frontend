@@ -31,6 +31,7 @@ export interface ProductManualResponse {
   estaAbierto: boolean;
   porcentajeConsumido: number;
   cantidadEnvases: number;
+  origenCarga?: 'manual' | 'codigo_barras' | 'ticket_compra';
 }
 
 export interface CreateStockHomeResponse {

@@ -1,0 +1,261 @@
+<div class="planificador-page" (click)="closeItemMenu()">
+  <header class="plan-hero">
+    <div class="plan-hero__content">
+      <div>
+        <h1>Planificador Semanal</h1>
+        <p>Organiza tus comidas y tareas para mantener tu hogar abastecido.</p>
+      </div>
+
+      <div class="plan-hero__actions">
+        <div class="plan-nav">
+          <button type="button" class="icon-btn" (click)="prevSemana()" title="Semana anterior">
+            <lucide-icon name="chevron-left" [size]="18" />
+          </button>
+          <span>{{ rangoSemana() }}</span>
+          <button type="button" class="icon-btn" (click)="nextSemana()" title="Semana siguiente">
+            <lucide-icon name="chevron-right" [size]="18" />
+          </button>
+        </div>
+        <button type="button" class="plan-cta" (click)="openQuickPlan()">
+          <lucide-icon name="plus" [size]="16" />
+          Planificar
+        </button>
+      </div>
+    </div>
+  </header>
+
+  @if (isLoading()) {
+    <section class="plan-loading">
+      <span class="plan-spinner"></span>
+      <p>Cargando planificador...</p>
+    </section>
+  } @else {
+    @if (errorMessage()) {
+      <section class="plan-error">
+        <lucide-icon name="alert-circle" [size]="15" />
+        <span>{{ errorMessage() }}</span>
+      </section>
+    }
+
+    <section class="plan-board" aria-label="Planificador semanal">
+      <div class="plan-grid">
+        <div class="plan-row-labels">
+          <div class="plan-day-spacer"></div>
+          @for (tipo of TIPOS; track tipo) {
+            <div class="meal-label">
+              <lucide-icon [name]="TIPO_ICONS[tipo]" [size]="20" />
+              <span>{{ TIPO_LABELS[tipo] }}</span>
+            </div>
+          }
+        </div>
+
+        @for (dia of dias(); track dia.isoDate) {
+          <article class="day-column" [class.day-column--today]="dia.esHoy">
+            <header class="day-header">
+              <strong>{{ dia.dayName }}</strong>
+              <span>{{ dia.dayLabel }}</span>
+              @if (dia.esHoy) {
+                <em>Hoy</em>
+              }
+            </header>
+
+            @for (tipo of TIPOS; track tipo) {
+              @let slotItems = getItems(dia.isoDate, tipo);
+              <div
+                class="plan-slot"
+                [class.plan-slot--tasks]="tipo === 'tarea'"
+                [class.plan-slot--filled]="slotItems.length > 0">
+                <div class="slot-mobile-label">
+                  <span>
+                    <lucide-icon [name]="TIPO_ICONS[tipo]" [size]="15" />
+                    {{ TIPO_LABELS[tipo] }}
+                  </span>
+                  @if (slotItems.length > 0) {
+                    <button
+                      type="button"
+                      class="slot-mobile-add"
+                      (click)="openModal(dia.isoDate, tipo)"
+                      [title]="'Agregar ' + TIPO_LABELS[tipo]">
+                      <lucide-icon name="plus" [size]="14" />
+                    </button>
+                  }
+                </div>
+
+                @for (item of slotItems; track item.id) {
+                  <article class="plan-card" [class.plan-card--task]="tipo === 'tarea'">
+                    @if (tipo !== 'tarea') {
+                      @if (itemImage(item); as img) {
+                        <img [src]="img" [alt]="itemTitle(item)" />
+                      } @else {
+                        <div class="plan-card__empty">
+                          <lucide-icon name="image" [size]="18" />
+                        </div>
+                      }
+                    } @else {
+                      <span class="task-check"></span>
+                    }
+
+                    <div class="plan-card__body">
+                      <strong>{{ itemTitle(item) }}</strong>
+                      @if (item.hora) {
+                        <small>{{ formatTime(item.hora) }}</small>
+                      }
+                    </div>
+
+                    <button type="button" class="card-menu" (click)="toggleItemMenu(item.id, $event)" title="Opciones">
+                      <lucide-icon name="ellipsis-vertical" [size]="15" />
+                    </button>
+
+                    @if (openMenuItemId() === item.id) {
+                      <div class="card-actions-menu" (click)="$event.stopPropagation()">
+                        <button type="button" (click)="openEditModal(item)">
+                          <lucide-icon name="pencil" [size]="13" />
+                          <span>Editar</span>
+                        </button>
+                        <button type="button" class="card-actions-menu__danger" (click)="deleteItem(item.id, $event)">
+                          <lucide-icon name="trash-2" [size]="13" />
+                          <span>Eliminar</span>
+                        </button>
+                      </div>
+                    }
+                  </article>
+                }
+
+                @if (slotItems.length === 0) {
+                  <button
+                    type="button"
+                    class="slot-add"
+                    (click)="openModal(dia.isoDate, tipo)"
+                    [title]="'Agregar ' + TIPO_LABELS[tipo]">
+                    <lucide-icon name="plus" [size]="14" />
+                    @if (tipo === 'tarea') {
+                      <span>Aniadir tarea</span>
+                    }
+                  </button>
+                }
+              </div>
+            }
+          </article>
+        }
+      </div>
+    </section>
+  }
+
+  <footer class="plan-tip">
+    <lucide-icon name="lightbulb" [size]="15" />
+    <strong>Consejo Nido:</strong>
+    <span>Planificar tus comidas con anticipacion ayuda a comprar mejor y reducir desperdicios.</span>
+  </footer>
+</div>
+
+@if (showModal() && modalSlot()) {
+  <div class="plan-modal-backdrop" (click)="closeModal()">
+    <div class="plan-modal" (click)="$event.stopPropagation()">
+      <header class="plan-modal__header">
+        <span>
+          <lucide-icon [name]="TIPO_ICONS[modalSlot()!.tipoComida]" [size]="18" />
+        </span>
+        <div>
+          <h2>{{ modalTitle() }}</h2>
+          <p>{{ TIPO_LABELS[modalSlot()!.tipoComida] }} - {{ modalDateLabel() }}</p>
+        </div>
+        <button type="button" class="icon-btn icon-btn--light" (click)="closeModal()" title="Cerrar">
+          <lucide-icon name="x" [size]="18" />
+        </button>
+      </header>
+
+      <div class="plan-modal__body">
+        @if (modalSlot()!.tipoComida === 'tarea') {
+          <label class="field-label">Tarea</label>
+          <input
+            class="field-input"
+            type="text"
+            placeholder="Ej: Limpiar la heladera"
+            maxlength="120"
+            [ngModel]="modalSlot()!.tituloLibre"
+            (ngModelChange)="updateTaskTitle($event)"
+            autofocus />
+        } @else {
+          <label class="field-label">Receta</label>
+          <div class="recipe-search">
+            <lucide-icon name="search" [size]="15" />
+            <input
+              type="text"
+              placeholder="Buscar receta"
+              [ngModel]="recipeQuery()"
+              (ngModelChange)="recipeQuery.set($event)" />
+          </div>
+
+          <div class="recipe-picker">
+            @if (isLoadingRecipes()) {
+              <div class="recipe-picker__state">
+                <span class="plan-spinner plan-spinner--sm"></span>
+                <span>Cargando recetas...</span>
+              </div>
+            } @else if (recetasFiltradas().length === 0) {
+              <div class="recipe-picker__state">No hay recetas para esa busqueda.</div>
+            } @else {
+              @for (receta of recetasFiltradas(); track receta.id) {
+                <button
+                  type="button"
+                  class="recipe-option"
+                  [class.recipe-option--selected]="modalSlot()!.recetaId === receta.id"
+                  (click)="selectRecipe(receta)">
+                  @if (recipeImage(receta); as img) {
+                    <img [src]="img" [alt]="receta.nombre" />
+                  } @else {
+                    <span class="recipe-option__empty">
+                      <lucide-icon name="chef-hat" [size]="16" />
+                    </span>
+                  }
+                  <span>
+                    <strong>{{ receta.nombre }}</strong>
+                    <small>
+                      {{ receta.tiempoCoccionMin || '-' }} min
+                      @if (receta.dificultad) {
+                        - {{ receta.dificultad }}
+                      }
+                    </small>
+                  </span>
+                  @if (modalSlot()!.recetaId === receta.id) {
+                    <lucide-icon name="check" [size]="16" />
+                  }
+                </button>
+              }
+            }
+          </div>
+        }
+
+        <label class="field-label field-label--inline">Hora</label>
+        <input
+          class="field-input field-input--time"
+          type="time"
+          [ngModel]="modalSlot()!.hora"
+          (ngModelChange)="updateSlotTime($event)" />
+
+        @if (errorMessage()) {
+          <p class="modal-error">
+            <lucide-icon name="alert-circle" [size]="14" />
+            {{ errorMessage() }}
+          </p>
+        }
+      </div>
+
+      <footer class="plan-modal__footer">
+        <button type="button" class="modal-secondary" (click)="closeModal()">Cancelar</button>
+        <button
+          type="button"
+          class="modal-primary"
+          [disabled]="isSaving() || (modalSlot()!.tipoComida === 'tarea' ? !modalSlot()!.tituloLibre.trim() : !modalSlot()!.recetaId)"
+          (click)="saveItem()">
+          @if (isSaving()) {
+            <span class="plan-spinner plan-spinner--sm"></span>
+          } @else {
+            <lucide-icon name="check" [size]="15" />
+          }
+          {{ editingItem() ? 'Guardar cambios' : 'Guardar' }}
+        </button>
+      </footer>
+    </div>
+  </div>
+}

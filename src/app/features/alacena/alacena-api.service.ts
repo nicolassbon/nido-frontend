@@ -18,6 +18,7 @@ export interface StockItemResponse {
   estaAbierto:         boolean;
   porcentajeConsumido: number;
   cantidadEnvases:     number;
+  origenCarga:          'manual' | 'codigo_barras' | 'ticket_compra';
 }
 
 export type DeleteStockMotivo = 'consumido' | 'descartado' | 'vencido';
@@ -25,6 +26,7 @@ export type StockMovementMotivo = DeleteStockMotivo | 'cocinado';
 
 export interface CreateStockItemRequest {
   nombre:              string;
+  categoriaId?:        string | null;
   codigoBarras:        string | null;
   imagen:              string | null;
   ubicacion:           string;
@@ -34,6 +36,7 @@ export interface CreateStockItemRequest {
   estaAbierto:         boolean;
   porcentajeConsumido: number;
   cantidadEnvases?:    number;
+  origenCarga?:         'manual' | 'codigo_barras' | 'ticket_compra';
 }
 
 export interface UpdateStockItemRequest {
