@@ -2,6 +2,7 @@
 
   <!-- ══ BANNER ════════════════════════════════════════════════════════════════ -->
   <section class="relative overflow-hidden rounded-[14px] px-8 py-7 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
+    <div class="absolute inset-0 bg-[url('/images/banners/finanzas.png')] bg-center bg-cover"></div>
     <div class="relative z-10">
       <h1 class="text-nido-cream text-[1.6rem] font-bold">Finanzas</h1>
       <p class="text-nido-cream/70 text-sm mt-0.5">Tu resumen financiero del mes</p>
@@ -34,7 +35,7 @@
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
     <!-- Gasto total del mes -->
-    <div class="bg-white rounded-[18px] border border-nido-border/50 p-5 flex items-start gap-4">
+    <div class="bg-white/[0.51] rounded-[18px] border border-nido-border/50 p-5 flex items-start gap-4">
       <div class="w-11 h-11 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0">
         <lucide-icon name="wallet" [size]="18" class="text-nido-cream"></lucide-icon>
       </div>
@@ -51,7 +52,7 @@
     </div>
 
     <!-- Presupuesto mensual -->
-    <div class="bg-white rounded-[18px] border border-nido-border/50 p-5 flex items-start gap-4 cursor-pointer hover:border-nido-green/40 transition-colors duration-150"
+    <div class="bg-white/[0.51] rounded-[18px] border border-nido-border/50 p-5 flex items-start gap-4 cursor-pointer hover:border-nido-green/40 transition-colors duration-150"
          (click)="openPresupuestoModal()">
       <div class="w-11 h-11 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0">
         <lucide-icon name="target" [size]="18" class="text-nido-cream"></lucide-icon>
@@ -77,7 +78,7 @@
     </div>
 
     <!-- Balance compartido -->
-    <div class="bg-white rounded-[18px] border border-nido-border/50 p-5 flex items-start gap-4">
+    <div class="bg-white/[0.51] rounded-[18px] border border-nido-border/50 p-5 flex items-start gap-4">
       <div class="w-11 h-11 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0">
         <lucide-icon name="users" [size]="18" class="text-nido-cream"></lucide-icon>
       </div>
@@ -112,7 +113,7 @@
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
     <!-- Line chart: gasto mensual -->
-    <div class="bg-white rounded-[18px] border border-nido-border/50 p-5">
+    <div class="bg-white/[0.51] rounded-[18px] border border-nido-border/50 p-5">
       <p class="text-sm font-semibold text-nido-green-dark mb-4">Gastos del mes</p>
       @if (gastosMesActual().length === 0) {
         <div class="h-[160px] flex items-center justify-center text-nido-muted text-sm">Sin movimientos este mes</div>
@@ -122,7 +123,7 @@
     </div>
 
     <!-- Donut chart: por categoría -->
-    <div class="bg-white rounded-[18px] border border-nido-border/50 p-5">
+    <div class="bg-white/[0.51] rounded-[18px] border border-nido-border/50 p-5">
       <p class="text-sm font-semibold text-nido-green-dark mb-4">Gastos por categoría</p>
       @if (catKeys().length === 0) {
         <div class="h-[160px] flex items-center justify-center text-nido-muted text-sm">Sin movimientos este mes</div>
@@ -148,7 +149,7 @@
   </div>
 
   <!-- ══ TRANSACCIONES ════════════════════════════════════════════════════════ -->
-  <div class="bg-white rounded-[18px] border border-nido-border/50">
+  <div class="bg-white/[0.51] rounded-[18px] border border-nido-border/50">
     <div class="flex items-center justify-between px-5 py-4 border-b border-nido-border/40">
       <p class="text-sm font-semibold text-nido-green-dark">Transacciones recientes</p>
       <div class="flex items-center gap-2">
@@ -202,7 +203,7 @@
 
   <!-- ══ MODO AHORRO BANNER ════════════════════════════════════════════════════ -->
   @if (!modoAhorro()) {
-    <div class="bg-white rounded-[18px] border border-nido-border/50 px-5 py-4 flex items-center gap-4">
+    <div class="bg-white/[0.51] rounded-[18px] border border-nido-border/50 px-5 py-4 flex items-center gap-4">
       <div class="w-9 h-9 rounded-[10px] bg-nido-cream flex items-center justify-center shrink-0">
         <lucide-icon name="leaf" [size]="16" class="text-nido-green"></lucide-icon>
       </div>
@@ -237,7 +238,7 @@
     @if (modoAhorroLoading()) {
       <div class="flex flex-col gap-4">
         @for (i of [1,2,3]; track i) {
-          <div class="bg-white rounded-[18px] border border-nido-border/50 p-5 animate-pulse">
+          <div class="bg-white/[0.51] rounded-[18px] border border-nido-border/50 p-5 animate-pulse">
             <div class="h-4 bg-nido-border/60 rounded w-1/3 mb-4"></div>
             <div class="h-3 bg-nido-border/40 rounded w-full mb-2"></div>
             <div class="h-3 bg-nido-border/40 rounded w-3/4"></div>
@@ -248,7 +249,7 @@
 
       <!-- ── SECCIÓN 1: Potencial de ahorro ──────────────────────────────────── -->
       @if (savingsPotencial(); as pot) {
-        <div class="bg-white rounded-[18px] border border-nido-border/50 p-5">
+        <div class="bg-white/[0.51] rounded-[18px] border border-nido-border/50 p-5">
           <div class="flex items-center gap-2.5 mb-4">
             <div class="w-7 h-7 rounded-[8px] bg-nido-green/10 flex items-center justify-center shrink-0">
               <lucide-icon name="trending-down" [size]="14" class="text-nido-green"></lucide-icon>
@@ -309,7 +310,7 @@
 
       <!-- ── SECCIÓN 2: Insights personalizados ─────────────────────────────── -->
       @if (insights()?.insights?.length) {
-        <div class="bg-white rounded-[18px] border border-nido-border/50 p-5">
+        <div class="bg-white/[0.51] rounded-[18px] border border-nido-border/50 p-5">
           <div class="flex items-center gap-2.5 mb-4">
             <div class="w-7 h-7 rounded-[8px] bg-nido-gold/20 flex items-center justify-center shrink-0">
               <lucide-icon name="lightbulb" [size]="14" class="text-nido-gold"></lucide-icon>
@@ -337,7 +338,7 @@
 
       <!-- ── SECCIÓN 3: Tu alacena puede ayudarte ───────────────────────────── -->
       @if (alacenaOportunidades(); as alacena) {
-        <div class="bg-white rounded-[18px] border border-nido-border/50 p-5">
+        <div class="bg-white/[0.51] rounded-[18px] border border-nido-border/50 p-5">
           <div class="flex items-center gap-2.5 mb-4">
             <div class="w-7 h-7 rounded-[8px] bg-nido-gold/10 flex items-center justify-center shrink-0">
               <lucide-icon name="package" [size]="14" class="text-nido-gold"></lucide-icon>
@@ -430,7 +431,7 @@
   } <!-- end @else modoAhorro -->
 
   <!-- ══ FACTURAS ═══════════════════════════════════════════════════════════════ -->
-  <div class="bg-white rounded-[18px] border border-nido-border/50">
+  <div class="bg-white/[0.51] rounded-[18px] border border-nido-border/50">
     <div class="flex items-center justify-between px-5 py-4 border-b border-nido-border/40">
       <div>
         <p class="text-sm font-semibold text-nido-green-dark">Facturas y servicios</p>
