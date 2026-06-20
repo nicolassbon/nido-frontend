@@ -11,7 +11,7 @@
     <button
       class="relative z-10 flex w-full items-center justify-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)] sm:w-auto"
       (click)="openCreateList()">
-      <lucide-icon name="plus" [size]="15" />
+      <fa-icon [icon]="faIcons.plus" [fixedWidth]="true" />
       Crear lista
     </button>
   </section>
@@ -97,10 +97,10 @@
         </div>
         <div class="flex gap-2">
           <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown hover:text-nido-green-dark" (click)="editList(lista)" title="Editar lista">
-            <lucide-icon name="pencil" [size]="14" />
+            <fa-icon [icon]="faIcons.pen" />
           </button>
           <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown hover:text-nido-red" (click)="deleteList(lista.id, $event)" title="Eliminar lista">
-            <lucide-icon name="trash-2" [size]="14" />
+            <fa-icon [icon]="faIcons.trashCan" />
           </button>
         </div>
       </div>
@@ -156,10 +156,10 @@
             </div>
 
             <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown hover:text-nido-green-dark" (click)="editItem(lista.id, item, $event)" title="Editar producto">
-              <lucide-icon name="pencil" [size]="14" />
+              <fa-icon [icon]="faIcons.pen" />
             </button>
             <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown hover:text-nido-red" (click)="removeItem(lista.id, item.id, $event)" title="Quitar producto">
-              <lucide-icon name="trash-2" [size]="14" />
+              <fa-icon [icon]="faIcons.trashCan" />
             </button>
           </li>
         }
@@ -169,7 +169,7 @@
 
   <section class="bg-white/[0.51] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] overflow-hidden">
     <div class="flex items-center gap-2 px-4 py-3.5 border-b border-nido-border/40 bg-nido-cream/30 sm:px-5">
-      <lucide-icon name="history" [size]="16" class="text-nido-green-dark" />
+      <fa-icon [icon]="faIcons.clockRotateLeft" class="text-nido-green-dark" />
       <h2 class="text-[0.9rem] font-semibold text-nido-green-dark">Historial de compras</h2>
     </div>
 

@@ -3,6 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faClockRotateLeft, faPen, faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { ListaComprasService, RecipeShoppingList, ShoppingHistoryItem, ShoppingItem } from './lista-compras.service';
 import { CatalogoService } from '../../core/servicios/catalogo.service';
 import { NidoSelectComponent, NidoSelectOption } from '../../shared/ui/form/nido-select/nido-select';
@@ -12,7 +14,7 @@ import { AlacenaApiService, CreateStockItemRequest } from '../alacena/alacena-ap
   selector: 'app-lista-compras',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, LucideAngularModule, RouterModule, NidoSelectComponent],
+  imports: [FormsModule, LucideAngularModule, FontAwesomeModule, RouterModule, NidoSelectComponent],
   templateUrl: './lista-compras.html',
 })
 export class ListaCompras implements OnInit, OnDestroy {
@@ -40,6 +42,12 @@ export class ListaCompras implements OnInit, OnDestroy {
   protected uploadingHistoryId: string | null = null;
   protected isSaving = false;
   protected unidadesOpts: NidoSelectOption[] = [];
+  protected readonly faIcons = {
+    clockRotateLeft: faClockRotateLeft,
+    pen: faPen,
+    plus: faPlus,
+    trashCan: faTrashCan,
+  };
 
   private sub = new Subscription();
 
