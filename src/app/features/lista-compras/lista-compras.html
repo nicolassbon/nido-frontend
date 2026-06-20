@@ -59,25 +59,35 @@
       </button>
     </section>
   } @else {
-    <div class="flex flex-wrap gap-2">
-      @for (lista of listas; track lista.id) {
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex flex-wrap gap-2">
+        @for (lista of listas; track lista.id) {
+          <button
+            class="inline-flex items-center gap-2 rounded-[20px] border px-3.5 py-2 text-[0.8rem] font-medium"
+            [class.bg-nido-green-dark]="activeListId === lista.id && !showAllLists"
+            [class.text-nido-cream]="activeListId === lista.id && !showAllLists"
+            [class.bg-white]="activeListId !== lista.id || showAllLists"
+            [class.text-nido-brown]="activeListId !== lista.id || showAllLists"
+            [class.border-nido-green-dark]="activeListId === lista.id && !showAllLists"
+            [class.border-nido-border]="activeListId !== lista.id || showAllLists"
+            (click)="selectList(lista.id)">
+            {{ lista.recetaNombre }}
+            <span class="text-[0.72rem] opacity-80">{{ pendientesDe(lista) }}</span>
+          </button>
+        }
+      </div>
+
+      @if (listas.length > 1) {
         <button
-          class="inline-flex items-center gap-2 rounded-[20px] border px-3.5 py-2 text-[0.8rem] font-medium"
-          [class.bg-nido-green-dark]="activeListId === lista.id"
-          [class.text-nido-cream]="activeListId === lista.id"
-          [class.bg-white]="activeListId !== lista.id"
-          [class.text-nido-brown]="activeListId !== lista.id"
-          [class.border-nido-green-dark]="activeListId === lista.id"
-          [class.border-nido-border]="activeListId !== lista.id"
-          (click)="selectList(lista.id)">
-          {{ lista.recetaNombre }}
-          <span class="text-[0.72rem] opacity-80">{{ pendientesDe(lista) }}</span>
+          class="inline-flex h-9 items-center justify-center rounded-[20px] border border-nido-border bg-white px-4 text-[0.8rem] font-semibold text-nido-brown transition-colors duration-150 hover:border-nido-green-dark hover:text-nido-green-dark"
+          (click)="toggleShowAllLists()">
+          {{ showAllLists ? 'Ver una' : 'Ver todo' }}
         </button>
       }
     </div>
   }
 
-  @if (activeList(); as lista) {
+  @for (lista of visibleLists(); track lista.id) {
     <section class="bg-white/[0.51] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] overflow-visible">
       <div class="flex flex-col gap-3 px-4 py-3.5 border-b border-nido-border/40 bg-nido-cream/30 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div class="flex min-w-0 flex-wrap items-center gap-2.5">
@@ -95,16 +105,16 @@
         </div>
       </div>
 
-      <div class="grid gap-3 border-b border-nido-border/40 px-4 py-4 sm:grid-cols-[minmax(0,1fr)_110px_110px_auto] sm:items-end sm:px-5">
-        <label class="flex flex-col gap-1.5 text-[0.75rem] font-semibold text-nido-brown">
+      <div class="grid gap-3 border-b border-nido-border/40 px-4 py-4 sm:grid-cols-[minmax(0,1fr)_92px_132px_96px] sm:items-end sm:px-5 lg:grid-cols-[minmax(0,1fr)_96px_144px_104px]">
+        <label class="flex min-w-0 flex-col gap-1.5 text-[0.75rem] font-semibold text-nido-brown">
           Producto
           <input class="h-10 rounded-[10px] border border-nido-border bg-white px-3 text-[0.875rem] font-medium text-nido-green-dark outline-none focus:border-nido-green-dark" [(ngModel)]="itemNombre" name="itemNombre" autocomplete="off">
         </label>
-        <label class="flex flex-col gap-1.5 text-[0.75rem] font-semibold text-nido-brown">
+        <label class="flex min-w-0 flex-col gap-1.5 text-[0.75rem] font-semibold text-nido-brown">
           Cantidad
           <input class="h-10 rounded-[10px] border border-nido-border bg-white px-3 text-[0.875rem] font-medium text-nido-green-dark outline-none focus:border-nido-green-dark" [(ngModel)]="itemCantidad" name="itemCantidad" type="number" min="0" step="0.01">
         </label>
-        <label class="flex flex-col gap-1.5 text-[0.75rem] font-semibold text-nido-brown">
+        <label class="flex min-w-0 flex-col gap-1.5 text-[0.75rem] font-semibold text-nido-brown">
           Unidad
           <nido-select
             [(ngModel)]="itemUnidad"
@@ -117,7 +127,7 @@
             [style.--nido-select-font-size]="'0.875rem'"
             placeholder="Unidad" />
         </label>
-        <button class="h-10 rounded-[20px] bg-nido-green-dark px-4 text-[0.8rem] font-semibold text-nido-cream disabled:cursor-not-allowed disabled:opacity-50" [disabled]="!itemNombre.trim() || isSaving" (click)="saveItem(lista.id)">
+        <button class="h-10 w-full rounded-[20px] bg-nido-green-dark px-4 text-[0.8rem] font-semibold text-nido-cream disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto" [disabled]="!itemNombre.trim() || isSaving" (click)="saveItem(lista.id)">
           {{ editingItem ? 'Guardar' : 'Agregar' }}
         </button>
       </div>
@@ -170,8 +180,17 @@
         @for (item of historial; track item.id) {
           <li class="flex flex-col gap-1 px-4 py-3 border-b border-nido-border/40 last:border-b-0 sm:px-5">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <span class="text-[0.875rem] font-medium text-nido-green-dark">{{ item.nombre }}</span>
-              <span class="text-[0.775rem] text-nido-brown">{{ formatHistoryDate(item.compradoEn) }}</span>
+              <div class="min-w-0 flex flex-col gap-1">
+                <span class="text-[0.875rem] font-medium text-nido-green-dark">{{ item.nombre }}</span>
+                <span class="text-[0.775rem] text-nido-brown">{{ formatHistoryDate(item.compradoEn) }}</span>
+              </div>
+
+              <button
+                class="inline-flex h-8 items-center justify-center rounded-[18px] border border-nido-border bg-white px-3 text-[0.76rem] font-semibold text-nido-brown transition-colors duration-150 hover:border-nido-green-dark hover:text-nido-green-dark disabled:cursor-not-allowed disabled:opacity-50"
+                [disabled]="uploadingHistoryId !== null"
+                (click)="sendHistoryItemToPantry(item)">
+                {{ uploadingHistoryId === item.id ? 'Subiendo...' : 'Pasar a alacena' }}
+              </button>
             </div>
             <span class="text-[0.775rem] text-nido-brown">
               {{ item.grupoNombre }}

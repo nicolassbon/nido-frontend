@@ -5,11 +5,13 @@ import { environment } from '../../../../../environments/environment';
 
 export interface ApiRecetaIngrediente {
   id: string;
-  productoId: string;
+  productoId: string | null;
   nombre: string;
-  productoNombre: string;
+  productoNombre: string | null;
   cantidad: number | null;
   unidad: string | null;
+  cantidadCompraEstandar?: number | null;
+  unidadCompraEstandar?: string | null;
   enStock: boolean;
   alergenos?: string[];
 }

@@ -87,6 +87,23 @@ describe('Alacena', () => {
     expect(badge).toBe('1.5kg');
   });
 
+  it('should show measured quantity detail on the stock card', () => {
+    const fixture = TestBed.createComponent(Alacena);
+    const component = fixture.componentInstance;
+
+    const detail = component['quantityDetail']({
+      id: 'stock-1',
+      name: 'Sal',
+      image: '',
+      location: 'Alacena',
+      expiryDate: '',
+      quantity: 500,
+      unit: 'gramos',
+    });
+
+    expect(detail).toBe('500 g');
+  });
+
   it('should normalize search query and match accent-containing product names', () => {
     const fixture = TestBed.createComponent(Alacena);
     const component = fixture.componentInstance as any;

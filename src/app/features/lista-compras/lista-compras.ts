@@ -6,6 +6,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import { ListaComprasService, RecipeShoppingList, ShoppingHistoryItem, ShoppingItem } from './lista-compras.service';
 import { CatalogoService } from '../../core/servicios/catalogo.service';
 import { NidoSelectComponent, NidoSelectOption } from '../../shared/ui/form/nido-select/nido-select';
+import { AlacenaApiService, CreateStockItemRequest } from '../alacena/alacena-api.service';
 
 @Component({
   selector: 'app-lista-compras',
@@ -16,6 +17,7 @@ import { NidoSelectComponent, NidoSelectOption } from '../../shared/ui/form/nido
 })
 export class ListaCompras implements OnInit, OnDestroy {
   protected readonly service = inject(ListaComprasService);
+  private readonly alacenaApi = inject(AlacenaApiService);
   private readonly catalogoService = inject(CatalogoService);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -30,10 +32,12 @@ export class ListaCompras implements OnInit, OnDestroy {
   protected editingListId: string | null = null;
 
   protected activeListId: string | null = null;
+  protected showAllLists = false;
   protected itemNombre = '';
   protected itemCantidad: number | null = null;
   protected itemUnidad = '';
   protected editingItem: { listaId: string; itemId: string } | null = null;
+  protected uploadingHistoryId: string | null = null;
   protected isSaving = false;
   protected unidadesOpts: NidoSelectOption[] = [];
 
@@ -129,7 +133,14 @@ export class ListaCompras implements OnInit, OnDestroy {
 
   protected selectList(listaId: string): void {
     this.activeListId = listaId;
+    this.showAllLists = false;
     this.cancelItemEdit();
+  }
+
+  protected toggleShowAllLists(): void {
+    this.showAllLists = !this.showAllLists;
+    this.cancelItemEdit();
+    this.cdr.markForCheck();
   }
 
   protected saveItem(listaId: string): void {
@@ -184,8 +195,56 @@ export class ListaCompras implements OnInit, OnDestroy {
     });
   }
 
+  protected sendHistoryItemToPantry(item: ShoppingHistoryItem): void {
+    if (this.uploadingHistoryId) return;
+
+    this.uploadingHistoryId = item.id;
+    this.errorMessage = null;
+    this.cdr.markForCheck();
+
+    const amount = item.cantidad && item.cantidad > 0 ? item.cantidad : 1;
+    const payload: CreateStockItemRequest = {
+      nombre: item.nombre,
+      categoriaId: null,
+      codigoBarras: null,
+      imagen: null,
+      ubicacion: 'Alacena',
+      cantidad: amount,
+      unidadMedida: this.stockUnitValue(item.unidad),
+      fechaVencimiento: null,
+      estaAbierto: false,
+      porcentajeConsumido: 0,
+      origenCarga: 'manual',
+    };
+
+    this.alacenaApi.createStock(payload).subscribe({
+      next: () => {
+        this.service.markAddedToInventory(item.id).subscribe({
+          next: () => {
+            this.uploadingHistoryId = null;
+            this.cdr.markForCheck();
+          },
+          error: () => {
+            this.uploadingHistoryId = null;
+            this.fail('Se subió a la alacena, pero no se pudo actualizar el historial.');
+          },
+        });
+      },
+      error: () => {
+        this.uploadingHistoryId = null;
+        this.fail('No se pudo pasar el producto a la alacena.');
+      },
+    });
+  }
+
   protected activeList(): RecipeShoppingList | null {
     return this.listas.find(lista => lista.id === this.activeListId) ?? this.listas[0] ?? null;
+  }
+
+  protected visibleLists(): RecipeShoppingList[] {
+    if (this.showAllLists) return this.listas;
+    const active = this.activeList();
+    return active ? [active] : [];
   }
 
   protected goToRecetas(): void {
@@ -218,5 +277,51 @@ export class ListaCompras implements OnInit, OnDestroy {
     this.errorMessage = message;
     this.isSaving = false;
     this.cdr.markForCheck();
+  }
+
+  private stockUnitValue(value: string | null | undefined): string | null {
+    const normalized = (value ?? '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+    const aliases: Record<string, string> = {
+      '': 'unidad',
+      unidad: 'unidad',
+      unidades: 'unidad',
+      u: 'unidad',
+      g: 'g',
+      gr: 'g',
+      gramo: 'g',
+      gramos: 'g',
+      kg: 'kg',
+      kilo: 'kg',
+      kilos: 'kg',
+      kilogramo: 'kg',
+      kilogramos: 'kg',
+      ml: 'ml',
+      mililitro: 'ml',
+      mililitros: 'ml',
+      l: 'lt',
+      lt: 'lt',
+      litro: 'lt',
+      litros: 'lt',
+      cda: 'cda',
+      cucharada: 'cda',
+      cucharadas: 'cda',
+      cdta: 'cdita',
+      cdita: 'cdita',
+      cucharadita: 'cdita',
+      cucharaditas: 'cdita',
+      taza: 'taza',
+      tazas: 'taza',
+      vaso: 'vaso',
+      vasos: 'vaso',
+      pizca: 'pizca',
+    };
+
+    if (!normalized) return null;
+    return aliases[normalized] ?? value?.trim() ?? null;
   }
 }
