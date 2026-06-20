@@ -10,10 +10,10 @@
     </div>
   </section>
 
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+    <div class="min-w-0 flex flex-col gap-5">
 
-
-    <section class="order-1 min-w-0 h-full bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col">
+    <section class="min-w-0 bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col">
       <div class="flex items-center gap-2.5 mb-5 border-b border-nido-border/40 pb-3">
         <lucide-icon name="user" [size]="20" class="text-nido-green" />
         <h2 class="text-base font-bold text-nido-green-dark">Cuenta</h2>
@@ -37,92 +37,7 @@
       </button>
     </section>
 
-    <section class="order-2 min-w-0 h-full bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col">
-      <div class="flex items-center gap-2.5 mb-5 border-b border-nido-border/40 pb-3">
-        <lucide-icon name="bell" [size]="20" class="text-nido-green" />
-        <h2 class="text-base font-bold text-nido-green-dark">Notificaciones</h2>
-      </div>
-
-      @if (isLoadingPrefs()) {
-        <div class="flex flex-col items-center justify-center py-6 gap-2">
-          <div class="w-6 h-6 rounded-full border-2 border-solid border-nido-border/50 border-t-nido-green-dark animate-spin"></div>
-          <span class="text-xs text-nido-brown">Cargando preferencias...</span>
-        </div>
-      } @else {
-        <div class="flex flex-col gap-5">
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[0.9375rem] font-semibold text-nido-green-dark leading-tight">
-              Días de anticipación para alertas de vencimiento
-            </label>
-            <p class="text-xs text-nido-brown opacity-95 leading-relaxed">
-              Te avisamos cuando un producto de la alacena vence en menos de este tiempo.
-            </p>
-          </div>
-
-          <div class="flex items-center gap-3 flex-wrap">
-            <input
-              type="number"
-              min="1"
-              max="365"
-              [ngModel]="diasAlertaInput()"
-              (ngModelChange)="diasAlertaInput.set($event)"
-              class="w-24 bg-white border border-nido-border rounded-xl px-4 py-2.5 text-sm text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green focus:ring-2 focus:ring-nido-green/10 transition-all duration-150 disabled:opacity-50"
-            />
-            <span class="text-[0.875rem] font-medium text-nido-brown">días</span>
-            <button
-              (click)="saveDiasAlerta()"
-              [disabled]="isSavingPrefs()"
-              class="px-5 py-2.5 rounded-xl bg-nido-green-dark text-nido-cream text-[0.875rem] font-bold border-none cursor-pointer transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-nido-green active:scale-[0.98] shadow-sm">
-              {{ isSavingPrefs() ? 'Guardando...' : 'Guardar' }}
-            </button>
-            @if (saveSuccess()) {
-              <span class="text-[0.8125rem] text-nido-green font-bold flex items-center gap-1">
-                <lucide-icon name="check" [size]="14" />
-                Guardado
-              </span>
-            }
-          </div>
-
-          <!-- Web Push Notifications Toggle -->
-          <div class="border-t border-nido-border/30 pt-4 flex flex-col gap-3">
-            <div class="flex flex-col gap-1.5">
-              <span class="text-[0.9375rem] font-semibold text-nido-green-dark leading-tight">
-                Notificaciones en segundo plano
-              </span>
-              <p class="text-xs text-nido-brown opacity-95 leading-relaxed">
-                Permite recibir alertas de stock bajo, vencimiento y aviso de tareas asignadas incluso si el navegador está cerrado.
-              </p>
-            </div>
-
-            <div class="flex items-center gap-3">
-              <button
-                type="button"
-                (click)="toggleWebPushNotifications()"
-                [disabled]="isWebPushLoading()"
-                [class]="isWebPushEnabled() ? 'bg-nido-green text-white hover:bg-nido-green-dark' : 'bg-transparent text-nido-brown border border-nido-border hover:bg-nido-cream'"
-                class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[0.875rem] font-bold cursor-pointer transition-all duration-150 active:scale-[0.98] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                @if (isWebPushLoading()) {
-                  <div class="w-4 h-4 rounded-full border-2 border-solid border-transparent border-t-current animate-spin"></div>
-                  <span>Procesando...</span>
-                } @else {
-                  <lucide-icon [name]="isWebPushEnabled() ? 'shield-check' : 'bell'" [size]="16" />
-                  <span>{{ isWebPushEnabled() ? 'Notificaciones activadas' : 'Activar en este dispositivo' }}</span>
-                }
-              </button>
-
-              @if (webPushError()) {
-                <span class="text-[0.8125rem] text-nido-red font-semibold flex items-center gap-1.5">
-                  <lucide-icon name="alert-circle" [size]="14" />
-                  {{ webPushError() }}
-                </span>
-              }
-            </div>
-          </div>
-        </div>
-      }
-    </section>
-
-    <section class="order-3 min-w-0 h-full bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col gap-6">
+    <section class="min-w-0 bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col gap-6">
       <div class="flex items-center gap-2.5 border-b border-nido-border/40 pb-3">
         <lucide-icon name="shield-check" [size]="20" class="text-nido-green" />
         <h2 class="text-base font-bold text-nido-green-dark">Seguridad de la cuenta</h2>
@@ -390,8 +305,97 @@
         }
       }
     </section>
+    </div>
 
-    <div class="order-4 flex flex-col gap-5 min-w-0">
+    <div class="min-w-0 flex flex-col gap-5">
+
+
+    <section class="min-w-0 bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col">
+      <div class="flex items-center gap-2.5 mb-5 border-b border-nido-border/40 pb-3">
+        <lucide-icon name="bell" [size]="20" class="text-nido-green" />
+        <h2 class="text-base font-bold text-nido-green-dark">Notificaciones</h2>
+      </div>
+
+      @if (isLoadingPrefs()) {
+        <div class="flex flex-col items-center justify-center py-6 gap-2">
+          <div class="w-6 h-6 rounded-full border-2 border-solid border-nido-border/50 border-t-nido-green-dark animate-spin"></div>
+          <span class="text-xs text-nido-brown">Cargando preferencias...</span>
+        </div>
+      } @else {
+        <div class="flex flex-col gap-5">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[0.9375rem] font-semibold text-nido-green-dark leading-tight">
+              Días de anticipación para alertas de vencimiento
+            </label>
+            <p class="text-xs text-nido-brown opacity-95 leading-relaxed">
+              Te avisamos cuando un producto de la alacena vence en menos de este tiempo.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-3 flex-wrap">
+            <input
+              type="number"
+              min="1"
+              max="365"
+              [ngModel]="diasAlertaInput()"
+              (ngModelChange)="diasAlertaInput.set($event)"
+              class="w-24 bg-white border border-nido-border rounded-xl px-4 py-2.5 text-sm text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green focus:ring-2 focus:ring-nido-green/10 transition-all duration-150 disabled:opacity-50"
+            />
+            <span class="text-[0.875rem] font-medium text-nido-brown">días</span>
+            <button
+              (click)="saveDiasAlerta()"
+              [disabled]="isSavingPrefs()"
+              class="px-5 py-2.5 rounded-xl bg-nido-green-dark text-nido-cream text-[0.875rem] font-bold border-none cursor-pointer transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-nido-green active:scale-[0.98] shadow-sm">
+              {{ isSavingPrefs() ? 'Guardando...' : 'Guardar' }}
+            </button>
+            @if (saveSuccess()) {
+              <span class="text-[0.8125rem] text-nido-green font-bold flex items-center gap-1">
+                <lucide-icon name="check" [size]="14" />
+                Guardado
+              </span>
+            }
+          </div>
+
+          <!-- Web Push Notifications Toggle -->
+          <div class="border-t border-nido-border/30 pt-4 flex flex-col gap-3">
+            <div class="flex flex-col gap-1.5">
+              <span class="text-[0.9375rem] font-semibold text-nido-green-dark leading-tight">
+                Notificaciones en segundo plano
+              </span>
+              <p class="text-xs text-nido-brown opacity-95 leading-relaxed">
+                Permite recibir alertas de stock bajo, vencimiento y aviso de tareas asignadas incluso si el navegador está cerrado.
+              </p>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <button
+                type="button"
+                (click)="toggleWebPushNotifications()"
+                [disabled]="isWebPushLoading()"
+                [class]="isWebPushEnabled() ? 'bg-nido-green text-white hover:bg-nido-green-dark' : 'bg-transparent text-nido-brown border border-nido-border hover:bg-nido-cream'"
+                class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[0.875rem] font-bold cursor-pointer transition-all duration-150 active:scale-[0.98] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                @if (isWebPushLoading()) {
+                  <div class="w-4 h-4 rounded-full border-2 border-solid border-transparent border-t-current animate-spin"></div>
+                  <span>Procesando...</span>
+                } @else {
+                  <lucide-icon [name]="isWebPushEnabled() ? 'shield-check' : 'bell'" [size]="16" />
+                  <span>{{ isWebPushEnabled() ? 'Notificaciones activadas' : 'Activar en este dispositivo' }}</span>
+                }
+              </button>
+
+              @if (webPushError()) {
+                <span class="text-[0.8125rem] text-nido-red font-semibold flex items-center gap-1.5">
+                  <lucide-icon name="alert-circle" [size]="14" />
+                  {{ webPushError() }}
+                </span>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </section>
+
+    <div class="flex flex-col gap-5 min-w-0">
 
       <section class="min-w-0 bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col">
         <div class="flex items-center gap-2.5 mb-5 border-b border-nido-border/40 pb-3">
@@ -551,6 +555,7 @@
         }
       </section>
 
+    </div>
     </div>
 
 </div>

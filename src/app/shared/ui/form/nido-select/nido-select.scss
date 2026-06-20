@@ -2,6 +2,11 @@
   display: block;
   position: relative;
   width: 100%;
+  --nido-select-height: 3rem;
+  --nido-select-radius: 0.5rem;
+  --nido-select-border-color: var(--color-nido-brown);
+  --nido-select-background: rgba(255, 255, 255, 0.51);
+  --nido-select-font-size: 0.95rem;
 }
 
 .nido-select {
@@ -11,17 +16,17 @@
   // ── Trigger ────────────────────────────────────────────────
   &__trigger {
     width: 100%;
-    height: 3rem;
+    height: var(--nido-select-height);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
     padding: 0 1rem;
-    border: 1.5px solid var(--color-nido-brown);
-    border-radius: 0.5rem;
-    background: rgba(255, 255, 255, 0.51);
+    border: 1.5px solid var(--nido-select-border-color);
+    border-radius: var(--nido-select-radius);
+    background: var(--nido-select-background);
     font-family: var(--font-family-sans);
-    font-size: 0.95rem;
+    font-size: var(--nido-select-font-size);
     color: var(--color-nido-green-dark);
     cursor: pointer;
     text-align: left;

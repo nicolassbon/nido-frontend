@@ -4,16 +4,19 @@ import { Router, RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
 import { ListaComprasService, RecipeShoppingList, ShoppingHistoryItem, ShoppingItem } from './lista-compras.service';
+import { CatalogoService } from '../../core/servicios/catalogo.service';
+import { NidoSelectComponent, NidoSelectOption } from '../../shared/ui/form/nido-select/nido-select';
 
 @Component({
   selector: 'app-lista-compras',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, LucideAngularModule, RouterModule],
+  imports: [FormsModule, LucideAngularModule, RouterModule, NidoSelectComponent],
   templateUrl: './lista-compras.html',
 })
 export class ListaCompras implements OnInit, OnDestroy {
   protected readonly service = inject(ListaComprasService);
+  private readonly catalogoService = inject(CatalogoService);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
 
@@ -32,6 +35,7 @@ export class ListaCompras implements OnInit, OnDestroy {
   protected itemUnidad = '';
   protected editingItem: { listaId: string; itemId: string } | null = null;
   protected isSaving = false;
+  protected unidadesOpts: NidoSelectOption[] = [];
 
   private sub = new Subscription();
 
@@ -46,6 +50,10 @@ export class ListaCompras implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.service.refresh().subscribe();
     this.service.refreshHistory().subscribe();
+    this.sub.add(this.catalogoService.getUnidadesMedida().subscribe(unidades => {
+      this.unidadesOpts = CatalogoService.toUnidadesOpts(unidades);
+      this.cdr.markForCheck();
+    }));
 
     this.sub.add(this.service.listas$.subscribe(listas => {
       this.listas = listas;

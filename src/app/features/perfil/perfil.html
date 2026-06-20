@@ -11,7 +11,7 @@
           <h1 class="text-2xl font-bold mb-0.5">Mi perfil</h1>
           <p class="text-xs opacity-90">Administrá tu información y preferencias</p>
           @if (nombreHogar()) {
-            <div class="mt-2 inline-flex items-center gap-1.5 text-[0.8rem] bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] rounded-full px-3 py-1 text-nido-cream/80">
+            <div class="mt-2 inline-flex items-center gap-1.5 text-[0.8rem] bg-[rgba(31,58,58,0.55)] border border-[rgba(247,241,230,0.38)] rounded-full px-3 py-1 text-nido-cream shadow-[0_2px_10px_rgba(0,0,0,0.12)]">
               <lucide-icon name="house" [size]="12"></lucide-icon>
               Estás en {{ nombreHogar() }}
             </div>
@@ -76,11 +76,12 @@
   <hr class="border-nido-border border-t-[1.5px] opacity-70 my-0">
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-    <app-stat-card icon="check-square" value="48" title="Tareas completadas"
-      subtitle="Seguí así, tu hogar te lo agradece."></app-stat-card>
-    <app-stat-card icon="scan-line" value="126" title="Productos escaneados"
-      subtitle="Llevás un excelente control."></app-stat-card>
-    <app-stat-card icon="trophy" value="12" title="Logros" subtitle="¡Vamos por más!"></app-stat-card>
+    <app-stat-card [icon]="statCards()[0].icon" [value]="statCards()[0].value" [title]="statCards()[0].title"
+      [subtitle]="statCards()[0].subtitle"></app-stat-card>
+    <app-stat-card [icon]="statCards()[1].icon" [value]="statCards()[1].value" [title]="statCards()[1].title"
+      [subtitle]="statCards()[1].subtitle"></app-stat-card>
+    <app-stat-card [icon]="statCards()[2].icon" [value]="statCards()[2].value" [title]="statCards()[2].title"
+      [subtitle]="statCards()[2].subtitle"></app-stat-card>
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
