@@ -243,12 +243,13 @@ describe('Alacena', () => {
     const preventSpy = vi.spyOn(event, 'preventDefault');
     const stopSpy = vi.spyOn(event, 'stopPropagation');
 
-    const today = new Date();
-    const expired = new Date(today);
-    expired.setDate(today.getDate() - 1);
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const expiredStr = `${yesterday.getFullYear()}-${pad(yesterday.getMonth() + 1)}-${pad(yesterday.getDate())}`;
 
     component.products.set([
-      { id: 'expired-1', name: 'Yogur', image: '', location: 'Heladera', expiryDate: expired.toISOString().split('T')[0], quantity: 1, unit: 'unidad' },
+      { id: 'expired-1', name: 'Yogur', image: '', location: 'Heladera', expiryDate: expiredStr, quantity: 1, unit: 'unidad' },
       { id: 'ok-1', name: 'Arroz', image: '', location: 'Alacena', expiryDate: '', quantity: 1, unit: 'unidad' },
     ]);
 
