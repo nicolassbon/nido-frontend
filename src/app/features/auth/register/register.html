@@ -6,36 +6,10 @@
   </header>
 
   <div class="flex justify-center px-4 py-4 sm:py-5">
-    <div class="w-full max-w-[740px] bg-nido-green-dark rounded-lg p-4 sm:p-5 flex items-center justify-center">
-      <div class="flex items-center gap-2 sm:gap-4">
-        @for (step of steps; track step.number; let last = $last) {
-          <div class="flex flex-col items-center gap-1">
-            <div [class]="stepCircleClass(step)">
-              @if (step.completed) {
-                <lucide-icon name="check" [size]="14" class="text-nido-cream" />
-              } @else {
-                <span
-                  class="text-[0.75rem] sm:text-[0.8125rem] font-bold"
-                  [class]="step.active ? 'text-nido-green-dark' : 'text-nido-cream/50'"
-                >
-                  {{ step.number }}
-                </span>
-              }
-            </div>
-            <span [class]="stepLabelClass(step)" class="text-[0.65rem] sm:text-[0.7rem]">{{ step.label }}</span>
-          </div>
-          @if (!last) {
-            <div
-              class="w-3 h-px sm:w-6"
-              [class]="step.completed ? 'bg-nido-green-dark/40' : 'bg-nido-border/50'"
-            ></div>
-          }
-        }
-      </div>
-    </div>
+    <app-progress-steps [steps]="steps" />
   </div>
 
-  <main class="flex-1 flex items-center justify-center px-4 py-3">
+  <main class="flex-1 flex items-center justify-center px-4 py-5 sm:py-6">
     <form
       [formGroup]="form"
       (ngSubmit)="onSubmit()"

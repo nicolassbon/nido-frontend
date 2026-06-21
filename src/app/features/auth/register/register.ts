@@ -15,6 +15,7 @@ import { AuthService, type GoogleLoginResponse } from '../../../core/auth/auth.s
 import { GoogleIdentityService } from '../../../core/auth/google-identity.service';
 import { validatePhotoFile } from '../../../shared/validators/photo';
 import { NidoSelectComponent, NidoSelectOption } from '../../../shared/ui/form/nido-select/nido-select';
+import { ProgressStepsComponent } from '../../../shared/ui/progress-steps/progress-steps.component';
 
 export function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
   const password = control.get('password')?.value;
@@ -24,7 +25,7 @@ export function passwordMatchValidator(control: AbstractControl): ValidationErro
 
 @Component({
   selector: 'app-register',
-  imports: [ReactiveFormsModule, LucideAngularModule, NidoSelectComponent, RouterLink],
+  imports: [ReactiveFormsModule, LucideAngularModule, NidoSelectComponent, RouterLink, ProgressStepsComponent],
   templateUrl: './register.html',
   styleUrl: './register.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -48,10 +49,10 @@ export class Register {
   }
 
   readonly steps = [
-    { number: 1, label: 'Tu cuenta',    completed: false, active: true  },
-    { number: 2, label: 'Tu hogar',     completed: false, active: false },
-    { number: 3, label: 'Equipamiento', completed: false, active: false },
-    { number: 4, label: 'Finalizar',    completed: false, active: false },
+    { number: 1, label: 'Tu Perfil - Crea tu cuenta', completed: false, active: true  },
+    { number: 2, label: 'Tu hogar - Convivientes', completed: false, active: false },
+    { number: 3, label: 'Equipamiento - Electrodomésticos', completed: false, active: false },
+    { number: 4, label: 'Finalizar - Preferencias', completed: false, active: false },
   ];
 
   readonly showPassword        = signal(false);

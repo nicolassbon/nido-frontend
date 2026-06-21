@@ -19,8 +19,24 @@
 .step-description {
   font-size: clamp(0.875rem, 2vw, 0.9375rem);
   color: var(--nido-brown, #54493e);
-  max-width: 420px;
+  max-width: 440px;
   line-height: 1.6;
   font-weight: 400;
   margin: 0;
+}
+
+.card-title {
+  font-size: clamp(1rem, 2.5vw, 1.0625rem);
+  font-weight: 700;
+  color: var(--nido-green-dark, #263f30);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.card-subtitle {
+  font-size: clamp(0.75rem, 1.5vw, 0.8125rem);
+  color: var(--nido-muted, #95827a);
+  margin: 0;
+  font-weight: 400;
+  line-height: 1.4;
 }
