@@ -34,7 +34,7 @@
           </div>
 
           <div class="hero-content">
-            <div>
+            <div class="relative z-10">
               <h1>{{ r.nombre }}</h1>
               @if (r.descripcion) {
                 <p class="description">{{ r.descripcion }}</p>
@@ -64,6 +64,9 @@
                   <small>Calorias</small>
                   <strong>{{ formatNutrition(r.calorias) }} kcal</strong>
                   <em>por porcion</em>
+                  @if (nutritionSourceLabel(r.fuenteId); as source) {
+                    <em class="nutrition-source">Fuente: {{ source }}</em>
+                  }
                 </span>
               </div>
             </div>
@@ -73,9 +76,9 @@
                 <lucide-icon name="play" [size]="16" />
                 Cocinar receta
               </button>
-              <button type="button" class="secondary-action">
-                <lucide-icon name="bookmark" [size]="16" />
-                Guardar receta
+              <button type="button" class="secondary-action" [disabled]="savingRecipe()" (click)="toggleSaved()">
+                <lucide-icon [img]="r.guardada ? bookmarkCheckIcon : bookmarkIcon" [size]="16" />
+                {{ r.guardada ? 'Guardada' : 'Guardar receta' }}
               </button>
             </div>
 
@@ -180,6 +183,9 @@
               <small>Grasas</small>
             </div>
           </div>
+          @if (nutritionSourceLabel(r.fuenteId); as source) {
+            <p class="nutrition-source-note">Fuente de datos nutricionales: {{ source }}.</p>
+          }
         </section>
 
       </aside>
@@ -240,12 +246,14 @@
              (click)="$event.stopPropagation()">
 
           <!-- Header del modal -->
-          <div class="px-6 py-5 border-b border-nido-border/40 flex items-start justify-between gap-3">
-            <div>
+          <div class="relative overflow-hidden px-6 py-5 flex items-start justify-between gap-3 bg-nido-green-dark">
+            <div class="absolute inset-0 bg-[url('/images/banners/recetas.png')] bg-center bg-cover"></div>
+            <div class="absolute inset-0 bg-[rgba(31,58,58,0.56)]"></div>
+            <div class="relative z-10 [&_h2]:!text-nido-cream [&_p]:!text-nido-cream/75">
               <h2 class="text-[1.05rem] font-bold text-nido-green-dark">¿Confirmar cocción?</h2>
               <p class="text-[0.8125rem] text-nido-brown mt-0.5">{{ r.nombre }}</p>
             </div>
-            <button class="bg-transparent border-none cursor-pointer text-nido-brown hover:text-nido-green-dark p-1 mt-0.5"
+            <button class="relative z-10 bg-transparent border-none cursor-pointer text-nido-cream/70 hover:text-nido-cream p-1 mt-0.5"
                     (click)="cerrarModalCocinar()">
               <lucide-icon name="x" [size]="18" />
             </button>

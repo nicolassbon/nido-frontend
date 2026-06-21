@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PerfilComponent } from './perfil';
 import { PerfilApiService } from './perfil-api.service';
 import { OnboardingApiService } from '../onboarding/onboarding-api.service';
+import { HogaresApiService } from '../household/hogares-api.service';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { appConfig } from '../../app.config';
@@ -11,6 +12,7 @@ describe('PerfilComponent', () => {
   let fixture: ComponentFixture<PerfilComponent>;
   let mockPerfilApi: any;
   let mockOnboardingApi: any;
+  let mockHogaresApi: any;
 
   beforeEach(async () => {
     mockPerfilApi = {
@@ -28,12 +30,17 @@ describe('PerfilComponent', () => {
       getAlergias: vi.fn().mockReturnValue(of([])),
     };
 
+    mockHogaresApi = {
+      getHogar: vi.fn().mockReturnValue(of({ id: 'h-1', nombre: 'Mi hogar' })),
+    };
+
     await TestBed.configureTestingModule({
       imports: [PerfilComponent],
       providers: [
         ...appConfig.providers,
         { provide: PerfilApiService, useValue: mockPerfilApi },
         { provide: OnboardingApiService, useValue: mockOnboardingApi },
+        { provide: HogaresApiService, useValue: mockHogaresApi },
       ],
     }).compileComponents();
 

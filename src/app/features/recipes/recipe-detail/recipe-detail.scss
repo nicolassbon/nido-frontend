@@ -199,6 +199,13 @@ h1 {
   line-height: 1;
 }
 
+.fact .nutrition-source {
+  margin-top: 3px;
+  color: #8b654c;
+  font-size: 9px;
+  line-height: 1.1;
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -414,6 +421,14 @@ h1 {
   color: #6f5a4b;
   font-size: 7px;
   line-height: 1;
+}
+
+.nutrition-source-note {
+  margin-top: 12px;
+  color: #8b654c;
+  font-size: 10px;
+  line-height: 1.15;
+  text-align: right;
 }
 
 .appliances-card {

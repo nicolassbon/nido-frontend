@@ -5,11 +5,13 @@ import { environment } from '../../../../../environments/environment';
 
 export interface ApiRecetaIngrediente {
   id: string;
-  productoId: string;
+  productoId: string | null;
   nombre: string;
-  productoNombre: string;
+  productoNombre: string | null;
   cantidad: number | null;
   unidad: string | null;
+  cantidadCompraEstandar?: number | null;
+  unidadCompraEstandar?: string | null;
   enStock: boolean;
   alergenos?: string[];
 }
@@ -23,6 +25,13 @@ export interface ApiRecetaPaso {
 export interface ApiRecetaElectrodomestico {
   id: string;
   tipoRequerido: string | null;
+}
+
+export interface ApiRecetaProductoPorVencer {
+  productoId: string;
+  nombre: string;
+  fechaVencimiento: string;
+  diasHastaVencimiento: number;
 }
 
 export interface ApiReceta {
@@ -43,6 +52,11 @@ export interface ApiReceta {
   electrodomesticos?: ApiRecetaElectrodomestico[];
   // Agregado cuando el backend implemente el contador (US-14)
   vecesCocinada?: number;
+  tieneProductosPorVencer?: boolean;
+  fechaVencimientoMasProxima?: string | null;
+  diasHastaVencimiento?: number | null;
+  productosPorVencer?: ApiRecetaProductoPorVencer[];
+  guardada?: boolean;
 }
 
 export interface CocinarRecetaResponse {
@@ -68,5 +82,17 @@ export class RecipesApiService {
   /** POST /recetas/{id}/cocinar — endpoint a implementar por el backend (US-14) */
   cocinar(id: string): Observable<CocinarRecetaResponse> {
     return this.http.post<CocinarRecetaResponse>(`${this.base}/recetas/${id}/cocinar`, {});
+  }
+
+  getSaved(): Observable<ApiReceta[]> {
+    return this.http.get<ApiReceta[]>(`${this.base}/recetas/guardadas`);
+  }
+
+  save(id: string): Observable<void> {
+    return this.http.post<void>(`${this.base}/recetas/${id}/guardar`, {});
+  }
+
+  unsave(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/recetas/${id}/guardar`);
   }
 }

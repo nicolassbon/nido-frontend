@@ -1,156 +1,174 @@
 import { TestBed } from '@angular/core/testing';
-import { firstValueFrom } from 'rxjs';
-import { ListaComprasService, RecipeShoppingList } from './lista-compras.service';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { environment } from '../../../environments/environment';
+import { ListaComprasService } from './lista-compras.service';
 
 describe('ListaComprasService', () => {
   let service: ListaComprasService;
+  let http: HttpTestingController;
+  const baseUrl = `${environment.apiBaseUrl}/listas-compra`;
+  const legacyUrl = `${environment.apiBaseUrl}/lista-compras`;
 
   beforeEach(() => {
-    localStorage.clear();
-    TestBed.configureTestingModule({ providers: [ListaComprasService] });
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting(), ListaComprasService],
+    });
+
     service = TestBed.inject(ListaComprasService);
+    http = TestBed.inject(HttpTestingController);
+    flushInitialRequests();
   });
 
   afterEach(() => {
-    localStorage.clear();
+    http.verify();
     TestBed.resetTestingModule();
   });
 
-  it('debería crearse correctamente', () => {
-    expect(service).toBeTruthy();
+  it('deberia cargar listas nombradas desde la API', () => {
+    service.refresh().subscribe();
+
+    http.expectOne(baseUrl).flush([shoppingList('lista-1', 'Compra semanal', [
+      item({ id: 'item-1', nombre: 'Arroz' }),
+    ])]);
+
+    expect(service.snapshot[0].id).toBe('lista-1');
+    expect(service.snapshot[0].recetaNombre).toBe('Compra semanal');
+    expect(service.snapshot[0].items[0].nombre).toBe('Arroz');
   });
 
-  it('addToLista debería agregar una lista nueva', () => {
-    service.addToLista('Arroz con leche', [{ nombre: 'Arroz', cantidad: 200, unidad: 'g' }]);
+  it('createList deberia llamar al endpoint nuevo', () => {
+    service.createList('Verduleria').subscribe();
 
-    expect(service.snapshot).toHaveLength(1);
-    expect(service.snapshot[0].recetaNombre).toBe('Arroz con leche');
-    expect(service.snapshot[0].items[0].checked).toBe(false);
+    const post = http.expectOne(baseUrl);
+    expect(post.request.method).toBe('POST');
+    expect(post.request.body).toEqual({ nombre: 'Verduleria' });
+    post.flush(shoppingList('lista-2', 'Verduleria', []));
+
+    http.expectOne(baseUrl).flush([shoppingList('lista-2', 'Verduleria', [])]);
+    expect(service.snapshot[0].recetaNombre).toBe('Verduleria');
   });
 
-  it('addToLista debería reemplazar una lista existente con el mismo nombre', () => {
-    service.addToLista('Receta', [{ nombre: 'Arroz', cantidad: 1, unidad: null }]);
-    service.addToLista('Receta', [{ nombre: 'Leche', cantidad: 2, unidad: 'lt' }]);
+  it('addItem deberia agregar un item manual a la lista indicada', () => {
+    service.addItem('lista-1', 'Leche', 1, 'lt').subscribe();
 
-    expect(service.snapshot).toHaveLength(1);
+    const post = http.expectOne(`${baseUrl}/lista-1/items`);
+    expect(post.request.method).toBe('POST');
+    expect(post.request.body).toEqual({ nombre: 'Leche', cantidad: 1, unidad: 'lt' });
+    post.flush(item({ id: 'item-1', nombre: 'Leche' }));
+
+    http.expectOne(baseUrl).flush([shoppingList('lista-1', 'Principal', [item({ id: 'item-1', nombre: 'Leche' })])]);
     expect(service.snapshot[0].items[0].nombre).toBe('Leche');
   });
 
-  it('toggleItem debería marcar un item como comprado', () => {
-    service.addToLista('Receta', [{ nombre: 'Tomate', cantidad: 2, unidad: null }]);
-    service.toggleItem('Receta', 0);
+  it('removeItem deberia borrar solo el item de su lista', () => {
+    service.removeItem('lista-1', 'item-1').subscribe();
 
-    expect(service.snapshot[0].items[0].checked).toBe(true);
+    const del = http.expectOne(`${baseUrl}/lista-1/items/item-1`);
+    expect(del.request.method).toBe('DELETE');
+    del.flush(null);
+
+    http.expectOne(baseUrl).flush([shoppingList('lista-1', 'Principal', [])]);
+    expect(service.snapshot[0].items).toHaveLength(0);
   });
 
-  it('toggleItem debería desmarcar un item ya comprado', () => {
-    service.addToLista('Receta', [{ nombre: 'Tomate', cantidad: 2, unidad: null }]);
-    service.toggleItem('Receta', 0);
-    service.toggleItem('Receta', 0);
+  it('markPurchased deberia actualizar item e historial', () => {
+    service.markPurchased('lista-1', 'item-1', true).subscribe();
 
-    expect(service.snapshot[0].items[0].checked).toBe(false);
+    const patch = http.expectOne(`${legacyUrl}/items/item-1/comprado`);
+    expect(patch.request.method).toBe('PATCH');
+    expect(patch.request.body).toEqual({});
+    patch.flush(item({ id: 'item-1', nombre: 'Pan', comprado: true }));
+
+    http.expectOne(baseUrl).flush([shoppingList('lista-1', 'Principal', [])]);
+    http.expectOne(`${baseUrl}/historial`).flush([historyItem({ id: 'item-1', nombre: 'Pan' })]);
+    expect(service.snapshot[0].items).toHaveLength(0);
   });
 
-  it('marcarCompradoPorNombre debería marcar un item con nombre exacto', () => {
-    service.addToLista('Receta', [{ nombre: 'Pimentón', cantidad: 1, unidad: 'cdita' }]);
+  it('markAddedToInventory deberia quitar item del historial', () => {
+    service.markAddedToInventory('item-1').subscribe();
 
-    service.marcarCompradoPorNombre('Pimentón');
+    const patch = http.expectOne(`${legacyUrl}/items/item-1/agregado-inventario`);
+    expect(patch.request.method).toBe('PATCH');
+    patch.flush(null);
 
-    expect(service.snapshot[0].items[0].checked).toBe(true);
+    http.expectOne(`${baseUrl}/historial`).flush([]);
+    http.expectOne(baseUrl).flush([]);
   });
 
-  it('marcarCompradoPorNombre debería funcionar con match parcial (producto contiene nombre item)', () => {
-    service.addToLista('Receta', [{ nombre: 'Arroz', cantidad: 200, unidad: 'g' }]);
+  it('marcarCompradoPorNombre mantiene compatibilidad con endpoint legacy', () => {
+    service.marcarCompradoPorNombre('Arroz');
 
-    service.marcarCompradoPorNombre('Arroz integral');
+    const patch = http.expectOne(`${legacyUrl}/items/comprado-por-nombre`);
+    expect(patch.request.method).toBe('PATCH');
+    patch.flush([item({ id: 'item-1', nombre: 'Arroz', comprado: true })]);
 
-    expect(service.snapshot[0].items[0].checked).toBe(true);
+    http.expectOne(baseUrl).flush([shoppingList('lista-1', 'Principal', [item({ id: 'item-1', nombre: 'Arroz', comprado: true })])]);
+    http.expectOne(`${baseUrl}/historial`).flush([historyItem({ id: 'item-1', nombre: 'Arroz' })]);
   });
 
-  it('marcarCompradoPorNombre debería funcionar con match parcial inverso (nombre item contiene producto)', () => {
-    service.addToLista('Receta', [{ nombre: 'Caldo de pollo', cantidad: 1, unidad: 'unidad' }]);
-
-    service.marcarCompradoPorNombre('caldo');
-
-    expect(service.snapshot[0].items[0].checked).toBe(true);
-  });
-
-  it('marcarCompradoPorNombre debería ser case-insensitive', () => {
-    service.addToLista('Receta', [{ nombre: 'Chile en Polvo', cantidad: 1, unidad: 'cdita' }]);
-
-    service.marcarCompradoPorNombre('chile en polvo');
-
-    expect(service.snapshot[0].items[0].checked).toBe(true);
-  });
-
-  it('marcarCompradoPorNombre no debería afectar items sin coincidencia', () => {
-    service.addToLista('Receta', [
-      { nombre: 'Tomate', cantidad: 2, unidad: null },
-      { nombre: 'Cebolla', cantidad: 1, unidad: null },
+  it('markAddedToInventory remueve el item del historial y refresca datos', () => {
+    service.refreshHistory().subscribe();
+    http.expectOne(`${baseUrl}/historial`).flush([
+      historyItem({ id: 'item-1', nombre: 'Sal', cantidad: 500, unidad: 'g' }),
+      historyItem({ id: 'item-2', nombre: 'Azucar', cantidad: 1, unidad: 'kg' }),
     ]);
 
-    service.marcarCompradoPorNombre('Arroz');
+    let latestHistoryIds: string[] = [];
+    service.historial$.subscribe(items => {
+      latestHistoryIds = items.map(item => item.id);
+    });
 
-    expect(service.snapshot[0].items[0].checked).toBe(false);
-    expect(service.snapshot[0].items[1].checked).toBe(false);
-  });
+    service.markAddedToInventory('item-1').subscribe();
 
-  it('marcarCompradoPorNombre no debería modificar items ya marcados', () => {
-    service.addToLista('Receta', [{ nombre: 'Arroz', cantidad: 200, unidad: 'g' }]);
-    service.toggleItem('Receta', 0);
+    const patch = http.expectOne(`${legacyUrl}/items/item-1/agregado-inventario`);
+    expect(patch.request.method).toBe('PATCH');
+    patch.flush(null);
 
-    service.marcarCompradoPorNombre('Arroz');
+    expect(latestHistoryIds).toEqual(['item-2']);
 
-    expect(service.snapshot[0].items[0].checked).toBe(true);
-  });
-
-  it('marcarCompradoPorNombre debería marcar en múltiples listas a la vez', () => {
-    service.addToLista('Receta 1', [{ nombre: 'Arroz', cantidad: 200, unidad: 'g' }]);
-    service.addToLista('Receta 2', [{ nombre: 'Arroz con verduras', cantidad: 150, unidad: 'g' }]);
-
-    service.marcarCompradoPorNombre('Arroz');
-
-    expect(service.snapshot[0].items[0].checked).toBe(true);
-    expect(service.snapshot[1].items[0].checked).toBe(true);
-  });
-
-  it('marcarCompradoPorNombre debería persistir en localStorage', () => {
-    service.addToLista('Receta', [{ nombre: 'Pimentón', cantidad: 1, unidad: null }]);
-
-    service.marcarCompradoPorNombre('Pimentón');
-
-    const stored: RecipeShoppingList[] = JSON.parse(localStorage.getItem('nido_listas_compras')!);
-    expect(stored[0].items[0].checked).toBe(true);
-  });
-
-  it('totalPendiente$ debería decrementar al marcar un item como comprado', async () => {
-    service.addToLista('Receta', [
-      { nombre: 'Arroz', cantidad: 1, unidad: null },
-      { nombre: 'Leche', cantidad: 1, unidad: null },
+    http.expectOne(`${baseUrl}/historial`).flush([
+      historyItem({ id: 'item-2', nombre: 'Azucar', cantidad: 1, unidad: 'kg' }),
     ]);
+    http.expectOne(baseUrl).flush([shoppingList('lista-1', 'Principal', [])]);
 
-    service.marcarCompradoPorNombre('Arroz');
-
-    const n = await firstValueFrom(service.totalPendiente$);
-    expect(n).toBe(1);
+    expect(latestHistoryIds).toEqual(['item-2']);
   });
 
-  it('removeRecetaLista debería eliminar la lista indicada', () => {
-    service.addToLista('A', [{ nombre: 'x', cantidad: 1, unidad: null }]);
-    service.addToLista('B', [{ nombre: 'y', cantidad: 1, unidad: null }]);
-
-    service.removeRecetaLista('A');
-
-    expect(service.snapshot).toHaveLength(1);
-    expect(service.snapshot[0].recetaNombre).toBe('B');
-  });
-
-  it('clearAll debería vaciar todas las listas y el localStorage', () => {
-    service.addToLista('Receta', [{ nombre: 'x', cantidad: 1, unidad: null }]);
-
-    service.clearAll();
-
-    expect(service.snapshot).toHaveLength(0);
-    expect(localStorage.getItem('nido_listas_compras')).toBeNull();
-  });
+  function flushInitialRequests(): void {
+    http.expectOne(baseUrl).flush([]);
+    http.expectOne(`${baseUrl}/historial`).flush([]);
+  }
 });
+
+function shoppingList(id: string, nombre: string, items: unknown[]) {
+  return { id, nombre, createdAt: '2026-06-19T10:00:00', updatedAt: null, items };
+}
+
+function item(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    id: 'item',
+    productoId: null,
+    nombre: 'Producto',
+    cantidad: null,
+    unidad: null,
+    comprado: false,
+    compradoEn: null,
+    orden: 0,
+    ...overrides,
+  };
+}
+
+function historyItem(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    id: 'item',
+    productoId: null,
+    nombre: 'Producto',
+    cantidad: null,
+    unidad: null,
+    grupoNombre: 'Principal',
+    compradoEn: '2026-06-19T10:00:00',
+    compradoPor: 'usuario-1',
+    ...overrides,
+  };
+}

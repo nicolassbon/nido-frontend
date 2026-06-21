@@ -1,7 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { HogaresApiService } from './hogares-api.service';
+import {
+  CambiarHogarResponse,
+  CrearHogarResponse,
+  HogaresApiService,
+  HogarResumenResponse,
+  HogarResponse,
+} from './hogares-api.service';
 import { environment } from '../../../environments/environment';
 
 describe('HogaresApiService', () => {
@@ -52,5 +58,60 @@ describe('HogaresApiService', () => {
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({ token: 'invite-xyz' });
     req.flush(mockRes);
+  });
+
+  it('getMisHogares() GETs /hogares/mis-hogares', () => {
+    const mockData: HogarResumenResponse[] = [
+      { id: 'h-1', nombre: 'Mi hogar', rol: 'owner' },
+      { id: 'h-2', nombre: 'Casa verano', rol: 'integrante' },
+    ];
+
+    service.getMisHogares().subscribe(data => expect(data).toEqual(mockData));
+
+    const req = http.expectOne(`${environment.apiBaseUrl}/hogares/mis-hogares`);
+    expect(req.request.method).toBe('GET');
+    req.flush(mockData);
+  });
+
+  it('activarHogar() POSTs to /hogares/{id}/activar', () => {
+    const mockRes: CambiarHogarResponse = { hogarId: 'h-2', hogarNombre: 'Casa verano', accessToken: 'jwt-abc' };
+
+    service.activarHogar('h-2').subscribe(res => expect(res).toEqual(mockRes));
+
+    const req = http.expectOne(`${environment.apiBaseUrl}/hogares/h-2/activar`);
+    expect(req.request.method).toBe('POST');
+    req.flush(mockRes);
+  });
+
+  it('crearHogar() POSTs nombre to /hogares', () => {
+    const mockRes: CrearHogarResponse = { hogarId: 'h-3', hogarNombre: 'Nuevo hogar', accessToken: 'jwt-xyz' };
+
+    service.crearHogar('Nuevo hogar').subscribe(res => expect(res).toEqual(mockRes));
+
+    const req = http.expectOne(`${environment.apiBaseUrl}/hogares`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ nombre: 'Nuevo hogar' });
+    req.flush(mockRes);
+  });
+
+  it('renombrarHogar() PATCHes nombre to /hogares/{id}', () => {
+    const mockRes: HogarResponse = { id: 'h-1', nombre: 'Casa renombrada' };
+
+    service.renombrarHogar('h-1', 'Casa renombrada').subscribe(res => expect(res).toEqual(mockRes));
+
+    const req = http.expectOne(`${environment.apiBaseUrl}/hogares/h-1`);
+    expect(req.request.method).toBe('PATCH');
+    expect(req.request.body).toEqual({ nombre: 'Casa renombrada' });
+    req.flush(mockRes);
+  });
+
+  it('eliminarHogar() DELETEs /hogares/{id}', () => {
+    let completed = false;
+    service.eliminarHogar('h-2').subscribe({ complete: () => (completed = true) });
+
+    const req = http.expectOne(`${environment.apiBaseUrl}/hogares/h-2`);
+    expect(req.request.method).toBe('DELETE');
+    req.flush(null, { status: 204, statusText: 'No Content' });
+    expect(completed).toBe(true);
   });
 });

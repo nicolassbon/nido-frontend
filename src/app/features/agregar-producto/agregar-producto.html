@@ -7,7 +7,7 @@
        (click)="$event.stopPropagation()">
 
     <!-- Banner header -->
-    <div class="relative overflow-hidden shrink-0 px-5 py-4 flex items-center justify-between [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
+    <div class="relative overflow-hidden shrink-0 px-5 py-4 flex items-center justify-between bg-nido-green-dark">
       <div class="absolute inset-0 bg-[url('/images/banners/alacena.png')] bg-center bg-cover"></div>
       <div class="absolute inset-0 bg-nido-green-dark/35"></div>
 
@@ -82,11 +82,16 @@
       @if (!isEditMode) {
         <div class="flex flex-col gap-1.5">
           <label class="text-[0.8125rem] font-semibold text-nido-green-dark">
-            Categoría <span class="text-nido-red">*</span>
+            Categoría
+            @if (!initialProduct) {
+              <span class="text-nido-red">*</span>
+            } @else {
+              <span class="text-[0.725rem] font-normal text-nido-muted ml-1">opcional</span>
+            }
           </label>
           <nido-select
             formControlName="categoriaId"
-            [options]="categoriasOpts"
+            [options]="categoriasOpts()"
             placeholder="Seleccionar categoría"
             [hasError]="form.controls.categoriaId.invalid && form.controls.categoriaId.touched" />
           @if (form.controls.categoriaId.invalid && form.controls.categoriaId.touched) {
@@ -120,7 +125,7 @@
           <div class="flex-1 min-w-[160px]">
             <nido-select
               formControlName="unidadMedida"
-              [options]="unidadesOpts"
+              [options]="unidadesOpts()"
               placeholder="Unidad de medida"
               [hasError]="form.controls.unidadMedida.invalid && form.controls.unidadMedida.touched" />
           </div>
@@ -139,15 +144,15 @@
           ¿Dónde lo guardás? <span class="text-nido-red">*</span>
         </label>
         <div class="flex gap-2">
-          @for (loc of ubicaciones; track loc) {
+          @for (loc of ubicaciones(); track loc.id) {
             <button type="button"
               class="flex-1 flex flex-col items-center gap-1.5 py-3 px-2 rounded-[10px] border-[1.5px] border-solid text-[0.8rem] font-medium cursor-pointer transition-all duration-150"
-              [style.background]="form.controls.ubicacion.value === loc ? getLocationColor(loc) : '#fff'"
-              [style.border-color]="form.controls.ubicacion.value === loc ? getLocationColor(loc) : '#d8c6b2'"
-              [style.color]="form.controls.ubicacion.value === loc ? '#fff' : '#927357'"
-              (click)="form.patchValue({ ubicacion: loc })">
+              [style.background]="form.controls.ubicacion.value === loc.nombre ? getLocationColor(loc) : '#fff'"
+              [style.border-color]="form.controls.ubicacion.value === loc.nombre ? getLocationColor(loc) : '#d8c6b2'"
+              [style.color]="form.controls.ubicacion.value === loc.nombre ? '#fff' : '#927357'"
+              (click)="form.patchValue({ ubicacion: loc.nombre })">
               <lucide-icon [name]="getLocationIcon(loc)" [size]="16" />
-              {{ loc }}
+              {{ loc.nombre }}
             </button>
           }
         </div>
@@ -163,6 +168,50 @@
           formControlName="fechaVencimiento"
           placeholder="Seleccionar fecha" />
       </div>
+
+      @if (!isEditMode) {
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[0.8125rem] font-semibold text-nido-green-dark">
+            Imagen del producto
+            <span class="text-[0.725rem] font-normal text-nido-muted ml-1">opcional</span>
+          </label>
+          <div
+            class="border-[1.5px] border-dashed border-nido-border rounded-lg px-4 py-3 flex items-center justify-between gap-3 cursor-pointer hover:border-nido-green hover:bg-[rgba(62,94,74,0.03)] transition-all duration-150"
+            (click)="imageInput.click()">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nido-cream text-nido-green-dark">
+                <lucide-icon name="camera" [size]="16" />
+              </span>
+              <div class="min-w-0">
+                <p class="m-0 text-[0.8125rem] font-semibold text-nido-green-dark truncate">
+                  {{ selectedImage()?.name ?? 'Seleccionar imagen' }}
+                </p>
+                <p class="m-0 text-[0.72rem] text-nido-muted">
+                  JPG, PNG o WebP, hasta 5 MB.
+                </p>
+              </div>
+            </div>
+            @if (selectedImage()) {
+              <button
+                type="button"
+                class="border-none bg-transparent text-nido-brown hover:text-nido-green-dark cursor-pointer p-1"
+                (click)="$event.stopPropagation(); removeSelectedImage()"
+                title="Quitar imagen seleccionada">
+                <lucide-icon name="x" [size]="16" />
+              </button>
+            }
+            <input
+              #imageInput
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              class="hidden"
+              (change)="onImageSelected($event)" />
+          </div>
+          @if (imageError()) {
+            <p class="text-[0.775rem] text-nido-red">{{ imageError() }}</p>
+          }
+        </div>
+      }
 
       <!-- ¿Ya está abierto? -->
       <div class="flex flex-col gap-1.5">
@@ -217,6 +266,13 @@
         <div class="flex items-center gap-2 rounded-lg border border-[rgba(180,76,60,0.25)] bg-[rgba(180,76,60,0.06)] px-3 py-2 text-[0.8125rem] font-medium text-nido-red">
           <lucide-icon name="alert-circle" [size]="15" />
           {{ errorMessage }}
+        </div>
+      }
+
+      @if (warningMessage) {
+        <div class="flex items-center gap-2 rounded-lg border border-[rgba(146,115,87,0.28)] bg-[rgba(146,115,87,0.09)] px-3 py-2 text-[0.8125rem] font-medium text-nido-brown">
+          <lucide-icon name="alert-circle" [size]="15" />
+          {{ warningMessage }}
         </div>
       }
 
