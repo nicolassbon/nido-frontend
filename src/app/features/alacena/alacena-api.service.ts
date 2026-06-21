@@ -68,6 +68,14 @@ export interface ProductoApiResponse {
   imagen:          string | null;
   categoriaNombre: string | null;
   ttlDias:         number | null;
+  // Datos de la última compra del producto en el hogar (pre-llenan el re-escaneo).
+  gramaje:         number | null;
+  unidadMedida:    string | null;
+  // Información nutricional por 100 g (si está guardada).
+  calorias:        number | null;
+  proteinas:       number | null;
+  carbohidratos:   number | null;
+  grasas:          number | null;
 }
 
 export interface StockMovementResponse {

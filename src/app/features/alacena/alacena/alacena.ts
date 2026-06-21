@@ -36,6 +36,7 @@ import { PreferenciasApiService } from '../preferencias-api.service';
 import { getTtlForCategory, TtlInfo } from '../ttl.config';
 import { RouterLink } from '@angular/router';
 import { ProductService, ProductManualResponse } from '../../../core/servicios/agregar-producto.service';
+import { CatalogoService } from '../../../core/servicios/catalogo.service';
 import { AgregarProducto, KnownProduct } from '../../agregar-producto/agregar-producto';
 import { EstimatedDateNoticeComponent } from '../../../shared/ui/estimated-date-notice/estimated-date-notice';
 import { environment } from '../../../../environments/environment';
@@ -89,6 +90,8 @@ interface ProductDraft {
   consumedPercent:   number;
   notFound:          boolean;
   quantity:          number;
+  unit:              string;
+  cantidadEnvases:   number;
   barcode:           string;
   // Información nutricional por 100 g (del escaneo a Open Food Facts).
   calorias:          number | null;
@@ -137,11 +140,36 @@ function makeEmptyDraft(): ProductDraft {
     notFound:          false,
     quantity:          1,
     barcode:           '',
+    unit:              'unidad',
+    cantidadEnvases:   1,
     calorias:          null,
     proteinas:         null,
     carbohidratos:     null,
     grasas:            null,
   };
+}
+
+/**
+ * Recomienda dónde guardar y en qué unidad según la categoría detectada.
+ * Las categorías que llegan del escaneo son las canónicas del back
+ * (General, Lácteos, Bebidas, Congelados, Despensa).
+ */
+function recommendStorage(category: string): { location: Exclude<StorageLocation, 'Todos'>; unit: string } {
+  const c = category.toLowerCase();
+
+  let location: Exclude<StorageLocation, 'Todos'> = 'Alacena';
+  if (c.includes('congelados')) {
+    location = 'Freezer';
+  } else if (['lácteos', 'lacteos', 'carnes', 'fiambres', 'huevos', 'verduras', 'frutas'].some(k => c.includes(k))) {
+    location = 'Heladera';
+  }
+
+  let unit = 'unidad';
+  if (['bebidas', 'aceites', 'caldos'].some(k => c.includes(k))) {
+    unit = 'lt';
+  }
+
+  return { location, unit };
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -306,6 +334,10 @@ export class Alacena implements OnInit {
   private readonly destroyRef     = inject(DestroyRef);
   private readonly zone           = inject(NgZone);
   private readonly productService = inject(ProductService);
+  private readonly catalogo       = inject(CatalogoService);
+
+  /** Mapa nombre-de-categoría (minúsculas) → id, para resolver la categoría del escaneo. */
+  private readonly categoriaIdByName = new Map<string, string>();
 
 
   // ── List & filters ───────────────────────────────────────
@@ -483,6 +515,20 @@ export class Alacena implements OnInit {
     this.loadProducts();
     this.loadMovements();
     this.loadPreferences();
+    this.loadCategorias();
+  }
+
+  /** Carga las categorías de la BD para poder resolver nombre → id al guardar un escaneo. */
+  private loadCategorias(): void {
+    this.catalogo.getCategorias()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: cats => {
+          for (const cat of cats) {
+            this.categoriaIdByName.set(cat.nombre.toLowerCase(), cat.id);
+          }
+        },
+      });
   }
 
   private loadPreferences(): void {
@@ -796,7 +842,9 @@ protected reloadProducts(): void { this.loadProducts(); }
         switchMap(dbProduct => {
           if (dbProduct?.nombre) {
             const ttl = getTtlForCategory([]);
-            return of({ name: dbProduct.nombre, image: dbProduct.imagen ?? '', category: dbProduct.categoriaNombre ?? '', ttl, fromDb: true, calorias: null, proteinas: null, carbohidratos: null, grasas: null, gramajeExtraido: null });
+            // Ya está en nuestro catálogo: usamos los datos guardados (nutrición +
+            // gramaje/unidad de la última compra) en vez de ir a Open Food Facts.
+            return of({ name: dbProduct.nombre, image: dbProduct.imagen ?? '', category: dbProduct.categoriaNombre ?? '', ttl, fromDb: true, calorias: dbProduct.calorias, proteinas: dbProduct.proteinas, carbohidratos: dbProduct.carbohidratos, grasas: dbProduct.grasas, gramajeExtraido: dbProduct.gramaje, unidad: dbProduct.unidadMedida });
           }
           return this.offService.lookup(barcode).pipe(
             switchMap(p => {
@@ -804,20 +852,26 @@ protected reloadProducts(): void { this.loadProducts(); }
               // El back mapea los tags crudos a una categoría canónica de Nido
               // (General, Lácteos, Bebidas, Congelados, Despensa).
               const category = p.categoriaSugerida || '';
-              return of({ name: p.name, image: p.image, category, ttl, fromDb: p.foundInDb, calorias: p.calorias, proteinas: p.proteinas, carbohidratos: p.carbohidratos, grasas: p.grasas, gramajeExtraido: p.gramajeExtraido });
+              return of({ name: p.name, image: p.image, category, ttl, fromDb: p.foundInDb, calorias: p.calorias, proteinas: p.proteinas, carbohidratos: p.carbohidratos, grasas: p.grasas, gramajeExtraido: p.gramajeExtraido, unidad: null as string | null });
             }),
           );
         }),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: ({ name, image, category, ttl, fromDb, calorias, proteinas, carbohidratos, grasas, gramajeExtraido }) => {
+        next: ({ name, image, category, ttl, fromDb, calorias, proteinas, carbohidratos, grasas, gramajeExtraido, unidad }) => {
           this.currentTtl.set(ttl);
+          // Recomendación según categoría: dónde guardarlo y la unidad.
+          // Prioridad de unidad: la guardada (última compra) > "gr" si hay gramaje > recomendada por categoría.
+          const reco = recommendStorage(category);
+          const unit = unidad ?? (gramajeExtraido != null ? 'gr' : reco.unit);
           this.draft.set({
             ...makeEmptyDraft(),
             name,
             image,
             category,
+            location:   reco.location,
+            unit,
             expiryDate: toIsoDate(addDays(new Date(), ttl.days)),
             ttlHint:    name ? ttl.hint : '',
             notFound:   !name,
@@ -959,6 +1013,25 @@ protected reloadProducts(): void { this.loadProducts(); }
     this.draft.update(d => ({ ...d, quantity: Math.max(1, d.quantity + delta) }));
   }
 
+  protected updateEnvases(delta: number): void {
+    this.draft.update(d => ({ ...d, cantidadEnvases: Math.max(1, d.cantidadEnvases + delta) }));
+  }
+
+  /** Formatea un valor nutricional a 1 decimal con coma (ej: 146.6666 → "146,7"). */
+  protected fmtNutrient(value: number | null | undefined): string {
+    if (value == null) return '';
+    return value.toLocaleString('es-AR', { maximumFractionDigits: 1 });
+  }
+
+  /** Unidades de medida para el selector del escaneo (mismas del alta manual). */
+  protected readonly unidadesEscaneo: { value: string; label: string }[] = [
+    { value: 'unidad', label: 'Unidad' },
+    { value: 'gr',     label: 'Gramos (gr)' },
+    { value: 'kg',     label: 'Kilogramos (kg)' },
+    { value: 'ml',     label: 'Mililitros (ml)' },
+    { value: 'lt',     label: 'Litros (lt)' },
+  ];
+
   protected triggerPhotoInput(): void {
     this.photoInputRef()?.nativeElement.click();
   }
@@ -1004,11 +1077,12 @@ protected reloadProducts(): void { this.loadProducts(); }
       this.alacenaApi
         .createStock({
           nombre:              d.name.trim(),
+          categoriaId:         this.categoriaIdByName.get(d.category.toLowerCase()) ?? null,
           codigoBarras:        d.barcode || null,
           imagen:              d.image || null,
           ubicacion:           d.location,
           cantidad:            d.quantity,
-          unidadMedida:        'unidad',
+          unidadMedida:        d.unit,
           fechaVencimiento:    d.expiryDate || null,
           estaAbierto:         d.isOpened,
           porcentajeConsumido: d.consumedPercent,
@@ -1016,6 +1090,7 @@ protected reloadProducts(): void { this.loadProducts(); }
           proteinas:           d.proteinas,
           carbohidratos:       d.carbohidratos,
           grasas:              d.grasas,
+          cantidadEnvases:     d.cantidadEnvases,
           origenCarga:         d.barcode ? 'codigo_barras' : 'manual',
         })
         .pipe(takeUntilDestroyed(this.destroyRef))

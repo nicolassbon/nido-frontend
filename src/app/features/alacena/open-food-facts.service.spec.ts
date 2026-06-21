@@ -21,7 +21,7 @@ describe('OpenFoodFactsService', () => {
   });
 
   describe('lookup', () => {
-    it('should return product data with weight extracted from name', (done) => {
+    it('should return product data with weight extracted from name', () => {
       // Arrange
       const barcode = '7790630001234';
       const mockResponse = {
@@ -43,9 +43,7 @@ describe('OpenFoodFactsService', () => {
         // Assert
         expect(product.name).toBe('Yogur Natural');
         expect(product.gramajeExtraido).toBe(190);
-        expect(product.calorias).toBe(50);
-        done();
-      });
+        expect(product.calorias).toBe(50);      });
 
       // Assert HTTP request
       const req = httpMock.expectOne(
@@ -55,7 +53,7 @@ describe('OpenFoodFactsService', () => {
       req.flush(mockResponse);
     });
 
-    it('should return empty product on API error', (done) => {
+    it('should return empty product on API error', () => {
       // Arrange
       const barcode = 'invalid-barcode';
 
@@ -64,9 +62,7 @@ describe('OpenFoodFactsService', () => {
         // Assert
         expect(product.name).toBe('');
         expect(product.gramajeExtraido).toBeNull();
-        expect(product.calorias).toBeNull();
-        done();
-      });
+        expect(product.calorias).toBeNull();      });
 
       // Assert HTTP error
       const req = httpMock.expectOne(
@@ -75,7 +71,7 @@ describe('OpenFoodFactsService', () => {
       req.error(new ErrorEvent('Network error'));
     });
 
-    it('should handle product without nutritional data', (done) => {
+    it('should handle product without nutritional data', () => {
       // Arrange
       const barcode = '1234567890123';
       const mockResponse = {
@@ -97,9 +93,7 @@ describe('OpenFoodFactsService', () => {
         // Assert
         expect(product.calorias).toBeNull();
         expect(product.proteinas).toBeNull();
-        expect(product.gramajeExtraido).toBeNull();
-        done();
-      });
+        expect(product.gramajeExtraido).toBeNull();      });
 
       // Assert HTTP request
       const req = httpMock.expectOne(
@@ -108,14 +102,12 @@ describe('OpenFoodFactsService', () => {
       req.flush(mockResponse);
     });
 
-    it('should properly encode barcode in URL', (done) => {
+    it('should properly encode barcode in URL', () => {
       // Arrange
       const barcode = '123/456&789';
 
       // Act
-      service.lookup(barcode).subscribe(() => {
-        done();
-      });
+      service.lookup(barcode).subscribe(() => {      });
 
       // Assert
       const expectedUrl = `${environment.apiBaseUrl}/productos/external-lookup/${encodeURIComponent(barcode)}`;

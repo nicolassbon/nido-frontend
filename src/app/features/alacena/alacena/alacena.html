@@ -612,47 +612,78 @@
                   @if (draft().calorias != null) {
                     <div class="flex flex-col rounded-lg bg-[rgba(146,115,87,0.1)] px-3 py-2">
                       <span class="text-[0.65rem] text-nido-brown/70">Calorías</span>
-                      <span class="text-[0.85rem] font-semibold text-nido-green-dark tabular-nums">{{ draft().calorias }} kcal</span>
+                      <span class="text-[0.85rem] font-semibold text-nido-green-dark tabular-nums">{{ fmtNutrient(draft().calorias) }} kcal</span>
                     </div>
                   }
                   @if (draft().carbohidratos != null) {
                     <div class="flex flex-col rounded-lg bg-[rgba(146,115,87,0.1)] px-3 py-2">
                       <span class="text-[0.65rem] text-nido-brown/70">Carbohidratos</span>
-                      <span class="text-[0.85rem] font-semibold text-nido-green-dark tabular-nums">{{ draft().carbohidratos }} g</span>
+                      <span class="text-[0.85rem] font-semibold text-nido-green-dark tabular-nums">{{ fmtNutrient(draft().carbohidratos) }} g</span>
                     </div>
                   }
                   @if (draft().proteinas != null) {
                     <div class="flex flex-col rounded-lg bg-[rgba(146,115,87,0.1)] px-3 py-2">
                       <span class="text-[0.65rem] text-nido-brown/70">Proteínas</span>
-                      <span class="text-[0.85rem] font-semibold text-nido-green-dark tabular-nums">{{ draft().proteinas }} g</span>
+                      <span class="text-[0.85rem] font-semibold text-nido-green-dark tabular-nums">{{ fmtNutrient(draft().proteinas) }} g</span>
                     </div>
                   }
                   @if (draft().grasas != null) {
                     <div class="flex flex-col rounded-lg bg-[rgba(146,115,87,0.1)] px-3 py-2">
                       <span class="text-[0.65rem] text-nido-brown/70">Grasas</span>
-                      <span class="text-[0.85rem] font-semibold text-nido-green-dark tabular-nums">{{ draft().grasas }} g</span>
+                      <span class="text-[0.85rem] font-semibold text-nido-green-dark tabular-nums">{{ fmtNutrient(draft().grasas) }} g</span>
                     </div>
                   }
                 </div>
               </div>
             }
 
-            <!-- Cantidad -->
+            <!-- Cantidad + unidad -->
             <div class="flex flex-col gap-1.5">
               <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Cantidad</label>
+              <div class="flex items-center gap-2 flex-wrap">
+                <div class="flex items-center w-fit border-[1.5px] border-solid border-nido-border rounded-lg overflow-hidden">
+                  <button
+                    type="button"
+                    class="flex items-center justify-center w-9 h-9 bg-nido-cream border-none cursor-pointer text-nido-green-dark transition-[background] duration-150 hover:bg-[#ede4d8] disabled:opacity-35 disabled:cursor-default"
+                    (click)="updateQuantity(-1)"
+                    [disabled]="draft().quantity <= 1">
+                    <lucide-icon name="minus" [size]="14" />
+                  </button>
+                  <span class="min-w-[44px] text-center text-[0.9375rem] font-semibold text-nido-green-dark px-1 select-none">{{ draft().quantity }}</span>
+                  <button
+                    type="button"
+                    class="flex items-center justify-center w-9 h-9 bg-nido-cream border-none cursor-pointer text-nido-green-dark transition-[background] duration-150 hover:bg-[#ede4d8]"
+                    (click)="updateQuantity(1)">
+                    <lucide-icon name="plus" [size]="14" />
+                  </button>
+                </div>
+                <select
+                  [ngModel]="draft().unit"
+                  (ngModelChange)="updateDraftField('unit', $event)"
+                  class="h-9 border-[1.5px] border-solid border-nido-border rounded-lg px-2 text-[0.875rem] text-nido-green-dark bg-white cursor-pointer outline-none focus:border-nido-green">
+                  @for (u of unidadesEscaneo; track u.value) {
+                    <option [value]="u.value">{{ u.label }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <!-- Cantidad de envases -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Cantidad de envases</label>
               <div class="flex items-center w-fit border-[1.5px] border-solid border-nido-border rounded-lg overflow-hidden">
                 <button
                   type="button"
                   class="flex items-center justify-center w-9 h-9 bg-nido-cream border-none cursor-pointer text-nido-green-dark transition-[background] duration-150 hover:bg-[#ede4d8] disabled:opacity-35 disabled:cursor-default"
-                  (click)="updateQuantity(-1)"
-                  [disabled]="draft().quantity <= 1">
+                  (click)="updateEnvases(-1)"
+                  [disabled]="draft().cantidadEnvases <= 1">
                   <lucide-icon name="minus" [size]="14" />
                 </button>
-                <span class="min-w-[44px] text-center text-[0.9375rem] font-semibold text-nido-green-dark px-1 select-none">{{ draft().quantity }}</span>
+                <span class="min-w-[44px] text-center text-[0.9375rem] font-semibold text-nido-green-dark px-1 select-none">{{ draft().cantidadEnvases }}</span>
                 <button
                   type="button"
                   class="flex items-center justify-center w-9 h-9 bg-nido-cream border-none cursor-pointer text-nido-green-dark transition-[background] duration-150 hover:bg-[#ede4d8]"
-                  (click)="updateQuantity(1)">
+                  (click)="updateEnvases(1)">
                   <lucide-icon name="plus" [size]="14" />
                 </button>
               </div>
