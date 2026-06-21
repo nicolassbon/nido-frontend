@@ -4,8 +4,8 @@
   <section class="relative overflow-hidden rounded-[14px] px-5 py-7 sm:px-10 sm:py-8 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_60%,#927357_100%)]">
     <div class="absolute inset-0 bg-[url('/images/banners/home.png')] bg-center bg-cover"></div>
     <div class="relative z-10">
-      <h1 class="text-nido-cream text-[1.75rem] font-bold mb-1">{{ greeting() }}, {{ userName() }}.</h1>
-      <p class="text-nido-cream/75 text-sm">{{ today() }} &middot; Tu hogar está en buen estado.</p>
+      <h1 class="text-nido-cream text-[1.4rem] sm:text-[1.75rem] leading-tight font-bold mb-1">{{ greeting() }}, {{ userName() }}.</h1>
+      <p class="text-nido-cream/75 text-[0.8rem] sm:text-sm">{{ today() }} &middot; Tu hogar está en buen estado.</p>
     </div>
   </section>
 
@@ -112,9 +112,9 @@
 
         <h3 class="text-[0.88rem] font-semibold text-[#2D1E16] mb-3">Destacadas</h3>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 min-h-[121px] mb-3">
+        <div class="flex gap-3 overflow-x-auto snap-x snap-mandatory -mx-1 px-1 pb-1 min-h-[121px] mb-3 sm:grid sm:grid-cols-3 sm:overflow-visible sm:mx-0 sm:px-0 sm:pb-0">
           @for (recipe of featuredRecipes(); track recipe.id) {
-            <a [routerLink]="['/recetas', recipe.id]" class="rounded-[8px] border border-nido-border/80 bg-white/[0.51] overflow-hidden no-underline text-nido-green-dark group">
+            <a [routerLink]="['/recetas', recipe.id]" class="snap-start shrink-0 min-w-[62%] sm:min-w-0 rounded-[8px] border border-nido-border/80 bg-white/[0.51] overflow-hidden no-underline text-nido-green-dark group">
               <div class="h-[74px] bg-nido-cream/70 overflow-hidden flex items-center justify-center">
                 @if (recipe.imagenUrl) {
                   <img [src]="recipe.imagenUrl" [alt]="recipe.nombre" class="w-full h-full object-cover transition-transform group-hover:scale-[1.04]" loading="lazy" />
@@ -127,7 +127,7 @@
               </div>
             </a>
           } @empty {
-            <div class="sm:col-span-3 flex items-center gap-2 py-7 text-[0.85rem] text-nido-brown">
+            <div class="w-full sm:col-span-3 flex items-center gap-2 py-7 text-[0.85rem] text-nido-brown">
               <lucide-icon name="chef-hat" [size]="18" />
               Todavía no hay recetas para destacar.
             </div>

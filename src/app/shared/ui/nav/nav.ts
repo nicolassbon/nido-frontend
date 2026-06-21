@@ -1,10 +1,10 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import {
   LucideAngularModule, LucideIconData,
   House, Refrigerator, ChefHat, Wallet,
   CheckSquare, Calendar, Zap, Bell,
-  User, Settings, LogOut, ShoppingCart,
+  User, Settings, LogOut, ShoppingCart, X,
 } from 'lucide-angular';
 import { AuthService } from '../../../core/auth/auth.service';
 
@@ -25,6 +25,7 @@ export class Nav {
   private readonly authService = inject(AuthService);
 
   readonly isOpen = input(false);
+  readonly close = output<void>();
 
   protected readonly sidebarClass = computed(() => {
     const base = [
@@ -61,6 +62,7 @@ export class Nav {
   }
 
   protected readonly icons: Record<string, LucideIconData> = {
+    'x':            X,
     'house':        House,
     'refrigerator': Refrigerator,
     'chef-hat':     ChefHat,
