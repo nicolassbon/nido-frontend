@@ -1170,6 +1170,17 @@ protected reloadProducts(): void { this.loadProducts(); }
     return `${qty}${sep}${suffix}`;
   }
 
+  protected quantityDetail(product: Product): string {
+    const unit = normalizeUnit(product.unit);
+    const qty = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(product.quantity);
+
+    if (unit === 'unidad') {
+      return `${qty} ${product.quantity === 1 ? 'unidad' : 'unidades'}`;
+    }
+
+    return `${qty} ${this.displayUnit(unit)}`;
+  }
+
   protected getLocationIcon(location: StorageLocation): string {
     return LOCATION_ICONS[location] ?? 'package';
   }

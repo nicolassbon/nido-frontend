@@ -3,22 +3,23 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { forkJoin, Subscription } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faClockRotateLeft, faPen, faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { ListaComprasService, RecipeShoppingList, ShoppingHistoryItem, ShoppingItem } from './lista-compras.service';
 import { CatalogoService } from '../../core/servicios/catalogo.service';
 import { NidoSelectComponent, NidoSelectOption } from '../../shared/ui/form/nido-select/nido-select';
 import { AlacenaApiService, CreateStockItemRequest } from '../alacena/alacena-api.service';
 
-const VIEW_ALL_LIST_ID = '__ver_todo__';
-
 @Component({
   selector: 'app-lista-compras',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, LucideAngularModule, RouterModule, NidoSelectComponent],
+  imports: [FormsModule, LucideAngularModule, FontAwesomeModule, RouterModule, NidoSelectComponent],
   templateUrl: './lista-compras.html',
 })
 export class ListaCompras implements OnInit, OnDestroy {
   protected readonly service = inject(ListaComprasService);
+  private readonly alacenaApi = inject(AlacenaApiService);
   private readonly catalogoService = inject(CatalogoService);
   private readonly alacenaApi = inject(AlacenaApiService);
   private readonly router = inject(Router);
@@ -34,13 +35,20 @@ export class ListaCompras implements OnInit, OnDestroy {
   protected editingListId: string | null = null;
 
   protected activeListId: string | null = null;
+  protected showAllLists = false;
   protected itemNombre = '';
   protected itemCantidad: number | null = null;
   protected itemUnidad = '';
   protected editingItem: { listaId: string; itemId: string } | null = null;
+  protected uploadingHistoryId: string | null = null;
   protected isSaving = false;
   protected unidadesOpts: NidoSelectOption[] = [];
-  protected uploadingHistoryId: string | null = null;
+  protected readonly faIcons = {
+    clockRotateLeft: faClockRotateLeft,
+    pen: faPen,
+    plus: faPlus,
+    trashCan: faTrashCan,
+  };
 
   private sub = new Subscription();
 
@@ -143,7 +151,14 @@ export class ListaCompras implements OnInit, OnDestroy {
 
   protected selectList(listaId: string): void {
     this.activeListId = listaId;
+    this.showAllLists = false;
     this.cancelItemEdit();
+  }
+
+  protected toggleShowAllLists(): void {
+    this.showAllLists = !this.showAllLists;
+    this.cancelItemEdit();
+    this.cdr.markForCheck();
   }
 
   protected saveItem(listaId: string): void {
@@ -205,22 +220,23 @@ export class ListaCompras implements OnInit, OnDestroy {
   protected sendHistoryItemToPantry(item: ShoppingHistoryItem): void {
     if (this.uploadingHistoryId) return;
 
-    this.errorMessage = null;
     this.uploadingHistoryId = item.id;
+    this.errorMessage = null;
     this.cdr.markForCheck();
 
+    const amount = item.cantidad && item.cantidad > 0 ? item.cantidad : 1;
     const payload: CreateStockItemRequest = {
       nombre: item.nombre,
       categoriaId: null,
       codigoBarras: null,
       imagen: null,
       ubicacion: 'Alacena',
-      cantidad: item.cantidad && item.cantidad > 0 ? item.cantidad : 1,
+      cantidad: amount,
       unidadMedida: this.stockUnitValue(item.unidad),
       fechaVencimiento: null,
       estaAbierto: false,
       porcentajeConsumido: 0,
-      origenCarga: 'ticket_compra',
+      origenCarga: 'manual',
     };
 
     this.alacenaApi.createStock(payload).subscribe({
@@ -232,7 +248,7 @@ export class ListaCompras implements OnInit, OnDestroy {
           },
           error: () => {
             this.uploadingHistoryId = null;
-            this.fail('Se agrego a la alacena, pero no se pudo quitar del historial.');
+            this.fail('Se subió a la alacena, pero no se pudo actualizar el historial.');
           },
         });
       },
@@ -251,8 +267,10 @@ export class ListaCompras implements OnInit, OnDestroy {
     return this.listas.find(lista => lista.id === this.activeListId) ?? this.listas[0] ?? null;
   }
 
-  protected isViewingAll(): boolean {
-    return this.activeListId === VIEW_ALL_LIST_ID;
+  protected visibleLists(): RecipeShoppingList[] {
+    if (this.showAllLists) return this.listas;
+    const active = this.activeList();
+    return active ? [active] : [];
   }
 
   protected goToRecetas(): void {
@@ -288,68 +306,13 @@ export class ListaCompras implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  private buildAllList(): RecipeShoppingList {
-    const groups = new Map<string, {
-      nombre: string;
-      unidad: string | null;
-      cantidad: number;
-      hasCantidad: boolean;
-      sourceItems: Array<{ listaId: string; itemId: string }>;
-      firstOrden: number;
-    }>();
-
-    for (const lista of this.listas) {
-      for (const item of lista.items) {
-        if (item.checked) continue;
-
-        const unit = unitMergeInfo(item.unidad);
-        const nameKey = normalizeName(item.nombre);
-        const key = unit.canMerge ? `${nameKey}|${unit.kind}` : `${nameKey}|custom|${item.id}`;
-        const current = groups.get(key);
-
-        if (!current) {
-          groups.set(key, {
-            nombre: item.nombre,
-            unidad: unit.canonicalUnit,
-            cantidad: item.cantidad == null ? 0 : item.cantidad * unit.factor,
-            hasCantidad: item.cantidad != null,
-            sourceItems: [{ listaId: lista.id, itemId: item.id }],
-            firstOrden: item.orden ?? groups.size,
-          });
-          continue;
-        }
-
-        if (item.cantidad != null) {
-          current.cantidad += item.cantidad * unit.factor;
-          current.hasCantidad = true;
-        }
-        current.sourceItems.push({ listaId: lista.id, itemId: item.id });
-      }
-    }
-
-    const items: ShoppingItem[] = [...groups.entries()]
-      .map(([key, group]) => ({
-        id: key,
-        productoId: null,
-        nombre: group.nombre,
-        cantidad: group.hasCantidad ? group.cantidad : null,
-        unidad: group.unidad,
-        checked: false,
-        orden: group.firstOrden,
-        sourceItems: group.sourceItems,
-      }))
-      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
-
-    return {
-      id: VIEW_ALL_LIST_ID,
-      recetaNombre: 'Ver Todo',
-      grupoNombre: 'Ver Todo',
-      items,
-    };
-  }
-
   private stockUnitValue(value: string | null | undefined): string | null {
-    const normalized = normalizeName(value ?? '');
+    const normalized = (value ?? '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
     const aliases: Record<string, string> = {
       '': 'unidad',
       unidad: 'unidad',
@@ -387,53 +350,5 @@ export class ListaCompras implements OnInit, OnDestroy {
 
     if (!normalized) return null;
     return aliases[normalized] ?? value?.trim() ?? null;
-  }
-}
-
-function normalizeName(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-}
-
-function unitMergeInfo(value: string | null): {
-  kind: string;
-  canonicalUnit: string | null;
-  factor: number;
-  canMerge: boolean;
-} {
-  const normalized = normalizeName(value ?? '');
-
-  switch (normalized) {
-    case '':
-    case 'u':
-    case 'unidad':
-    case 'unidades':
-    case 'unit':
-      return { kind: 'unit', canonicalUnit: 'unidad', factor: 1, canMerge: true };
-    case 'g':
-    case 'gr':
-    case 'gramo':
-    case 'gramos':
-      return { kind: 'mass', canonicalUnit: 'g', factor: 1, canMerge: true };
-    case 'kg':
-    case 'kilo':
-    case 'kilos':
-    case 'kilogramo':
-    case 'kilogramos':
-      return { kind: 'mass', canonicalUnit: 'g', factor: 1000, canMerge: true };
-    case 'ml':
-    case 'mililitro':
-    case 'mililitros':
-      return { kind: 'volume', canonicalUnit: 'ml', factor: 1, canMerge: true };
-    case 'l':
-    case 'lt':
-    case 'litro':
-    case 'litros':
-      return { kind: 'volume', canonicalUnit: 'ml', factor: 1000, canMerge: true };
-    default:
-      return { kind: `custom:${normalized}`, canonicalUnit: value?.trim() || null, factor: 1, canMerge: false };
   }
 }

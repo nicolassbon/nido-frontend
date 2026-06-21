@@ -158,6 +158,16 @@ export class ListaComprasService {
     );
   }
 
+  markAddedToInventory(itemId: string) {
+    return this.http.patch<void>(`${this.legacyBaseUrl}/items/${encodeURIComponent(itemId)}/agregado-inventario`, {}).pipe(
+      tap(() => {
+        this._historial$.next(this._historial$.value.filter(item => item.id !== itemId));
+      }),
+      switchMap(() => this.refreshHistory()),
+      tap(() => this.refresh().subscribe()),
+    );
+  }
+
   removeItem(listaId: string, itemId: string) {
     return this.http.delete<void>(
       `${this.baseUrl}/${encodeURIComponent(listaId)}/items/${encodeURIComponent(itemId)}`,

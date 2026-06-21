@@ -106,6 +106,34 @@ describe('ListaComprasService', () => {
     http.expectOne(`${baseUrl}/historial`).flush([historyItem({ id: 'item-1', nombre: 'Arroz' })]);
   });
 
+  it('markAddedToInventory remueve el item del historial y refresca datos', () => {
+    service.refreshHistory().subscribe();
+    http.expectOne(`${baseUrl}/historial`).flush([
+      historyItem({ id: 'item-1', nombre: 'Sal', cantidad: 500, unidad: 'g' }),
+      historyItem({ id: 'item-2', nombre: 'Azucar', cantidad: 1, unidad: 'kg' }),
+    ]);
+
+    let latestHistoryIds: string[] = [];
+    service.historial$.subscribe(items => {
+      latestHistoryIds = items.map(item => item.id);
+    });
+
+    service.markAddedToInventory('item-1').subscribe();
+
+    const patch = http.expectOne(`${legacyUrl}/items/item-1/agregado-inventario`);
+    expect(patch.request.method).toBe('PATCH');
+    patch.flush(null);
+
+    expect(latestHistoryIds).toEqual(['item-2']);
+
+    http.expectOne(`${baseUrl}/historial`).flush([
+      historyItem({ id: 'item-2', nombre: 'Azucar', cantidad: 1, unidad: 'kg' }),
+    ]);
+    http.expectOne(baseUrl).flush([shoppingList('lista-1', 'Principal', [])]);
+
+    expect(latestHistoryIds).toEqual(['item-2']);
+  });
+
   function flushInitialRequests(): void {
     http.expectOne(baseUrl).flush([]);
     http.expectOne(`${baseUrl}/historial`).flush([]);
