@@ -7,13 +7,22 @@ export interface PlanificadorItemDto {
   id:          string;
   fecha:       string; // yyyy-MM-dd
   tipoComida:  string;
+  tareaId:     string | null;
   recetaId:    string | null;
   recetaNombre: string | null;
   imagenUrl:   string | null;
   tituloLibre: string | null;
   hora:        string | null;
+  tareaEstado: 'pendiente' | 'en_progreso' | 'completada' | null;
+  asignadoA:   PlanificadorAsignacionDto | null;
   orden:       number;
   creadoPor:   string;
+}
+
+export interface PlanificadorAsignacionDto {
+  usuarioId: string;
+  nombre: string;
+  fotoStorageKey: string | null;
 }
 
 export interface PlanificadorSemanaDto {
@@ -28,12 +37,14 @@ export interface AddItemRequest {
   recetaId?:   string | null;
   tituloLibre?: string | null;
   hora?:       string | null;
+  asignadoA?:  string | null;
 }
 
 export interface UpdateItemRequest {
   recetaId?:    string | null;
   tituloLibre?: string | null;
   hora?:        string | null;
+  asignadoA?:   string | null;
 }
 
 @Injectable({ providedIn: 'root' })

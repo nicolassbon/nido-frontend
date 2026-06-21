@@ -345,7 +345,7 @@
   padding: 5px 8px 7px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 
 .plan-card__body strong {
@@ -363,6 +363,29 @@
 .plan-card__body small {
   color: var(--muted);
   font-size: 0.56rem;
+}
+
+.plan-card__time {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(30, 63, 58, 0.08);
+  color: var(--green-deep);
+  font-size: 0.54rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.plan-card__assignee {
+  color: var(--brown);
+  font-size: 0.56rem;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .plan-card--task {
@@ -387,10 +410,29 @@
 }
 
 .task-check {
-  width: 9px;
-  height: 9px;
+  width: 14px;
+  height: 14px;
+  padding: 0;
   border: 1px solid #91867d;
+  border-radius: 4px;
   background: transparent;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.task-check--done,
+.task-check:disabled {
+  background: var(--green-deep);
+  border-color: var(--green-deep);
+  cursor: default;
+}
+
+.plan-card--done .plan-card__body strong {
+  text-decoration: line-through;
+  color: var(--muted);
 }
 
 .card-menu {
@@ -525,39 +567,57 @@
 }
 
 .plan-modal__header {
+  position: relative;
   padding: 16px 18px;
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(31, 58, 58, 0.54), rgba(31, 58, 58, 0.54)),
+    url('/images/banners/planificador.png') center / cover no-repeat;
+}
+
+.slot-add--inline {
+  margin-top: 2px;
 }
 
 .plan-modal__header > span {
+  position: relative;
+  z-index: 1;
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background: var(--paper-2);
-  color: var(--green-deep);
+  background: rgba(247, 241, 230, 0.16);
+  color: var(--color-nido-cream);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .plan-modal__header div {
+  position: relative;
+  z-index: 1;
   flex: 1;
   min-width: 0;
 }
 
 .plan-modal__header h2 {
   margin: 0;
-  color: var(--green-ink);
+  color: var(--color-nido-cream);
   font-size: 1rem;
 }
 
 .plan-modal__header p {
   margin: 2px 0 0;
-  color: var(--muted);
+  color: rgba(247, 241, 230, 0.74);
   font-size: 0.78rem;
+}
+
+.plan-modal__header .icon-btn {
+  position: relative;
+  z-index: 1;
 }
 
 .plan-modal__body {
@@ -906,6 +966,10 @@
     font-size: 0.66rem;
   }
 
+  .plan-card__time {
+    font-size: 0.62rem;
+  }
+
   .card-menu {
     top: 8px;
     right: 8px;
@@ -921,6 +985,10 @@
 
   .plan-card--task .plan-card__body strong {
     font-size: 0.76rem;
+  }
+
+  .plan-card__assignee {
+    font-size: 0.68rem;
   }
 
   .plan-slot--filled .plan-card--task {

@@ -82,7 +82,7 @@
                 </div>
 
                 @for (item of slotItems; track item.id) {
-                  <article class="plan-card" [class.plan-card--task]="tipo === 'tarea'">
+                  <article class="plan-card" [class.plan-card--task]="tipo === 'tarea'" [class.plan-card--done]="isTaskCompleted(item)">
                     @if (tipo !== 'tarea') {
                       @if (itemImage(item); as img) {
                         <img [src]="img" [alt]="itemTitle(item)" />
@@ -92,13 +92,26 @@
                         </div>
                       }
                     } @else {
-                      <span class="task-check"></span>
+                      <button
+                        type="button"
+                        class="task-check"
+                        [class.task-check--done]="isTaskCompleted(item)"
+                        [disabled]="isTaskCompleted(item)"
+                        (click)="completeTask(item, $event)"
+                        [title]="isTaskCompleted(item) ? 'Tarea completada' : 'Marcar como hecha'">
+                        @if (isTaskCompleted(item)) {
+                          <lucide-icon name="check" [size]="10" />
+                        }
+                      </button>
                     }
 
                     <div class="plan-card__body">
                       <strong>{{ itemTitle(item) }}</strong>
+                      @if (tipo === 'tarea') {
+                        <span class="plan-card__assignee">{{ itemAssignedLabel(item) }}</span>
+                      }
                       @if (item.hora) {
-                        <small>{{ formatTime(item.hora) }}</small>
+                        <small class="plan-card__time">{{ formatTime(item.hora) }}</small>
                       }
                     </div>
 
@@ -119,6 +132,17 @@
                       </div>
                     }
                   </article>
+                }
+
+                @if (tipo === 'tarea' && slotItems.length > 0) {
+                  <button
+                    type="button"
+                    class="slot-add slot-add--inline"
+                    (click)="openModal(dia.isoDate, tipo)"
+                    title="Agregar otra tarea">
+                    <lucide-icon name="plus" [size]="14" />
+                    <span>Aniadir otra tarea</span>
+                  </button>
                 }
 
                 @if (slotItems.length === 0) {
@@ -175,6 +199,17 @@
             [ngModel]="modalSlot()!.tituloLibre"
             (ngModelChange)="updateTaskTitle($event)"
             autofocus />
+
+          <label class="field-label field-label--inline">Asignar a</label>
+          <select
+            class="field-input"
+            [ngModel]="modalSlot()!.asignadoA"
+            (ngModelChange)="updateAssignedUser($event)">
+            <option value="">Sin asignar</option>
+            @for (miembro of miembros(); track miembro.usuarioId) {
+              <option [value]="miembro.usuarioId">{{ miembro.nombre }}</option>
+            }
+          </select>
         } @else {
           <label class="field-label">Receta</label>
           <div class="recipe-search">

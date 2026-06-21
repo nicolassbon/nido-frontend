@@ -136,6 +136,48 @@ describe('AgregarProducto', () => {
     expect(uploadSpy).toHaveBeenCalledWith('prod-1', image);
   });
 
+  it('should create a pantry item from shopping history with quantity and unit without requiring category', () => {
+    const alacenaApi = TestBed.inject(AlacenaApiService);
+    const createResponse: StockItemResponse = {
+      id: 'stock-1',
+      productoId: 'prod-1',
+      nombre: 'Leche',
+      imagen: null,
+      codigoBarras: null,
+      categoriaNombre: null,
+      cantidad: 1,
+      unidadMedida: 'lt',
+      fechaVencimiento: null,
+      ubicacion: 'Alacena',
+      estaAbierto: false,
+      porcentajeConsumido: 0,
+      cantidadEnvases: 1,
+      origenCarga: 'ticket_compra',
+    };
+    const createSpy = vi.spyOn(alacenaApi, 'createStock').mockReturnValue(of(createResponse));
+    const savedSpy = vi.spyOn(component.saved, 'emit');
+
+    component.initialProduct = {
+      nombre: 'Leche',
+      cantidad: 1,
+      unidadMedida: 'lt',
+      origenCarga: 'ticket_compra',
+    };
+    component.syncShoppingListOnSave = false;
+    component.ngOnInit();
+
+    component.onSubmit();
+
+    expect(createSpy).toHaveBeenCalledWith(expect.objectContaining({
+      nombre: 'Leche',
+      categoriaId: null,
+      cantidad: 1,
+      unidadMedida: 'lt',
+      origenCarga: 'ticket_compra',
+    }));
+    expect(savedSpy).toHaveBeenCalledWith(createResponse);
+  });
+
   it('should keep the create flow successful when image upload fails', () => {
     const productService = TestBed.inject(ProductService);
     const alacenaApi = TestBed.inject(AlacenaApiService);

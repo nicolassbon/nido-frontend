@@ -404,14 +404,13 @@
 .modal-banner-bg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #263F30 0%, #3E5E4A 50%, #927357 100%);
+  background: url('/images/banners/tareas.png') center/cover no-repeat;
 }
 
 .modal-banner-overlay {
   position: absolute;
   inset: 0;
-  background: url('/images/banners/home.png') center/cover no-repeat;
-  opacity: 0.12;
+  background: rgba(31, 58, 58, 0.52);
 }
 
 .modal-banner-content {

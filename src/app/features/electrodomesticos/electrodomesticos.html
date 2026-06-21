@@ -189,13 +189,15 @@
         class="relative z-[101] bg-[#fff] rounded-[14px] w-full max-w-[520px] overflow-hidden shadow-[0_18px_46px_rgba(31,58,58,0.28)]"
         (click)="$event.stopPropagation()">
 
-        <div class="flex items-center justify-between px-6 py-5 border-b border-nido-border bg-[#fff]">
-          <h2 class="text-base font-bold text-nido-green-dark">
+        <div class="relative flex items-center justify-between overflow-hidden px-6 py-5 bg-nido-green-dark">
+          <div class="absolute inset-0 bg-[url('/images/banners/electrodomesticos.png')] bg-center bg-cover"></div>
+          <div class="absolute inset-0 bg-[rgba(31,58,58,0.56)]"></div>
+          <h2 class="relative z-10 text-base font-bold text-nido-cream">
             Agregar electrodoméstico
           </h2>
 
           <button
-            class="bg-transparent border-none text-nido-brown cursor-pointer p-1 rounded hover:text-nido-green-dark"
+            class="relative z-10 bg-transparent border-none text-nido-cream/70 cursor-pointer p-1 rounded hover:text-nido-cream"
             (click)="cerrarModal()">
 
             <lucide-icon name="x" [size]="20" />

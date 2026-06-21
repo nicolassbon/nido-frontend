@@ -10,6 +10,8 @@ export interface ApiRecetaIngrediente {
   productoNombre: string;
   cantidad: number | null;
   unidad: string | null;
+  cantidadCompraEstandar?: number | null;
+  unidadCompraEstandar?: string | null;
   enStock: boolean;
   alergenos?: string[];
 }

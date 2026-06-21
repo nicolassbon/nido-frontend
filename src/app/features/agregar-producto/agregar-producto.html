@@ -7,7 +7,7 @@
        (click)="$event.stopPropagation()">
 
     <!-- Banner header -->
-    <div class="relative overflow-hidden shrink-0 px-5 py-4 flex items-center justify-between [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
+    <div class="relative overflow-hidden shrink-0 px-5 py-4 flex items-center justify-between bg-nido-green-dark">
       <div class="absolute inset-0 bg-[url('/images/banners/alacena.png')] bg-center bg-cover"></div>
       <div class="absolute inset-0 bg-nido-green-dark/35"></div>
 
@@ -82,7 +82,12 @@
       @if (!isEditMode) {
         <div class="flex flex-col gap-1.5">
           <label class="text-[0.8125rem] font-semibold text-nido-green-dark">
-            Categoría <span class="text-nido-red">*</span>
+            Categoría
+            @if (!initialProduct) {
+              <span class="text-nido-red">*</span>
+            } @else {
+              <span class="text-[0.725rem] font-normal text-nido-muted ml-1">opcional</span>
+            }
           </label>
           <nido-select
             formControlName="categoriaId"

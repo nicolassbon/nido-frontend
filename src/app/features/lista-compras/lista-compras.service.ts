@@ -13,6 +13,7 @@ export interface ShoppingItem {
   checked: boolean;
   compradoEn?: string | null;
   orden?: number;
+  sourceItems?: Array<{ listaId: string; itemId: string }>;
 }
 
 export interface RecipeShoppingList {
@@ -144,7 +145,17 @@ export class ListaComprasService {
   }
 
   markPurchased(listaId: string, itemId: string, comprado = true) {
-    return this.updateItem(listaId, itemId, { comprado });
+    if (!comprado) {
+      return this.updateItem(listaId, itemId, { comprado: false });
+    }
+
+    return this.http.patch<ApiShoppingItem>(
+      `${this.legacyBaseUrl}/items/${encodeURIComponent(itemId)}/comprado`,
+      {},
+    ).pipe(
+      switchMap(() => this.refresh()),
+      tap(() => this.refreshHistory().subscribe()),
+    );
   }
 
   removeItem(listaId: string, itemId: string) {
@@ -152,6 +163,12 @@ export class ListaComprasService {
       `${this.baseUrl}/${encodeURIComponent(listaId)}/items/${encodeURIComponent(itemId)}`,
     ).pipe(
       switchMap(() => this.refresh()),
+    );
+  }
+
+  markAddedToInventory(itemId: string) {
+    return this.http.patch<void>(`${this.legacyBaseUrl}/items/${encodeURIComponent(itemId)}/agregado-inventario`, {}).pipe(
+      switchMap(() => this.refreshHistory()),
     );
   }
 

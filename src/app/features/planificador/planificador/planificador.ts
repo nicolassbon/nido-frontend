@@ -12,6 +12,8 @@ import {
   PlanificadorService,
   UpdateItemRequest,
 } from '../planificador.service';
+import { HogaresApiService, MiembroResponse } from '../../household/hogares-api.service';
+import { TareasApiService } from '../../tareas/services/tareas-api.service';
 
 type TipoComida = 'desayuno' | 'almuerzo' | 'cena' | 'tarea';
 
@@ -21,6 +23,7 @@ interface SlotModal {
   tituloLibre: string;
   recetaId: string;
   hora: string;
+  asignadoA: string;
 }
 
 @Component({
@@ -33,6 +36,8 @@ interface SlotModal {
 export class Planificador implements OnInit, OnDestroy {
   private readonly svc = inject(PlanificadorService);
   private readonly recetasSvc = inject(RecipesApiService);
+  private readonly hogaresApi = inject(HogaresApiService);
+  private readonly tareasApi = inject(TareasApiService);
   private readonly destroy$ = new Subject<void>();
 
   protected readonly isLoading = signal(true);
@@ -42,6 +47,7 @@ export class Planificador implements OnInit, OnDestroy {
   protected readonly semana = signal<PlanificadorSemanaDto | null>(null);
   protected readonly lunes = signal<Date>(PlanificadorService.getLunes(new Date()));
   protected readonly recetas = signal<ApiReceta[]>([]);
+  protected readonly miembros = signal<MiembroResponse[]>([]);
   protected readonly recipeQuery = signal('');
 
   protected readonly showModal = signal(false);
@@ -169,6 +175,7 @@ export class Planificador implements OnInit, OnDestroy {
       tituloLibre: '',
       recetaId: '',
       hora: this.DEFAULT_HOURS[tipo],
+      asignadoA: '',
     });
     this.recipeQuery.set('');
     this.errorMessage.set(null);
@@ -185,6 +192,7 @@ export class Planificador implements OnInit, OnDestroy {
       tituloLibre: item.tituloLibre ?? '',
       recetaId: item.recetaId ?? '',
       hora: this.formatTime(item.hora) || this.DEFAULT_HOURS[tipo],
+      asignadoA: item.asignadoA?.usuarioId ?? '',
     });
     this.recipeQuery.set(item.recetaNombre ?? '');
     this.errorMessage.set(null);
@@ -231,6 +239,13 @@ export class Planificador implements OnInit, OnDestroy {
     this.modalSlot.set({ ...slot, hora: value });
   }
 
+  protected updateAssignedUser(value: string): void {
+    const slot = this.modalSlot();
+    if (!slot) return;
+
+    this.modalSlot.set({ ...slot, asignadoA: value });
+  }
+
   protected saveItem(): void {
     const slot = this.modalSlot();
     if (!slot) return;
@@ -246,6 +261,7 @@ export class Planificador implements OnInit, OnDestroy {
       recetaId: isTask ? null : slot.recetaId,
       tituloLibre: isTask ? slot.tituloLibre.trim() : null,
       hora: slot.hora || null,
+      asignadoA: isTask ? (slot.asignadoA || null) : null,
     };
     const editing = this.editingItem();
     const request$ = editing
@@ -287,6 +303,18 @@ export class Planificador implements OnInit, OnDestroy {
       });
   }
 
+  protected completeTask(item: PlanificadorItemDto, event?: Event): void {
+    event?.stopPropagation();
+    if (!item.tareaId || item.tareaEstado === 'completada') return;
+
+    this.tareasApi.completarTarea(item.tareaId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => this.loadSemana(),
+        error: () => this.errorMessage.set('No se pudo marcar la tarea como hecha.'),
+      });
+  }
+
   protected modalTitle(): string {
     const slot = this.modalSlot();
     if (!slot) return '';
@@ -308,6 +336,14 @@ export class Planificador implements OnInit, OnDestroy {
 
   protected itemTitle(item: PlanificadorItemDto): string {
     return item.recetaNombre ?? item.tituloLibre ?? 'Sin titulo';
+  }
+
+  protected itemAssignedLabel(item: PlanificadorItemDto): string {
+    return item.asignadoA?.nombre?.split(' ')[0] ?? 'Sin asignar';
+  }
+
+  protected isTaskCompleted(item: PlanificadorItemDto): boolean {
+    return item.tareaEstado === 'completada';
   }
 
   protected itemImage(item: PlanificadorItemDto): string | null {
@@ -359,6 +395,13 @@ export class Planificador implements OnInit, OnDestroy {
           this.isLoadingRecipes.set(false);
         },
         error: () => this.isLoadingRecipes.set(false),
+      });
+
+    this.hogaresApi.getMiembros()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: miembros => this.miembros.set(miembros),
+        error: () => {},
       });
   }
 
