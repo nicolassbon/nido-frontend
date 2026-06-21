@@ -26,6 +26,7 @@ export function passwordMatchValidator(control: AbstractControl): ValidationErro
   selector: 'app-register',
   imports: [ReactiveFormsModule, LucideAngularModule, NidoSelectComponent, RouterLink],
   templateUrl: './register.html',
+  styleUrl: './register.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Register {

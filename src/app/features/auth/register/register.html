@@ -1,52 +1,56 @@
 <div class="flex flex-col min-h-screen bg-nido-cream">
-  <header class="relative bg-nido-green-dark px-6 py-3 flex items-center">
-    <div class="relative z-10 flex items-center shrink-0 cursor-pointer" (click)="onLogoClick()">
-      <img src="logo.png" alt="Nido" class="h-9 object-contain" />
+  <header class="bg-nido-green-dark px-4 py-4 flex items-center justify-center sm:px-6">
+    <div class="flex items-center justify-center cursor-pointer" (click)="onLogoClick()">
+      <img src="logo.png" alt="Nido" class="h-8 sm:h-9 object-contain" />
     </div>
-    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-      <div class="pointer-events-auto flex items-start">
+  </header>
+
+  <div class="flex justify-center px-4 py-4 sm:py-5">
+    <div class="w-full max-w-[740px] bg-nido-green-dark rounded-lg p-4 sm:p-5 flex items-center justify-center">
+      <div class="flex items-center gap-2 sm:gap-4">
         @for (step of steps; track step.number; let last = $last) {
-          <div class="flex flex-col items-center gap-1.5">
+          <div class="flex flex-col items-center gap-1">
             <div [class]="stepCircleClass(step)">
               @if (step.completed) {
-                <lucide-icon name="check" [size]="15" class="text-nido-green-dark" />
+                <lucide-icon name="check" [size]="14" class="text-nido-cream" />
               } @else {
                 <span
-                  class="text-[0.8125rem] font-bold"
-                  [class]="step.active ? 'text-nido-green-dark' : 'text-[rgba(247,241,230,0.45)]'"
+                  class="text-[0.75rem] sm:text-[0.8125rem] font-bold"
+                  [class]="step.active ? 'text-nido-green-dark' : 'text-nido-cream/50'"
                 >
                   {{ step.number }}
                 </span>
               }
             </div>
-            <span [class]="stepLabelClass(step)">{{ step.label }}</span>
+            <span [class]="stepLabelClass(step)" class="text-[0.65rem] sm:text-[0.7rem]">{{ step.label }}</span>
           </div>
           @if (!last) {
             <div
-              class="w-12 h-px mt-4 mx-1"
-              [class]="step.completed ? 'bg-nido-cream/60' : 'bg-[rgba(247,241,230,0.2)]'"
+              class="w-3 h-px sm:w-6"
+              [class]="step.completed ? 'bg-nido-green-dark/40' : 'bg-nido-border/50'"
             ></div>
           }
         }
       </div>
     </div>
-  </header>
+  </div>
+
   <main class="flex-1 flex items-center justify-center px-4 py-3">
     <form
       [formGroup]="form"
       (ngSubmit)="onSubmit()"
       class="bg-white rounded-2xl shadow-[0_4px_32px_rgba(38,63,48,0.10)] w-full max-w-[740px] px-5 py-6 sm:px-10 flex flex-col items-center gap-4"
     >
-      <p class="text-nido-muted italic text-[0.9rem] m-0">Todo conecta, todo fluye.</p>
-      <div class="flex flex-col items-center gap-1 text-center">
-        <h1 class="text-[1.6rem] font-bold text-nido-green-dark m-0">Paso 1: Tu Perfil</h1>
-        <p class="text-nido-brown text-[0.875rem] max-w-[340px] leading-relaxed m-0">
+      <p class="auth-tagline">Todo conecta, todo fluye.</p>
+      <div class="flex flex-col items-center gap-3 text-center">
+        <h1 class="auth-title">Paso 1: Tu Perfil</h1>
+        <p class="auth-description">
           Contanos un poco sobre vos para empezar a construir tu experiencia personalizada en Nido!
         </p>
       </div>
-      <div class="w-full flex flex-col items-center gap-3 pt-1">
-        <div class="w-full max-w-[420px] flex justify-center">
-          <div #googleButtonHost class="w-full"></div>
+      <div class="w-full flex flex-col items-center gap-4 pt-2">
+        <div class="w-full max-w-[520px] flex justify-center">
+          <div #googleButtonHost class="w-full min-h-[48px] flex items-center justify-center"></div>
         </div>
         <div class="flex items-center w-full max-w-[520px]">
           <div class="flex-1 h-px bg-nido-border"></div>
