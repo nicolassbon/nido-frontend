@@ -3,7 +3,7 @@
   <!-- Banner -->
   <section class="relative overflow-hidden rounded-[14px] px-8 py-7 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
     <div class="absolute inset-0 bg-[url('/images/banners/home.png')] bg-center bg-cover"></div>
-    
+
     <div class="relative z-10">
       <h1 class="text-nido-cream text-[1.6rem] font-bold font-title">
         Notificaciones
@@ -35,26 +35,21 @@
     </span>
 
     <!-- Filtro -->
-    <div class="relative z-20">
+    <div class="flex w-fit gap-1 rounded-[12px] border border-nido-border/40 bg-white/35 p-1">
       <button
-        class="flex items-center gap-2 bg-white/[0.51] border-[1.5px] border-solid border-nido-border text-nido-green-dark px-4 py-2.5 rounded-[10px] text-[0.875rem] font-medium cursor-pointer transition hover:border-nido-gold"
-        (click)="toggleFiltros()">
-        <span class="font-sans">Filtrar: {{ filtroActual() === 'todas' ? 'Todas' : 'No leídas' }}</span>
-        <lucide-icon name="chevron-down" [img]="icons.ChevronDown" [size]="14" />
+        type="button"
+        [class]="filtroTabClass('no-leidas')"
+        (click)="setFiltro('no-leidas')">
+        No leídas
       </button>
-
-      @if (mostrarFiltros()) {
-        <div class="absolute right-0 top-[calc(100%+4px)] bg-white border border-nido-border rounded-[8px] shadow-[0_4px_12px_rgba(38,63,48,0.1)] min-w-[130px] overflow-hidden">
-          <button class="w-full text-left px-4 py-2.5 text-[0.825rem] border-none bg-transparent text-nido-green-dark cursor-pointer hover:bg-[#f7f3ef] font-sans" [class.font-bold]="filtroActual() === 'todas'" (click)="setFiltro('todas')">Todas</button>
-          <button class="w-full text-left px-4 py-2.5 text-[0.825rem] border-none bg-transparent text-nido-green-dark cursor-pointer hover:bg-[#f7f3ef] font-sans" [class.font-bold]="filtroActual() === 'no-leidas'" (click)="setFiltro('no-leidas')">No leídas</button>
-        </div>
-      }
+      <button
+        type="button"
+        [class]="filtroTabClass('todas')"
+        (click)="setFiltro('todas')">
+        Todas
+      </button>
     </div>
   </div>
-
-  @if (mostrarFiltros()) {
-    <div class="fixed inset-0 z-10 bg-transparent" (click)="toggleFiltros()"></div>
-  }
 
   <!-- Contenido Principal -->
   <main class="w-full flex flex-col gap-4">
@@ -76,17 +71,19 @@
       <div class="flex flex-col gap-3">
         @for (n of notificacionesFiltradas(); track n.id) {
           <article
-            class="rounded-[14px] border border-solid border-[rgba(180,139,106,0.15)] bg-white/[0.51] p-4 flex items-center gap-4 shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition duration-[180ms] hover:-translate-y-[2px] hover:shadow-[0_6px_16px_rgba(38,63,48,0.08)] hover:opacity-100 cursor-pointer"
+            class="rounded-[14px] border border-solid border-[rgba(180,139,106,0.15)] p-4 flex items-center gap-4 shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition duration-[180ms] hover:-translate-y-[2px] hover:shadow-[0_6px_16px_rgba(38,63,48,0.08)] hover:opacity-100 cursor-pointer"
+            [class.bg-white]="!n.leida"
+            [class.bg-nido-brown/10]="n.leida"
             [class.border-l-4]="!n.leida"
             [class.border-l-nido-gold]="!n.leida"
-            [class.opacity-70]="n.leida"
+            [class.opacity-85]="n.leida"
             (click)="verRecurso(n)">
-            
+
             <!-- Icono círculo -->
             <div [className]="'w-11 h-11 rounded-full flex items-center justify-center shrink-0 ' + getIconBgClass(n.tipo, n.mensaje)">
               <lucide-icon name="bell" [img]="getIconName(n.tipo, n.mensaje)" [size]="18" />
             </div>
- 
+
             <!-- Contenido textual -->
             <div class="flex-1 min-w-0 flex flex-col gap-0.5 font-sans">
               <h3 class="text-[0.95rem] font-semibold text-nido-green-dark leading-snug font-title">
@@ -99,7 +96,7 @@
                 {{ formatFecha(n.createdAt) }}
               </span>
             </div>
- 
+
             <!-- Acciones -->
             <div class="flex items-center gap-3 shrink-0">
               @if (!n.leida) {
@@ -116,7 +113,7 @@
                 title="Eliminar">
                 <lucide-icon name="trash-2" [img]="icons.Trash2" [size]="14" />
               </button>
- 
+
               @if (n.referenciaTipo === 'tarea') {
                 <button
                   class="bg-nido-green-dark text-white text-[0.825rem] font-semibold px-5 py-2 rounded-[20px] transition hover:opacity-90 max-sm:px-3 max-sm:text-[0.78rem] cursor-pointer"
