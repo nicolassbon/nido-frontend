@@ -1,7 +1,6 @@
 :host {
   --green-ink: #1e3f3a;
   --green-deep: #21433c;
-  --green-soft: #3e5e4a;
   --cream: var(--color-nido-bg);
   --paper: #f8f3ea;
   --paper-2: #f2eadf;
@@ -10,7 +9,6 @@
   --brown-dark: var(--color-nido-brown);
   --muted: #7f756b;
   --danger: #b44c3c;
-  --shadow: 0 10px 30px rgba(31, 39, 34, 0.12);
   display: block;
 }
 
@@ -481,7 +479,6 @@
   justify-content: flex-start;
   background: rgba(255, 253, 248, 0.94);
   border-color: rgba(216, 198, 178, 0.64);
-
 }
 
 .plan-slot--tasks .slot-add--inline {
@@ -754,11 +751,6 @@
   margin: 2px 0 0;
   color: rgba(247, 241, 230, 0.74);
   font-size: 0.78rem;
-}
-
-.plan-modal__header .icon-btn {
-  position: relative;
-  z-index: 1;
 }
 
 .plan-modal__body {
@@ -1122,10 +1114,6 @@
     min-height: 42px;
     grid-template-columns: 13px minmax(0, 1fr) 24px;
     padding: 8px 6px 8px 10px;
-  }
-
-  .plan-card--task .plan-card__body strong {
-    font-size: 0.76rem;
   }
 
   .plan-card__assignee {
