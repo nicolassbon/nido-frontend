@@ -3,55 +3,21 @@
     <!-- Contenedor con línea conectora -->
     <div class="relative flex items-center justify-around gap-1 sm:gap-2">
 
-      <!-- Línea de fondo -->
-      <div class="absolute h-px bg-nido-brown/20" style="z-index: 0; left: 12%; right: 12%; top: 20px;"></div>
+      <!-- Línea de fondo que une los pasos -->
+      <div class="absolute h-0.5 bg-nido-brown/20 rounded-full" style="z-index: 0; left: 12%; right: 12%; top: 19px;"></div>
 
       @for (step of steps; track step.number) {
         <div class="relative flex flex-col items-center flex-shrink-0 w-1/4 sm:w-auto" style="z-index: 1;">
 
-          <!-- Círculo del paso -->
+          <!-- Círculo del paso con número -->
           <div
             [class]="getStepCircleClass(step)"
-            class="relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 mb-3">
+            class="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 mb-3">
 
             @if (step.completed) {
               <lucide-icon name="check" [size]="20" class="text-white" />
-            } @else if (step.active) {
-              @switch (step.number) {
-                @case (1) {
-                  <lucide-icon name="user" size="20" class="text-white" />
-                }
-                @case (2) {
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                  </svg>
-                }
-                @case (3) {
-                  <lucide-icon name="zap" size="20" class="text-white" />
-                }
-                @case (4) {
-                  <lucide-icon name="star" size="20" class="text-white" />
-                }
-              }
             } @else {
-              @switch (step.number) {
-                @case (1) {
-                  <lucide-icon name="user" size="20" class="text-nido-brown" />
-                }
-                @case (2) {
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-nido-brown">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                  </svg>
-                }
-                @case (3) {
-                  <lucide-icon name="zap" size="20" class="text-nido-brown" />
-                }
-                @case (4) {
-                  <lucide-icon name="star" size="20" class="text-nido-brown" />
-                }
-              }
+              <span class="text-base sm:text-lg font-bold leading-none">{{ step.number }}</span>
             }
           </div>
 

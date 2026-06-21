@@ -1,104 +1,205 @@
 <div class="w-full p-4 sm:p-6 flex flex-col gap-5">
-
-  <!-- Banner -->
   <section class="relative overflow-hidden rounded-[14px] px-5 py-6 sm:px-8 sm:py-7 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4">
     <div class="absolute inset-0 bg-[url('/images/banners/lista-compra.png')] bg-center bg-cover"></div>
     <div class="relative z-10">
       <h1 class="text-nido-cream text-[1.6rem] font-bold">Lista de compras</h1>
       <p class="text-nido-cream/70 text-sm mt-0.5">
-        @if (listas.length > 0) {
-          {{ listas.length }} receta{{ listas.length !== 1 ? 's' : '' }}
-          · {{ totalPendiente }} pendiente{{ totalPendiente !== 1 ? 's' : '' }}
-        } @else {
-          Sin ingredientes pendientes
-        }
+        {{ listas.length }} lista{{ listas.length !== 1 ? 's' : '' }} - {{ totalPendiente }} pendiente{{ totalPendiente !== 1 ? 's' : '' }}
       </p>
     </div>
-    @if (listas.length > 0) {
-      <button
-        class="relative z-10 flex w-full items-center justify-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)] sm:w-auto"
-        (click)="clearAll()">
-        <lucide-icon name="trash-2" [size]="15" />
-        Vaciar todo
-      </button>
-    }
+
+    <button
+      class="relative z-10 flex w-full items-center justify-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)] sm:w-auto"
+      (click)="openCreateList()">
+      <lucide-icon name="plus" [size]="16" />
+      Crear lista
+    </button>
   </section>
 
-  <!-- Estado vacío -->
+  @if (errorMessage) {
+    <p class="rounded-[12px] border border-nido-red/25 bg-nido-red/10 px-4 py-3 text-sm text-nido-red">
+      {{ errorMessage }}
+    </p>
+  }
+
+  @if (showListForm) {
+    <section class="bg-white/[0.51] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] px-4 py-4 sm:px-5">
+      <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+        <label class="flex flex-col gap-1.5 text-[0.75rem] font-semibold text-nido-brown">
+          Nombre de la lista
+          <input
+            class="h-10 rounded-[10px] border border-nido-border bg-white px-3 text-[0.875rem] font-medium text-nido-green-dark outline-none focus:border-nido-green-dark"
+            name="listName"
+            [(ngModel)]="listName"
+            placeholder="Ej: Compra semanal"
+            autocomplete="off">
+        </label>
+
+        <button
+          class="h-10 rounded-[20px] bg-nido-green-dark px-4 text-[0.8rem] font-semibold text-nido-cream disabled:cursor-not-allowed disabled:opacity-50"
+          [disabled]="!listName.trim() || isSaving"
+          (click)="saveList()">
+          {{ editingListId ? 'Guardar' : 'Crear' }}
+        </button>
+      </div>
+    </section>
+  }
+
   @if (listas.length === 0) {
     <section class="bg-white/[0.51] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] flex flex-col items-center justify-center gap-4 px-5 py-12 text-center sm:px-8 sm:py-16">
       <lucide-icon name="shopping-cart" [size]="48" class="text-nido-brown/30" />
       <div>
-        <p class="text-nido-green-dark font-semibold text-[1rem]">La lista está vacía</p>
-        <p class="text-nido-brown text-[0.875rem] mt-1">Entrá a una receta y tocá "Agregar faltantes a lista de compras"</p>
+        <p class="text-nido-green-dark font-semibold text-[1rem]">Todavia no hay listas</p>
+        <p class="text-nido-brown text-[0.875rem] mt-1">Crea una lista propia o agrega faltantes desde una receta.</p>
       </div>
       <button
         class="mt-2 px-5 py-2 bg-nido-green-dark text-nido-cream border-none rounded-[20px] text-[0.8rem] cursor-pointer hover:bg-nido-green"
-        (click)="goToRecetas()">
-        Ver recetas
+        (click)="openCreateList()">
+        Crear lista
       </button>
     </section>
+  } @else {
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex flex-wrap gap-2">
+        @for (lista of listas; track lista.id) {
+          <button
+            class="inline-flex items-center gap-2 rounded-[20px] border px-3.5 py-2 text-[0.8rem] font-medium"
+            [class.bg-nido-green-dark]="activeListId === lista.id && !showAllLists"
+            [class.text-nido-cream]="activeListId === lista.id && !showAllLists"
+            [class.bg-white]="activeListId !== lista.id || showAllLists"
+            [class.text-nido-brown]="activeListId !== lista.id || showAllLists"
+            [class.border-nido-green-dark]="activeListId === lista.id && !showAllLists"
+            [class.border-nido-border]="activeListId !== lista.id || showAllLists"
+            (click)="selectList(lista.id)">
+            {{ lista.recetaNombre }}
+            <span class="text-[0.72rem] opacity-80">{{ pendientesDe(lista) }}</span>
+          </button>
+        }
+      </div>
+
+      @if (listas.length > 1) {
+        <button
+          class="inline-flex h-9 items-center justify-center rounded-[20px] border border-nido-border bg-white px-4 text-[0.8rem] font-semibold text-nido-brown transition-colors duration-150 hover:border-nido-green-dark hover:text-nido-green-dark"
+          (click)="toggleShowAllLists()">
+          {{ showAllLists ? 'Ver una' : 'Ver todo' }}
+        </button>
+      }
+    </div>
   }
 
-  <!-- Una card por receta -->
-  @for (lista of listas; track lista.recetaNombre) {
-    <section class="bg-white/[0.51] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] overflow-hidden">
-
-      <!-- Header -->
+  @for (lista of visibleLists(); track lista.id) {
+    <section class="bg-white/[0.51] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] overflow-visible">
       <div class="flex flex-col gap-3 px-4 py-3.5 border-b border-nido-border/40 bg-nido-cream/30 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div class="flex min-w-0 flex-wrap items-center gap-2.5">
-          <lucide-icon name="chef-hat" [size]="16" class="text-nido-green-dark shrink-0" />
+          <lucide-icon name="shopping-basket" [size]="16" class="text-nido-green-dark shrink-0" />
           <span class="text-[0.875rem] font-semibold text-nido-green-dark">{{ lista.recetaNombre }}</span>
-          <span class="text-[0.775rem] text-nido-brown">
-            · {{ pendientesDe(lista) }} pendiente{{ pendientesDe(lista) !== 1 ? 's' : '' }}
-          </span>
+          <span class="text-[0.775rem] text-nido-brown">{{ pendientesDe(lista) }} pendiente{{ pendientesDe(lista) !== 1 ? 's' : '' }}</span>
         </div>
-        <button
-          class="flex w-fit items-center gap-1 px-2.5 py-1 rounded-[20px] border border-nido-border bg-transparent text-nido-brown text-[0.75rem] cursor-pointer hover:border-nido-red hover:text-nido-red transition-colors duration-150"
-          (click)="removeReceta(lista.recetaNombre)">
-          <lucide-icon name="x" [size]="13" />
-          Quitar
+        <div class="flex gap-2">
+          <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown hover:text-nido-green-dark" (click)="editList(lista)" title="Editar lista">
+            <lucide-icon name="pencil" [size]="15" />
+          </button>
+          <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown hover:text-nido-red" (click)="deleteList(lista.id, $event)" title="Eliminar lista">
+            <lucide-icon name="trash-2" [size]="15" />
+          </button>
+        </div>
+      </div>
+
+      <div class="grid gap-3 border-b border-nido-border/40 px-4 py-4 sm:grid-cols-[minmax(0,1fr)_92px_132px_96px] sm:items-end sm:px-5 lg:grid-cols-[minmax(0,1fr)_96px_144px_104px]">
+        <label class="flex min-w-0 flex-col gap-1.5 text-[0.75rem] font-semibold text-nido-brown">
+          Producto
+          <input class="h-10 rounded-[10px] border border-nido-border bg-white px-3 text-[0.875rem] font-medium text-nido-green-dark outline-none focus:border-nido-green-dark" [(ngModel)]="itemNombre" name="itemNombre" autocomplete="off">
+        </label>
+        <label class="flex min-w-0 flex-col gap-1.5 text-[0.75rem] font-semibold text-nido-brown">
+          Cantidad
+          <input class="h-10 rounded-[10px] border border-nido-border bg-white px-3 text-[0.875rem] font-medium text-nido-green-dark outline-none focus:border-nido-green-dark" [(ngModel)]="itemCantidad" name="itemCantidad" type="number" min="0" step="0.01">
+        </label>
+        <label class="flex min-w-0 flex-col gap-1.5 text-[0.75rem] font-semibold text-nido-brown">
+          Unidad
+          <nido-select
+            [(ngModel)]="itemUnidad"
+            name="itemUnidad"
+            [options]="unidadesOpts"
+            [style.--nido-select-height]="'2.5rem'"
+            [style.--nido-select-radius]="'0.625rem'"
+            [style.--nido-select-border-color]="'var(--color-nido-border)'"
+            [style.--nido-select-background]="'#fff'"
+            [style.--nido-select-font-size]="'0.875rem'"
+            placeholder="Unidad" />
+        </label>
+        <button class="h-10 w-full rounded-[20px] bg-nido-green-dark px-4 text-[0.8rem] font-semibold text-nido-cream disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto" [disabled]="!itemNombre.trim() || isSaving" (click)="saveItem(lista.id)">
+          {{ editingItem ? 'Guardar' : 'Agregar' }}
         </button>
       </div>
 
-      <!-- Items -->
       <ul class="list-none m-0 p-0">
-        @for (item of lista.items; track $index; let i = $index) {
-          <li
-            class="flex items-center gap-3 px-4 py-3.5 border-b border-nido-border/40 cursor-pointer transition-colors duration-150 last:border-b-0 hover:bg-nido-cream/40 sm:gap-4 sm:px-5"
-            (click)="toggleItem(lista.recetaNombre, i)">
+        @for (item of lista.items; track item.id) {
+          <li class="flex items-center gap-3 px-4 py-3.5 border-b border-nido-border/40 transition-colors duration-150 last:border-b-0 hover:bg-nido-cream/40 sm:px-5">
+            <button
+              class="shrink-0 w-5 h-5 rounded-[5px] border-[1.5px] flex items-center justify-center"
+              [class.bg-nido-green-dark]="item.checked"
+              [class.border-nido-green-dark]="item.checked"
+              [class.bg-white]="!item.checked"
+              [class.border-nido-border]="!item.checked"
+              (click)="togglePurchased(lista.id, item)"
+              title="Marcar comprado">
+              @if (item.checked) {
+                <lucide-icon name="check" [size]="12" class="text-nido-cream" />
+              }
+            </button>
 
-            @if (item.checked) {
-              <span class="shrink-0 w-5 h-5 rounded-[5px] bg-nido-green-dark border-[1.5px] border-nido-green-dark flex items-center justify-center text-nido-cream">
-                <lucide-icon name="check" [size]="12" />
-              </span>
-              <span class="flex-1 text-[0.875rem] text-nido-brown line-through">{{ item.nombre }}</span>
-            } @else {
-              <span class="shrink-0 w-5 h-5 rounded-[5px] bg-white border-[1.5px] border-nido-border flex items-center justify-center"></span>
-              <span class="flex-1 text-[0.875rem] font-medium text-nido-green-dark">{{ item.nombre }}</span>
-            }
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-[0.875rem]" [class.line-through]="item.checked" [class.text-nido-brown]="item.checked" [class.text-nido-green-dark]="!item.checked" [class.font-medium]="!item.checked">{{ item.nombre }}</p>
+              @if (formatAmount(item.cantidad, item.unidad)) {
+                <p class="text-[0.775rem] text-nido-brown">{{ formatAmount(item.cantidad, item.unidad) }}</p>
+              }
+            </div>
 
-            @if (formatAmount(item.cantidad, item.unidad)) {
-              <span class="text-[0.8rem] text-nido-brown shrink-0">{{ formatAmount(item.cantidad, item.unidad) }}</span>
-            }
-
+            <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown hover:text-nido-green-dark" (click)="editItem(lista.id, item, $event)" title="Editar producto">
+              <lucide-icon name="pencil" [size]="15" />
+            </button>
+            <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown hover:text-nido-red" (click)="removeItem(lista.id, item.id, $event)" title="Quitar producto">
+              <lucide-icon name="trash-2" [size]="15" />
+            </button>
           </li>
         }
       </ul>
-
-      <!-- Footer progreso -->
-      <div class="px-4 py-2.5 border-t border-nido-border/40 flex flex-col gap-2 bg-nido-cream/20 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-        <span class="text-[0.775rem] text-nido-brown">
-          {{ lista.items.length - pendientesDe(lista) }} de {{ lista.items.length }} comprado{{ lista.items.length !== 1 ? 's' : '' }}
-        </span>
-        <div class="w-28 h-1.5 bg-nido-border rounded-full overflow-hidden">
-          <div class="h-full bg-nido-green-dark rounded-full transition-[width] duration-300"
-               [style.width.%]="lista.items.length > 0 ? ((lista.items.length - pendientesDe(lista)) / lista.items.length) * 100 : 0">
-          </div>
-        </div>
-      </div>
-
     </section>
   }
 
+  <section class="bg-white/[0.51] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] overflow-hidden">
+    <div class="flex items-center gap-2 px-4 py-3.5 border-b border-nido-border/40 bg-nido-cream/30 sm:px-5">
+      <lucide-icon name="history" [size]="16" class="text-nido-green-dark" />
+      <h2 class="text-[0.9rem] font-semibold text-nido-green-dark">Historial de compras</h2>
+    </div>
+
+    @if (historial.length === 0) {
+      <p class="px-4 py-5 text-[0.875rem] text-nido-brown sm:px-5">Todavia no marcaste productos como comprados.</p>
+    } @else {
+      <ul class="list-none m-0 p-0">
+        @for (item of historial; track item.id) {
+          <li class="flex items-center justify-between gap-3 px-4 py-3 border-b border-nido-border/40 last:border-b-0 sm:px-5">
+            <div class="min-w-0 flex flex-col gap-1">
+              <span class="text-[0.875rem] font-medium text-nido-green-dark">{{ item.nombre }}</span>
+              <span class="text-[0.775rem] text-nido-brown">{{ formatHistoryDate(item.compradoEn) }}</span>
+              <span class="text-[0.775rem] text-nido-brown">
+                {{ item.grupoNombre }}
+                @if (formatAmount(item.cantidad, item.unidad)) {
+                  - {{ formatAmount(item.cantidad, item.unidad) }}
+                }
+              </span>
+            </div>
+            <button
+              class="inline-flex shrink-0 items-center gap-1.5 rounded-[18px] border border-nido-border bg-white px-3 py-1.5 text-[0.75rem] font-semibold text-nido-green-dark transition-colors duration-150 hover:border-nido-green hover:bg-nido-cream"
+              type="button"
+              [disabled]="uploadingHistoryId === item.id"
+              (click)="sendHistoryItemToPantry(item)">
+              <lucide-icon name="package-plus" [size]="13" />
+              Pasar a la alacena
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </section>
 </div>

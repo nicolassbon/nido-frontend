@@ -2,7 +2,28 @@ import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { LucideAngularModule } from 'lucide-angular';
+import {
+  AlarmClock,
+  AlertTriangle,
+  Bookmark,
+  Check,
+  CheckSquare,
+  ChevronDown,
+  ChefHat,
+  Clock,
+  Eye,
+  Flame,
+  LucideAngularModule,
+  Pencil,
+  Search,
+  Shield,
+  ShoppingBasket,
+  Shuffle,
+  SlidersHorizontal,
+  Star,
+  X,
+  Zap,
+} from 'lucide-angular';
 import { ElectrodomesticosService } from '../../electrodomesticos/services/electrodomesticos.service';
 import { HogaresApiService, MiembroResponse } from '../../household/hogares-api.service';
 import { environment } from '../../../../environments/environment';
@@ -13,7 +34,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { PerfilApiService } from '../../perfil/perfil-api.service';
 
 type Difficulty = 'Fácil' | 'Medio' | 'Difícil';
-type FilterOption = 'Todos' | Difficulty;
+type FilterOption = 'Todos' | 'Guardadas' | Difficulty;
 type SortOption = 'default' | 'rating' | 'coincidencia' | 'urgencia';
 
 interface RecipeIngredient {
@@ -45,6 +66,7 @@ interface Recipe {
   fechaVencimientoMasProxima: string | null;
   diasHastaVencimiento: number | null;
   productosPorVencer: ExpiringRecipeProduct[];
+  guardada: boolean;
 }
 
 interface RecipeWithAvailability extends Recipe {
@@ -128,11 +150,34 @@ export class Recipes implements OnInit {
   private readonly perfilApi         = inject(PerfilApiService);
   private readonly destroyRef        = inject(DestroyRef);
 
+  protected readonly icons = {
+    AlarmClock,
+    AlertTriangle,
+    Bookmark,
+    Check,
+    CheckSquare,
+    ChevronDown,
+    ChefHat,
+    Clock,
+    Eye,
+    Flame,
+    Pencil,
+    Search,
+    Shield,
+    ShoppingBasket,
+    Shuffle,
+    SlidersHorizontal,
+    Star,
+    X,
+    Zap,
+  };
+
   protected readonly searchQuery              = signal('');
   protected readonly activeFilter             = signal<FilterOption>('Todos');
   protected readonly sortBy                   = signal<SortOption>('urgencia');
   protected readonly showSortDropdown         = signal(false);
   protected readonly showRoulettePopup        = signal(false);
+  protected readonly rouletteRecipe           = signal<RecipeWithAvailability | null>(null);
   protected readonly excludeAllergens         = signal(false);
   protected readonly excludeMissingAppliances = signal(false);
   protected readonly filterByIngredients      = signal(false);
@@ -282,7 +327,9 @@ export class Recipes implements OnInit {
   protected readonly filteredRecipes = computed(() => {
     let result = [...this.recipesWithAvailability()];
 
-    if (this.activeFilter() !== 'Todos') {
+    if (this.activeFilter() === 'Guardadas') {
+      result = result.filter(recipe => recipe.guardada);
+    } else if (this.activeFilter() !== 'Todos') {
       result = result.filter(recipe => recipe.difficulty === this.activeFilter());
     }
 
@@ -367,11 +414,28 @@ export class Recipes implements OnInit {
   }
 
   protected openRoulettePopup(): void {
+    this.rerollRoulette();
     this.showRoulettePopup.set(true);
   }
 
   protected closeRoulettePopup(): void {
     this.showRoulettePopup.set(false);
+  }
+
+  protected rerollRoulette(): void {
+    const currentId = this.rouletteRecipe()?.id;
+    const candidates = this.recipesWithAvailability()
+      .filter(recipe => recipe.availabilityPercent > 50 && !recipe.hasAllergen);
+    const pool = candidates.length > 1
+      ? candidates.filter(recipe => recipe.id !== currentId)
+      : candidates;
+    this.rouletteRecipe.set(pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : null);
+  }
+
+  protected missingIngredientNames(recipe: RecipeWithAvailability): string[] {
+    return recipe.ingredients
+      .filter(ingredient => !ingredient.inStock)
+      .map(ingredient => ingredient.name);
   }
 
   protected get selectedIngredients(): PantryIngredient[] {
@@ -461,6 +525,7 @@ export class Recipes implements OnInit {
         expirationDate: producto.fechaVencimiento,
         daysUntilExpiration: producto.diasHastaVencimiento,
       })),
+      guardada: receta.guardada ?? false,
       ingredients: receta.ingredientes.map(ingrediente => {
         const ingredientName = ingrediente.productoNombre || ingrediente.nombre;
         return {

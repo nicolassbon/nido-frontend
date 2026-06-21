@@ -7,6 +7,7 @@ import { vi } from 'vitest';
 import {
   AlarmClock,
   AlertTriangle,
+  Bookmark,
   Check,
   CheckSquare,
   ChefHat,
@@ -124,6 +125,7 @@ describe('Recipes', () => {
           useValue: new LucideIconProvider({
             AlarmClock,
             AlertTriangle,
+            Bookmark,
             Check,
             CheckSquare,
             ChefHat,

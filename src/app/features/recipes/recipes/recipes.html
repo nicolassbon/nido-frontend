@@ -16,7 +16,7 @@
       type="button"
       class="relative z-10 flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]"
       (click)="openRoulettePopup()">
-      <lucide-icon name="shuffle" [size]="16" />
+      <lucide-icon [img]="icons.Shuffle" [size]="16" />
       Ruleta de comidas
     </button>
   </section>
@@ -24,7 +24,7 @@
   <!-- Buscador -->
   <div class="relative flex items-center">
     <span class="absolute inset-y-0 left-3.5 flex w-6 items-center justify-center text-nido-brown pointer-events-none">
-      <lucide-icon name="search" [size]="18" />
+      <lucide-icon [img]="icons.Search" [size]="18" />
     </span>
     <input
       class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-brown rounded-[10px] bg-white/[0.51] text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-brown placeholder:text-nido-muted"
@@ -35,7 +35,7 @@
     />
     @if (searchQuery()) {
       <button class="absolute right-2.5 top-1/2 -translate-y-1/2 h-8 w-8 bg-transparent border-none text-nido-brown cursor-pointer flex items-center justify-center rounded hover:text-nido-green-dark" (click)="clearSearch()">
-        <lucide-icon name="x" [size]="16" />
+        <lucide-icon [img]="icons.X" [size]="16" />
       </button>
     }
   </div>
@@ -43,23 +43,27 @@
   <!-- Filtros -->
   <div class="flex items-center justify-between gap-3 flex-wrap">
     <div class="flex gap-2 flex-wrap">
+      <button [class]="filterChipClass('Guardadas')" (click)="setFilter('Guardadas')">
+        <lucide-icon [img]="icons.Bookmark" [size]="13" />
+        Guardadas
+      </button>
       @for (filter of filterOptions; track filter) {
         <button [class]="filterChipClass(filter)" (click)="setFilter(filter)">
           {{ filter }}
         </button>
       }
       <button [class]="allergenChipClass()" (click)="toggleAllergens()">
-        <lucide-icon name="shield" [size]="13" />
+        <lucide-icon [img]="icons.Shield" [size]="13" />
         Sin alergenos
         @if (excludeAllergens()) {
-          <lucide-icon name="check" [size]="12" />
+          <lucide-icon [img]="icons.Check" [size]="12" />
         }
       </button>
       <button [class]="applianceChipClass()" (click)="toggleMissingAppliances()">
-        <lucide-icon name="zap" [size]="13" />
+        <lucide-icon [img]="icons.Zap" [size]="13" />
         Con mis electrodomesticos
         @if (excludeMissingAppliances()) {
-          <lucide-icon name="check" [size]="12" />
+          <lucide-icon [img]="icons.Check" [size]="12" />
         }
       </button>
     </div>
@@ -69,9 +73,9 @@
       <button
         class="flex items-center gap-1.5 px-3.5 py-[0.4rem] rounded-[20px] border-[1.5px] border-solid border-nido-border bg-white text-nido-brown text-[0.8125rem] font-medium cursor-pointer whitespace-nowrap hover:border-nido-green hover:text-nido-green"
         (click)="showSortDropdown.set(!showSortDropdown())">
-        <lucide-icon name="sliders-horizontal" [size]="15" />
+        <lucide-icon [img]="icons.SlidersHorizontal" [size]="15" />
         {{ getSortLabel() }}
-        <lucide-icon name="chevron-down" [size]="14" />
+        <lucide-icon [img]="icons.ChevronDown" [size]="14" />
       </button>
       @if (showSortDropdown()) {
         <div class="absolute top-[calc(100%+6px)] right-0 bg-white border border-nido-border rounded-[10px] shadow-[0_4px_16px_rgba(38,63,48,0.12)] overflow-hidden z-10 min-w-[180px]">
@@ -91,7 +95,7 @@
     <div class="order-2 md:order-1">
       @if (filteredRecipes().length === 0) {
         <div class="flex flex-col items-center justify-center gap-3 py-16 px-8 text-nido-brown text-center">
-          <lucide-icon name="chef-hat" [size]="48" />
+          <lucide-icon [img]="icons.ChefHat" [size]="48" />
           <p class="text-[0.9rem]">No encontramos recetas con ese criterio.</p>
           <button
             class="mt-2 px-5 py-2 bg-nido-green-dark text-nido-cream border-none rounded-[20px] text-[0.8rem] cursor-pointer hover:bg-nido-green"
@@ -116,7 +120,7 @@
                 @if (recipe.tieneProductosPorVencer) {
                   <div class="group/urgent absolute left-2 top-2 z-10">
                     <span class="inline-flex items-center gap-1 rounded-[20px] bg-nido-red px-2.5 py-0.5 text-[0.68rem] font-bold uppercase tracking-[0.04em] text-white shadow-[0_2px_8px_rgba(180,76,60,0.22)]">
-                      <lucide-icon name="alarm-clock" [size]="11" />
+                      <lucide-icon [img]="icons.AlarmClock" [size]="11" />
                       URGENTE
                     </span>
                     <div class="pointer-events-none absolute left-0 top-[calc(100%+6px)] w-[210px] rounded-[8px] border border-[rgba(180,76,60,0.18)] bg-white px-3 py-2 text-left opacity-0 shadow-[0_8px_22px_rgba(38,63,48,0.18)] transition-opacity duration-150 group-hover/urgent:opacity-100">
@@ -155,21 +159,21 @@
                     }
                   </span>
                   <span class="flex items-center gap-1 text-[0.775rem] text-nido-brown">
-                    <lucide-icon name="clock" [size]="13" />
+                    <lucide-icon [img]="icons.Clock" [size]="13" />
                     {{ recipe.timeMinutes }} min
                   </span>
                 </div>
 
                 <div class="flex min-h-[1.15rem] items-center gap-3.5">
                   <span class="flex items-center gap-1 text-[0.775rem] text-nido-brown">
-                    <lucide-icon name="flame" [size]="13" />
+                    <lucide-icon [img]="icons.Flame" [size]="13" />
                     {{ recipe.calories }} kcal
                   </span>
                 </div>
 
                 <div class="mt-0.5 flex min-h-[1.15rem] items-center gap-1">
                   @if (recipe.vecesCocinada > 0) {
-                    <lucide-icon name="chef-hat" [size]="12" class="text-nido-brown" />
+                    <lucide-icon [img]="icons.ChefHat" [size]="12" class="text-nido-brown" />
                     <span class="text-[0.72rem] text-nido-brown">
                       Cocinada {{ recipe.vecesCocinada }} {{ recipe.vecesCocinada === 1 ? 'vez' : 'veces' }}
                     </span>
@@ -196,7 +200,7 @@
                 <div class="mt-1.5 flex min-h-[2.35rem] items-start">
                   @if (recipe.hasMissingAppliance) {
                   <div class="flex w-full items-center gap-1.5 px-2.5 py-1.5 rounded-[8px] bg-[rgba(180,76,60,0.07)] border border-[rgba(180,76,60,0.2)]">
-                    <lucide-icon name="zap" [size]="12" class="text-nido-red shrink-0" />
+                    <lucide-icon [img]="icons.Zap" [size]="12" class="text-nido-red shrink-0" />
                     <span class="text-[0.7rem] font-medium text-nido-red leading-snug">
                       Requiere electrodomestico no disponible
                     </span>
@@ -209,7 +213,7 @@
                   [routerLink]="['/recetas', recipe.id]"
                   (click)="$event.stopPropagation()"
                   class="mt-auto inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 bg-nido-green-dark text-nido-cream rounded-[8px] text-[0.8rem] font-medium cursor-pointer transition-[background] duration-150 hover:bg-nido-green">
-                  <lucide-icon name="eye" [size]="14" />
+                  <lucide-icon [img]="icons.Eye" [size]="14" />
                   Ver detalle
                 </a>
               </div>
@@ -248,7 +252,7 @@
               </span>
               @if (member.allergens.length) {
                 <span class="text-nido-gold shrink-0">
-                  <lucide-icon name="alert-triangle" [size]="10" />
+                  <lucide-icon [img]="icons.AlertTriangle" [size]="10" />
                 </span>
               }
             </button>
@@ -256,7 +260,7 @@
         </div>
         @if (excludeAllergens()) {
           <p class="flex items-center gap-1.5 text-[0.75rem] text-nido-green bg-[rgba(62,94,74,0.08)] px-2.5 py-[0.4rem] rounded-md mt-1">
-            <lucide-icon name="shield" [size]="13" />
+            <lucide-icon [img]="icons.Shield" [size]="13" />
             Excluyendo recetas con alergenos de los presentes
           </p>
         }
@@ -270,7 +274,7 @@
           @for (item of pantryIngredients(); track item.name; let i = $index) {
             <button [class]="ingredientChipClass(item.selected)" (click)="toggleIngredient(i)">
               @if (item.selected) {
-                <lucide-icon name="check-square" [size]="13" />
+                <lucide-icon [img]="icons.CheckSquare" [size]="13" />
               }
               {{ item.name }}
             </button>
@@ -280,14 +284,14 @@
           <button
             class="w-full flex items-center justify-center gap-2 mt-3.5 py-2.5 bg-nido-red text-white border-none rounded-lg text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 hover:opacity-90"
             (click)="limpiarFiltroPorIngredientes()">
-            <lucide-icon name="x" [size]="15" />
+            <lucide-icon [img]="icons.X" [size]="15" />
             Limpiar filtro
           </button>
         } @else {
           <button
             class="w-full flex items-center justify-center gap-2 mt-3.5 py-2.5 bg-nido-green-dark text-nido-cream border-none rounded-lg text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 hover:bg-nido-green"
             (click)="buscarPorIngredientes()">
-            <lucide-icon name="search" [size]="15" />
+            <lucide-icon [img]="icons.Search" [size]="15" />
             Buscar receta
           </button>
         }
@@ -298,14 +302,14 @@
         <div class="flex items-center justify-between mb-3.5">
           <h3 class="text-[0.9375rem] font-semibold text-nido-green-dark">Tus ingredientes</h3>
           <button class="flex items-center gap-1 bg-transparent border-none text-nido-gold text-[0.775rem] font-medium cursor-pointer hover:underline">
-            <lucide-icon name="pencil" [size]="13" />
+            <lucide-icon [img]="icons.Pencil" [size]="13" />
             Editar
           </button>
         </div>
         <ul class="list-none flex flex-col gap-2">
           @for (item of pantryIngredients(); track item.name) {
             <li class="flex items-center gap-2 text-[0.8125rem]">
-              <lucide-icon name="shopping-basket" [size]="14" class="text-nido-green shrink-0" />
+              <lucide-icon [img]="icons.ShoppingBasket" [size]="14" class="text-nido-green shrink-0" />
               <span class="flex-1 text-nido-green-dark">{{ item.name }}</span>
               <span class="text-nido-brown text-[0.775rem]">{{ item.amount }}</span>
             </li>
@@ -330,21 +334,37 @@
         aria-modal="true"
         aria-labelledby="roulette-popup-title"
         (click)="$event.stopPropagation()">
-        <div class="mx-auto mb-3 flex h-[148px] w-[148px] items-center justify-center overflow-visible rounded-full bg-nido-cream">
-          <img
-            src="/images/proximamente-pollito.png"
-            alt="Pollito de Nido"
-            class="h-[170px] w-[170px] object-contain drop-shadow-[0_10px_18px_rgba(38,63,48,0.18)]" />
-        </div>
-        <h2 id="roulette-popup-title" class="text-[1.1rem] font-semibold text-nido-green-dark">
-          &iexcl;Proximamente!
-        </h2>
-        <button
-          type="button"
-          class="mt-5 inline-flex h-10 items-center justify-center rounded-[8px] bg-nido-green-dark px-5 text-[0.85rem] font-medium text-nido-cream transition-colors hover:bg-nido-green"
-          (click)="closeRoulettePopup()">
-          Entendido
-        </button>
+        @if (rouletteRecipe(); as recipe) {
+          <img [src]="recipe.image" [alt]="recipe.name" class="mb-4 h-40 w-full rounded-[10px] object-cover" />
+          <h2 id="roulette-popup-title" class="text-[1.1rem] font-semibold text-nido-green-dark">{{ recipe.name }}</h2>
+          <div class="mt-3 grid grid-cols-3 gap-2 text-[0.78rem] text-nido-brown">
+            <span class="rounded-[8px] bg-nido-cream px-2 py-1">{{ recipe.timeMinutes }} min</span>
+            <span class="rounded-[8px] bg-nido-cream px-2 py-1">{{ recipe.difficulty }}</span>
+            <span class="rounded-[8px] bg-nido-cream px-2 py-1">{{ recipe.availabilityPercent }}%</span>
+          </div>
+          <div class="mt-4 text-left">
+            <p class="text-[0.78rem] font-semibold text-nido-green-dark">Faltantes</p>
+            @if (missingIngredientNames(recipe).length > 0) {
+              <p class="mt-1 text-[0.78rem] text-nido-brown">{{ missingIngredientNames(recipe).join(', ') }}</p>
+            } @else {
+              <p class="mt-1 text-[0.78rem] text-nido-brown">Tenes todo para cocinarla.</p>
+            }
+          </div>
+          <div class="mt-5 flex gap-2">
+            <button type="button" class="flex-1 rounded-[8px] border border-nido-border bg-white px-3 py-2 text-[0.82rem] font-medium text-nido-brown" (click)="rerollRoulette()">
+              Volver a sortear
+            </button>
+            <button type="button" class="flex-1 rounded-[8px] bg-nido-green-dark px-3 py-2 text-[0.82rem] font-medium text-nido-cream" (click)="navigateToRecipe(recipe.id)">
+              Ver receta
+            </button>
+          </div>
+        } @else {
+          <h2 id="roulette-popup-title" class="text-[1.1rem] font-semibold text-nido-green-dark">Sin candidatas</h2>
+          <p class="mt-2 text-[0.85rem] text-nido-brown">No hay recetas con mas de 50% disponible y sin alergenos activos.</p>
+          <button type="button" class="mt-5 inline-flex h-10 items-center justify-center rounded-[8px] bg-nido-green-dark px-5 text-[0.85rem] font-medium text-nido-cream transition-colors hover:bg-nido-green" (click)="closeRoulettePopup()">
+            Entendido
+          </button>
+        }
       </div>
     </div>
   }

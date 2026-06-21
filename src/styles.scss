@@ -62,6 +62,18 @@ select {
   font-family: var(--font-family-sans);
 }
 
+/* Landing: oculta la barra de scroll del documento sin perder el scroll */
+html.landing-no-scrollbar {
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE / Edge antiguo */
+}
+
+html.landing-no-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;                /* Chrome / Safari / Edge */
+}
+
 lucide-icon {
   display: inline-block;
   vertical-align: middle;

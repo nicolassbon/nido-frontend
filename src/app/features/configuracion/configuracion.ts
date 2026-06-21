@@ -4,9 +4,11 @@ import { AbstractControl, FormBuilder, FormsModule, ReactiveFormsModule, Validat
 import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../core/auth/auth.service';
 import { PreferenciasApiService } from '../alacena/preferencias-api.service';
-import { HogaresApiService, MiembroResponse } from '../household/hogares-api.service';
+import { HogaresApiService, HogarResumenResponse, MiembroResponse } from '../household/hogares-api.service';
 import { PerfilApiService } from '../perfil/perfil-api.service';
 import { Avatar } from '../../shared/ui/avatar/avatar';
+import { SwPush } from '@angular/service-worker';
+import { NotificacionesApiService } from '../notificaciones/services/notificaciones-api.service';
 
 export function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
   const password = control.get('newPassword')?.value;
@@ -46,6 +48,8 @@ export class Configuracion {
   private readonly perfilApi = inject(PerfilApiService);
   private readonly preferenciasApi = inject(PreferenciasApiService);
   private readonly hogaresApi = inject(HogaresApiService);
+  private readonly swPush = inject(SwPush);
+  private readonly notifApi = inject(NotificacionesApiService);
   private readonly destroyRef = inject(DestroyRef);
 
   // ── Cuenta (Giulianna) ───────────────────────────────────
@@ -59,18 +63,34 @@ export class Configuracion {
   readonly isSavingPrefs = signal(false);
   readonly saveSuccess = signal(false);
   readonly isLoadingPrefs = signal(true);
+  readonly isWebPushEnabled = signal(false);
+  readonly isWebPushLoading = signal(false);
+  readonly webPushError = signal<string | null>(null);
 
   // ── Miembros del hogar (Giulianna) ───────────────────────
   readonly members = signal<MiembroResponse[]>([]);
   readonly isLoadingMembers = signal(true);
 
-  // ── Editar nombre del hogar ──────────────────────────────
-  readonly hogarNombre       = signal('');
-  readonly isLoadingHogar    = signal(true);
-  readonly isEditingHogar    = signal(false);
-  readonly hogarNombreInput  = signal('');
-  readonly isSavingHogar     = signal(false);
-  readonly hogarSaveError    = signal<string | null>(null);
+  // ── Mis hogares ──────────────────────────────────────────
+  readonly hogares = signal<HogarResumenResponse[]>([]);
+  readonly isLoadingHogares = signal(true);
+  readonly hogarActivoId = signal(this.auth.getHogarId() ?? '');
+  readonly switchingHogarId = signal<string | null>(null);
+  readonly editingHogarId   = signal<string | null>(null);
+  readonly editHogarNombre  = signal('');
+  readonly savingHogarRename = signal(false);
+  readonly renameHogarError = signal('');
+
+  readonly hogarToDelete = signal<HogarResumenResponse | null>(null);
+  readonly deletingHogar = signal(false);
+  readonly deleteHogarError = signal('');
+
+  // ── Crear hogar (desde configuración) ────────────────────
+  readonly showCrearHogarModal = signal(false);
+  readonly crearHogarNombre    = signal('');
+  readonly crearHogarState     = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
+  readonly crearHogarErrorMsg  = signal('');
+  readonly crearHogarNombreCreado = signal('');
 
   // ── Invitar convivente (Giulianna) ───────────────────────
   readonly showInviteModal = signal(false);
@@ -115,63 +135,8 @@ export class Configuracion {
     this.loadProfile();
     this.loadPreferences();
     this.loadMembers();
-    this.loadHogar();
-  }
-
-  // ── Hogar — load + edit ──────────────────────────────────
-  private loadHogar(): void {
-    this.isLoadingHogar.set(true);
-    this.hogaresApi.getHogar()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: hogar => {
-          this.hogarNombre.set(hogar.nombre);
-          this.isLoadingHogar.set(false);
-        },
-        error: () => this.isLoadingHogar.set(false),
-      });
-  }
-
-  startEditHogar(): void {
-    this.hogarNombreInput.set(this.hogarNombre());
-    this.hogarSaveError.set(null);
-    this.isEditingHogar.set(true);
-  }
-
-  cancelEditHogar(): void {
-    this.isEditingHogar.set(false);
-    this.hogarSaveError.set(null);
-  }
-
-  saveHogarNombre(): void {
-    const nombre = this.hogarNombreInput().trim();
-    if (!nombre || nombre.length > 80) {
-      this.hogarSaveError.set('El nombre debe tener entre 1 y 80 caracteres.');
-      return;
-    }
-    if (nombre === this.hogarNombre()) {
-      this.isEditingHogar.set(false);
-      return;
-    }
-
-    this.isSavingHogar.set(true);
-    this.hogarSaveError.set(null);
-    this.hogaresApi.updateHogarNombre(nombre)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: updated => {
-          this.hogarNombre.set(updated.nombre);
-          this.isEditingHogar.set(false);
-          this.isSavingHogar.set(false);
-        },
-        error: err => {
-          const msg = err?.status === 403
-            ? 'Solo el dueño del hogar puede cambiar el nombre.'
-            : 'No se pudo guardar el cambio. Intentá de nuevo.';
-          this.hogarSaveError.set(msg);
-          this.isSavingHogar.set(false);
-        },
-      });
+    this.loadHogares();
+    this.checkWebPushStatus();
   }
 
   // ── Load & Async logic ───────────────────────────────────
@@ -216,6 +181,137 @@ export class Configuracion {
           this.isLoadingMembers.set(false);
         },
         error: () => this.isLoadingMembers.set(false),
+      });
+  }
+
+  // ── Load & Async logic ───────────────────────────────────
+  private loadHogares(): void {
+    this.hogaresApi.getMisHogares()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: lista => {
+          this.hogares.set(lista);
+          this.isLoadingHogares.set(false);
+        },
+        error: () => this.isLoadingHogares.set(false),
+      });
+  }
+
+  activarHogar(hogarId: string): void {
+    if (hogarId === this.hogarActivoId() || this.switchingHogarId() !== null) return;
+    this.switchingHogarId.set(hogarId);
+
+    this.hogaresApi.activarHogar(hogarId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.auth.setToken(res.accessToken);
+          this.hogarActivoId.set(res.hogarId);
+          this.switchingHogarId.set(null);
+          this.loadMembers();
+        },
+        error: () => this.switchingHogarId.set(null),
+      });
+  }
+
+  openEditHogar(hogar: HogarResumenResponse): void {
+    this.editingHogarId.set(hogar.id);
+    this.editHogarNombre.set(hogar.nombre);
+    this.renameHogarError.set('');
+  }
+
+  cancelEditHogar(): void {
+    this.editingHogarId.set(null);
+    this.editHogarNombre.set('');
+    this.renameHogarError.set('');
+  }
+
+  saveEditHogar(): void {
+    const nombre = this.editHogarNombre().trim();
+    const hogarId = this.editingHogarId();
+    if (!nombre || !hogarId || this.savingHogarRename()) return;
+
+    this.savingHogarRename.set(true);
+    this.renameHogarError.set('');
+
+    this.hogaresApi.renombrarHogar(hogarId, nombre)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.hogares.update(list =>
+            list.map(h => h.id === hogarId ? { ...h, nombre: res.nombre } : h)
+          );
+          this.savingHogarRename.set(false);
+          this.editingHogarId.set(null);
+        },
+        error: err => {
+          this.renameHogarError.set(err.error?.message ?? 'No se pudo guardar el nombre.');
+          this.savingHogarRename.set(false);
+        },
+      });
+  }
+
+  openEliminarHogarConfirm(hogar: HogarResumenResponse): void {
+    this.deleteHogarError.set('');
+    this.hogarToDelete.set(hogar);
+  }
+
+  closeEliminarHogarConfirm(): void {
+    this.hogarToDelete.set(null);
+    this.deleteHogarError.set('');
+  }
+
+  confirmarEliminarHogar(): void {
+    const hogar = this.hogarToDelete();
+    if (!hogar || this.deletingHogar()) return;
+    this.deletingHogar.set(true);
+    this.deleteHogarError.set('');
+
+    this.hogaresApi.eliminarHogar(hogar.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.hogarToDelete.set(null);
+          this.deletingHogar.set(false);
+          this.loadHogares();
+        },
+        error: err => {
+          this.deleteHogarError.set(err.error?.detail ?? 'No se pudo eliminar el hogar.');
+          this.deletingHogar.set(false);
+        },
+      });
+  }
+
+  openCrearHogarModal(): void {
+    this.showCrearHogarModal.set(true);
+  }
+
+  closeCrearHogarModal(): void {
+    this.showCrearHogarModal.set(false);
+    this.crearHogarNombre.set('');
+    this.crearHogarState.set('idle');
+    this.crearHogarErrorMsg.set('');
+  }
+
+  submitCrearHogar(): void {
+    const nombre = this.crearHogarNombre().trim();
+    if (!nombre) return;
+    this.crearHogarState.set('loading');
+
+    this.hogaresApi.crearHogar(nombre)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: res => {
+          this.auth.setToken(res.accessToken);
+          this.hogarActivoId.set(res.hogarId);
+          this.crearHogarNombreCreado.set(res.hogarNombre);
+          this.crearHogarState.set('success');
+          this.loadHogares();
+        },
+        error: err => {
+          this.crearHogarErrorMsg.set(err.error?.message ?? 'Error al crear el hogar.');
+          this.crearHogarState.set('error');
+        },
       });
   }
 
@@ -380,5 +476,87 @@ export class Configuracion {
         this.showAddConfirmPassword.update(value => !value);
         return;
     }
+  }
+
+  private checkWebPushStatus(): void {
+    if (!this.swPush.isEnabled) {
+      this.isWebPushEnabled.set(false);
+      this.webPushError.set('Los Service Workers están desactivados en modo de desarrollo local. Para probarlos, ejecutá "npm run start:pwa" en vez de "npm start".');
+      return;
+    }
+
+    this.swPush.subscription
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(sub => {
+        this.isWebPushEnabled.set(!!sub);
+      });
+  }
+
+  toggleWebPushNotifications(): void {
+    if (!this.swPush.isEnabled) {
+      this.webPushError.set('Los Service Workers no están habilitados o soportados en este navegador.');
+      return;
+    }
+
+    this.webPushError.set(null);
+    this.isWebPushLoading.set(true);
+
+    if (this.isWebPushEnabled()) {
+      this.swPush.unsubscribe()
+        .then(() => {
+          this.isWebPushEnabled.set(false);
+          this.isWebPushLoading.set(false);
+        })
+        .catch(err => {
+          console.error('Error al desuscribirse:', err);
+          this.webPushError.set('No se pudo desactivar las notificaciones.');
+          this.isWebPushLoading.set(false);
+        });
+    } else {
+      const publicKey = 'BAteOm10_UH08u7RbvEZGU7ogo4ss8IQ9Gf4uu9B0ZEIUv4OiJJm3lBDsA9euwVapq6umtggVUoZBEM1mk6TUgo';
+      this.swPush.requestSubscription({ serverPublicKey: publicKey })
+        .then(sub => {
+          const p256dhRaw = sub.getKey('p256dh');
+          const authRaw = sub.getKey('auth');
+
+          if (!p256dhRaw || !authRaw) {
+            throw new Error('No se obtuvieron las claves criptográficas de la suscripción.');
+          }
+
+          const p256dh = this.arrayBufferToBase64Url(p256dhRaw);
+          const auth = this.arrayBufferToBase64Url(authRaw);
+
+          this.notifApi.subscribePush(sub.endpoint, p256dh, auth)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: () => {
+                this.isWebPushEnabled.set(true);
+                this.isWebPushLoading.set(false);
+              },
+              error: (err) => {
+                console.error('Error al enviar la suscripción al servidor:', err);
+                this.webPushError.set('Error al registrar las notificaciones en el servidor.');
+                this.isWebPushLoading.set(false);
+              }
+            });
+        })
+        .catch(err => {
+          console.error('Error al solicitar suscripción push:', err);
+          if (Notification.permission === 'denied') {
+            this.webPushError.set('Permiso de notificaciones denegado. Actívalo en los ajustes de tu navegador.');
+          } else {
+            this.webPushError.set('No se pudo activar las notificaciones.');
+          }
+          this.isWebPushLoading.set(false);
+        });
+    }
+  }
+
+  private arrayBufferToBase64Url(buffer: ArrayBuffer): string {
+    const binary = String.fromCharCode(...new Uint8Array(buffer));
+    return btoa(binary)
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
   }
 }

@@ -259,6 +259,7 @@
 
           <div class="px-4 py-3.5 flex flex-col gap-2">
             <h3 class="text-[0.875rem] font-semibold text-nido-green-dark leading-snug">{{ product.name }}</h3>
+            <p class="text-[0.76rem] font-medium text-nido-brown">{{ quantityDetail(product) }}</p>
             @if (isExpired(product)) {
               <span class="inline-flex w-fit items-center gap-1 rounded-[20px] bg-[rgba(180,76,60,0.12)] px-2 py-0.5 text-[0.68rem] font-bold text-[#b44c3c]">
                 <lucide-icon name="alert-triangle" [size]="11" />

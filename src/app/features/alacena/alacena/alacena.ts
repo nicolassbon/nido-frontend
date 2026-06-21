@@ -1016,6 +1016,7 @@ protected reloadProducts(): void { this.loadProducts(); }
           proteinas:           d.proteinas,
           carbohidratos:       d.carbohidratos,
           grasas:              d.grasas,
+          origenCarga:         d.barcode ? 'codigo_barras' : 'manual',
         })
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
@@ -1202,6 +1203,17 @@ protected reloadProducts(): void { this.loadProducts(); }
       : `${qty}${(labels[unit] ?? unit) === 'cda' || (labels[unit] ?? unit) === 'cdita' ? ' ' : ''}${labels[unit] ?? unit}`;
 
     return packages > 1 ? `${packages} × ${perPackage}` : perPackage;
+  }
+
+  protected quantityDetail(product: Product): string {
+    const unit = normalizeUnit(product.unit);
+    const qty = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(product.quantity);
+
+    if (unit === 'unidad') {
+      return `${qty} ${product.quantity === 1 ? 'unidad' : 'unidades'}`;
+    }
+
+    return `${qty} ${this.displayUnit(unit)}`;
   }
 
   protected getLocationIcon(location: StorageLocation): string {

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { LucideAngularModule } from 'lucide-angular';
+import { Bookmark, BookmarkCheck, LucideAngularModule } from 'lucide-angular';
 import { environment } from '../../../../environments/environment';
 import { ApiReceta, ApiRecetaIngrediente, RecipesApiService } from '../recipes/services/recipes-api.service';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -33,11 +33,14 @@ export class RecipeDetail {
   private readonly electrodomesticosService = inject(ElectrodomesticosService);
   protected readonly router       = inject(Router);
   private readonly destroyRef     = inject(DestroyRef);
+  protected readonly bookmarkIcon = Bookmark;
+  protected readonly bookmarkCheckIcon = BookmarkCheck;
 
   protected readonly recipe           = signal<ApiReceta | null>(null);
   protected readonly loading          = signal(false);
   protected readonly errorMessage     = signal<string | null>(null);
   protected readonly imageFailed      = signal(false);
+  protected readonly savingRecipe     = signal(false);
 
   // Modal de confirmación para cocinar
   protected readonly showCookModal    = signal(false);
@@ -167,6 +170,29 @@ export class RecipeDetail {
       });
   }
 
+  protected toggleSaved(): void {
+    const receta = this.recipe();
+    if (!receta || this.savingRecipe()) return;
+
+    this.savingRecipe.set(true);
+    const request = receta.guardada
+      ? this.recipesService.unsave(receta.id)
+      : this.recipesService.save(receta.id);
+
+    request
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.recipe.set({ ...receta, guardada: !receta.guardada });
+          this.savingRecipe.set(false);
+        },
+        error: () => {
+          this.errorMessage.set('No se pudo actualizar la receta guardada.');
+          this.savingRecipe.set(false);
+        },
+      });
+  }
+
   protected agregarFaltantesALista(): void {
     const receta    = this.recipe();
     const faltantes = this.missingIngredients();
@@ -174,18 +200,20 @@ export class RecipeDetail {
 
     const items = faltantes.map(i => ({
       nombre:   i.productoNombre || i.nombre,
-      cantidad: i.cantidad,
-      unidad:   i.unidad,
-      checked:  false,
+      cantidad: i.cantidadCompraEstandar ?? i.cantidad,
+      unidad:   i.unidadCompraEstandar ?? i.unidad,
     }));
 
-    // Guardar en el servicio (persiste en localStorage)
-    this.listaService.addToLista(receta.nombre, items);
+    this.listaService.addGroupToLista(receta.nombre, items).subscribe({
+      next: () => {
+        this.router.navigate(['/lista-compras']);
+      },
+      error: () => {
+        this.errorMessage.set('No se pudo agregar los faltantes a la lista de compras.');
+      },
+    });
 
     // Pasar también por router state para garantizar el primer render
-    this.router.navigate(['/lista-compras'], {
-      state: { recetaNombre: receta.nombre, items },
-    });
   }
 
   protected goBack(): void {
@@ -248,8 +276,8 @@ export class RecipeDetail {
     const normalized = this.normalizeText(value);
     if (normalized.includes('horno')) return 'cooking-pot';
     if (normalized.includes('micro')) return 'microwave';
-    if (normalized.includes('licuadora')) return 'blender';
-    if (normalized.includes('batidora')) return 'hand';
+    if (normalized.includes('licuadora')) return 'blend';
+    if (normalized.includes('batidora')) return 'cog';
     if (normalized.includes('heladera')) return 'refrigerator';
     if (normalized.includes('freezer')) return 'snowflake';
     return 'plug';

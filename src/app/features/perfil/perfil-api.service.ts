@@ -16,6 +16,9 @@ export interface PerfilApiResponse {
   alimentacion?: string[];
   hasPassword?: boolean;
   hasGoogleLinked?: boolean;
+  tareasCompletadas?: number;
+  productosEscaneados?: number;
+  logros?: number;
 }
 
 @Injectable({

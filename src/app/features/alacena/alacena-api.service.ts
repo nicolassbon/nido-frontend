@@ -24,6 +24,7 @@ export interface StockItemResponse {
   proteinas:           number | null;
   carbohidratos:       number | null;
   grasas:              number | null;
+  origenCarga:          'manual' | 'codigo_barras' | 'ticket_compra';
 }
 
 export type DeleteStockMotivo = 'consumido' | 'descartado' | 'vencido';
@@ -31,6 +32,7 @@ export type StockMovementMotivo = DeleteStockMotivo | 'cocinado';
 
 export interface CreateStockItemRequest {
   nombre:              string;
+  categoriaId?:        string | null;
   codigoBarras:        string | null;
   imagen:              string | null;
   ubicacion:           string;
@@ -45,6 +47,7 @@ export interface CreateStockItemRequest {
   proteinas?:          number | null;
   carbohidratos?:      number | null;
   grasas?:             number | null;
+  origenCarga?:         'manual' | 'codigo_barras' | 'ticket_compra';
 }
 
 export interface UpdateStockItemRequest {

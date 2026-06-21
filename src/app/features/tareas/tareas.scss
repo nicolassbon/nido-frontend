@@ -1,97 +1,8 @@
-.tareas-page {
-  min-height: 100%;
-  background: var(--color-nido-bg);
-}
-
-/* ── Banner ─────────────────────────────────────────────── */
-.banner {
-  background: linear-gradient(135deg, #2c1e14 0%, #1F3A3A 60%, #3d2b1f 100%);
-  background-size: cover;
-  min-height: 110px;
-  display: flex;
-  align-items: center;
-  padding: 1.5rem 2rem;
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: url('/images/banners/home.png') center/cover no-repeat;
-    opacity: 0.15;
-  }
-}
-
-.banner-content {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.banner-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #fff;
-  margin: 0;
-  line-height: 1.2;
-}
-
-.banner-subtitle {
-  color: rgba(255,255,255,0.72);
-  font-size: 0.85rem;
-  margin: 0.2rem 0 0;
-}
-
-.banner-user {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #fff;
-  font-family: var(--font-family-title);
-}
-
-/* ── Tabs ────────────────────────────────────────────────── */
-.tabs-bar {
-  display: flex;
-  gap: 0.25rem;
-  padding: 1rem 1.5rem 0;
-  border-bottom: 2px solid var(--color-nido-border);
-}
-
-.tab-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 1.1rem;
-  border-radius: 8px 8px 0 0;
-  border: none;
-  background: transparent;
-  color: var(--color-nido-muted);
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s;
-
-  &:hover { background: var(--color-nido-border); color: #2D1E16; }
-  &.active {
-    background: var(--color-nido-cream);
-    color: #2D1E16;
-    border: 2px solid var(--color-nido-border);
-    border-bottom: 2px solid var(--color-nido-cream);
-    margin-bottom: -2px;
-  }
-}
-
 /* ── Cards layout ────────────────────────────────────────── */
 .lista-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.25rem;
-  padding: 1.25rem 1.5rem;
   align-items: start;
 
   @media (max-width: 900px) {
@@ -105,6 +16,8 @@
   border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(38,63,48,0.07);
+  display: flex;
+  flex-direction: column;
 }
 
 .card-header {
@@ -113,6 +26,7 @@
   justify-content: space-between;
   padding: 1rem 1.25rem 0.75rem;
   border-bottom: 1px solid var(--color-nido-border);
+  flex-shrink: 0;
 }
 
 .card-title {
@@ -156,6 +70,12 @@
   padding: 0.5rem 0;
 }
 
+/* Scroll en la lista de preview — máximo 4 ítems visibles (4 × 62px) */
+.tarea-list-preview {
+  max-height: 248px;
+  overflow-y: auto;
+}
+
 .tarea-item {
   display: flex;
   align-items: center;
@@ -163,6 +83,7 @@
   padding: 0.65rem 1.25rem;
   border-bottom: 1px solid var(--color-nido-border);
   transition: background 0.12s;
+  height: 62px;
 
   &:last-child { border-bottom: none; }
   &:hover { background: rgba(255,255,255,0.55); }
@@ -238,16 +159,6 @@
   gap: 0.2rem;
 }
 
-.tarea-badge {
-  font-size: 0.7rem;
-  color: #fff;
-  padding: 0.2rem 0.55rem;
-  border-radius: 20px;
-  font-weight: 600;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
 .vencida-text { color: var(--color-nido-red) !important; }
 .vencida-icon { color: var(--color-nido-red); flex-shrink: 0; }
 .vencida-chip {
@@ -274,6 +185,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: background 0.12s;
+  flex-shrink: 0;
 
   &:hover { background: var(--color-nido-cream); }
 }
@@ -395,210 +307,6 @@
   color: var(--color-nido-muted);
 }
 
-/* ── Tablero (Kanban) ────────────────────────────────────── */
-.tablero-wrap {
-  padding: 1rem 1.5rem 2rem;
-}
-
-.tablero-filters {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-  padding: 0.75rem 1rem;
-  background: rgba(255,255,255,0.51);
-  border: 1px solid rgba(180,139,106,0.22);
-  border-radius: 10px;
-  box-shadow: 0 1px 4px rgba(38,63,48,0.07);
-}
-
-.filter-label {
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--color-nido-muted);
-}
-
-.filter-chip {
-  font-size: 0.78rem;
-  padding: 0.3rem 0.75rem;
-  border-radius: 20px;
-  border: 1px solid var(--color-nido-border);
-  background: var(--color-nido-cream);
-  color: #2D1E16;
-  cursor: pointer;
-  transition: all 0.15s;
-
-  &:hover { border-color: var(--color-nido-gold); }
-  &.active { background: var(--color-nido-gold); color: #fff; border-color: var(--color-nido-gold); }
-}
-
-.ml-auto { margin-left: auto; }
-
-.kanban-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  align-items: start;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.kanban-col {
-  background: rgba(255,255,255,0.51);
-  border: 1px solid rgba(180,139,106,0.22);
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 4px rgba(38,63,48,0.07);
-}
-
-.kanban-col-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--color-nido-border);
-}
-
-.pendiente-header  { background: rgba(253,248,243,0.8); border-top: 3px solid #B48B6A; }
-.progreso-header   { background: rgba(243,246,253,0.8); border-top: 3px solid #6B8EC4; }
-.completada-header { background: rgba(38,63,48,0.06);   border-top: 3px solid #3E5E4A; }
-
-.kanban-col-title { font-size: 0.85rem; font-weight: 600; color: #2D1E16; }
-.kanban-col-count {
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: var(--color-nido-cream);
-  color: var(--color-nido-brown);
-  padding: 0.1rem 0.5rem;
-  border-radius: 12px;
-}
-
-.kanban-cards { padding: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; min-height: 80px; }
-
-.kanban-card {
-  background: rgba(255,255,255,0.72);
-  border: 1px solid rgba(180,139,106,0.2);
-  border-radius: 9px;
-  padding: 0.65rem 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  box-shadow: 0 1px 3px rgba(38,63,48,0.06);
-  transition: box-shadow 0.15s, transform 0.15s;
-
-  &:hover { box-shadow: 0 4px 12px rgba(38,63,48,0.1); transform: translateY(-1px); }
-  &.vencida { border-left: 3px solid var(--color-nido-red); background: rgba(255,235,232,0.8); }
-  &.completada-card { opacity: 0.72; }
-}
-
-.kanban-card-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.kanban-titulo { font-size: 0.82rem; font-weight: 600; color: #2D1E16; flex: 1; }
-.completada-titulo { text-decoration: line-through; color: var(--color-nido-muted); }
-
-.kanban-desc {
-  font-size: 0.75rem;
-  color: var(--color-nido-muted);
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.kanban-meta { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
-
-.kanban-fecha {
-  font-size: 0.68rem;
-  color: var(--color-nido-muted);
-  display: flex;
-  align-items: center;
-  gap: 0.2rem;
-}
-
-.completada-por {
-  font-size: 0.68rem;
-  color: #3E5E4A;
-  display: flex;
-  align-items: center;
-  gap: 0.2rem;
-}
-
-.btn-mover {
-  font-size: 0.72rem;
-  font-weight: 500;
-  padding: 0.32rem 0.7rem;
-  border-radius: 6px;
-  border: 1.5px solid var(--color-nido-border);
-  background: transparent;
-  color: var(--color-nido-brown);
-  cursor: pointer;
-  transition: all 0.15s;
-  margin-top: 0.3rem;
-  width: fit-content;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-
-  &:hover {
-    border-color: #3E5E4A;
-    color: #263F30;
-    background: rgba(62,94,74,0.06);
-  }
-}
-
-.btn-mover-group { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-
-.btn-mover-back {
-  color: var(--color-nido-brown);
-  border-color: var(--color-nido-brown);
-  font-size: 0.7rem;
-  &:hover { background: var(--color-nido-cream); color: #2D1E16; border-color: #2D1E16; }
-}
-
-.btn-mover-primary {
-  background: #263F30;
-  color: #F7F1E6;
-  border-color: #263F30;
-  font-weight: 600;
-
-  &:hover { background: #3E5E4A; border-color: #3E5E4A; color: #F7F1E6; }
-}
-
-.btn-mover-complete {
-  background: #263F30;
-  color: #F7F1E6;
-  border-color: #263F30;
-  font-weight: 600;
-
-  &:hover { background: #3E5E4A; border-color: #3E5E4A; }
-}
-
-.btn-icon {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: var(--color-nido-muted);
-  display: flex;
-  align-items: center;
-  padding: 0.2rem;
-  border-radius: 4px;
-  flex-shrink: 0;
-  transition: all 0.12s;
-
-  &:hover { color: var(--color-nido-red); background: #fde8e5; }
-}
-
-.kanban-empty { font-size: 0.78rem; color: var(--color-nido-muted); text-align: center; padding: 1rem; }
-
 /* ── Reasignación dropdown ───────────────────────────────── */
 .asignado-wrap {
   position: relative;
@@ -652,16 +360,6 @@
   z-index: 1490;
 }
 
-/* items de preview: altura fija e igual para todos */
-.tarea-list-preview .tarea-item {
-  height: 62px;
-}
-
-/* ocultar descripción en preview para mantener altura uniforme */
-.tarea-list-preview .tarea-desc {
-  display: none;
-}
-
 /* hover más visible dentro del modal mis tareas y elemento resaltado */
 .modal-mis-body .tarea-item:hover,
 .modal-mis-body .tarea-item.highlighted {
@@ -686,14 +384,13 @@
   width: 100%;
   max-width: 460px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-  overflow: hidden;
 }
 
 .modal-mis-tareas {
   max-width: 520px;
 }
 
-/* ── Modal banner (estilo agregar-producto) ──────────────── */
+/* ── Modal banner ────────────────────────────────────────── */
 .modal-banner {
   position: relative;
   padding: 1.4rem 1.5rem;
@@ -701,19 +398,19 @@
   min-height: 88px;
   display: flex;
   align-items: center;
+  border-radius: 16px 16px 0 0;
 }
 
 .modal-banner-bg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #263F30 0%, #3E5E4A 50%, #927357 100%);
+  background: url('/images/banners/tareas.png') center/cover no-repeat;
 }
 
 .modal-banner-overlay {
   position: absolute;
   inset: 0;
-  background: url('/images/banners/home.png') center/cover no-repeat;
-  opacity: 0.12;
+  background: rgba(31, 58, 58, 0.52);
 }
 
 .modal-banner-content {
@@ -770,7 +467,7 @@
   &:hover { background: rgba(255,255,255,0.28); }
 }
 
-/* ── Modal form body (estilo nido) ───────────────────────── */
+/* ── Modal form body ─────────────────────────────────────── */
 .modal-form-body {
   padding: 1.25rem 1.5rem;
   display: flex;
@@ -835,15 +532,6 @@
   min-height: 70px;
 }
 
-.nido-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23927357' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  padding-right: 2rem;
-  cursor: pointer;
-}
-
 /* ── Estado pill (modal mis tareas) ─────────────────────── */
 .estado-pill {
   font-size: 0.68rem;
@@ -894,3 +582,4 @@
 }
 
 .text-muted { color: var(--color-nido-muted); }
+.completada-titulo { text-decoration: line-through; color: var(--color-nido-muted); }

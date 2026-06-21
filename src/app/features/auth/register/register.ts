@@ -153,7 +153,7 @@ export class Register {
     }
 
     this.loading.set(true);
-    const { nombre, email, password, sexo } = this.form.getRawValue();
+    const { nombre, email, password, sexo, aceptaTerminos } = this.form.getRawValue();
 
     this.auth.register({
       nombre,
@@ -161,7 +161,7 @@ export class Register {
       password,
       sexo,
       foto: this.selectedPhoto(),
-      aceptaTerminos: true,
+      aceptaTerminos,
     }).subscribe({
       next: (response) => {
         this.loading.set(false);

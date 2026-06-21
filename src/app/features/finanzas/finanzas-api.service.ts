@@ -15,6 +15,7 @@ export interface GastoResponse {
   pagadoPorId: string;
   pagadoPorNombre: string;
   createdAt: string;
+  facturaId: string | null;
 }
 
 export interface GastosListResponse {
@@ -48,10 +49,6 @@ export interface RecetaRecomendadaResponse {
   totalIngredientes: number;
 }
 
-export interface RecomendacionesResponse {
-  recetas: RecetaRecomendadaResponse[];
-  tips: string[];
-}
 
 export interface FacturaResponse {
   id: string;
@@ -117,6 +114,14 @@ export interface AlacenaOportunidadesResponse {
   totalProductosEnCasa: number;
 }
 
+export interface PresupuestoResponse {
+  monto: number | null;
+  gastoActual: number;
+  restante: number | null;
+  anio: number;
+  mes: number;
+}
+
 // ── Request types ─────────────────────────────────────────────────────────────
 
 export interface CreateGastoRequest {
@@ -125,6 +130,19 @@ export interface CreateGastoRequest {
   categoria: string | null;
   fecha: string;
   pagadoPorId: string | null;
+}
+
+export interface UpdateGastoRequest {
+  monto: number;
+  descripcion: string | null;
+  categoria: string | null;
+  fecha: string;
+  pagadoPorId: string | null;
+}
+
+export interface DeleteGastoResponse {
+  facturaRevertida: boolean;
+  facturaId: string | null;
 }
 
 export interface CreateFacturaRequest {
@@ -150,12 +168,6 @@ export class FinanzasApiService {
     return this.http.patch<ModoAhorroResponse>(`${this.base}/finanzas/modo-ahorro`, { activo });
   }
 
-  getRecomendaciones(): Observable<RecomendacionesResponse> {
-    return this.http
-      .get<RecomendacionesResponse>(`${this.base}/finanzas/recomendaciones`)
-      .pipe(catchError(() => of({ recetas: [], tips: [] })));
-  }
-
   getBalance(desde?: string, hasta?: string): Observable<BalanceResponse> {
     const params: Record<string, string> = {};
     if (desde) params['desde'] = desde;
@@ -175,6 +187,14 @@ export class FinanzasApiService {
 
   createGasto(req: CreateGastoRequest): Observable<GastoResponse> {
     return this.http.post<GastoResponse>(`${this.base}/finanzas/gastos`, req);
+  }
+
+  updateGasto(id: string, req: UpdateGastoRequest): Observable<GastoResponse> {
+    return this.http.patch<GastoResponse>(`${this.base}/finanzas/gastos/${id}`, req);
+  }
+
+  deleteGasto(id: string): Observable<DeleteGastoResponse> {
+    return this.http.delete<DeleteGastoResponse>(`${this.base}/finanzas/gastos/${id}`);
   }
 
   getFacturas(tipo?: string, pagada?: boolean, proximaDias?: number): Observable<FacturaResponse[]> {
@@ -221,5 +241,16 @@ export class FinanzasApiService {
     return this.http
       .get<AlacenaOportunidadesResponse>(`${this.base}/finanzas/modo-ahorro/alacena`)
       .pipe(catchError(() => of({ productosDestacados: [], recetasSugeridas: [], totalProductosEnCasa: 0 })));
+  }
+
+  getPresupuesto(): Observable<PresupuestoResponse> {
+    const now = new Date();
+    return this.http
+      .get<PresupuestoResponse>(`${this.base}/finanzas/presupuesto`)
+      .pipe(catchError(() => of({ monto: null, gastoActual: 0, restante: null, anio: now.getFullYear(), mes: now.getMonth() + 1 })));
+  }
+
+  setPresupuesto(monto: number): Observable<PresupuestoResponse> {
+    return this.http.put<PresupuestoResponse>(`${this.base}/finanzas/presupuesto`, { monto });
   }
 }

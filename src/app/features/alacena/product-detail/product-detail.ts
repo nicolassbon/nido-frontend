@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { AgregarProducto } from '../../agregar-producto/agregar-producto';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { forkJoin } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -11,7 +11,7 @@ import { ListaComprasService } from '../../lista-compras/lista-compras.service';
 import { AlacenaApiService, DeleteStockMotivo, StockItemResponse } from '../alacena-api.service';
 import { EstimatedDateNoticeComponent } from '../../../shared/ui/estimated-date-notice/estimated-date-notice';
 
-const SHOPPING_GROUP = 'Productos de alacena';
+const SHOPPING_GROUP = 'Productos agregados';
 
 interface DeleteConfirmation {
   title:        string;
@@ -115,7 +115,7 @@ function clamp(value: number, min: number, max: number): number {
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, RouterLink, AgregarProducto, EstimatedDateNoticeComponent],
+  imports: [CommonModule, LucideAngularModule, AgregarProducto, EstimatedDateNoticeComponent],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.scss',
 })
@@ -148,12 +148,11 @@ export class ProductDetail {
     clamp(100 - (this.product()?.porcentajeConsumido ?? 0), 0, 100),
   );
 
-  protected readonly expiredDays = computed(() => {
-    const days = this.daysUntilExpiry(this.product()?.fechaVencimiento);
-    return Number.isFinite(days) && days < 0 ? Math.abs(days) : 0;
+  protected readonly isExpired = computed(() => {
+    const p = this.product();
+    if (!p || !p.fechaVencimiento) return false;
+    return this.daysUntilExpiry(p.fechaVencimiento) < 0;
   });
-
-  protected readonly isExpired = computed(() => this.expiredDays() > 0);
 
   protected readonly brand = computed(() => {
     const name = this.product()?.nombre.trim() ?? '';
@@ -263,6 +262,7 @@ export class ProductDetail {
       proteinas: null,
       carbohidratos: null,
       grasas: null,
+      origenCarga: item.origenCarga ?? 'manual',
     };
   }
 
@@ -307,20 +307,16 @@ export class ProductDetail {
     const currentGroup = this.listaService.snapshot.find(group => group.recetaNombre === SHOPPING_GROUP);
     const existingItems = currentGroup?.items ?? [];
     const exists = existingItems.some(item => item.nombre.trim().toLowerCase() === product.nombre.trim().toLowerCase());
-    const nextItems = exists
-      ? existingItems
-      : [
-          ...existingItems,
-          {
-            nombre: product.nombre,
-            cantidad: product.cantidad || 1,
-            unidad: this.displayUnit(product.unidadMedida),
-            checked: false,
-          },
-        ];
 
-    this.listaService.addToLista(SHOPPING_GROUP, nextItems);
-    this.listMessage.set(exists ? 'Ya estaba en tu lista.' : 'Agregado a la lista.');
+    if (exists) {
+      this.listMessage.set('Ya estaba en tu lista.');
+      return;
+    }
+
+    this.listaService.addManualItem(product.nombre, product.cantidad || 1, this.displayUnit(product.unidadMedida)).subscribe({
+      next: () => this.listMessage.set('Agregado a la lista.'),
+      error: () => this.listMessage.set('No se pudo agregar a la lista.'),
+    });
   }
 
   protected finishProduct(): void {
@@ -401,6 +397,13 @@ export class ProductDetail {
       month: 'long',
       year: 'numeric',
     }).format(date);
+  }
+
+  protected expiredDays(): number {
+    const p = this.product();
+    if (!p || !p.fechaVencimiento) return 0;
+    const days = this.daysUntilExpiry(p.fechaVencimiento);
+    return days < 0 ? Math.abs(days) : 0;
   }
 
   protected expiredText(): string {
