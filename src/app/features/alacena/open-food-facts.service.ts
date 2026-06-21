@@ -12,6 +12,11 @@ export interface FoodProduct {
   /** Categoría canónica de Nido sugerida por el back: General, Lácteos, Bebidas, Congelados, Despensa. */
   categoriaSugerida: string;
   foundInDb:         boolean;
+  /** Información nutricional por 100 g (puede venir null si la fuente no la provee). */
+  calorias:          number | null;
+  proteinas:         number | null;
+  carbohidratos:     number | null;
+  grasas:            number | null;
 }
 
 /**
@@ -41,6 +46,9 @@ export class OpenFoodFactsService {
   }
 
   private emptyProduct(): FoodProduct {
-    return { name: '', image: '', brands: '', categoriesTags: [], categoriaSugerida: 'General', foundInDb: false };
+    return {
+      name: '', image: '', brands: '', categoriesTags: [], categoriaSugerida: 'General', foundInDb: false,
+      calorias: null, proteinas: null, carbohidratos: null, grasas: null,
+    };
   }
 }

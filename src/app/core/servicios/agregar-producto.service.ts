@@ -14,6 +14,11 @@ export interface CreateStockHomeRequest {
   estaAbierto?:        boolean;
   porcentajeConsumido?: number;
   cantidadEnvases?:    number;
+  // Información nutricional por 100 g (del escaneo a Open Food Facts).
+  calorias?:           number | null;
+  proteinas?:          number | null;
+  carbohidratos?:      number | null;
+  grasas?:             number | null;
 }
 
 export interface ProductManualResponse {

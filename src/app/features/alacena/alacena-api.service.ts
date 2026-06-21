@@ -19,6 +19,11 @@ export interface StockItemResponse {
   porcentajeConsumido: number;
   /** Cantidad de envases idénticos del mismo producto (default 1). */
   cantidadEnvases:     number;
+  /** Información nutricional por 100 g (null si el producto no la tiene). */
+  calorias:            number | null;
+  proteinas:           number | null;
+  carbohidratos:       number | null;
+  grasas:              number | null;
 }
 
 export type DeleteStockMotivo = 'consumido' | 'descartado' | 'vencido';
@@ -35,6 +40,11 @@ export interface CreateStockItemRequest {
   estaAbierto:         boolean;
   porcentajeConsumido: number;
   cantidadEnvases?:    number;
+  // Información nutricional por 100 g (del escaneo a Open Food Facts).
+  calorias?:           number | null;
+  proteinas?:          number | null;
+  carbohidratos?:      number | null;
+  grasas?:             number | null;
 }
 
 export interface UpdateStockItemRequest {
