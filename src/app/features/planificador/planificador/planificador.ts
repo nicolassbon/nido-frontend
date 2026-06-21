@@ -34,6 +34,7 @@ interface SlotModal {
   styleUrl: './planificador.scss',
 })
 export class Planificador implements OnInit, OnDestroy {
+  private readonly visibleTasksLimit = 2;
   private readonly svc = inject(PlanificadorService);
   private readonly recetasSvc = inject(RecipesApiService);
   private readonly hogaresApi = inject(HogaresApiService);
@@ -54,6 +55,7 @@ export class Planificador implements OnInit, OnDestroy {
   protected readonly modalSlot = signal<SlotModal | null>(null);
   protected readonly editingItem = signal<PlanificadorItemDto | null>(null);
   protected readonly openMenuItemId = signal<string | null>(null);
+  protected readonly selectedTaskDay = signal<string | null>(null);
 
   protected readonly TIPOS: TipoComida[] = ['desayuno', 'almuerzo', 'cena', 'tarea'];
   protected readonly TIPO_LABELS: Record<TipoComida, string> = {
@@ -123,6 +125,20 @@ export class Planificador implements OnInit, OnDestroy {
     return this.recetas().find(receta => receta.id === id) ?? null;
   });
 
+  protected readonly selectedTaskDayItems = computed(() => {
+    const fecha = this.selectedTaskDay();
+    if (!fecha) return [];
+    return this.itemsMap().get(`${fecha}|tarea`) ?? [];
+  });
+
+  protected readonly selectedTaskDayLabel = computed(() => {
+    const fecha = this.selectedTaskDay();
+    if (!fecha) return '';
+
+    const day = this.dias().find(d => d.isoDate === fecha);
+    return day ? `${day.dayName} ${day.dayLabel}` : fecha;
+  });
+
   protected readonly rangoSemana = computed(() => {
     const dias = this.dias();
     if (!dias.length) return '';
@@ -150,6 +166,7 @@ export class Planificador implements OnInit, OnDestroy {
     const d = new Date(this.lunes());
     d.setDate(d.getDate() - 7);
     this.lunes.set(d);
+    this.closeTaskDayDetail();
     this.loadSemana();
   }
 
@@ -157,6 +174,7 @@ export class Planificador implements OnInit, OnDestroy {
     const d = new Date(this.lunes());
     d.setDate(d.getDate() + 7);
     this.lunes.set(d);
+    this.closeTaskDayDetail();
     this.loadSemana();
   }
 
@@ -169,6 +187,7 @@ export class Planificador implements OnInit, OnDestroy {
   protected openModal(fecha: string, tipo: TipoComida): void {
     this.editingItem.set(null);
     this.openMenuItemId.set(null);
+    this.closeTaskDayDetail();
     this.modalSlot.set({
       fecha,
       tipoComida: tipo,
@@ -186,6 +205,7 @@ export class Planificador implements OnInit, OnDestroy {
     const tipo = item.tipoComida as TipoComida;
     this.editingItem.set(item);
     this.openMenuItemId.set(null);
+    this.closeTaskDayDetail();
     this.modalSlot.set({
       fecha: item.fecha,
       tipoComida: tipo,
@@ -213,6 +233,25 @@ export class Planificador implements OnInit, OnDestroy {
   protected toggleItemMenu(itemId: string, event: Event): void {
     event.stopPropagation();
     this.openMenuItemId.update(current => current === itemId ? null : itemId);
+  }
+
+  protected visibleTaskItems(items: PlanificadorItemDto[]): PlanificadorItemDto[] {
+    return items.slice(0, this.visibleTasksLimit);
+  }
+
+  protected hiddenTaskCount(items: PlanificadorItemDto[]): number {
+    return Math.max(items.length - this.visibleTasksLimit, 0);
+  }
+
+  protected openTaskDayDetail(fecha: string, event?: Event): void {
+    event?.stopPropagation();
+    this.openMenuItemId.set(null);
+    this.selectedTaskDay.set(fecha);
+  }
+
+  protected closeTaskDayDetail(): void {
+    this.selectedTaskDay.set(null);
+    this.openMenuItemId.set(null);
   }
 
   protected selectRecipe(receta: ApiReceta): void {
@@ -297,7 +336,16 @@ export class Planificador implements OnInit, OnDestroy {
       .subscribe({
         next: () => {
           const s = this.semana();
-          if (s) this.semana.set({ ...s, items: s.items.filter(i => i.id !== itemId) });
+          if (s) {
+            const items = s.items.filter(i => i.id !== itemId);
+            this.semana.set({ ...s, items });
+
+            const taskDay = this.selectedTaskDay();
+            const hasRemainingTasks = taskDay
+              ? items.some(i => i.fecha === taskDay && i.tipoComida === 'tarea')
+              : true;
+            if (!hasRemainingTasks) this.closeTaskDayDetail();
+          }
         },
         error: () => this.errorMessage.set('No se pudo eliminar el item. Volve a intentar.'),
       });
