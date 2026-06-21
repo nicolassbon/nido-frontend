@@ -259,7 +259,16 @@ export class ProductDetail {
       estaAbierto: item.estaAbierto,
       porcentajeConsumido: item.porcentajeConsumido,
       cantidadEnvases: item.cantidadEnvases ?? 1,
+      calorias: null,
+      proteinas: null,
+      carbohidratos: null,
+      grasas: null,
     };
+  }
+
+  /** True si el producto tiene al menos un dato nutricional cargado. */
+  protected hasNutrition(p: StockItemResponse): boolean {
+    return p.calorias != null || p.proteinas != null || p.carbohidratos != null || p.grasas != null;
   }
 
   protected goBack(): void {

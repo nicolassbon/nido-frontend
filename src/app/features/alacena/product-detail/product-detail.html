@@ -138,6 +138,38 @@
           </div>
         </section>
 
+        @if (hasNutrition(p)) {
+          <section class="nutrition-card">
+            <h2>Información nutricional</h2>
+            <p class="nutrition-note">Valores aproximados por cada 100 g</p>
+
+            @if (p.calorias != null) {
+              <div class="nutrition-row">
+                <span class="nutrition-label">Calorías</span>
+                <span class="nutrition-pill">{{ p.calorias }} kcal</span>
+              </div>
+            }
+            @if (p.carbohidratos != null) {
+              <div class="nutrition-row">
+                <span class="nutrition-label">Carbohidratos</span>
+                <span class="nutrition-pill">{{ p.carbohidratos }} g</span>
+              </div>
+            }
+            @if (p.proteinas != null) {
+              <div class="nutrition-row">
+                <span class="nutrition-label">Proteínas</span>
+                <span class="nutrition-pill">{{ p.proteinas }} g</span>
+              </div>
+            }
+            @if (p.grasas != null) {
+              <div class="nutrition-row">
+                <span class="nutrition-label">Grasas</span>
+                <span class="nutrition-pill">{{ p.grasas }} g</span>
+              </div>
+            }
+          </section>
+        }
+
         <div class="actions">
           <button type="button" class="primary-action" (click)="addToShoppingList()">
             <span class="action-symbol">+</span>

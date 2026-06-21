@@ -70,6 +70,11 @@ export interface Product {
   barcode?:         string;
   /** Cantidad de envases idénticos del mismo producto. Default 1. */
   packagesCount:    number;
+  /** Información nutricional por 100 g (opcional). */
+  calorias?:        number | null;
+  proteinas?:       number | null;
+  carbohidratos?:   number | null;
+  grasas?:          number | null;
 }
 
 interface ProductDraft {
@@ -85,6 +90,11 @@ interface ProductDraft {
   notFound:          boolean;
   quantity:          number;
   barcode:           string;
+  // Información nutricional por 100 g (del escaneo a Open Food Facts).
+  calorias:          number | null;
+  proteinas:         number | null;
+  carbohidratos:     number | null;
+  grasas:            number | null;
 }
 
 interface DeleteConfirmation {
@@ -127,6 +137,10 @@ function makeEmptyDraft(): ProductDraft {
     notFound:          false,
     quantity:          1,
     barcode:           '',
+    calorias:          null,
+    proteinas:         null,
+    carbohidratos:     null,
+    grasas:            null,
   };
 }
 
@@ -596,6 +610,10 @@ protected reloadProducts(): void { this.loadProducts(); }
       remainingPercent: 100 - item.porcentajeConsumido,
       barcode:          item.codigoBarras ?? undefined,
       packagesCount:    item.cantidadEnvases ?? 1,
+      calorias:         item.calorias,
+      proteinas:        item.proteinas,
+      carbohidratos:    item.carbohidratos,
+      grasas:           item.grasas,
     };
   }
 
@@ -778,7 +796,7 @@ protected reloadProducts(): void { this.loadProducts(); }
         switchMap(dbProduct => {
           if (dbProduct?.nombre) {
             const ttl = getTtlForCategory([]);
-            return of({ name: dbProduct.nombre, image: dbProduct.imagen ?? '', category: dbProduct.categoriaNombre ?? '', ttl, fromDb: true });
+            return of({ name: dbProduct.nombre, image: dbProduct.imagen ?? '', category: dbProduct.categoriaNombre ?? '', ttl, fromDb: true, calorias: null, proteinas: null, carbohidratos: null, grasas: null });
           }
           return this.offService.lookup(barcode).pipe(
             switchMap(p => {
@@ -786,14 +804,14 @@ protected reloadProducts(): void { this.loadProducts(); }
               // El back mapea los tags crudos a una categoría canónica de Nido
               // (General, Lácteos, Bebidas, Congelados, Despensa).
               const category = p.categoriaSugerida || '';
-              return of({ name: p.name, image: p.image, category, ttl, fromDb: p.foundInDb });
+              return of({ name: p.name, image: p.image, category, ttl, fromDb: p.foundInDb, calorias: p.calorias, proteinas: p.proteinas, carbohidratos: p.carbohidratos, grasas: p.grasas });
             }),
           );
         }),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: ({ name, image, category, ttl, fromDb }) => {
+        next: ({ name, image, category, ttl, fromDb, calorias, proteinas, carbohidratos, grasas }) => {
           this.currentTtl.set(ttl);
           this.draft.set({
             ...makeEmptyDraft(),
@@ -804,6 +822,10 @@ protected reloadProducts(): void { this.loadProducts(); }
             ttlHint:    name ? ttl.hint : '',
             notFound:   !name,
             barcode,
+            calorias,
+            proteinas,
+            carbohidratos,
+            grasas,
           });
 
           if (!name) {
@@ -989,6 +1011,10 @@ protected reloadProducts(): void { this.loadProducts(); }
           fechaVencimiento:    d.expiryDate || null,
           estaAbierto:         d.isOpened,
           porcentajeConsumido: d.consumedPercent,
+          calorias:            d.calorias,
+          proteinas:           d.proteinas,
+          carbohidratos:       d.carbohidratos,
+          grasas:              d.grasas,
         })
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
@@ -1057,6 +1083,11 @@ protected reloadProducts(): void { this.loadProducts(); }
 
   protected isExpired(product: Product): boolean {
     return this.getDaysRemaining(product.expiryDate) < 0;
+  }
+
+  /** True si el producto tiene al menos un dato nutricional. */
+  protected hasNutrition(p: { calorias?: number | null; proteinas?: number | null; carbohidratos?: number | null; grasas?: number | null }): boolean {
+    return p.calorias != null || p.proteinas != null || p.carbohidratos != null || p.grasas != null;
   }
 
   protected productCardClass(product: Product): string {

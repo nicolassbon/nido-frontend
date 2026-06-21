@@ -297,6 +297,23 @@
                 }
               }
             </div>
+
+            @if (hasNutrition(product)) {
+              <div class="flex flex-wrap gap-1 pt-0.5" title="Información nutricional por 100 g">
+                @if (product.calorias != null) {
+                  <span class="rounded-full bg-[rgba(146,115,87,0.15)] px-2 py-0.5 text-[0.62rem] font-semibold text-nido-brown tabular-nums">{{ product.calorias }} kcal</span>
+                }
+                @if (product.carbohidratos != null) {
+                  <span class="rounded-full bg-[rgba(146,115,87,0.15)] px-2 py-0.5 text-[0.62rem] font-semibold text-nido-brown tabular-nums">C {{ product.carbohidratos }}g</span>
+                }
+                @if (product.proteinas != null) {
+                  <span class="rounded-full bg-[rgba(146,115,87,0.15)] px-2 py-0.5 text-[0.62rem] font-semibold text-nido-brown tabular-nums">P {{ product.proteinas }}g</span>
+                }
+                @if (product.grasas != null) {
+                  <span class="rounded-full bg-[rgba(146,115,87,0.15)] px-2 py-0.5 text-[0.62rem] font-semibold text-nido-brown tabular-nums">G {{ product.grasas }}g</span>
+                }
+              </div>
+            }
           </div>
 
         </a>
@@ -582,6 +599,40 @@
                   <lucide-icon name="tag" [size]="11" />
                   {{ draft().category }}
                 </span>
+              </div>
+            }
+
+            <!-- Información nutricional (del escaneo, resumida) -->
+            @if (hasNutrition(draft())) {
+              <div class="flex flex-col gap-1.5 min-w-0">
+                <span class="text-[0.8125rem] font-semibold text-nido-green-dark">Información nutricional</span>
+                <span class="text-[0.7rem] text-nido-muted -mt-1">Valores aproximados por cada 100 g</span>
+                <div class="grid grid-cols-2 gap-2 pt-0.5">
+                  @if (draft().calorias != null) {
+                    <div class="flex flex-col rounded-lg bg-[rgba(146,115,87,0.1)] px-3 py-2">
+                      <span class="text-[0.65rem] text-nido-brown/70">Calorías</span>
+                      <span class="text-[0.85rem] font-semibold text-nido-green-dark tabular-nums">{{ draft().calorias }} kcal</span>
+                    </div>
+                  }
+                  @if (draft().carbohidratos != null) {
+                    <div class="flex flex-col rounded-lg bg-[rgba(146,115,87,0.1)] px-3 py-2">
+                      <span class="text-[0.65rem] text-nido-brown/70">Carbohidratos</span>
+                      <span class="text-[0.85rem] font-semibold text-nido-green-dark tabular-nums">{{ draft().carbohidratos }} g</span>
+                    </div>
+                  }
+                  @if (draft().proteinas != null) {
+                    <div class="flex flex-col rounded-lg bg-[rgba(146,115,87,0.1)] px-3 py-2">
+                      <span class="text-[0.65rem] text-nido-brown/70">Proteínas</span>
+                      <span class="text-[0.85rem] font-semibold text-nido-green-dark tabular-nums">{{ draft().proteinas }} g</span>
+                    </div>
+                  }
+                  @if (draft().grasas != null) {
+                    <div class="flex flex-col rounded-lg bg-[rgba(146,115,87,0.1)] px-3 py-2">
+                      <span class="text-[0.65rem] text-nido-brown/70">Grasas</span>
+                      <span class="text-[0.85rem] font-semibold text-nido-green-dark tabular-nums">{{ draft().grasas }} g</span>
+                    </div>
+                  }
+                </div>
               </div>
             }
 
