@@ -1,4 +1,4 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
@@ -9,6 +9,7 @@ import { OnboardingApiService } from '../../onboarding/onboarding-api.service';
 import { HogaresApiService } from '../hogares-api.service';
 
 describe('CreateHousehold', () => {
+  let fixture: ComponentFixture<CreateHousehold>;
   let mockOnboardingApi: {
     saveHouseholdStep: ReturnType<typeof vi.fn>;
   };
@@ -22,6 +23,10 @@ describe('CreateHousehold', () => {
     getHogarId: ReturnType<typeof vi.fn>;
     getNombre: ReturnType<typeof vi.fn>;
   };
+
+  afterEach(() => {
+    fixture?.destroy();
+  });
 
   beforeEach(async () => {
     mockOnboardingApi = {
@@ -50,18 +55,18 @@ describe('CreateHousehold', () => {
   });
 
   it('should create', () => {
-    const fixture = TestBed.createComponent(CreateHousehold);
+    fixture = TestBed.createComponent(CreateHousehold);
     expect(fixture.componentInstance).toBeTruthy();
   });
 
   it('sortedMembers pone al usuario actual primero', () => {
-    const fixture = TestBed.createComponent(CreateHousehold);
+    fixture = TestBed.createComponent(CreateHousehold);
     const sorted = fixture.componentInstance.sortedMembers();
     expect(sorted[0].isCurrentUser).toBe(true);
   });
 
   it('inicializa el miembro actual desde el token', () => {
-    const fixture = TestBed.createComponent(CreateHousehold);
+    fixture = TestBed.createComponent(CreateHousehold);
     fixture.detectChanges();
     const members = fixture.componentInstance.members();
 
@@ -79,7 +84,7 @@ describe('CreateHousehold', () => {
 
     vi.useFakeTimers();
     try {
-      const fixture = TestBed.createComponent(CreateHousehold);
+      fixture = TestBed.createComponent(CreateHousehold);
       fixture.detectChanges();
       vi.advanceTimersByTime(1);
 
@@ -93,7 +98,7 @@ describe('CreateHousehold', () => {
   });
 
   it('removeMember() elimina al miembro aceptado y cierra el menú', () => {
-    const fixture = TestBed.createComponent(CreateHousehold);
+    fixture = TestBed.createComponent(CreateHousehold);
     const comp = fixture.componentInstance;
     fixture.detectChanges();
     comp.members.set([
@@ -112,7 +117,7 @@ describe('CreateHousehold', () => {
   });
 
   it('addMember() abre el modal con email y estado en blanco', () => {
-    const fixture = TestBed.createComponent(CreateHousehold);
+    fixture = TestBed.createComponent(CreateHousehold);
     const comp = fixture.componentInstance;
     comp.inviteEmail.set('anterior@email.com');
     comp.inviteState.set('error');
@@ -127,7 +132,7 @@ describe('CreateHousehold', () => {
   });
 
   it('closeInviteModal() oculta el modal', () => {
-    const fixture = TestBed.createComponent(CreateHousehold);
+    fixture = TestBed.createComponent(CreateHousehold);
     const comp = fixture.componentInstance;
     comp.showInviteModal.set(true);
 
@@ -137,7 +142,7 @@ describe('CreateHousehold', () => {
   });
 
   it('submitInvite() llama a la API y establece estado success', () => {
-    const fixture = TestBed.createComponent(CreateHousehold);
+    fixture = TestBed.createComponent(CreateHousehold);
     const comp = fixture.componentInstance;
     comp.inviteEmail.set('nuevo@test.com');
 
@@ -148,7 +153,7 @@ describe('CreateHousehold', () => {
   });
 
   it('submitInvite() no llama a la API con email vacío', () => {
-    const fixture = TestBed.createComponent(CreateHousehold);
+    fixture = TestBed.createComponent(CreateHousehold);
     const comp = fixture.componentInstance;
     comp.inviteEmail.set('   ');
 
@@ -159,7 +164,7 @@ describe('CreateHousehold', () => {
 
   it('submitInvite() establece estado error con mensaje del servidor', () => {
     mockHogaresApi.invitar.mockReturnValue(throwError(() => ({ error: { message: 'Email no encontrado' } })));
-    const fixture = TestBed.createComponent(CreateHousehold);
+    fixture = TestBed.createComponent(CreateHousehold);
     const comp = fixture.componentInstance;
     comp.inviteEmail.set('desconocido@test.com');
 
@@ -170,7 +175,7 @@ describe('CreateHousehold', () => {
   });
 
   it('toggleMenu() abre el menú del miembro y llama stopPropagation', () => {
-    const fixture = TestBed.createComponent(CreateHousehold);
+    fixture = TestBed.createComponent(CreateHousehold);
     const comp = fixture.componentInstance;
     const fakeEvent = { stopPropagation: vi.fn() } as unknown as MouseEvent;
 
@@ -181,7 +186,7 @@ describe('CreateHousehold', () => {
   });
 
   it('toggleMenu() cierra el menú si ya estaba abierto', () => {
-    const fixture = TestBed.createComponent(CreateHousehold);
+    fixture = TestBed.createComponent(CreateHousehold);
     const comp = fixture.componentInstance;
     const fakeEvent = { stopPropagation: vi.fn() } as unknown as MouseEvent;
 
@@ -192,7 +197,7 @@ describe('CreateHousehold', () => {
   });
 
   it('closeMenus() limpia openMenuId', () => {
-    const fixture = TestBed.createComponent(CreateHousehold);
+    fixture = TestBed.createComponent(CreateHousehold);
     const comp = fixture.componentInstance;
     comp.openMenuId.set('alguno');
 
@@ -202,7 +207,7 @@ describe('CreateHousehold', () => {
   });
 
   it('next() marca step-2 completo sin miembros representados y navega a /equipamiento', () => {
-    const fixture = TestBed.createComponent(CreateHousehold);
+    fixture = TestBed.createComponent(CreateHousehold);
     const comp = fixture.componentInstance;
     const router = TestBed.inject(Router);
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
@@ -219,7 +224,7 @@ describe('CreateHousehold', () => {
   });
 
   it('skip() guarda step-2 como omitido y navega a /equipamiento', () => {
-    const fixture = TestBed.createComponent(CreateHousehold);
+    fixture = TestBed.createComponent(CreateHousehold);
     const router = TestBed.inject(Router);
     const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);
 
@@ -236,7 +241,7 @@ describe('CreateHousehold', () => {
 
   it('next() muestra error si no puede guardar step-2', () => {
     mockOnboardingApi.saveHouseholdStep.mockReturnValue(throwError(() => new Error('fail')));
-    const fixture = TestBed.createComponent(CreateHousehold);
+    fixture = TestBed.createComponent(CreateHousehold);
 
     fixture.componentInstance.next();
 
@@ -245,19 +250,19 @@ describe('CreateHousehold', () => {
 
   describe('stepCircleClass()', () => {
     it('retorna clase rellena para el paso activo', () => {
-      const fixture = TestBed.createComponent(CreateHousehold);
+      fixture = TestBed.createComponent(CreateHousehold);
       const result = fixture.componentInstance.stepCircleClass({ completed: false, active: true });
       expect(result).toContain('bg-nido-cream');
     });
 
     it('retorna clase rellena para el paso completado', () => {
-      const fixture = TestBed.createComponent(CreateHousehold);
+      fixture = TestBed.createComponent(CreateHousehold);
       const result = fixture.componentInstance.stepCircleClass({ completed: true, active: false });
       expect(result).toContain('bg-nido-cream');
     });
 
     it('retorna clase con borde para el paso inactivo', () => {
-      const fixture = TestBed.createComponent(CreateHousehold);
+      fixture = TestBed.createComponent(CreateHousehold);
       const result = fixture.componentInstance.stepCircleClass({ completed: false, active: false });
       expect(result).toContain('border-[rgba(247,241,230,0.35)]');
     });
@@ -265,19 +270,19 @@ describe('CreateHousehold', () => {
 
   describe('stepLabelClass()', () => {
     it('retorna clase semibold para el paso activo', () => {
-      const fixture = TestBed.createComponent(CreateHousehold);
+      fixture = TestBed.createComponent(CreateHousehold);
       expect(fixture.componentInstance.stepLabelClass({ active: true })).toContain('font-semibold');
     });
 
     it('retorna clase con opacidad reducida para el paso inactivo', () => {
-      const fixture = TestBed.createComponent(CreateHousehold);
+      fixture = TestBed.createComponent(CreateHousehold);
       expect(fixture.componentInstance.stepLabelClass({ active: false })).toContain('0.45');
     });
   });
 
   describe('interacción con logo y modal de salida', () => {
     it('onLogoClick() abre el modal y frena propagación', () => {
-      const fixture = TestBed.createComponent(CreateHousehold);
+      fixture = TestBed.createComponent(CreateHousehold);
       const comp = fixture.componentInstance;
       const fakeEvent = { stopPropagation: vi.fn() } as unknown as Event;
 
@@ -288,7 +293,7 @@ describe('CreateHousehold', () => {
     });
 
     it('closeLeaveModal() cierra el modal', () => {
-      const fixture = TestBed.createComponent(CreateHousehold);
+      fixture = TestBed.createComponent(CreateHousehold);
       const comp = fixture.componentInstance;
       comp.showLeaveModal.set(true);
 
@@ -298,7 +303,7 @@ describe('CreateHousehold', () => {
     });
 
     it('confirmLeave() cierra el modal y redirige a /', () => {
-      const fixture = TestBed.createComponent(CreateHousehold);
+      fixture = TestBed.createComponent(CreateHousehold);
       const comp = fixture.componentInstance;
       const router = TestBed.inject(Router);
       const navigateSpy = vi.spyOn(router, 'navigate').mockResolvedValue(true);

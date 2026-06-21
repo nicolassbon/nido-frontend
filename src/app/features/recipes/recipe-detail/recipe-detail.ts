@@ -197,11 +197,23 @@ export class RecipeDetail {
     const faltantes = this.missingIngredients();
     if (!receta || faltantes.length === 0) return;
 
-    const items = faltantes.map(i => ({
-      nombre:   i.productoNombre || i.nombre,
-      cantidad: i.cantidadCompraEstandar ?? i.cantidad,
-      unidad:   i.unidadCompraEstandar ?? i.unidad,
-    }));
+    const items = faltantes.map(i => {
+      const targetUnit = i.unidadCompraEstandar ?? i.unidad;
+      const isCooking = isCookingUnit(targetUnit);
+      
+      let cantidad = isCooking ? null : (i.cantidadCompraEstandar ?? i.cantidad);
+      let unidad = isCooking ? null : targetUnit;
+
+      if (!unidad && cantidad !== null && cantidad !== undefined && cantidad % 1 !== 0) {
+        cantidad = null;
+      }
+
+      return {
+        nombre:   i.productoNombre || cleanIngredientName(i.nombre),
+        cantidad,
+        unidad,
+      };
+    });
 
     this.listaService.addGroupToLista(receta.nombre, items).subscribe({
       next: () => {
@@ -306,3 +318,42 @@ export class RecipeDetail {
     return `${baseUrl}${path}`;
   }
 }
+
+const COOKING_UNITS = new Set([
+  'taza', 'tazas', 'cup', 'cups',
+  'cda', 'cdas', 'cucharada', 'cucharadas', 'tbsp', 'tablespoon', 'tablespoons',
+  'cdta', 'cdtas', 'cucharadita', 'cucharaditas', 'tsp', 'teaspoon', 'teaspoons',
+  'pizca', 'pizcas', 'pinch', 'pinches',
+  'chorrito', 'chorritos', 'splash',
+  'al gusto', 'c/n', 'gota', 'gotas'
+]);
+
+export function isCookingUnit(unit: string | null | undefined): boolean {
+  if (!unit) return false;
+  return COOKING_UNITS.has(unit.trim().toLowerCase().replace(/\./g, ''));
+}
+
+const PREP_KEYWORDS = [
+  'cortado', 'picado', 'rallado', 'troceado', 'fileteado',
+  'en trozos', 'en cubos', 'finamente', 'groseramente', 'bien',
+  'pelado', 'cocido', 'cocido al vapor', 'desmenuzado', 'picada',
+  'para decorar', 'decorar', 'para servir', 'al gusto', 'a gusto',
+  'opcional', ' molido', ' molida', ' picada', ' picado',
+  ' fresco', ' fresca', ' frescos', ' frescas', ' seco', ' seca'
+];
+
+export function cleanIngredientName(name: string): string {
+  const lower = name.toLowerCase();
+  let minIdx = -1;
+  for (const keyword of PREP_KEYWORDS) {
+    const idx = lower.indexOf(keyword);
+    if (idx > 0 && (minIdx === -1 || idx < minIdx)) {
+      minIdx = idx;
+    }
+  }
+  if (minIdx > 0) {
+    return name.slice(0, minIdx).trim().replace(/[,.:]$/, '').trim();
+  }
+  return name.trim();
+}
+
