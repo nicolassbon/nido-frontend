@@ -93,6 +93,7 @@ describe('ListaComprasService', () => {
     patch.flush(null);
 
     http.expectOne(`${baseUrl}/historial`).flush([]);
+    http.expectOne(baseUrl).flush([]);
   });
 
   it('marcarCompradoPorNombre mantiene compatibilidad con endpoint legacy', () => {

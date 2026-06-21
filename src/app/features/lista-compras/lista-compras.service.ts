@@ -176,12 +176,6 @@ export class ListaComprasService {
     );
   }
 
-  markAddedToInventory(itemId: string) {
-    return this.http.patch<void>(`${this.legacyBaseUrl}/items/${encodeURIComponent(itemId)}/agregado-inventario`, {}).pipe(
-      switchMap(() => this.refreshHistory()),
-    );
-  }
-
   addGroupToLista(recetaNombre: string, faltantes: AddItemInput[]) {
     return this.http.post<ApiShoppingList>(this.baseUrl, { nombre: recetaNombre }).pipe(
       switchMap(lista => {

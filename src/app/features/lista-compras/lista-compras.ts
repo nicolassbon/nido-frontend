@@ -3,25 +3,24 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { forkJoin, Subscription } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faClockRotateLeft, faPen, faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { ListaComprasService, RecipeShoppingList, ShoppingHistoryItem, ShoppingItem } from './lista-compras.service';
 import { CatalogoService } from '../../core/servicios/catalogo.service';
 import { NidoSelectComponent, NidoSelectOption } from '../../shared/ui/form/nido-select/nido-select';
 import { AlacenaApiService, CreateStockItemRequest } from '../alacena/alacena-api.service';
 
+const VIEW_ALL_LIST_ID = '__all__';
+
 @Component({
   selector: 'app-lista-compras',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, LucideAngularModule, FontAwesomeModule, RouterModule, NidoSelectComponent],
+  imports: [FormsModule, LucideAngularModule, RouterModule, NidoSelectComponent],
   templateUrl: './lista-compras.html',
 })
 export class ListaCompras implements OnInit, OnDestroy {
   protected readonly service = inject(ListaComprasService);
   private readonly alacenaApi = inject(AlacenaApiService);
   private readonly catalogoService = inject(CatalogoService);
-  private readonly alacenaApi = inject(AlacenaApiService);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
 
@@ -43,12 +42,6 @@ export class ListaCompras implements OnInit, OnDestroy {
   protected uploadingHistoryId: string | null = null;
   protected isSaving = false;
   protected unidadesOpts: NidoSelectOption[] = [];
-  protected readonly faIcons = {
-    clockRotateLeft: faClockRotateLeft,
-    pen: faPen,
-    plus: faPlus,
-    trashCan: faTrashCan,
-  };
 
   private sub = new Subscription();
 
@@ -304,6 +297,64 @@ export class ListaCompras implements OnInit, OnDestroy {
     this.uploadingHistoryId = null;
     this.isSaving = false;
     this.cdr.markForCheck();
+  }
+
+  private buildAllList(): RecipeShoppingList {
+    const grouped = new Map<string, ShoppingItem>();
+
+    for (const lista of this.listas) {
+      for (const item of lista.items) {
+        const normalized = this.normalizeItemName(item.nombre);
+        const amount = this.normalizeAmount(item.cantidad, item.unidad);
+        const key = amount
+          ? `${normalized}|${amount.unit}`
+          : `${normalized}|${item.unidad ?? ''}|${item.id}`;
+        const existing = grouped.get(key);
+        const source = { listaId: lista.id, itemId: item.id };
+
+        if (existing && amount) {
+          existing.cantidad = (existing.cantidad ?? 0) + amount.value;
+          existing.checked = existing.checked && item.checked;
+          existing.sourceItems = [...(existing.sourceItems ?? []), source];
+          continue;
+        }
+
+        grouped.set(key, {
+          ...item,
+          id: `all-${key}`,
+          nombre: existing?.nombre ?? item.nombre,
+          cantidad: amount?.value ?? item.cantidad,
+          unidad: amount?.unit ?? item.unidad,
+          checked: item.checked,
+          sourceItems: [source],
+        });
+      }
+    }
+
+    return {
+      id: VIEW_ALL_LIST_ID,
+      recetaNombre: 'Ver Todo',
+      grupoNombre: 'Todas las listas',
+      items: Array.from(grouped.values()),
+    };
+  }
+
+  private normalizeItemName(value: string): string {
+    return value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  private normalizeAmount(cantidad: number | null, unidad: string | null): { value: number; unit: string } | null {
+    if (cantidad === null || cantidad === undefined || !unidad) return null;
+
+    const unit = this.stockUnitValue(unidad);
+    if (unit === 'kg') return { value: cantidad * 1000, unit: 'g' };
+    if (unit === 'lt') return { value: cantidad * 1000, unit: 'ml' };
+    if (unit) return { value: cantidad, unit };
+    return null;
   }
 
   private stockUnitValue(value: string | null | undefined): string | null {

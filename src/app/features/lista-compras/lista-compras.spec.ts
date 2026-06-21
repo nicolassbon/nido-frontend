@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BehaviorSubject, of } from 'rxjs';
-import { vi } from 'vitest';
+import { expect, vi } from 'vitest';
 import { Router } from '@angular/router';
 import {
   Check,
@@ -24,16 +24,18 @@ describe('ListaCompras', () => {
   let fixture: ComponentFixture<ListaCompras>;
   let component: ListaCompras;
   let listaService: FakeListaComprasService;
+  let alacenaApi: FakeAlacenaApiService;
 
   beforeEach(async () => {
     listaService = new FakeListaComprasService();
+    alacenaApi = new FakeAlacenaApiService();
 
     await TestBed.configureTestingModule({
       imports: [ListaCompras],
       providers: [
         { provide: ListaComprasService, useValue: listaService },
         { provide: CatalogoService, useValue: { getUnidadesMedida: () => of([]) } },
-        { provide: AlacenaApiService, useValue: { getStock: () => of([]) } },
+        { provide: AlacenaApiService, useValue: alacenaApi },
         { provide: Router, useValue: { getCurrentNavigation: () => null, navigate: vi.fn() } },
         {
           provide: LUCIDE_ICONS,
@@ -58,25 +60,25 @@ describe('ListaCompras', () => {
     fixture.detectChanges();
   });
 
-  it('abre el modal de alacena prellenado desde historial', () => {
+  it('pasa un item del historial a la alacena', () => {
     const item = historyItem({ nombre: 'Harina', cantidad: 500, unidad: 'g' });
 
-    (component as any).openHistoryToPantry(item);
+    (component as any).sendHistoryItemToPantry(item);
 
-    expect((component as any).historyToPantryItem).toEqual(item);
-    expect((component as any).historyInitialProduct).toEqual({
+    expect(alacenaApi.createStock).toHaveBeenCalledWith(expect.objectContaining({
       nombre: 'Harina',
       cantidad: 500,
       unidadMedida: 'g',
-      origenCarga: 'ticket_compra',
-    });
+      origenCarga: 'manual',
+      ubicacion: 'Alacena',
+    }));
+    expect(listaService.markAddedToInventory).toHaveBeenCalledWith('hist-item');
   });
 
-  it('marca el item como agregado a inventario cuando el modal guarda', () => {
+  it('marca el item como agregado a inventario despues de subirlo a alacena', () => {
     const item = historyItem({ id: 'hist-1' });
-    (component as any).openHistoryToPantry(item);
 
-    (component as any).onHistorySaved();
+    (component as any).sendHistoryItemToPantry(item);
 
     expect(listaService.markAddedToInventory).toHaveBeenCalledWith('hist-1');
   });
@@ -131,6 +133,11 @@ class FakeListaComprasService {
   emitLists(listas: RecipeShoppingList[]): void {
     this.listas.next(listas);
   }
+}
+
+class FakeAlacenaApiService {
+  getStock = vi.fn(() => of([]));
+  createStock = vi.fn(() => of({}));
 }
 
 function shoppingList(id: string, recetaNombre: string, items: RecipeShoppingList['items']): RecipeShoppingList {
