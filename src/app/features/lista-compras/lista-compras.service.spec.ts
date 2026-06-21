@@ -75,15 +75,24 @@ describe('ListaComprasService', () => {
   it('markPurchased deberia actualizar item e historial', () => {
     service.markPurchased('lista-1', 'item-1', true).subscribe();
 
-    const patch = http.expectOne(`${baseUrl}/lista-1/items/item-1`);
+    const patch = http.expectOne(`${legacyUrl}/items/item-1/comprado`);
     expect(patch.request.method).toBe('PATCH');
-    expect(patch.request.body).toEqual({ comprado: true });
+    expect(patch.request.body).toEqual({});
     patch.flush(item({ id: 'item-1', nombre: 'Pan', comprado: true }));
 
-    http.expectOne(baseUrl).flush([shoppingList('lista-1', 'Principal', [item({ id: 'item-1', nombre: 'Pan', comprado: true })])]);
+    http.expectOne(baseUrl).flush([shoppingList('lista-1', 'Principal', [])]);
     http.expectOne(`${baseUrl}/historial`).flush([historyItem({ id: 'item-1', nombre: 'Pan' })]);
+    expect(service.snapshot[0].items).toHaveLength(0);
+  });
 
-    expect(service.snapshot[0].items[0].checked).toBe(true);
+  it('markAddedToInventory deberia quitar item del historial', () => {
+    service.markAddedToInventory('item-1').subscribe();
+
+    const patch = http.expectOne(`${legacyUrl}/items/item-1/agregado-inventario`);
+    expect(patch.request.method).toBe('PATCH');
+    patch.flush(null);
+
+    http.expectOne(`${baseUrl}/historial`).flush([]);
   });
 
   it('marcarCompradoPorNombre mantiene compatibilidad con endpoint legacy', () => {

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { faClockRotateLeft, faPen, faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons';
@@ -21,6 +21,7 @@ export class ListaCompras implements OnInit, OnDestroy {
   protected readonly service = inject(ListaComprasService);
   private readonly alacenaApi = inject(AlacenaApiService);
   private readonly catalogoService = inject(CatalogoService);
+  private readonly alacenaApi = inject(AlacenaApiService);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
 
@@ -69,7 +70,7 @@ export class ListaCompras implements OnInit, OnDestroy {
 
     this.sub.add(this.service.listas$.subscribe(listas => {
       this.listas = listas;
-      if (!this.activeListId || !listas.some(lista => lista.id === this.activeListId)) {
+      if (!this.activeListId || (this.activeListId !== VIEW_ALL_LIST_ID && !listas.some(lista => lista.id === this.activeListId))) {
         this.activeListId = listas[0]?.id ?? null;
       }
       this.cdr.markForCheck();
@@ -139,6 +140,15 @@ export class ListaCompras implements OnInit, OnDestroy {
     });
   }
 
+  protected viewAll(): void {
+    if (this.listas.length === 0) return;
+
+    this.activeListId = VIEW_ALL_LIST_ID;
+    this.errorMessage = null;
+    this.cancelItemEdit();
+    this.cdr.markForCheck();
+  }
+
   protected selectList(listaId: string): void {
     this.activeListId = listaId;
     this.showAllLists = false;
@@ -191,7 +201,11 @@ export class ListaCompras implements OnInit, OnDestroy {
   }
 
   protected togglePurchased(listaId: string, item: ShoppingItem): void {
-    this.service.markPurchased(listaId, item.id, !item.checked).subscribe({
+    const refs = item.sourceItems?.length
+      ? item.sourceItems
+      : [{ listaId, itemId: item.id }];
+
+    forkJoin(refs.map(ref => this.service.markPurchased(ref.listaId, ref.itemId, !item.checked))).subscribe({
       error: () => this.fail('No se pudo actualizar el producto.'),
     });
   }
@@ -246,6 +260,10 @@ export class ListaCompras implements OnInit, OnDestroy {
   }
 
   protected activeList(): RecipeShoppingList | null {
+    if (this.activeListId === VIEW_ALL_LIST_ID) {
+      return this.buildAllList();
+    }
+
     return this.listas.find(lista => lista.id === this.activeListId) ?? this.listas[0] ?? null;
   }
 
@@ -283,6 +301,7 @@ export class ListaCompras implements OnInit, OnDestroy {
 
   private fail(message: string): void {
     this.errorMessage = message;
+    this.uploadingHistoryId = null;
     this.isSaving = false;
     this.cdr.markForCheck();
   }

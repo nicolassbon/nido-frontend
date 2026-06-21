@@ -23,6 +23,13 @@ export interface KnownProduct {
   cantidad?:       number;   // cantidad actual en la alacena
 }
 
+export interface InitialProductDraft {
+  nombre: string;
+  cantidad: number | null;
+  unidadMedida: string | null;
+  origenCarga?: 'manual' | 'codigo_barras' | 'ticket_compra';
+}
+
 @Component({
   selector: 'app-agregar-producto',
   imports: [CommonModule, ReactiveFormsModule, LucideAngularModule, NidoSelectComponent, NidoDatepickerComponent],
@@ -36,8 +43,13 @@ export class AgregarProducto implements OnInit, OnDestroy {
   /** Productos ya conocidos (de la alacena) para sugerir al escribir el nombre */
   @Input() knownProducts: KnownProduct[] = [];
 
+  @Input() initialProduct?: InitialProductDraft;
+
+  @Input() syncShoppingListOnSave = true;
+
   @Input() isModal = false;
   @Output() closed = new EventEmitter<StockItemResponse | void>();
+  @Output() saved = new EventEmitter<StockItemResponse | void>();
 
   private readonly fb                  = inject(FormBuilder);
   private readonly productService      = inject(ProductService);
@@ -178,6 +190,16 @@ export class AgregarProducto implements OnInit, OnDestroy {
 
       this.isOpened.set(s.estaAbierto ?? false);
       this.consumedPct.set(s.porcentajeConsumido ?? 0);
+    } else if (this.initialProduct) {
+      this.form.get('categoriaId')?.clearValidators();
+      this.form.get('categoriaId')?.updateValueAndValidity();
+
+      this.form.patchValue({
+        nombre:       this.initialProduct.nombre,
+        ubicacion:    'Alacena',
+        cantidad:     this.initialProduct.cantidad,
+        unidadMedida: this.normalizeUnit(this.initialProduct.unidadMedida),
+      });
     }
   }
 
@@ -290,7 +312,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
       fechaVencimiento:    this.form.value.fechaVencimiento || null,
       estaAbierto:         isOpened,
       porcentajeConsumido: consumedPct,
-      origenCarga:         'manual' as const,
+      origenCarga:         this.initialProduct?.origenCarga ?? 'manual' as const,
     };
 
     let imageUploadFailed = false;
@@ -311,12 +333,15 @@ export class AgregarProducto implements OnInit, OnDestroy {
 
       const nuevaCantidad = (existing.cantidad ?? 0) + payload.cantidad;
       this.alacenaApi.updateStock(existing.stockId, { cantidad: nuevaCantidad }).subscribe({
-        next: () => {
-          this.listaComprasService.marcarCompradoPorNombre(payload.nombre);
+        next: (updated) => {
+          if (this.syncShoppingListOnSave) {
+            this.listaComprasService.marcarCompradoPorNombre(payload.nombre);
+          }
           this.form.reset({ cantidad: null, ubicacion: 'Alacena' });
           this.isOpened.set(false);
           this.consumedPct.set(0);
           this.isSaving = false;
+          this.saved.emit(updated);
           this.closed.emit();
           if (!this.isModal) this.router.navigate(['/alacena']);
         },
@@ -349,17 +374,22 @@ export class AgregarProducto implements OnInit, OnDestroy {
         );
       }),
     ).subscribe({
-      next: () => {
+      next: (created) => {
         if (imageUploadFailed) {
-          this.listaComprasService.marcarCompradoPorNombre(payload.nombre);
+          if (this.syncShoppingListOnSave) {
+            this.listaComprasService.marcarCompradoPorNombre(payload.nombre);
+          }
           this.resetCreateForm();
           this.warningMessage = 'El producto se guardó, pero no se pudo subir la imagen.';
           this.isSaving = false;
           return;
         }
-        this.listaComprasService.marcarCompradoPorNombre(payload.nombre);
+        if (this.syncShoppingListOnSave) {
+          this.listaComprasService.marcarCompradoPorNombre(payload.nombre);
+        }
         this.resetCreateForm();
         this.isSaving = false;
+        this.saved.emit(created);
         this.closed.emit();
         if (!this.isModal) this.router.navigate(['/alacena']);
       },
@@ -405,6 +435,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
           origenCarga: updated.origenCarga,
         };
         this.isSaving = false;
+        this.saved.emit(edited);
         this.closed.emit(edited);
         if (!this.isModal) this.router.navigate(['/alacena']);
       },

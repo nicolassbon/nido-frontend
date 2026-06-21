@@ -42,7 +42,7 @@
         <div class="plan-row-labels">
           <div class="plan-day-spacer"></div>
           @for (tipo of TIPOS; track tipo) {
-            <div class="meal-label">
+            <div class="meal-label" [class.meal-label--tasks]="tipo === 'tarea'">
               <lucide-icon [name]="TIPO_ICONS[tipo]" [size]="20" />
               <span>{{ TIPO_LABELS[tipo] }}</span>
             </div>
@@ -65,7 +65,7 @@
                 class="plan-slot"
                 [class.plan-slot--tasks]="tipo === 'tarea'"
                 [class.plan-slot--filled]="slotItems.length > 0">
-                <div class="slot-mobile-label">
+                <div class="slot-mobile-label" [class.slot-mobile-label--tasks]="tipo === 'tarea'">
                   <span>
                     <lucide-icon [name]="TIPO_ICONS[tipo]" [size]="15" />
                     {{ TIPO_LABELS[tipo] }}
@@ -81,9 +81,61 @@
                   }
                 </div>
 
-                @for (item of slotItems; track item.id) {
-                  <article class="plan-card" [class.plan-card--task]="tipo === 'tarea'">
-                    @if (tipo !== 'tarea') {
+                @if (tipo === 'tarea') {
+                  @for (item of visibleTaskItems(slotItems); track item.id) {
+                    <article class="plan-card plan-card--task" [class.plan-card--done]="isTaskCompleted(item)">
+                      <button
+                        type="button"
+                        class="task-check"
+                        [class.task-check--done]="isTaskCompleted(item)"
+                        [disabled]="isTaskCompleted(item)"
+                        (click)="completeTask(item, $event)"
+                        [title]="isTaskCompleted(item) ? 'Tarea completada' : 'Marcar como hecha'">
+                        @if (isTaskCompleted(item)) {
+                          <lucide-icon name="check" [size]="10" />
+                        }
+                      </button>
+
+                      <div class="plan-card__body">
+                        <strong>{{ itemTitle(item) }}</strong>
+                        <span class="plan-card__assignee">{{ itemAssignedLabel(item) }}</span>
+                        @if (item.hora) {
+                          <small class="plan-card__time">{{ formatTime(item.hora) }}</small>
+                        }
+                      </div>
+
+                      <button type="button" class="card-menu" (click)="toggleItemMenu(item.id, $event)" title="Opciones">
+                        <lucide-icon name="ellipsis-vertical" [size]="15" />
+                      </button>
+
+                      @if (openMenuItemId() === item.id) {
+                        <div class="card-actions-menu" (click)="$event.stopPropagation()">
+                          <button type="button" (click)="openEditModal(item)">
+                            <lucide-icon name="pencil" [size]="13" />
+                            <span>Editar</span>
+                          </button>
+                          <button type="button" class="card-actions-menu__danger" (click)="deleteItem(item.id, $event)">
+                            <lucide-icon name="trash-2" [size]="13" />
+                            <span>Eliminar</span>
+                          </button>
+                        </div>
+                      }
+                    </article>
+                  }
+
+                  @if (hiddenTaskCount(slotItems) > 0) {
+                    <button
+                      type="button"
+                      class="task-more"
+                      (click)="openTaskDayDetail(dia.isoDate, $event)"
+                      title="Ver todas las tareas">
+                      <span>+{{ hiddenTaskCount(slotItems) }} mas</span>
+                      <lucide-icon name="list" [size]="13" />
+                    </button>
+                  }
+                } @else {
+                  @for (item of slotItems; track item.id) {
+                    <article class="plan-card">
                       @if (itemImage(item); as img) {
                         <img [src]="img" [alt]="itemTitle(item)" />
                       } @else {
@@ -91,43 +143,63 @@
                           <lucide-icon name="image" [size]="18" />
                         </div>
                       }
-                    } @else {
-                      <span class="task-check"></span>
-                    }
 
-                    <div class="plan-card__body">
-                      <strong>{{ itemTitle(item) }}</strong>
-                      @if (item.hora) {
-                        <small>{{ formatTime(item.hora) }}</small>
-                      }
-                    </div>
-
-                    <button type="button" class="card-menu" (click)="toggleItemMenu(item.id, $event)" title="Opciones">
-                      <lucide-icon name="ellipsis-vertical" [size]="15" />
-                    </button>
-
-                    @if (openMenuItemId() === item.id) {
-                      <div class="card-actions-menu" (click)="$event.stopPropagation()">
-                        <button type="button" (click)="openEditModal(item)">
-                          <lucide-icon name="pencil" [size]="13" />
-                          <span>Editar</span>
-                        </button>
-                        <button type="button" class="card-actions-menu__danger" (click)="deleteItem(item.id, $event)">
-                          <lucide-icon name="trash-2" [size]="13" />
-                          <span>Eliminar</span>
-                        </button>
+                      <div class="plan-card__body">
+                        <strong>{{ itemTitle(item) }}</strong>
+                        @if (item.hora) {
+                          <small class="plan-card__time">{{ formatTime(item.hora) }}</small>
+                        }
                       </div>
-                    }
-                  </article>
+
+                      <button type="button" class="card-menu" (click)="toggleItemMenu(item.id, $event)" title="Opciones">
+                        <lucide-icon name="ellipsis-vertical" [size]="15" />
+                      </button>
+
+                      @if (openMenuItemId() === item.id) {
+                        <div class="card-actions-menu" (click)="$event.stopPropagation()">
+                          <button type="button" (click)="openEditModal(item)">
+                            <lucide-icon name="pencil" [size]="13" />
+                            <span>Editar</span>
+                          </button>
+                          <button type="button" class="card-actions-menu__danger" (click)="deleteItem(item.id, $event)">
+                            <lucide-icon name="trash-2" [size]="13" />
+                            <span>Eliminar</span>
+                          </button>
+                        </div>
+                      }
+                    </article>
+                  }
+
+                  @if (slotItems.length > 0) {
+                    <button
+                      type="button"
+                      class="slot-add slot-add--meal slot-add--meal-inline"
+                      (click)="openModal(dia.isoDate, tipo)"
+                      [title]="'Agregar ' + TIPO_LABELS[tipo]">
+                      <lucide-icon name="plus" [size]="17" />
+                    </button>
+                  }
+                }
+
+                @if (tipo === 'tarea' && slotItems.length > 0) {
+                  <button
+                    type="button"
+                    class="slot-add slot-add--inline"
+                    (click)="openModal(dia.isoDate, tipo)"
+                    title="Agregar otra tarea">
+                    <lucide-icon name="plus" [size]="14" />
+                    <span>Aniadir otra tarea</span>
+                  </button>
                 }
 
                 @if (slotItems.length === 0) {
                   <button
                     type="button"
                     class="slot-add"
+                    [class.slot-add--meal]="tipo !== 'tarea'"
                     (click)="openModal(dia.isoDate, tipo)"
                     [title]="'Agregar ' + TIPO_LABELS[tipo]">
-                    <lucide-icon name="plus" [size]="14" />
+                    <lucide-icon name="plus" [size]="tipo === 'tarea' ? 14 : 22" />
                     @if (tipo === 'tarea') {
                       <span>Aniadir tarea</span>
                     }
@@ -147,6 +219,76 @@
     <span>Planificar tus comidas con anticipacion ayuda a comprar mejor y reducir desperdicios.</span>
   </footer>
 </div>
+
+@if (selectedTaskDay(); as taskDayDate) {
+  <div class="task-detail-backdrop" (click)="closeTaskDayDetail()">
+    <section class="task-detail-panel" (click)="$event.stopPropagation()" aria-label="Tareas del dia">
+      <header class="task-detail-panel__header">
+        <span>
+          <lucide-icon name="house" [size]="18" />
+        </span>
+        <div>
+          <h2>Tareas del hogar</h2>
+          <p>{{ selectedTaskDayLabel() }} - {{ selectedTaskDayItems().length }} tareas</p>
+        </div>
+        <button type="button" class="icon-btn icon-btn--light" (click)="closeTaskDayDetail()" title="Cerrar">
+          <lucide-icon name="x" [size]="18" />
+        </button>
+      </header>
+
+      <div class="task-detail-list">
+        @for (item of selectedTaskDayItems(); track item.id) {
+          <article class="plan-card plan-card--task task-detail-card" [class.plan-card--done]="isTaskCompleted(item)">
+            <button
+              type="button"
+              class="task-check"
+              [class.task-check--done]="isTaskCompleted(item)"
+              [disabled]="isTaskCompleted(item)"
+              (click)="completeTask(item, $event)"
+              [title]="isTaskCompleted(item) ? 'Tarea completada' : 'Marcar como hecha'">
+              @if (isTaskCompleted(item)) {
+                <lucide-icon name="check" [size]="10" />
+              }
+            </button>
+
+            <div class="plan-card__body">
+              <strong>{{ itemTitle(item) }}</strong>
+              <span class="plan-card__assignee">{{ itemAssignedLabel(item) }}</span>
+              @if (item.hora) {
+                <small class="plan-card__time">{{ formatTime(item.hora) }}</small>
+              }
+            </div>
+
+            <button type="button" class="card-menu" (click)="toggleItemMenu(item.id, $event)" title="Opciones">
+              <lucide-icon name="ellipsis-vertical" [size]="15" />
+            </button>
+
+            @if (openMenuItemId() === item.id) {
+              <div class="card-actions-menu" (click)="$event.stopPropagation()">
+                <button type="button" (click)="openEditModal(item)">
+                  <lucide-icon name="pencil" [size]="13" />
+                  <span>Editar</span>
+                </button>
+                <button type="button" class="card-actions-menu__danger" (click)="deleteItem(item.id, $event)">
+                  <lucide-icon name="trash-2" [size]="13" />
+                  <span>Eliminar</span>
+                </button>
+              </div>
+            }
+          </article>
+        }
+      </div>
+
+      <footer class="task-detail-panel__footer">
+        <button type="button" class="modal-secondary" (click)="closeTaskDayDetail()">Cerrar</button>
+        <button type="button" class="modal-primary" (click)="openModal(taskDayDate, 'tarea')">
+          <lucide-icon name="plus" [size]="15" />
+          Anadir otra tarea
+        </button>
+      </footer>
+    </section>
+  </div>
+}
 
 @if (showModal() && modalSlot()) {
   <div class="plan-modal-backdrop" (click)="closeModal()">
@@ -175,6 +317,17 @@
             [ngModel]="modalSlot()!.tituloLibre"
             (ngModelChange)="updateTaskTitle($event)"
             autofocus />
+
+          <label class="field-label field-label--inline">Asignar a</label>
+          <select
+            class="field-input"
+            [ngModel]="modalSlot()!.asignadoA"
+            (ngModelChange)="updateAssignedUser($event)">
+            <option value="">Sin asignar</option>
+            @for (miembro of miembros(); track miembro.usuarioId) {
+              <option [value]="miembro.usuarioId">{{ miembro.nombre }}</option>
+            }
+          </select>
         } @else {
           <label class="field-label">Receta</label>
           <div class="recipe-search">

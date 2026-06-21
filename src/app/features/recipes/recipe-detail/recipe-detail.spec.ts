@@ -49,7 +49,11 @@ describe('RecipeDetail', () => {
         { provide: ListaComprasService, useValue: listaService },
         { provide: ElectrodomesticosService, useValue: { getAll: () => of([]) } },
       ],
-    }).compileComponents();
+    })
+      .overrideComponent(RecipeDetail, {
+        set: { template: '' },
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(RecipeDetail);
     component = fixture.componentInstance;
@@ -144,3 +148,25 @@ describe('RecipeDetail', () => {
     } as ApiReceta);
   }
 });
+
+function buildRecipe(overrides: Partial<ApiReceta> = {}): ApiReceta {
+  return {
+    id: 'receta-1',
+    nombre: 'Receta demo',
+    descripcion: null,
+    tiempoCoccionMin: 20,
+    dificultad: 'facil',
+    porciones: 2,
+    fuenteId: 'manual',
+    imagenUrl: null,
+    calorias: null,
+    proteinas: null,
+    carbohidratos: null,
+    grasas: null,
+    ingredientes: [],
+    pasos: [],
+    electrodomesticos: [],
+    guardada: false,
+    ...overrides,
+  };
+}

@@ -178,7 +178,7 @@
     } @else {
       <ul class="list-none m-0 p-0">
         @for (item of historial; track item.id) {
-          <li class="flex flex-col gap-1 px-4 py-3 border-b border-nido-border/40 last:border-b-0 sm:px-5">
+          <li class="flex flex-col gap-2 px-4 py-3 border-b border-nido-border/40 last:border-b-0 sm:px-5">
             <div class="flex flex-wrap items-center justify-between gap-2">
               <div class="min-w-0 flex flex-col gap-1">
                 <span class="text-[0.875rem] font-medium text-nido-green-dark">{{ item.nombre }}</span>
@@ -192,12 +192,22 @@
                 {{ uploadingHistoryId === item.id ? 'Subiendo...' : 'Pasar a alacena' }}
               </button>
             </div>
-            <span class="text-[0.775rem] text-nido-brown">
-              {{ item.grupoNombre }}
-              @if (formatAmount(item.cantidad, item.unidad)) {
-                - {{ formatAmount(item.cantidad, item.unidad) }}
-              }
-            </span>
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="text-[0.775rem] text-nido-brown">
+                {{ item.grupoNombre }}
+                @if (formatAmount(item.cantidad, item.unidad)) {
+                  - {{ formatAmount(item.cantidad, item.unidad) }}
+                }
+              </span>
+              <button
+                class="inline-flex items-center gap-1.5 rounded-[18px] border border-nido-border bg-white px-3 py-1.5 text-[0.75rem] font-semibold text-nido-green-dark transition-colors duration-150 hover:border-nido-green hover:bg-nido-cream"
+                type="button"
+                [disabled]="uploadingHistoryId === item.id"
+                (click)="sendHistoryItemToPantry(item)">
+                <lucide-icon name="package-plus" [size]="13" />
+                Pasar a la alacena
+              </button>
+            </div>
           </li>
         }
       </ul>
