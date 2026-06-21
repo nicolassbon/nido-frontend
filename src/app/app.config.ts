@@ -63,6 +63,7 @@ import {
   LockKeyhole,
   Unlock,
   Send,
+  Unlink,
   // Alacena
   Scan,
   ScanLine,
@@ -221,6 +222,7 @@ export const appConfig: ApplicationConfig = {
         LockKeyhole,
         Unlock,
         Send,
+        Unlink,
         Scan,
         ScanLine,
         SearchX,

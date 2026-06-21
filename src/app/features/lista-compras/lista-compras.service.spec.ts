@@ -72,6 +72,23 @@ describe('ListaComprasService', () => {
     expect(service.snapshot[0].items).toHaveLength(0);
   });
 
+  it('sendToTelegram deberia llamar al endpoint legacy sin listaId', () => {
+    service.sendToTelegram().subscribe();
+
+    const post = http.expectOne(`${environment.apiBaseUrl}/lista-compras/enviar-telegram`);
+    expect(post.request.method).toBe('POST');
+    expect(post.request.body).toEqual({});
+    post.flush({ status: 'enqueued', itemCount: 2, chatId: 123, listaId: null });
+  });
+
+  it('sendToTelegram deberia incluir listaId cuando se envia una lista puntual', () => {
+    service.sendToTelegram('lista-1').subscribe();
+
+    const post = http.expectOne(`${environment.apiBaseUrl}/lista-compras/enviar-telegram?listaId=lista-1`);
+    expect(post.request.method).toBe('POST');
+    post.flush({ status: 'empty', itemCount: 0, chatId: null, listaId: 'lista-1' });
+  });
+
   it('markPurchased deberia actualizar item e historial', () => {
     service.markPurchased('lista-1', 'item-1', true).subscribe();
 
