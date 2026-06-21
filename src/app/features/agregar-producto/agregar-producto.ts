@@ -67,7 +67,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
   // ── Opciones ──────────────────────────────────────────────
   protected readonly categoriasOpts: NidoSelectOption[] = [
     { value: '33333333-3333-3333-3333-333333333333', label: 'General' },
-    { value: '44444444-4444-4444-4444-444444444444', label: 'Lácteos' },
+    { value: '3426d21e-cac7-5df3-bfdc-a0918ccf5af6', label: 'Lácteos' },
     { value: '55555555-5555-5555-5555-555555555555', label: 'Bebidas' },
     { value: '66666666-6666-6666-6666-666666666666', label: 'Congelados' },
     { value: '77777777-7777-7777-7777-777777777777', label: 'Despensa' },
