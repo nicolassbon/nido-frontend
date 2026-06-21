@@ -14,6 +14,8 @@ export interface ShoppingItem {
   compradoEn?: string | null;
   orden?: number;
   sourceItems?: Array<{ listaId: string; itemId: string }>;
+  categoriaNombre?: string | null;
+  iconoSvg?: string | null;
 }
 
 export interface RecipeShoppingList {
@@ -32,6 +34,9 @@ export interface ShoppingHistoryItem {
   grupoNombre: string;
   compradoEn: string;
   compradoPor: string | null;
+  agregadoAlInventario: boolean;
+  categoriaNombre?: string | null;
+  iconoSvg?: string | null;
 }
 
 type AddItemInput = {
@@ -161,7 +166,9 @@ export class ListaComprasService {
   markAddedToInventory(itemId: string) {
     return this.http.patch<void>(`${this.legacyBaseUrl}/items/${encodeURIComponent(itemId)}/agregado-inventario`, {}).pipe(
       tap(() => {
-        this._historial$.next(this._historial$.value.filter(item => item.id !== itemId));
+        const current = this._historial$.value;
+        const updated = current.map(item => item.id === itemId ? { ...item, agregadoAlInventario: true } : item);
+        this._historial$.next(updated);
       }),
       switchMap(() => this.refreshHistory()),
       tap(() => this.refresh().subscribe()),
@@ -221,6 +228,8 @@ interface ApiShoppingItem {
   comprado: boolean;
   compradoEn: string | null;
   orden: number;
+  categoriaNombre?: string | null;
+  iconoSvg?: string | null;
 }
 
 interface ApiHistoryItem {
@@ -232,6 +241,9 @@ interface ApiHistoryItem {
   grupoNombre: string;
   compradoEn: string;
   compradoPor: string | null;
+  agregadoAlInventario: boolean;
+  categoriaNombre?: string | null;
+  iconoSvg?: string | null;
 }
 
 function toShoppingList(list: ApiShoppingList): RecipeShoppingList {
@@ -248,6 +260,8 @@ function toShoppingList(list: ApiShoppingList): RecipeShoppingList {
       checked: item.comprado,
       compradoEn: item.compradoEn,
       orden: item.orden,
+      categoriaNombre: item.categoriaNombre,
+      iconoSvg: item.iconoSvg,
     })),
   };
 }
@@ -262,5 +276,8 @@ function toHistoryItem(item: ApiHistoryItem): ShoppingHistoryItem {
     grupoNombre: item.grupoNombre,
     compradoEn: item.compradoEn,
     compradoPor: item.compradoPor,
+    agregadoAlInventario: item.agregadoAlInventario,
+    categoriaNombre: item.categoriaNombre,
+    iconoSvg: item.iconoSvg,
   };
 }

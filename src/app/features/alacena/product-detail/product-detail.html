@@ -161,9 +161,7 @@
           </button>
         </div>
 
-        @if (listMessage()) {
-          <p class="feedback">{{ listMessage() }}</p>
-        }
+
       </section>
     </div>
   }
@@ -232,4 +230,13 @@
     [isModal]="true"
     [stockItem]="product()!"
     (closed)="onEditClosed($event)" />
+}
+
+@if (listMessage()) {
+  <div class="toast-container">
+    <div class="toast" [class.toast--success]="listMessage() === 'Agregado a la lista.' || listMessage() === 'Ya estaba en tu lista.'" [class.toast--error]="listMessage() !== 'Agregado a la lista.' && listMessage() !== 'Ya estaba en tu lista.'">
+      <lucide-icon [name]="listMessage() === 'Agregado a la lista.' || listMessage() === 'Ya estaba en tu lista.' ? 'check-circle' : 'alert-circle'" [size]="20" />
+      <span>{{ listMessage() }}</span>
+    </div>
+  </div>
 }

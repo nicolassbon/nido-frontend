@@ -565,40 +565,56 @@
     class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4"
     (click)="closeEliminarHogarConfirm()">
     <div
-      class="bg-white rounded-2xl shadow-[0_8px_40px_rgba(38,63,48,0.18)] w-full max-w-[420px] px-5 py-6 sm:px-8 sm:py-8 flex flex-col gap-5"
+      class="bg-white rounded-2xl shadow-[0_8px_40px_rgba(38,63,48,0.18)] w-full max-w-[420px] overflow-hidden flex flex-col"
       (click)="$event.stopPropagation()">
 
-      <div class="flex items-start gap-4">
-        <div class="w-10 h-10 rounded-full bg-[rgba(180,76,60,0.08)] flex items-center justify-center shrink-0 mt-0.5">
-          <lucide-icon name="trash-2" [size]="18" class="text-nido-red" />
+      <!-- Header -->
+      <div class="relative overflow-hidden shrink-0 px-5 py-4 flex items-center justify-between bg-nido-green-dark">
+        <div class="absolute inset-0 bg-[url('/images/banners/miperfil.png')] bg-center bg-cover opacity-35"></div>
+        <div class="absolute inset-0 bg-black/20"></div>
+        <div class="flex items-center gap-2.5 relative z-10">
+          <span class="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[10px] bg-[rgba(247,241,230,0.16)] ring-1 ring-[rgba(247,241,230,0.22)]">
+            <lucide-icon name="trash-2" [size]="18" class="text-nido-red"></lucide-icon>
+          </span>
+          <div>
+            <h2 class="text-[1.05rem] font-bold leading-tight text-nido-cream m-0">Eliminar hogar</h2>
+            <p class="text-[0.775rem] text-nido-cream/70 m-0">Esta acción no se puede deshacer.</p>
+          </div>
         </div>
-        <div class="flex flex-col gap-1">
-          <h2 class="text-[1.1rem] font-bold text-nido-green-dark m-0">Eliminar hogar</h2>
-          <p class="text-nido-brown text-[0.8375rem] m-0 leading-relaxed">
-            ¿Confirmás que querés eliminar <strong>{{ hogarToDelete()?.nombre }}</strong>? Se eliminarán todos los datos asociados (tareas, gastos, alacena, etc.). Esta acción no se puede deshacer.
-          </p>
-        </div>
+        <button (click)="closeEliminarHogarConfirm()"
+                class="relative z-10 bg-transparent border-none cursor-pointer text-nido-cream/70 hover:text-nido-cream p-1 rounded transition-colors duration-150">
+          <lucide-icon name="x" [size]="20"></lucide-icon>
+        </button>
       </div>
 
-      @if (deleteHogarError()) {
-        <span class="text-nido-red text-[0.8rem] flex items-center gap-1.5">
-          <lucide-icon name="alert-circle" [size]="14" />
-          {{ deleteHogarError() }}
-        </span>
-      }
+      <!-- Body -->
+      <div class="p-6 flex flex-col gap-5 bg-white">
+        <div class="flex flex-col gap-1">
+          <p class="text-nido-brown text-[0.875rem] m-0 leading-relaxed">
+            ¿Confirmás que querés eliminar <strong>{{ hogarToDelete()?.nombre }}</strong>? Se eliminarán todos los datos asociados (tareas, gastos, alacena, etc.).
+          </p>
+        </div>
 
-      <div class="flex gap-3 justify-end pt-1">
-        <button
-          class="px-5 py-2.5 rounded-full text-[0.875rem] text-nido-brown bg-transparent border border-nido-border cursor-pointer hover:bg-nido-cream transition-colors duration-150"
-          (click)="closeEliminarHogarConfirm()">
-          Cancelar
-        </button>
-        <button
-          [disabled]="deletingHogar()"
-          (click)="confirmarEliminarHogar()"
-          class="px-6 py-2.5 rounded-full text-[0.875rem] font-semibold text-white bg-nido-red border-none cursor-pointer hover:opacity-90 transition-opacity duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
-          {{ deletingHogar() ? 'Eliminando...' : 'Sí, eliminar' }}
-        </button>
+        @if (deleteHogarError()) {
+          <span class="text-nido-red text-[0.8rem] flex items-center gap-1.5">
+            <lucide-icon name="alert-circle" [size]="14" />
+            {{ deleteHogarError() }}
+          </span>
+        }
+
+        <div class="flex gap-3 justify-end pt-1">
+          <button
+            class="px-5 py-2.5 rounded-full text-[0.875rem] text-nido-brown bg-transparent border border-nido-border cursor-pointer hover:bg-nido-cream transition-colors duration-150"
+            (click)="closeEliminarHogarConfirm()">
+            Cancelar
+          </button>
+          <button
+            [disabled]="deletingHogar()"
+            (click)="confirmarEliminarHogar()"
+            class="px-6 py-2.5 rounded-full text-[0.875rem] font-semibold text-white bg-nido-red border-none cursor-pointer hover:opacity-90 transition-opacity duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ deletingHogar() ? 'Eliminando...' : 'Sí, eliminar' }}
+          </button>
+        </div>
       </div>
 
     </div>
@@ -610,69 +626,77 @@
     class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4"
     (click)="closeCrearHogarModal()">
     <div
-      class="bg-white rounded-2xl shadow-[0_8px_40px_rgba(38,63,48,0.18)] w-full max-w-[420px] px-5 py-6 sm:px-8 sm:py-8 flex flex-col gap-5"
+      class="bg-white rounded-2xl shadow-[0_8px_40px_rgba(38,63,48,0.18)] w-full max-w-[420px] overflow-hidden flex flex-col"
       (click)="$event.stopPropagation()">
 
-      <div class="flex items-start justify-between gap-4">
-        <div class="flex flex-col gap-1">
-          <h2 class="text-[1.25rem] font-bold text-nido-green-dark m-0">Crear nuevo hogar</h2>
-          <p class="text-nido-brown text-[0.8375rem] m-0 leading-relaxed">
-            Podés pertenecer a más de un hogar. Dale un nombre a tu nuevo espacio.
-          </p>
+      <!-- Header -->
+      <div class="relative overflow-hidden shrink-0 px-5 py-4 flex items-center justify-between bg-nido-green-dark">
+        <div class="absolute inset-0 bg-[url('/images/banners/miperfil.png')] bg-center bg-cover opacity-35"></div>
+        <div class="absolute inset-0 bg-black/20"></div>
+        <div class="flex items-center gap-2.5 relative z-10">
+          <span class="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[10px] bg-[rgba(247,241,230,0.16)] ring-1 ring-[rgba(247,241,230,0.22)]">
+            <lucide-icon name="house-plus" [size]="18" class="text-nido-cream/80"></lucide-icon>
+          </span>
+          <div>
+            <h2 class="text-[1.05rem] font-bold leading-tight text-nido-cream m-0">Crear nuevo hogar</h2>
+            <p class="text-[0.775rem] text-nido-cream/70 m-0">Dale un nombre a tu nuevo espacio.</p>
+          </div>
         </div>
-        <button
-          class="shrink-0 p-1 bg-transparent border-none cursor-pointer text-nido-muted hover:text-nido-brown transition-colors duration-150 mt-0.5"
-          (click)="closeCrearHogarModal()">
-          <lucide-icon name="x" [size]="18" />
+        <button (click)="closeCrearHogarModal()"
+                class="relative z-10 bg-transparent border-none cursor-pointer text-nido-cream/70 hover:text-nido-cream p-1 rounded transition-colors duration-150">
+          <lucide-icon name="x" [size]="20"></lucide-icon>
         </button>
       </div>
 
-      @if (crearHogarState() !== 'success') {
-        <div class="flex flex-col gap-2">
-          <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Nombre del hogar</label>
-          <input
-            type="text"
-            placeholder="Ej: Casa de verano, Depto centro..."
-            [ngModel]="crearHogarNombre()"
-            (ngModelChange)="crearHogarNombre.set($event)"
-            [disabled]="crearHogarState() === 'loading'"
-            class="border border-nido-border rounded-xl px-4 py-3 text-[0.9rem] text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green transition-colors duration-150 disabled:opacity-50"
-          />
-          @if (crearHogarState() === 'error') {
-            <span class="text-nido-red text-[0.8rem]">{{ crearHogarErrorMsg() }}</span>
-          }
-        </div>
-        <div class="flex gap-3 justify-end pt-1">
-          <button
-            class="px-5 py-2.5 rounded-full text-[0.875rem] text-nido-brown bg-transparent border border-nido-border cursor-pointer hover:bg-nido-cream transition-colors duration-150"
-            (click)="closeCrearHogarModal()">
-            Cancelar
-          </button>
-          <button
-            [disabled]="!crearHogarNombre().trim() || crearHogarState() === 'loading'"
-            (click)="submitCrearHogar()"
-            class="px-6 py-2.5 rounded-full text-[0.875rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
-            {{ crearHogarState() === 'loading' ? 'Creando...' : 'Crear hogar' }}
-          </button>
-        </div>
-      } @else {
-        <div class="flex flex-col items-center gap-4 py-4 text-center">
-          <div class="w-16 h-16 rounded-full bg-[rgba(62,94,74,0.08)] flex items-center justify-center">
-            <lucide-icon name="house-plus" [size]="30" class="text-nido-green-dark" />
+      <!-- Body -->
+      <div class="p-6 flex flex-col gap-5 bg-white">
+        @if (crearHogarState() !== 'success') {
+          <div class="flex flex-col gap-2">
+            <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Nombre del hogar</label>
+            <input
+              type="text"
+              placeholder="Ej: Casa de verano, Depto centro..."
+              [ngModel]="crearHogarNombre()"
+              (ngModelChange)="crearHogarNombre.set($event)"
+              [disabled]="crearHogarState() === 'loading'"
+              class="border border-nido-border rounded-xl px-4 py-3 text-[0.9rem] text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green transition-colors duration-150 disabled:opacity-50"
+            />
+            @if (crearHogarState() === 'error') {
+              <span class="text-nido-red text-[0.8rem]">{{ crearHogarErrorMsg() }}</span>
+            }
           </div>
-          <div class="flex flex-col gap-1">
-            <p class="text-[0.9375rem] font-semibold text-nido-green-dark m-0">¡Hogar creado!</p>
-            <p class="text-[0.8375rem] text-nido-brown m-0">
-              <strong>{{ crearHogarNombreCreado() }}</strong> está listo. Ya podés cambiarlo cuando quieras.
-            </p>
+          <div class="flex gap-3 justify-end pt-1">
+            <button
+              class="px-5 py-2.5 rounded-full text-[0.875rem] text-nido-brown bg-transparent border border-nido-border cursor-pointer hover:bg-nido-cream transition-colors duration-150"
+              (click)="closeCrearHogarModal()">
+              Cancelar
+            </button>
+            <button
+              [disabled]="!crearHogarNombre().trim() || crearHogarState() === 'loading'"
+              (click)="submitCrearHogar()"
+              class="px-6 py-2.5 rounded-full text-[0.875rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
+              {{ crearHogarState() === 'loading' ? 'Creando...' : 'Crear hogar' }}
+            </button>
           </div>
-          <button
-            class="mt-1 px-7 py-2.5 rounded-full text-[0.875rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150"
-            (click)="closeCrearHogarModal()">
-            Cerrar
-          </button>
-        </div>
-      }
+        } @else {
+          <div class="flex flex-col items-center gap-4 py-4 text-center">
+            <div class="w-16 h-16 rounded-full bg-[rgba(62,94,74,0.08)] flex items-center justify-center">
+              <lucide-icon name="house-plus" [size]="30" class="text-nido-green-dark" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <p class="text-[0.9375rem] font-semibold text-nido-green-dark m-0">¡Hogar creado!</p>
+              <p class="text-[0.8375rem] text-nido-brown m-0">
+                <strong>{{ crearHogarNombreCreado() }}</strong> está listo. Ya podés cambiarlo cuando quieras.
+              </p>
+            </div>
+            <button
+              class="mt-1 px-7 py-2.5 rounded-full text-[0.875rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150"
+              (click)="closeCrearHogarModal()">
+              Cerrar
+            </button>
+          </div>
+        }
+      </div>
     </div>
   </div>
 }
@@ -683,70 +707,78 @@
     (click)="closeInviteModal()">
 
     <div
-      class="bg-white rounded-2xl shadow-[0_8px_40px_rgba(38,63,48,0.18)] w-full max-w-[420px] px-5 py-6 sm:px-8 sm:py-8 flex flex-col gap-5"
+      class="bg-white rounded-2xl shadow-[0_8px_40px_rgba(38,63,48,0.18)] w-full max-w-[420px] overflow-hidden flex flex-col"
       (click)="$event.stopPropagation()">
 
-      <div class="flex items-start justify-between gap-4">
-        <div class="flex flex-col gap-1">
-          <h2 class="text-[1.25rem] font-bold text-nido-green-dark m-0">Invitar convivente</h2>
-          <p class="text-nido-brown text-[0.8375rem] m-0 leading-relaxed">
-            Ingresá el email de la persona que querés invitar. Le vamos a mandar un link para que pueda unirse a tu hogar.
-          </p>
+      <!-- Header -->
+      <div class="relative overflow-hidden shrink-0 px-5 py-4 flex items-center justify-between bg-nido-green-dark">
+        <div class="absolute inset-0 bg-[url('/images/banners/miperfil.png')] bg-center bg-cover opacity-35"></div>
+        <div class="absolute inset-0 bg-black/20"></div>
+        <div class="flex items-center gap-2.5 relative z-10">
+          <span class="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[10px] bg-[rgba(247,241,230,0.16)] ring-1 ring-[rgba(247,241,230,0.22)]">
+            <lucide-icon name="user-plus" [size]="18" class="text-nido-cream/80"></lucide-icon>
+          </span>
+          <div>
+            <h2 class="text-[1.05rem] font-bold leading-tight text-nido-cream m-0">Invitar convivente</h2>
+            <p class="text-[0.775rem] text-nido-cream/70 m-0">Mandá un link para unirse a tu hogar.</p>
+          </div>
         </div>
-        <button
-          class="shrink-0 p-1 bg-transparent border-none cursor-pointer text-nido-muted hover:text-nido-brown transition-colors duration-150 mt-0.5"
-          (click)="closeInviteModal()">
-          <lucide-icon name="x" [size]="18" />
+        <button (click)="closeInviteModal()"
+                class="relative z-10 bg-transparent border-none cursor-pointer text-nido-cream/70 hover:text-nido-cream p-1 rounded transition-colors duration-150">
+          <lucide-icon name="x" [size]="20"></lucide-icon>
         </button>
       </div>
 
-      @if (inviteState() !== 'success') {
-        <div class="flex flex-col gap-2">
-          <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Email</label>
-          <input
-            type="email"
-            placeholder="ejemplo@email.com"
-            [ngModel]="inviteEmail()"
-            (ngModelChange)="inviteEmail.set($event)"
-            [disabled]="inviteState() === 'loading'"
-            class="border border-nido-border rounded-xl px-4 py-3 text-[0.9rem] text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green transition-colors duration-150 disabled:opacity-50"
-          />
-          @if (inviteState() === 'error') {
-            <span class="text-nido-red text-[0.8rem]">{{ inviteErrorMsg() }}</span>
-          }
-        </div>
+      <!-- Body -->
+      <div class="p-6 flex flex-col gap-5 bg-white">
+        @if (inviteState() !== 'success') {
+          <div class="flex flex-col gap-2">
+            <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Email</label>
+            <input
+              type="email"
+              placeholder="ejemplo@email.com"
+              [ngModel]="inviteEmail()"
+              (ngModelChange)="inviteEmail.set($event)"
+              [disabled]="inviteState() === 'loading'"
+              class="border border-nido-border rounded-xl px-4 py-3 text-[0.9rem] text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green transition-colors duration-150 disabled:opacity-50"
+            />
+            @if (inviteState() === 'error') {
+              <span class="text-nido-red text-[0.8rem]">{{ inviteErrorMsg() }}</span>
+            }
+          </div>
 
-        <div class="flex gap-3 justify-end pt-1">
-          <button
-            class="px-5 py-2.5 rounded-full text-[0.875rem] text-nido-brown bg-transparent border border-nido-border cursor-pointer hover:bg-nido-cream transition-colors duration-150"
-            (click)="closeInviteModal()">
-            Cancelar
-          </button>
-          <button
-            [disabled]="!inviteEmail().trim() || inviteState() === 'loading'"
-            (click)="submitInvite()"
-            class="px-6 py-2.5 rounded-full text-[0.875rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
-            {{ inviteState() === 'loading' ? 'Enviando...' : 'Enviar invitación' }}
-          </button>
-        </div>
-      } @else {
-        <div class="flex flex-col items-center gap-4 py-4 text-center">
-          <div class="w-16 h-16 rounded-full bg-[rgba(62,94,74,0.08)] flex items-center justify-center">
-            <lucide-icon name="mail-check" [size]="30" class="text-nido-green-dark" />
+          <div class="flex gap-3 justify-end pt-1">
+            <button
+              class="px-5 py-2.5 rounded-full text-[0.875rem] text-nido-brown bg-transparent border border-nido-border cursor-pointer hover:bg-nido-cream transition-colors duration-150"
+              (click)="closeInviteModal()">
+              Cancelar
+            </button>
+            <button
+              [disabled]="!inviteEmail().trim() || inviteState() === 'loading'"
+              (click)="submitInvite()"
+              class="px-6 py-2.5 rounded-full text-[0.875rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
+              {{ inviteState() === 'loading' ? 'Enviando...' : 'Enviar invitación' }}
+            </button>
           </div>
-          <div class="flex flex-col gap-1">
-            <p class="text-[0.9375rem] font-semibold text-nido-green-dark m-0">¡Invitación enviada!</p>
-            <p class="text-[0.8375rem] text-nido-brown m-0">
-              Le mandamos un email a <strong>{{ inviteEmail() }}</strong> con el link para unirse.
-            </p>
+        } @else {
+          <div class="flex flex-col items-center gap-4 py-4 text-center">
+            <div class="w-16 h-16 rounded-full bg-[rgba(62,94,74,0.08)] flex items-center justify-center">
+              <lucide-icon name="mail-check" [size]="30" class="text-nido-green-dark" />
+            </div>
+            <div class="flex flex-col gap-1">
+              <p class="text-[0.9375rem] font-semibold text-nido-green-dark m-0">¡Invitación enviada!</p>
+              <p class="text-[0.8375rem] text-nido-brown m-0">
+                Le mandamos un email a <strong>{{ inviteEmail() }}</strong> con el link para unirse.
+              </p>
+            </div>
+            <button
+              class="mt-1 px-7 py-2.5 rounded-full text-[0.875rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150"
+              (click)="closeInviteModal()">
+              Cerrar
+            </button>
           </div>
-          <button
-            class="mt-1 px-7 py-2.5 rounded-full text-[0.875rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150"
-            (click)="closeInviteModal()">
-            Cerrar
-          </button>
-        </div>
-      }
+        }
+      </div>
 
     </div>
   </div>

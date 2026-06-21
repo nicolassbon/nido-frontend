@@ -85,14 +85,14 @@ describe('ListaComprasService', () => {
     expect(service.snapshot[0].items).toHaveLength(0);
   });
 
-  it('markAddedToInventory deberia quitar item del historial', () => {
+  it('markAddedToInventory deberia marcar item en el historial como agregado', () => {
     service.markAddedToInventory('item-1').subscribe();
 
     const patch = http.expectOne(`${legacyUrl}/items/item-1/agregado-inventario`);
     expect(patch.request.method).toBe('PATCH');
     patch.flush(null);
 
-    http.expectOne(`${baseUrl}/historial`).flush([]);
+    http.expectOne(`${baseUrl}/historial`).flush([historyItem({ id: 'item-1', nombre: 'Pan', agregadoAlInventario: true })]);
     http.expectOne(baseUrl).flush([]);
   });
 
@@ -107,16 +107,16 @@ describe('ListaComprasService', () => {
     http.expectOne(`${baseUrl}/historial`).flush([historyItem({ id: 'item-1', nombre: 'Arroz' })]);
   });
 
-  it('markAddedToInventory remueve el item del historial y refresca datos', () => {
+  it('markAddedToInventory marca el item del historial como agregado y refresca datos', () => {
     service.refreshHistory().subscribe();
     http.expectOne(`${baseUrl}/historial`).flush([
-      historyItem({ id: 'item-1', nombre: 'Sal', cantidad: 500, unidad: 'g' }),
-      historyItem({ id: 'item-2', nombre: 'Azucar', cantidad: 1, unidad: 'kg' }),
+      historyItem({ id: 'item-1', nombre: 'Sal', cantidad: 500, unidad: 'g', agregadoAlInventario: false }),
+      historyItem({ id: 'item-2', nombre: 'Azucar', cantidad: 1, unidad: 'kg', agregadoAlInventario: false }),
     ]);
 
-    let latestHistoryIds: string[] = [];
+    let latestHistory: any[] = [];
     service.historial$.subscribe(items => {
-      latestHistoryIds = items.map(item => item.id);
+      latestHistory = items;
     });
 
     service.markAddedToInventory('item-1').subscribe();
@@ -125,14 +125,15 @@ describe('ListaComprasService', () => {
     expect(patch.request.method).toBe('PATCH');
     patch.flush(null);
 
-    expect(latestHistoryIds).toEqual(['item-2']);
+    expect(latestHistory[0].agregadoAlInventario).toBe(true);
 
     http.expectOne(`${baseUrl}/historial`).flush([
-      historyItem({ id: 'item-2', nombre: 'Azucar', cantidad: 1, unidad: 'kg' }),
+      historyItem({ id: 'item-1', nombre: 'Sal', cantidad: 500, unidad: 'g', agregadoAlInventario: true }),
+      historyItem({ id: 'item-2', nombre: 'Azucar', cantidad: 1, unidad: 'kg', agregadoAlInventario: false }),
     ]);
-    http.expectOne(baseUrl).flush([shoppingList('lista-1', 'Principal', [])]);
+    http.expectOne(baseUrl).flush([]);
 
-    expect(latestHistoryIds).toEqual(['item-2']);
+    expect(latestHistory[0].agregadoAlInventario).toBe(true);
   });
 
   function flushInitialRequests(): void {
@@ -169,6 +170,7 @@ function historyItem(overrides: Partial<Record<string, unknown>> = {}) {
     grupoNombre: 'Principal',
     compradoEn: '2026-06-19T10:00:00',
     compradoPor: 'usuario-1',
+    agregadoAlInventario: false,
     ...overrides,
   };
 }

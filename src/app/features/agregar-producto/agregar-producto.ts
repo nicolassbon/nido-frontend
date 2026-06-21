@@ -317,42 +317,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
 
     let imageUploadFailed = false;
 
-    // ¿Ya existe en la alacena con el mismo nombre y unidad? → sumar cantidad
-    const existing = this.knownProducts.find(p =>
-      p.stockId &&
-      p.nombre.trim().toLowerCase() === payload.nombre.trim().toLowerCase() &&
-      this.normalizeUnit(p.unidadMedida) === payload.unidadMedida,
-    );
 
-    if (existing?.stockId) {
-      if (this.selectedImage()) {
-        this.imageError.set('Este producto ya existe en tu alacena. Quitá la imagen seleccionada para sumar cantidad sin crear duplicados.');
-        this.isSaving = false;
-        return;
-      }
-
-      const nuevaCantidad = (existing.cantidad ?? 0) + payload.cantidad;
-      this.alacenaApi.updateStock(existing.stockId, { cantidad: nuevaCantidad }).subscribe({
-        next: (updated) => {
-          if (this.syncShoppingListOnSave) {
-            this.listaComprasService.marcarCompradoPorNombre(payload.nombre);
-          }
-          this.form.reset({ cantidad: null, ubicacion: 'Alacena' });
-          this.isOpened.set(false);
-          this.consumedPct.set(0);
-          this.isSaving = false;
-          this.saved.emit(updated);
-          this.closed.emit();
-          if (!this.isModal) this.router.navigate(['/alacena']);
-        },
-        error: (err) => {
-          console.error('Error:', err);
-          this.errorMessage = 'No se pudo actualizar la cantidad.';
-          this.isSaving     = false;
-        },
-      });
-      return;
-    }
 
     // Primero creamos el producto, luego si tiene datos de consumo
     // hacemos un PATCH inmediato porque el endpoint de creación

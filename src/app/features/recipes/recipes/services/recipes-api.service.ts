@@ -12,6 +12,8 @@ export interface ApiRecetaIngrediente {
   unidad: string | null;
   cantidadCompraEstandar?: number | null;
   unidadCompraEstandar?: string | null;
+  cantidadListaCompras?: number | null;
+  unidadListaCompras?: string | null;
   enStock: boolean;
   alergenos?: string[];
 }

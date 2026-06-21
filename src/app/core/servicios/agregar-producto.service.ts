@@ -32,6 +32,7 @@ export interface ProductManualResponse {
   porcentajeConsumido: number;
   cantidadEnvases: number;
   origenCarga?: 'manual' | 'codigo_barras' | 'ticket_compra';
+  iconoSvg?: string | null;
 }
 
 export interface CreateStockHomeResponse {

@@ -19,6 +19,7 @@ export interface StockItemResponse {
   porcentajeConsumido: number;
   cantidadEnvases:     number;
   origenCarga:          'manual' | 'codigo_barras' | 'ticket_compra';
+  iconoSvg?:            string | null;
 }
 
 export type DeleteStockMotivo = 'consumido' | 'descartado' | 'vencido';

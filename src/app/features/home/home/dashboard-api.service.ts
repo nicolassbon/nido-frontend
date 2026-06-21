@@ -3,6 +3,8 @@ import { Observable, forkJoin, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { ProductManualResponse, ProductService } from '../../../core/servicios/agregar-producto.service';
 import { ApiReceta, RecipesApiService } from '../../recipes/recipes/services/recipes-api.service';
+import { FinanzasApiService } from '../../finanzas/finanzas-api.service';
+import { TareasApiService } from '../../tareas/services/tareas-api.service';
 
 export interface DashboardProductoPorVencer {
   id: string;
@@ -28,7 +30,16 @@ export interface DashboardResponse {
   recetas: {
     recetasGuardadas: number;
     recetasSugeridas: number;
+    recetasCocinadas: number;
     destacadas: DashboardRecetaDestacada[];
+  };
+  finanzas: {
+    gastoMensual: number;
+    presupuestoRestante: number | null;
+  };
+  tareas: {
+    tareasPendientes: number;
+    tareasCompletadas: number;
   };
 }
 
@@ -36,15 +47,27 @@ export interface DashboardResponse {
 export class DashboardApiService {
   private readonly productService = inject(ProductService);
   private readonly recipesApi = inject(RecipesApiService);
+  private readonly finanzasApi = inject(FinanzasApiService);
+  private readonly tareasApi = inject(TareasApiService);
 
   getSummary(): Observable<DashboardResponse> {
     return forkJoin({
       stock: this.productService.getProductManual().pipe(catchError(() => of([] as ProductManualResponse[]))),
       recetas: this.recipesApi.getAll().pipe(catchError(() => of([] as ApiReceta[]))),
+      presupuesto: this.finanzasApi.getPresupuesto().pipe(catchError(() => of({ monto: null, gastoActual: 0, restante: null, anio: new Date().getFullYear(), mes: new Date().getMonth() + 1 }))),
+      tareas: this.tareasApi.getTareas().pipe(catchError(() => of([]))),
     }).pipe(
-      map(({ stock, recetas }) => ({
+      map(({ stock, recetas, presupuesto, tareas }) => ({
         alacena: this.buildAlacena(stock),
         recetas: this.buildRecetas(recetas),
+        finanzas: {
+          gastoMensual: presupuesto.gastoActual,
+          presupuestoRestante: presupuesto.restante,
+        },
+        tareas: {
+          tareasPendientes: tareas.filter(t => t.estado !== 'completada').length,
+          tareasCompletadas: tareas.filter(t => t.estado === 'completada').length,
+        },
       }))
     );
   }
@@ -63,7 +86,7 @@ export class DashboardApiService {
       productosPorVencer: productosPorVencer.slice(0, 3).map(({ item, dias }) => ({
         id: item.stockHogarId,
         nombre: item.nombre,
-        imagenUrl: item.imagenUrl,
+        imagenUrl: item.iconoSvg ? `/assets/icons/categorias/${item.iconoSvg}` : item.imagenUrl,
         diasParaVencer: dias,
         vencimientoLabel: this.expirationLabel(dias),
       })),
@@ -79,8 +102,9 @@ export class DashboardApiService {
       .sort((a, b) => b.disponibilidad - a.disponibilidad || a.receta.nombre.localeCompare(b.receta.nombre));
 
     return {
-      recetasGuardadas: recetas.length,
-      recetasSugeridas: recetasConDisponibilidad.filter(entry => entry.disponibilidad > 0).length,
+      recetasSugeridas: recetas.length,
+      recetasGuardadas: recetas.filter(r => r.guardada).length,
+      recetasCocinadas: recetas.filter(r => (r.vecesCocinada ?? 0) > 0).length,
       destacadas: recetasConDisponibilidad.slice(0, 3).map(({ receta, disponibilidad }) => ({
         id: receta.id,
         nombre: receta.nombre,

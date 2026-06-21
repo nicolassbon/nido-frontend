@@ -67,6 +67,7 @@ export interface Product {
   isOpened?:        boolean;
   remainingPercent?: number;  // 100 = full, 75 / 50 / 25 = approximate remaining
   barcode?:         string;
+  iconoSvg?:        string;
 }
 
 interface ProductDraft {
@@ -589,7 +590,7 @@ protected reloadProducts(): void { this.loadProducts(); }
     return {
       id:               item.id,
       name:             item.nombre,
-      image:            resolveImageUrl(item.imagen) || fallbackProductImage(item.nombre),
+      image:            item.iconoSvg ? `/assets/icons/categorias/${item.iconoSvg}` : (resolveImageUrl(item.imagen) || fallbackProductImage(item.nombre)),
       location:         item.ubicacion as Exclude<StorageLocation, 'Todos'>,
       expiryDate:       item.fechaVencimiento ?? '',
       quantity:         item.cantidad ?? 0,
@@ -598,6 +599,7 @@ protected reloadProducts(): void { this.loadProducts(); }
       isOpened:         item.estaAbierto,
       remainingPercent: 100 - item.porcentajeConsumido,
       barcode:          item.codigoBarras ?? undefined,
+      iconoSvg:         item.iconoSvg ?? undefined
     };
   }
 
@@ -605,7 +607,7 @@ protected reloadProducts(): void { this.loadProducts(); }
   return {
     id: item.stockHogarId,
     name: item.nombre,
-    image: resolveImageUrl(item.imagenUrl) || fallbackProductImage(item.nombre),
+    image: item.iconoSvg ? `/assets/icons/categorias/${item.iconoSvg}` : (resolveImageUrl(item.imagenUrl) || fallbackProductImage(item.nombre)),
     location: item.ubicacion as Exclude<StorageLocation, 'Todos'>,
     expiryDate: item.fechaVencimiento ?? '',
     quantity: item.cantidad ?? 0,
@@ -614,6 +616,7 @@ protected reloadProducts(): void { this.loadProducts(); }
     isOpened: item.estaAbierto,
     remainingPercent: 100 - item.porcentajeConsumido,
     barcode: item.codigoBarras ?? undefined,
+    iconoSvg: item.iconoSvg ?? undefined
   };
 }
 
@@ -953,66 +956,41 @@ protected reloadProducts(): void { this.loadProducts(); }
 
     const d = this.draft();
 
-    const existing = d.barcode
-      ? this.products().find(p => p.barcode === d.barcode)
-      : undefined;
-
-    if (existing) {
-      const newQty = existing.quantity + d.quantity;
-      this.alacenaApi
-        .updateStock(existing.id, { cantidad: newQty })
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: updated => {
-            this.products.update(list =>
-              list.map(p => p.id === existing.id ? this.toProduct(updated) : p),
-            );
-            this.closeScanner();
-          },
-          error: () => {
-            this.products.update(list =>
-              list.map(p => p.id === existing.id ? { ...p, quantity: newQty } : p),
-            );
-            this.closeScanner();
-          },
-        });
-    } else {
-      this.alacenaApi
-        .createStock({
-          nombre:              d.name.trim(),
-          codigoBarras:        d.barcode || null,
-          imagen:              d.image || null,
-          ubicacion:           d.location,
-          cantidad:            d.quantity,
-          unidadMedida:        'unidad',
-          fechaVencimiento:    d.expiryDate || null,
-          estaAbierto:         d.isOpened,
-          porcentajeConsumido: d.consumedPercent,
-          origenCarga:         d.barcode ? 'codigo_barras' : 'manual',
-        })
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: created => {
-            this.products.update(list => [...list, this.toProduct(created)]);
-            this.closeScanner();
-          },
-          error: () => {
-            const product: Product = {
-              id:               crypto.randomUUID(),
-              name:             d.name.trim(),
-              image:            d.image,
-              location:         d.location,
-              expiryDate:       d.expiryDate,
-              quantity:         d.quantity,
-              isOpened:         d.isOpened,
-              remainingPercent: 100 - d.consumedPercent,
-              barcode:          d.barcode || undefined,
-            };
-            this.products.update(list => [...list, product]);
-            this.closeScanner();
-          },
-        });
-    }
+    this.alacenaApi
+      .createStock({
+        nombre:              d.name.trim(),
+        codigoBarras:        d.barcode || null,
+        imagen:              d.image || null,
+        ubicacion:           d.location,
+        cantidad:            d.quantity,
+        unidadMedida:        'unidad',
+        fechaVencimiento:    d.expiryDate || null,
+        estaAbierto:         d.isOpened,
+        porcentajeConsumido: d.consumedPercent,
+        origenCarga:         d.barcode ? 'codigo_barras' : 'manual',
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: created => {
+          this.products.update(list => [...list, this.toProduct(created)]);
+          this.closeScanner();
+        },
+        error: () => {
+          const product: Product = {
+            id:               crypto.randomUUID(),
+            name:             d.name.trim(),
+            image:            d.image,
+            location:         d.location,
+            expiryDate:       d.expiryDate,
+            quantity:         d.quantity,
+            isOpened:         d.isOpened,
+            remainingPercent: 100 - d.consumedPercent,
+            barcode:          d.barcode || undefined,
+          };
+          this.products.update(list => [...list, product]);
+          this.closeScanner();
+        },
+      });
   }
 
   // ── Display helpers ──────────────────────────────────────

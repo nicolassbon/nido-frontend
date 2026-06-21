@@ -159,6 +159,7 @@ function historyItem(overrides: Partial<ShoppingHistoryItem> = {}): ShoppingHist
     grupoNombre: 'Principal',
     compradoEn: '2026-06-19T10:00:00',
     compradoPor: null,
+    agregadoAlInventario: false,
     ...overrides,
   };
 }

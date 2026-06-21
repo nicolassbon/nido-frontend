@@ -199,8 +199,8 @@ export class RecipeDetail {
 
     const items = faltantes.map(i => ({
       nombre:   i.productoNombre || i.nombre,
-      cantidad: i.cantidadCompraEstandar ?? i.cantidad,
-      unidad:   i.unidadCompraEstandar ?? i.unidad,
+      cantidad: i.cantidadListaCompras ?? i.cantidad,
+      unidad:   i.unidadListaCompras ?? i.unidad,
     }));
 
     this.listaService.addGroupToLista(receta.nombre, items).subscribe({
