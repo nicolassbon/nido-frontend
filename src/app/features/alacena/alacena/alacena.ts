@@ -796,7 +796,7 @@ protected reloadProducts(): void { this.loadProducts(); }
         switchMap(dbProduct => {
           if (dbProduct?.nombre) {
             const ttl = getTtlForCategory([]);
-            return of({ name: dbProduct.nombre, image: dbProduct.imagen ?? '', category: dbProduct.categoriaNombre ?? '', ttl, fromDb: true, calorias: null, proteinas: null, carbohidratos: null, grasas: null });
+            return of({ name: dbProduct.nombre, image: dbProduct.imagen ?? '', category: dbProduct.categoriaNombre ?? '', ttl, fromDb: true, calorias: null, proteinas: null, carbohidratos: null, grasas: null, gramajeExtraido: null });
           }
           return this.offService.lookup(barcode).pipe(
             switchMap(p => {
@@ -804,14 +804,14 @@ protected reloadProducts(): void { this.loadProducts(); }
               // El back mapea los tags crudos a una categoría canónica de Nido
               // (General, Lácteos, Bebidas, Congelados, Despensa).
               const category = p.categoriaSugerida || '';
-              return of({ name: p.name, image: p.image, category, ttl, fromDb: p.foundInDb, calorias: p.calorias, proteinas: p.proteinas, carbohidratos: p.carbohidratos, grasas: p.grasas });
+              return of({ name: p.name, image: p.image, category, ttl, fromDb: p.foundInDb, calorias: p.calorias, proteinas: p.proteinas, carbohidratos: p.carbohidratos, grasas: p.grasas, gramajeExtraido: p.gramajeExtraido });
             }),
           );
         }),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: ({ name, image, category, ttl, fromDb, calorias, proteinas, carbohidratos, grasas }) => {
+        next: ({ name, image, category, ttl, fromDb, calorias, proteinas, carbohidratos, grasas, gramajeExtraido }) => {
           this.currentTtl.set(ttl);
           this.draft.set({
             ...makeEmptyDraft(),
@@ -822,6 +822,7 @@ protected reloadProducts(): void { this.loadProducts(); }
             ttlHint:    name ? ttl.hint : '',
             notFound:   !name,
             barcode,
+            quantity:   gramajeExtraido ?? 1,
             calorias,
             proteinas,
             carbohidratos,

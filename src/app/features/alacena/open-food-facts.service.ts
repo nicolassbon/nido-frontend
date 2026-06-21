@@ -17,6 +17,8 @@ export interface FoodProduct {
   proteinas:         number | null;
   carbohidratos:     number | null;
   grasas:            number | null;
+  /** Gramaje extraído del nombre del producto (ej: 290 de "Producto 290g"). */
+  gramajeExtraido:   number | null;
 }
 
 /**
@@ -48,7 +50,7 @@ export class OpenFoodFactsService {
   private emptyProduct(): FoodProduct {
     return {
       name: '', image: '', brands: '', categoriesTags: [], categoriaSugerida: 'General', foundInDb: false,
-      calorias: null, proteinas: null, carbohidratos: null, grasas: null,
+      calorias: null, proteinas: null, carbohidratos: null, grasas: null, gramajeExtraido: null,
     };
   }
 }
