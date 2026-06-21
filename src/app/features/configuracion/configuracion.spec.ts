@@ -33,6 +33,8 @@ describe('Configuracion', () => {
       getNombre: vi.fn().mockReturnValue('Test User'),
       getEmail: vi.fn().mockReturnValue('test@example.com'),
       getUserId: vi.fn().mockReturnValue('u-1'),
+      getHogarId: vi.fn().mockReturnValue('h-1'),
+      setToken: vi.fn(),
       logout: vi.fn().mockReturnValue(of(undefined)),
     };
 
@@ -54,6 +56,13 @@ describe('Configuracion', () => {
       getMiembros: vi.fn().mockReturnValue(of([
         { usuarioId: 'u-1', nombre: 'Test User', email: 'test@example.com', rol: 'owner', fotoUrl: null, alergias: [] }
       ])),
+      getMisHogares: vi.fn().mockReturnValue(of([
+        { id: 'h-1', nombre: 'Mi hogar', rol: 'owner' },
+      ])),
+      activarHogar: vi.fn(),
+      crearHogar: vi.fn(),
+      renombrarHogar: vi.fn(),
+      eliminarHogar: vi.fn(),
       invitar: vi.fn().mockReturnValue(of({ token: 'mock-token' })),
     };
 
@@ -516,6 +525,129 @@ describe('Configuracion', () => {
       expect(component.telegramUnlinkError()).toBe('No encontramos una cuenta de Telegram vinculada.');
       expect(findButton('Conectar Telegram')).toBeTruthy();
       expect(findButton('Desconectar')).toBeNull();
+    });
+  });
+
+  describe('Mis hogares', () => {
+    it('should load hogares on init and reflect hogarActivoId from token', () => {
+      expect(mockHogaresApiService.getMisHogares).toHaveBeenCalled();
+      expect(component.hogares()).toEqual([{ id: 'h-1', nombre: 'Mi hogar', rol: 'owner' }]);
+      expect(component.hogarActivoId()).toBe('h-1');
+    });
+
+    it('activarHogar() sets new token, updates hogarActivoId and reloads members', () => {
+      mockHogaresApiService.activarHogar.mockReturnValue(of({
+        hogarId: 'h-2',
+        hogarNombre: 'Casa verano',
+        accessToken: 'new-jwt',
+      }));
+
+      component.activarHogar('h-2');
+
+      expect(mockHogaresApiService.activarHogar).toHaveBeenCalledWith('h-2');
+      expect(mockAuthService.setToken).toHaveBeenCalledWith('new-jwt');
+      expect(component.hogarActivoId()).toBe('h-2');
+      expect(mockHogaresApiService.getMiembros).toHaveBeenCalledTimes(2);
+    });
+
+    it('activarHogar() does nothing when hogar is already active', () => {
+      component.activarHogar('h-1');
+      expect(mockHogaresApiService.activarHogar).not.toHaveBeenCalled();
+    });
+
+    it('openEditHogar() sets editingHogarId and editHogarNombre', () => {
+      component.openEditHogar({ id: 'h-1', nombre: 'Mi hogar', rol: 'owner' });
+      expect(component.editingHogarId()).toBe('h-1');
+      expect(component.editHogarNombre()).toBe('Mi hogar');
+    });
+
+    it('cancelEditHogar() clears editing state', () => {
+      component.openEditHogar({ id: 'h-1', nombre: 'Mi hogar', rol: 'owner' });
+      component.cancelEditHogar();
+      expect(component.editingHogarId()).toBeNull();
+      expect(component.editHogarNombre()).toBe('');
+    });
+
+    it('saveEditHogar() calls renombrarHogar and updates hogares signal locally', () => {
+      mockHogaresApiService.renombrarHogar.mockReturnValue(of({ id: 'h-1', nombre: 'Hogar renombrado' }));
+      component.openEditHogar({ id: 'h-1', nombre: 'Mi hogar', rol: 'owner' });
+      component.editHogarNombre.set('Hogar renombrado');
+
+      component.saveEditHogar();
+
+      expect(mockHogaresApiService.renombrarHogar).toHaveBeenCalledWith('h-1', 'Hogar renombrado');
+      expect(component.hogares()[0].nombre).toBe('Hogar renombrado');
+      expect(component.editingHogarId()).toBeNull();
+    });
+
+    it('saveEditHogar() shows error on failure', () => {
+      mockHogaresApiService.renombrarHogar.mockReturnValue(
+        throwError(() => ({ error: { message: 'Nombre inválido' } }))
+      );
+      component.openEditHogar({ id: 'h-1', nombre: 'Mi hogar', rol: 'owner' });
+      component.editHogarNombre.set('x');
+
+      component.saveEditHogar();
+
+      expect(component.renameHogarError()).toBe('Nombre inválido');
+    });
+
+    it('confirmarEliminarHogar() calls eliminarHogar and reloads hogares', () => {
+      mockHogaresApiService.eliminarHogar.mockReturnValue(of(undefined));
+      component.openEliminarHogarConfirm({ id: 'h-2', nombre: 'Casa verano', rol: 'owner' });
+
+      component.confirmarEliminarHogar();
+
+      expect(mockHogaresApiService.eliminarHogar).toHaveBeenCalledWith('h-2');
+      expect(component.hogarToDelete()).toBeNull();
+      expect(mockHogaresApiService.getMisHogares).toHaveBeenCalledTimes(2);
+    });
+
+    it('confirmarEliminarHogar() shows error on failure', () => {
+      mockHogaresApiService.eliminarHogar.mockReturnValue(
+        throwError(() => ({ error: { detail: 'No se puede eliminar el hogar activo.' } }))
+      );
+      component.openEliminarHogarConfirm({ id: 'h-2', nombre: 'Casa verano', rol: 'owner' });
+
+      component.confirmarEliminarHogar();
+
+      expect(component.deleteHogarError()).toBe('No se puede eliminar el hogar activo.');
+    });
+
+    it('submitCrearHogar() creates hogar, sets token, updates hogarActivoId and reloads hogares', () => {
+      mockHogaresApiService.crearHogar.mockReturnValue(of({
+        hogarId: 'h-3',
+        hogarNombre: 'Nuevo hogar',
+        accessToken: 'jwt-nuevo',
+      }));
+      component.crearHogarNombre.set('Nuevo hogar');
+
+      component.submitCrearHogar();
+
+      expect(mockHogaresApiService.crearHogar).toHaveBeenCalledWith('Nuevo hogar');
+      expect(mockAuthService.setToken).toHaveBeenCalledWith('jwt-nuevo');
+      expect(component.hogarActivoId()).toBe('h-3');
+      expect(component.crearHogarState()).toBe('success');
+      expect(component.crearHogarNombreCreado()).toBe('Nuevo hogar');
+      expect(mockHogaresApiService.getMisHogares).toHaveBeenCalledTimes(2);
+    });
+
+    it('submitCrearHogar() does nothing when name is blank', () => {
+      component.crearHogarNombre.set('   ');
+      component.submitCrearHogar();
+      expect(mockHogaresApiService.crearHogar).not.toHaveBeenCalled();
+    });
+
+    it('submitCrearHogar() shows error on failure', () => {
+      mockHogaresApiService.crearHogar.mockReturnValue(
+        throwError(() => ({ error: { message: 'El nombre ya existe' } }))
+      );
+      component.crearHogarNombre.set('Hogar duplicado');
+
+      component.submitCrearHogar();
+
+      expect(component.crearHogarState()).toBe('error');
+      expect(component.crearHogarErrorMsg()).toBe('El nombre ya existe');
     });
   });
 });

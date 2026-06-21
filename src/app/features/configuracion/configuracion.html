@@ -1,8 +1,8 @@
 <div class="w-full p-4 sm:p-6 flex flex-col gap-5">
 
-  <section class="relative overflow-hidden rounded-[14px] px-8 py-7 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
+  <section class="relative overflow-hidden rounded-[14px] bg-[#6a665c] px-8 py-7 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4">
     <div class="absolute inset-0 bg-[url('/images/banners/miperfil.png')] bg-center bg-cover opacity-35"></div>
-    <div class="absolute inset-0 bg-nido-green-dark/35"></div>
+    <div class="absolute inset-0 bg-black/20"></div>
 
     <div class="relative z-10">
       <h1 class="text-nido-cream text-[1.75rem] font-bold tracking-tight">Configuración</h1>
@@ -10,10 +10,10 @@
     </div>
   </section>
 
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+    <div class="min-w-0 flex flex-col gap-5">
 
-
-    <section class="order-1 min-w-0 h-full bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col">
+    <section class="min-w-0 bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col">
       <div class="flex items-center gap-2.5 mb-5 border-b border-nido-border/40 pb-3">
         <lucide-icon name="user" [size]="20" class="text-nido-green" />
         <h2 class="text-base font-bold text-nido-green-dark">Cuenta</h2>
@@ -37,195 +37,7 @@
       </button>
     </section>
 
-    <section class="order-2 min-w-0 h-full bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col">
-      <div class="flex items-center gap-2.5 mb-5 border-b border-nido-border/40 pb-3">
-        <lucide-icon name="bell" [size]="20" class="text-nido-green" />
-        <h2 class="text-base font-bold text-nido-green-dark">Notificaciones</h2>
-      </div>
-
-      @if (isLoadingPrefs()) {
-        <div class="flex flex-col items-center justify-center py-6 gap-2">
-          <div class="w-6 h-6 rounded-full border-2 border-solid border-nido-border/50 border-t-nido-green-dark animate-spin"></div>
-          <span class="text-xs text-nido-brown">Cargando preferencias...</span>
-        </div>
-      } @else {
-        <div class="flex flex-col gap-5">
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[0.9375rem] font-semibold text-nido-green-dark leading-tight">
-              Días de anticipación para alertas de vencimiento
-            </label>
-            <p class="text-xs text-nido-brown opacity-95 leading-relaxed">
-              Te avisamos cuando un producto de la alacena vence en menos de este tiempo.
-            </p>
-          </div>
-
-          <div class="flex items-center gap-3 flex-wrap">
-            <input
-              type="number"
-              min="1"
-              max="365"
-              [ngModel]="diasAlertaInput()"
-              (ngModelChange)="diasAlertaInput.set($event)"
-              class="w-24 bg-white border border-nido-border rounded-xl px-4 py-2.5 text-sm text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green focus:ring-2 focus:ring-nido-green/10 transition-all duration-150 disabled:opacity-50"
-            />
-            <span class="text-[0.875rem] font-medium text-nido-brown">días</span>
-            <button
-              (click)="saveDiasAlerta()"
-              [disabled]="isSavingPrefs()"
-              class="px-5 py-2.5 rounded-xl bg-nido-green-dark text-nido-cream text-[0.875rem] font-bold border-none cursor-pointer transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-nido-green active:scale-[0.98] shadow-sm">
-              {{ isSavingPrefs() ? 'Guardando...' : 'Guardar' }}
-            </button>
-            @if (saveSuccess()) {
-              <span class="text-[0.8125rem] text-nido-green font-bold flex items-center gap-1">
-                <lucide-icon name="check" [size]="14" />
-                Guardado
-              </span>
-            }
-          </div>
-
-          <!-- Web Push Notifications Toggle -->
-          <div class="border-t border-nido-border/30 pt-4 flex flex-col gap-3">
-            <div class="flex flex-col gap-1.5">
-              <span class="text-[0.9375rem] font-semibold text-nido-green-dark leading-tight">
-                Notificaciones en segundo plano
-              </span>
-              <p class="text-xs text-nido-brown opacity-95 leading-relaxed">
-                Permite recibir alertas de stock bajo, vencimiento y aviso de tareas asignadas incluso si el navegador está cerrado.
-              </p>
-            </div>
-
-            <div class="flex items-center gap-3">
-              <button
-                type="button"
-                (click)="toggleWebPushNotifications()"
-                [disabled]="isWebPushLoading()"
-                [class]="isWebPushEnabled() ? 'bg-nido-green text-white hover:bg-nido-green-dark' : 'bg-transparent text-nido-brown border border-nido-border hover:bg-nido-cream'"
-                class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[0.875rem] font-bold cursor-pointer transition-all duration-150 active:scale-[0.98] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                @if (isWebPushLoading()) {
-                  <div class="w-4 h-4 rounded-full border-2 border-solid border-transparent border-t-current animate-spin"></div>
-                  <span>Procesando...</span>
-                } @else {
-                  <lucide-icon [name]="isWebPushEnabled() ? 'shield-check' : 'bell'" [size]="16" />
-                  <span>{{ isWebPushEnabled() ? 'Notificaciones activadas' : 'Activar en este dispositivo' }}</span>
-                }
-              </button>
-
-              @if (webPushError()) {
-                <span class="text-[0.8125rem] text-nido-red font-semibold flex items-center gap-1.5">
-                  <lucide-icon name="alert-circle" [size]="14" />
-                  {{ webPushError() }}
-                </span>
-              }
-            </div>
-          </div>
-
-          <div class="border-t border-nido-border/30 pt-4 flex flex-col gap-3">
-            <div class="flex flex-col gap-1.5">
-              <span class="text-[0.9375rem] font-semibold text-nido-green-dark leading-tight">
-                Telegram
-              </span>
-              <p class="text-xs text-nido-brown opacity-95 leading-relaxed">
-                Conectá tu cuenta para abrir el bot de Telegram y terminar la vinculación desde ahí.
-              </p>
-            </div>
-
-            <div class="flex flex-col gap-3 items-start">
-              @if (telegramIsLinked()) {
-                <div class="flex items-center gap-2 rounded-xl border border-nido-green/30 bg-nido-green/5 px-3.5 py-2 text-nido-green-dark">
-                  <lucide-icon name="check-circle" [size]="18" class="text-nido-green" />
-                  <span class="text-[0.9375rem] font-semibold">Telegram conectado</span>
-                </div>
-
-                @if (telegramPairedAt()) {
-                  <span class="text-xs text-nido-brown">
-                    Vinculado el {{ telegramPairedAt() | date:'dd/MM/yyyy, HH:mm' }}
-                  </span>
-                }
-
-                <button
-                  type="button"
-                  (click)="disconnectTelegram()"
-                  [disabled]="telegramUnlinkStatus() === 'loading'"
-                  class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-nido-green-dark text-nido-cream text-[0.875rem] font-bold border-none cursor-pointer transition-all duration-150 hover:bg-nido-green active:scale-[0.98] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                  @if (telegramUnlinkStatus() === 'loading') {
-                    <div class="w-4 h-4 rounded-full border-2 border-solid border-transparent border-t-current animate-spin"></div>
-                    <span>Desconectando...</span>
-                  } @else {
-                    <lucide-icon name="unlink" [size]="16" />
-                    <span>Desconectar</span>
-                  }
-                </button>
-
-                @if (telegramUnlinkError()) {
-                  <span class="text-[0.8125rem] text-nido-red font-semibold flex items-center gap-1.5">
-                    <lucide-icon name="alert-circle" [size]="14" />
-                    {{ telegramUnlinkError() }}
-                  </span>
-                }
-              } @else {
-                <button
-                  type="button"
-                  (click)="connectTelegram()"
-                  [disabled]="telegramPairingStatus() === telegramPairingStatusValues.LOADING"
-                  class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-nido-green-dark text-nido-cream text-[0.875rem] font-bold border-none cursor-pointer transition-all duration-150 hover:bg-nido-green active:scale-[0.98] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                  @if (telegramPairingStatus() === telegramPairingStatusValues.LOADING) {
-                    <div class="w-4 h-4 rounded-full border-2 border-solid border-transparent border-t-current animate-spin"></div>
-                    <span>Abriendo Telegram...</span>
-                  } @else {
-                    <lucide-icon name="send" [size]="16" />
-                    <span>Conectar Telegram</span>
-                  }
-                </button>
-
-                @if (telegramUnlinkStatus() === 'success') {
-                  <span class="text-[0.8125rem] text-nido-green font-bold flex items-center gap-1">
-                    <lucide-icon name="check" [size]="14" />
-                    Desconectado correctamente
-                  </span>
-                }
-
-                @if (telegramPairingMessage()) {
-                  <div
-                    [class]="telegramPairingStatus() === telegramPairingStatusValues.ERROR ? 'text-nido-red bg-nido-red/5 border-nido-red/20' : 'text-nido-green-dark bg-nido-green/5 border-nido-green/20'"
-                    class="w-full rounded-xl border px-3.5 py-3 text-[0.8125rem] font-medium leading-relaxed">
-                    {{ telegramPairingMessage() }}
-                  </div>
-                }
-
-                @if (telegramPairingCode()) {
-                  <div class="flex flex-col gap-1 rounded-xl border border-nido-border/50 bg-white px-3.5 py-3 text-[0.8125rem] text-nido-green-dark">
-                    <span class="font-semibold">Código de vinculación</span>
-                    <code class="font-mono text-sm font-bold tracking-[0.2em]">{{ telegramPairingCode() }}</code>
-                  </div>
-                }
-
-                @if (telegramPairingStatus() === telegramPairingStatusValues.SUCCESS && !telegramIsLinked()) {
-                  <button
-                    type="button"
-                    (click)="refreshTelegramStatus()"
-                    class="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-nido-green/30 bg-nido-green/5 text-nido-green-dark text-[0.875rem] font-bold cursor-pointer transition-all duration-150 hover:bg-nido-green/10 active:scale-[0.98] shadow-sm">
-                    <lucide-icon name="refresh-cw" [size]="16" />
-                    <span>Verificar conexión</span>
-                  </button>
-                  <span class="text-[0.8125rem] text-nido-brown">
-                    Volvé acá después de vincular Telegram y tocá para actualizar el estado.
-                  </span>
-                }
-              }
-
-              @if (telegramStatusError()) {
-                <span class="text-[0.8125rem] text-nido-red font-semibold flex items-center gap-1.5">
-                  <lucide-icon name="alert-circle" [size]="14" />
-                  {{ telegramStatusError() }}
-                </span>
-              }
-            </div>
-          </div>
-        </div>
-      }
-    </section>
-
-    <section class="order-3 min-w-0 h-full bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col gap-6">
+    <section class="min-w-0 bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col gap-6">
       <div class="flex items-center gap-2.5 border-b border-nido-border/40 pb-3">
         <lucide-icon name="shield-check" [size]="20" class="text-nido-green" />
         <h2 class="text-base font-bold text-nido-green-dark">Seguridad de la cuenta</h2>
@@ -493,57 +305,480 @@
         }
       }
     </section>
+    </div>
 
-    <section class="order-4 min-w-0 self-start bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col">
+    <div class="min-w-0 flex flex-col gap-5">
+
+
+    <section class="min-w-0 bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col">
       <div class="flex items-center gap-2.5 mb-5 border-b border-nido-border/40 pb-3">
-        <lucide-icon name="users" [size]="20" class="text-nido-green" />
-        <h2 class="text-base font-bold text-nido-green-dark">Miembros del hogar</h2>
+        <lucide-icon name="bell" [size]="20" class="text-nido-green" />
+        <h2 class="text-base font-bold text-nido-green-dark">Notificaciones</h2>
       </div>
 
-      @if (isLoadingMembers()) {
+      @if (isLoadingPrefs()) {
         <div class="flex flex-col items-center justify-center py-6 gap-2">
           <div class="w-6 h-6 rounded-full border-2 border-solid border-nido-border/50 border-t-nido-green-dark animate-spin"></div>
-          <span class="text-xs text-nido-brown">Cargando miembros...</span>
+          <span class="text-xs text-nido-brown">Cargando preferencias...</span>
         </div>
       } @else {
-        <ul class="list-none flex flex-col gap-2.5 mb-6">
-          @for (miembro of members(); track miembro.usuarioId; let i = $index) {
-            <li class="flex items-center gap-3.5 py-2.5 border-b border-nido-border/30 last:border-0">
-              <app-avatar
-                [nombre]="miembro.nombre"
-                [fotoUrl]="miembro.fotoUrl"
-                sizeClass="w-10 h-10"
-                fontSizeClass="text-sm"
-              />
-              <div class="flex-1 min-w-0">
-                <p class="text-[0.875rem] font-semibold text-nido-green-dark truncate m-0 flex items-center gap-1.5">
-                  {{ miembro.nombre }}
-                  @if (isCurrentUser(miembro)) {
-                    <span class="text-[0.7rem] bg-[rgba(62,94,74,0.07)] text-nido-green-dark px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">(vos)</span>
+        <div class="flex flex-col gap-5">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[0.9375rem] font-semibold text-nido-green-dark leading-tight">
+              Días de anticipación para alertas de vencimiento
+            </label>
+            <p class="text-xs text-nido-brown opacity-95 leading-relaxed">
+              Te avisamos cuando un producto de la alacena vence en menos de este tiempo.
+            </p>
+          </div>
+
+          <div class="flex items-center gap-3 flex-wrap">
+            <input
+              type="number"
+              min="1"
+              max="365"
+              [ngModel]="diasAlertaInput()"
+              (ngModelChange)="diasAlertaInput.set($event)"
+              class="w-24 bg-white border border-nido-border rounded-xl px-4 py-2.5 text-sm text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green focus:ring-2 focus:ring-nido-green/10 transition-all duration-150 disabled:opacity-50"
+            />
+            <span class="text-[0.875rem] font-medium text-nido-brown">días</span>
+            <button
+              (click)="saveDiasAlerta()"
+              [disabled]="isSavingPrefs()"
+              class="px-5 py-2.5 rounded-xl bg-nido-green-dark text-nido-cream text-[0.875rem] font-bold border-none cursor-pointer transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-nido-green active:scale-[0.98] shadow-sm">
+              {{ isSavingPrefs() ? 'Guardando...' : 'Guardar' }}
+            </button>
+            @if (saveSuccess()) {
+              <span class="text-[0.8125rem] text-nido-green font-bold flex items-center gap-1">
+                <lucide-icon name="check" [size]="14" />
+                Guardado
+              </span>
+            }
+          </div>
+
+          <!-- Web Push Notifications Toggle -->
+          <div class="border-t border-nido-border/30 pt-4 flex flex-col gap-3">
+            <div class="flex flex-col gap-1.5">
+              <span class="text-[0.9375rem] font-semibold text-nido-green-dark leading-tight">
+                Notificaciones en segundo plano
+              </span>
+              <p class="text-xs text-nido-brown opacity-95 leading-relaxed">
+                Permite recibir alertas de stock bajo, vencimiento y aviso de tareas asignadas incluso si el navegador está cerrado.
+              </p>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <button
+                type="button"
+                (click)="toggleWebPushNotifications()"
+                [disabled]="isWebPushLoading()"
+                [class]="isWebPushEnabled() ? 'bg-nido-green text-white hover:bg-nido-green-dark' : 'bg-transparent text-nido-brown border border-nido-border hover:bg-nido-cream'"
+                class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[0.875rem] font-bold cursor-pointer transition-all duration-150 active:scale-[0.98] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                @if (isWebPushLoading()) {
+                  <div class="w-4 h-4 rounded-full border-2 border-solid border-transparent border-t-current animate-spin"></div>
+                  <span>Procesando...</span>
+                } @else {
+                  <lucide-icon [name]="isWebPushEnabled() ? 'shield-check' : 'bell'" [size]="16" />
+                  <span>{{ isWebPushEnabled() ? 'Notificaciones activadas' : 'Activar en este dispositivo' }}</span>
+                }
+              </button>
+
+              @if (webPushError()) {
+                <span class="text-[0.8125rem] text-nido-red font-semibold flex items-center gap-1.5">
+                  <lucide-icon name="alert-circle" [size]="14" />
+                  {{ webPushError() }}
+                </span>
+              }
+            </div>
+          </div>
+
+          <div class="border-t border-nido-border/30 pt-4 flex flex-col gap-3">
+            <div class="flex flex-col gap-1.5">
+              <span class="text-[0.9375rem] font-semibold text-nido-green-dark leading-tight">
+                Telegram
+              </span>
+              <p class="text-xs text-nido-brown opacity-95 leading-relaxed">
+                Conectá tu cuenta para abrir el bot de Telegram y terminar la vinculación desde ahí.
+              </p>
+            </div>
+
+            <div class="flex flex-col gap-3 items-start">
+              @if (telegramIsLinked()) {
+                <div class="flex items-center gap-2 rounded-xl border border-nido-green/30 bg-nido-green/5 px-3.5 py-2 text-nido-green-dark">
+                  <lucide-icon name="check-circle" [size]="18" class="text-nido-green" />
+                  <span class="text-[0.9375rem] font-semibold">Telegram conectado</span>
+                </div>
+
+                @if (telegramPairedAt()) {
+                  <span class="text-xs text-nido-brown">
+                    Vinculado el {{ telegramPairedAt() | date:'dd/MM/yyyy, HH:mm' }}
+                  </span>
+                }
+
+                <button
+                  type="button"
+                  (click)="disconnectTelegram()"
+                  [disabled]="telegramUnlinkStatus() === 'loading'"
+                  class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-nido-green-dark text-nido-cream text-[0.875rem] font-bold border-none cursor-pointer transition-all duration-150 hover:bg-nido-green active:scale-[0.98] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                  @if (telegramUnlinkStatus() === 'loading') {
+                    <div class="w-4 h-4 rounded-full border-2 border-solid border-transparent border-t-current animate-spin"></div>
+                    <span>Desconectando...</span>
+                  } @else {
+                    <lucide-icon name="unlink" [size]="16" />
+                    <span>Desconectar</span>
                   }
-                </p>
-                <p class="text-[0.775rem] text-nido-brown capitalize m-0 mt-0.5 opacity-90">{{ miembro.rol }}</p>
-              </div>
-            </li>
-          }
-        </ul>
+                </button>
+
+                @if (telegramUnlinkError()) {
+                  <span class="text-[0.8125rem] text-nido-red font-semibold flex items-center gap-1.5">
+                    <lucide-icon name="alert-circle" [size]="14" />
+                    {{ telegramUnlinkError() }}
+                  </span>
+                }
+              } @else {
+                <button
+                  type="button"
+                  (click)="connectTelegram()"
+                  [disabled]="telegramPairingStatus() === telegramPairingStatusValues.LOADING"
+                  class="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-nido-green-dark text-nido-cream text-[0.875rem] font-bold border-none cursor-pointer transition-all duration-150 hover:bg-nido-green active:scale-[0.98] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                  @if (telegramPairingStatus() === telegramPairingStatusValues.LOADING) {
+                    <div class="w-4 h-4 rounded-full border-2 border-solid border-transparent border-t-current animate-spin"></div>
+                    <span>Abriendo Telegram...</span>
+                  } @else {
+                    <lucide-icon name="send" [size]="16" />
+                    <span>Conectar Telegram</span>
+                  }
+                </button>
+
+                @if (telegramUnlinkStatus() === 'success') {
+                  <span class="text-[0.8125rem] text-nido-green font-bold flex items-center gap-1">
+                    <lucide-icon name="check" [size]="14" />
+                    Desconectado correctamente
+                  </span>
+                }
+
+                @if (telegramPairingMessage()) {
+                  <div
+                    [class]="telegramPairingStatus() === telegramPairingStatusValues.ERROR ? 'text-nido-red bg-nido-red/5 border-nido-red/20' : 'text-nido-green-dark bg-nido-green/5 border-nido-green/20'"
+                    class="w-full rounded-xl border px-3.5 py-3 text-[0.8125rem] font-medium leading-relaxed">
+                    {{ telegramPairingMessage() }}
+                  </div>
+                }
+
+                @if (telegramPairingCode()) {
+                  <div class="flex flex-col gap-1 rounded-xl border border-nido-border/50 bg-white px-3.5 py-3 text-[0.8125rem] text-nido-green-dark">
+                    <span class="font-semibold">Código de vinculación</span>
+                    <code class="font-mono text-sm font-bold tracking-[0.2em]">{{ telegramPairingCode() }}</code>
+                  </div>
+                }
+
+                @if (telegramPairingStatus() === telegramPairingStatusValues.SUCCESS && !telegramIsLinked()) {
+                  <button
+                    type="button"
+                    (click)="refreshTelegramStatus()"
+                    class="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-nido-green/30 bg-nido-green/5 text-nido-green-dark text-[0.875rem] font-bold cursor-pointer transition-all duration-150 hover:bg-nido-green/10 active:scale-[0.98] shadow-sm">
+                    <lucide-icon name="refresh-cw" [size]="16" />
+                    <span>Verificar conexión</span>
+                  </button>
+                  <span class="text-[0.8125rem] text-nido-brown">
+                    Volvé acá después de vincular Telegram y tocá para actualizar el estado.
+                  </span>
+                }
+              }
+
+              @if (telegramStatusError()) {
+                <span class="text-[0.8125rem] text-nido-red font-semibold flex items-center gap-1.5">
+                  <lucide-icon name="alert-circle" [size]="14" />
+                  {{ telegramStatusError() }}
+                </span>
+              }
+            </div>
+          </div>
+        </div>
       }
+    </section>
 
-      <div class="flex items-center gap-2 mb-3.5 pt-2 border-t border-nido-border/20">
-        <lucide-icon name="user-plus" [size]="18" class="text-nido-green" />
-        <h3 class="text-sm font-bold text-nido-green-dark">Invitar convivente</h3>
-      </div>
+    <div class="flex flex-col gap-5 min-w-0">
 
-      <button
-        (click)="openInviteModal()"
-        class="flex items-center gap-2 px-5 py-2.5 rounded-[10px] bg-nido-green-dark text-nido-cream text-[0.875rem] font-medium border-none cursor-pointer transition-opacity duration-150 hover:opacity-90 w-full justify-center sm:w-auto">
-        <lucide-icon name="user-plus" [size]="16" />
-        Invitar convivente
-      </button>
+      <section class="min-w-0 bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col">
+        <div class="flex items-center gap-2.5 mb-5 border-b border-nido-border/40 pb-3">
+          <lucide-icon name="users" [size]="20" class="text-nido-green" />
+          <h2 class="text-base font-bold text-nido-green-dark">Miembros del hogar</h2>
+        </div>
 
-  </section>
+        @if (isLoadingMembers()) {
+          <div class="flex flex-col items-center justify-center py-6 gap-2">
+            <div class="w-6 h-6 rounded-full border-2 border-solid border-nido-border/50 border-t-nido-green-dark animate-spin"></div>
+            <span class="text-xs text-nido-brown">Cargando miembros...</span>
+          </div>
+        } @else {
+          <ul class="list-none flex flex-col gap-2.5 mb-6">
+            @for (miembro of members(); track miembro.usuarioId; let i = $index) {
+              <li class="flex items-center gap-3.5 py-2.5 border-b border-nido-border/30 last:border-0">
+                <app-avatar
+                  [nombre]="miembro.nombre"
+                  [fotoUrl]="miembro.fotoUrl"
+                  sizeClass="w-10 h-10"
+                  fontSizeClass="text-sm"
+                />
+                <div class="flex-1 min-w-0">
+                  <p class="text-[0.875rem] font-semibold text-nido-green-dark truncate m-0 flex items-center gap-1.5">
+                    {{ miembro.nombre }}
+                    @if (isCurrentUser(miembro)) {
+                      <span class="text-[0.7rem] bg-[rgba(62,94,74,0.07)] text-nido-green-dark px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">(vos)</span>
+                    }
+                  </p>
+                  <p class="text-[0.775rem] text-nido-brown capitalize m-0 mt-0.5 opacity-90">{{ miembro.rol }}</p>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+
+        <div class="flex items-center gap-2 mb-3.5 pt-2 border-t border-nido-border/20">
+          <lucide-icon name="user-plus" [size]="18" class="text-nido-green" />
+          <h3 class="text-sm font-bold text-nido-green-dark">Invitar integrante</h3>
+        </div>
+
+        <button
+          (click)="openInviteModal()"
+          class="flex items-center gap-2 px-5 py-2.5 rounded-[10px] bg-nido-green-dark text-nido-cream text-[0.875rem] font-medium border-none cursor-pointer transition-opacity duration-150 hover:opacity-90 w-full justify-center sm:w-auto">
+          <lucide-icon name="user-plus" [size]="16" />
+          Invitar integrante
+        </button>
+      </section>
+
+      <section class="min-w-0 bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col gap-4">
+        <div class="flex items-center justify-between border-b border-nido-border/40 pb-3">
+          <div class="flex items-center gap-2.5">
+            <lucide-icon name="house" [size]="20" class="text-nido-green" />
+            <h2 class="text-base font-bold text-nido-green-dark">Mis hogares</h2>
+          </div>
+          <button
+            (click)="openCrearHogarModal()"
+            class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-[10px] bg-nido-green-dark text-nido-cream text-[0.8125rem] font-medium border-none cursor-pointer transition-opacity duration-150 hover:opacity-90">
+            <lucide-icon name="house-plus" [size]="14" />
+            Nuevo hogar
+          </button>
+        </div>
+
+        @if (isLoadingHogares()) {
+          <div class="flex flex-col items-center justify-center py-6 gap-2">
+            <div class="w-6 h-6 rounded-full border-2 border-solid border-nido-border/50 border-t-nido-green-dark animate-spin"></div>
+            <span class="text-xs text-nido-brown">Cargando hogares...</span>
+          </div>
+        } @else {
+          <ul class="list-none flex flex-col gap-2">
+            @for (hogar of hogares(); track hogar.id) {
+              <li class="flex flex-col gap-2 py-2.5 px-1 border-b border-nido-border/30 last:border-0">
+
+                @if (editingHogarId() === hogar.id) {
+                  <div class="flex items-center gap-2">
+                    <input
+                      type="text"
+                      [value]="editHogarNombre()"
+                      (input)="editHogarNombre.set($any($event.target).value)"
+                      (keydown.enter)="saveEditHogar()"
+                      (keydown.escape)="cancelEditHogar()"
+                      [disabled]="savingHogarRename()"
+                      class="flex-1 border border-nido-green rounded-xl px-3 py-1.5 text-[0.875rem] text-nido-green-dark outline-none focus:ring-2 focus:ring-nido-green/20 transition-all duration-150 disabled:opacity-50"
+                    />
+                    <button
+                      (click)="saveEditHogar()"
+                      [disabled]="!editHogarNombre().trim() || savingHogarRename()"
+                      class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-nido-green-dark text-nido-cream text-[0.8rem] font-medium border-none cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+                      @if (savingHogarRename()) {
+                        <div class="w-3.5 h-3.5 rounded-full border-2 border-solid border-nido-cream/40 border-t-nido-cream animate-spin"></div>
+                      } @else {
+                        <lucide-icon name="check" [size]="14" />
+                      }
+                      Guardar
+                    </button>
+                    <button
+                      (click)="cancelEditHogar()"
+                      [disabled]="savingHogarRename()"
+                      class="flex items-center justify-center w-8 h-8 rounded-lg border border-nido-border text-nido-brown bg-transparent cursor-pointer hover:bg-nido-cream transition-colors duration-150 disabled:opacity-50">
+                      <lucide-icon name="x" [size]="14" />
+                    </button>
+                  </div>
+                  @if (renameHogarError()) {
+                    <span class="text-nido-red text-[0.775rem] pl-1">{{ renameHogarError() }}</span>
+                  }
+                } @else {
+                  <div class="flex items-center gap-3.5">
+                    <div class="w-9 h-9 rounded-xl bg-[rgba(62,94,74,0.08)] flex items-center justify-center shrink-0">
+                      <lucide-icon name="house" [size]="16" class="text-nido-green-dark" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[0.875rem] font-semibold text-nido-green-dark truncate m-0 flex items-center gap-2">
+                        {{ hogar.nombre }}
+                        @if (hogar.id === hogarActivoId()) {
+                          <span class="text-[0.7rem] bg-[rgba(62,94,74,0.10)] text-nido-green-dark px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Activo</span>
+                        }
+                      </p>
+                      <p class="text-[0.775rem] text-nido-brown capitalize m-0 mt-0.5 opacity-90">{{ hogar.rol }}</p>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                      @if (hogar.rol === 'owner') {
+                        <button
+                          (click)="openEditHogar(hogar)"
+                          [disabled]="switchingHogarId() !== null || deletingHogar()"
+                          class="flex items-center justify-center w-8 h-8 rounded-lg border border-nido-border text-nido-brown bg-transparent cursor-pointer transition-all duration-150 hover:border-nido-green hover:text-nido-green-dark disabled:opacity-40 disabled:cursor-not-allowed">
+                          <lucide-icon name="pencil" [size]="13" />
+                        </button>
+                      }
+                      @if (hogar.id !== hogarActivoId()) {
+                        <button
+                          (click)="activarHogar(hogar.id)"
+                          [disabled]="switchingHogarId() !== null || deletingHogar()"
+                          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-nido-border text-[0.8rem] text-nido-brown bg-transparent font-medium cursor-pointer transition-all duration-150 hover:border-nido-green hover:text-nido-green-dark disabled:opacity-50 disabled:cursor-not-allowed">
+                          @if (switchingHogarId() === hogar.id) {
+                            <div class="w-3.5 h-3.5 rounded-full border-2 border-solid border-nido-border border-t-nido-green-dark animate-spin"></div>
+                            Activando...
+                          } @else {
+                            Activar
+                          }
+                        </button>
+                        @if (hogar.rol === 'owner') {
+                          <button
+                            (click)="openEliminarHogarConfirm(hogar)"
+                            [disabled]="switchingHogarId() !== null || deletingHogar()"
+                            class="flex items-center justify-center w-8 h-8 rounded-lg border border-nido-red/30 text-nido-red bg-transparent cursor-pointer transition-all duration-150 hover:bg-nido-red/5 hover:border-nido-red/60 disabled:opacity-40 disabled:cursor-not-allowed">
+                            <lucide-icon name="trash-2" [size]="14" />
+                          </button>
+                        }
+                      }
+                    </div>
+                  </div>
+                }
+
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+    </div>
+    </div>
 
 </div>
+
+@if (hogarToDelete()) {
+  <div
+    class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4"
+    (click)="closeEliminarHogarConfirm()">
+    <div
+      class="bg-white rounded-2xl shadow-[0_8px_40px_rgba(38,63,48,0.18)] w-full max-w-[420px] px-5 py-6 sm:px-8 sm:py-8 flex flex-col gap-5"
+      (click)="$event.stopPropagation()">
+
+      <div class="flex items-start gap-4">
+        <div class="w-10 h-10 rounded-full bg-[rgba(180,76,60,0.08)] flex items-center justify-center shrink-0 mt-0.5">
+          <lucide-icon name="trash-2" [size]="18" class="text-nido-red" />
+        </div>
+        <div class="flex flex-col gap-1">
+          <h2 class="text-[1.1rem] font-bold text-nido-green-dark m-0">Eliminar hogar</h2>
+          <p class="text-nido-brown text-[0.8375rem] m-0 leading-relaxed">
+            ¿Confirmás que querés eliminar <strong>{{ hogarToDelete()?.nombre }}</strong>? Se eliminarán todos los datos asociados (tareas, gastos, alacena, etc.). Esta acción no se puede deshacer.
+          </p>
+        </div>
+      </div>
+
+      @if (deleteHogarError()) {
+        <span class="text-nido-red text-[0.8rem] flex items-center gap-1.5">
+          <lucide-icon name="alert-circle" [size]="14" />
+          {{ deleteHogarError() }}
+        </span>
+      }
+
+      <div class="flex gap-3 justify-end pt-1">
+        <button
+          class="px-5 py-2.5 rounded-full text-[0.875rem] text-nido-brown bg-transparent border border-nido-border cursor-pointer hover:bg-nido-cream transition-colors duration-150"
+          (click)="closeEliminarHogarConfirm()">
+          Cancelar
+        </button>
+        <button
+          [disabled]="deletingHogar()"
+          (click)="confirmarEliminarHogar()"
+          class="px-6 py-2.5 rounded-full text-[0.875rem] font-semibold text-white bg-nido-red border-none cursor-pointer hover:opacity-90 transition-opacity duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
+          {{ deletingHogar() ? 'Eliminando...' : 'Sí, eliminar' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+@if (showCrearHogarModal()) {
+  <div
+    class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4"
+    (click)="closeCrearHogarModal()">
+    <div
+      class="bg-white rounded-2xl shadow-[0_8px_40px_rgba(38,63,48,0.18)] w-full max-w-[420px] px-5 py-6 sm:px-8 sm:py-8 flex flex-col gap-5"
+      (click)="$event.stopPropagation()">
+
+      <div class="flex items-start justify-between gap-4">
+        <div class="flex flex-col gap-1">
+          <h2 class="text-[1.25rem] font-bold text-nido-green-dark m-0">Crear nuevo hogar</h2>
+          <p class="text-nido-brown text-[0.8375rem] m-0 leading-relaxed">
+            Podés pertenecer a más de un hogar. Dale un nombre a tu nuevo espacio.
+          </p>
+        </div>
+        <button
+          class="shrink-0 p-1 bg-transparent border-none cursor-pointer text-nido-muted hover:text-nido-brown transition-colors duration-150 mt-0.5"
+          (click)="closeCrearHogarModal()">
+          <lucide-icon name="x" [size]="18" />
+        </button>
+      </div>
+
+      @if (crearHogarState() !== 'success') {
+        <div class="flex flex-col gap-2">
+          <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Nombre del hogar</label>
+          <input
+            type="text"
+            placeholder="Ej: Casa de verano, Depto centro..."
+            [ngModel]="crearHogarNombre()"
+            (ngModelChange)="crearHogarNombre.set($event)"
+            [disabled]="crearHogarState() === 'loading'"
+            class="border border-nido-border rounded-xl px-4 py-3 text-[0.9rem] text-nido-green-dark placeholder:text-nido-muted outline-none focus:border-nido-green transition-colors duration-150 disabled:opacity-50"
+          />
+          @if (crearHogarState() === 'error') {
+            <span class="text-nido-red text-[0.8rem]">{{ crearHogarErrorMsg() }}</span>
+          }
+        </div>
+        <div class="flex gap-3 justify-end pt-1">
+          <button
+            class="px-5 py-2.5 rounded-full text-[0.875rem] text-nido-brown bg-transparent border border-nido-border cursor-pointer hover:bg-nido-cream transition-colors duration-150"
+            (click)="closeCrearHogarModal()">
+            Cancelar
+          </button>
+          <button
+            [disabled]="!crearHogarNombre().trim() || crearHogarState() === 'loading'"
+            (click)="submitCrearHogar()"
+            class="px-6 py-2.5 rounded-full text-[0.875rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed">
+            {{ crearHogarState() === 'loading' ? 'Creando...' : 'Crear hogar' }}
+          </button>
+        </div>
+      } @else {
+        <div class="flex flex-col items-center gap-4 py-4 text-center">
+          <div class="w-16 h-16 rounded-full bg-[rgba(62,94,74,0.08)] flex items-center justify-center">
+            <lucide-icon name="house-plus" [size]="30" class="text-nido-green-dark" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <p class="text-[0.9375rem] font-semibold text-nido-green-dark m-0">¡Hogar creado!</p>
+            <p class="text-[0.8375rem] text-nido-brown m-0">
+              <strong>{{ crearHogarNombreCreado() }}</strong> está listo. Ya podés cambiarlo cuando quieras.
+            </p>
+          </div>
+          <button
+            class="mt-1 px-7 py-2.5 rounded-full text-[0.875rem] font-semibold text-nido-cream bg-nido-green-dark border-none cursor-pointer hover:bg-nido-green transition-colors duration-150"
+            (click)="closeCrearHogarModal()">
+            Cerrar
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}
 
 @if (showInviteModal()) {
   <div

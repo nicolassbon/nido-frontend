@@ -49,10 +49,6 @@ export interface RecetaRecomendadaResponse {
   totalIngredientes: number;
 }
 
-export interface RecomendacionesResponse {
-  recetas: RecetaRecomendadaResponse[];
-  tips: string[];
-}
 
 export interface FacturaResponse {
   id: string;
@@ -170,12 +166,6 @@ export class FinanzasApiService {
 
   setModoAhorro(activo: boolean): Observable<ModoAhorroResponse> {
     return this.http.patch<ModoAhorroResponse>(`${this.base}/finanzas/modo-ahorro`, { activo });
-  }
-
-  getRecomendaciones(): Observable<RecomendacionesResponse> {
-    return this.http
-      .get<RecomendacionesResponse>(`${this.base}/finanzas/recomendaciones`)
-      .pipe(catchError(() => of({ recetas: [], tips: [] })));
   }
 
   getBalance(desde?: string, hasta?: string): Observable<BalanceResponse> {

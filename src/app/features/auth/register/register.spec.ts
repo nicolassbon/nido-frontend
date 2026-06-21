@@ -143,6 +143,7 @@ describe('Register Component', () => {
       password: 'Password1!',
       confirmPassword: 'Password1!',
       sexo: 'Masculino',
+      aceptaTerminos: true,
     });
 
     component.onSubmit();
@@ -154,6 +155,7 @@ describe('Register Component', () => {
       password: 'Password1!',
       sexo: 'Masculino',
       foto: null,
+      aceptaTerminos: true,
     });
     expect(navigateSpy).toHaveBeenCalledWith(['/crear-hogar']);
   });
@@ -182,6 +184,7 @@ describe('Register Component', () => {
       password: 'Password1!',
       confirmPassword: 'Password1!',
       sexo: 'Masculino',
+      aceptaTerminos: true,
     });
 
     component.onSubmit();
@@ -192,6 +195,7 @@ describe('Register Component', () => {
       password: 'Password1!',
       sexo: 'Masculino',
       foto: file,
+      aceptaTerminos: true,
     });
 
     createObjectURLSpy.mockRestore();
@@ -280,6 +284,7 @@ describe('Register Component', () => {
       password: 'Password1!',
       confirmPassword: 'Password1!',
       sexo: 'Masculino',
+      aceptaTerminos: true,
     });
 
     component.onSubmit();
@@ -299,6 +304,7 @@ describe('Register Component', () => {
       password: 'Password1!',
       confirmPassword: 'Password1!',
       sexo: 'Masculino',
+      aceptaTerminos: true,
     });
 
     component.onSubmit();

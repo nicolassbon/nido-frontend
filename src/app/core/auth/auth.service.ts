@@ -31,6 +31,7 @@ export interface RegisterRequest {
   password: string;
   sexo: string;
   foto?: File | null;
+  aceptaTerminos: boolean;
 }
 
 export interface RegisterResponse {
@@ -141,6 +142,7 @@ export class AuthService {
     formData.append('email', req.email);
     formData.append('password', req.password);
     formData.append('sexo', req.sexo);
+    formData.append('aceptaTerminos', String(req.aceptaTerminos));
 
     if (req.foto) {
       formData.append('foto', req.foto);
