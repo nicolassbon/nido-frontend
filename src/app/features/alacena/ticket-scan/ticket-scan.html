@@ -2,9 +2,9 @@
   <section class="relative overflow-hidden rounded-[14px] px-6 sm:px-8 py-6 flex items-center justify-between gap-4 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_55%,#927357_100%)]">
     <div class="absolute inset-0 bg-[url('/images/banners/alacena.png')] bg-center bg-cover opacity-35"></div>
     <div class="relative z-10 min-w-0">
-      <a routerLink="/alacena" class="inline-flex items-center gap-1.5 text-nido-cream/80 text-[0.8rem] font-medium no-underline mb-3 hover:text-nido-cream">
+      <a [routerLink]="isFromFinanzas() ? '/finanzas' : '/alacena'" class="inline-flex items-center gap-1.5 text-nido-cream/80 text-[0.8rem] font-medium no-underline mb-3 hover:text-nido-cream">
         <lucide-icon name="arrow-left" [size]="14" />
-        Alacena
+        {{ isFromFinanzas() ? 'Finanzas' : 'Alacena' }}
       </a>
       <h1 class="text-nido-cream text-[1.55rem] sm:text-[1.85rem] font-bold leading-tight">Escanear ticket</h1>
       <p class="text-nido-cream/75 text-sm mt-1 max-w-[540px]">

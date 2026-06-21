@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { forkJoin, of, switchMap } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
 import { AlacenaApiService } from '../alacena-api.service';
 import { TicketScanService } from '../ticket-scan.service';
+import { FinanzasApiService } from '../../finanzas/finanzas-api.service';
 
 interface EditableTicketItem {
   id: string;
@@ -21,11 +22,13 @@ interface EditableTicketItem {
   templateUrl: './ticket-scan.html',
   styleUrl: './ticket-scan.scss',
 })
-export class TicketScan {
+export class TicketScan implements OnInit {
   private readonly ticketScan = inject(TicketScanService);
   private readonly alacenaApi = inject(AlacenaApiService);
+  private readonly finanzasApi = inject(FinanzasApiService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly selectedFile = signal<File | null>(null);
   protected readonly previewUrl = signal<string | null>(null);
@@ -34,6 +37,7 @@ export class TicketScan {
   protected readonly isScanning = signal(false);
   protected readonly isConfirming = signal(false);
   protected readonly errorMessage = signal<string | null>(null);
+  protected readonly isFromFinanzas = signal(false);
 
   protected readonly total = computed(() =>
     this.items().reduce((sum, item) => sum + item.quantity * (item.unitPrice ?? 0), 0),
@@ -42,6 +46,11 @@ export class TicketScan {
   protected readonly validItems = computed(() =>
     this.items().filter(item => item.productName.trim().length > 1 && item.quantity > 0),
   );
+
+  ngOnInit(): void {
+    const returnTo = this.route.snapshot.queryParamMap.get('returnTo');
+    this.isFromFinanzas.set(returnTo === 'finanzas');
+  }
 
   protected onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -122,6 +131,8 @@ export class TicketScan {
     this.isConfirming.set(true);
     this.errorMessage.set(null);
 
+    const today = new Date().toISOString().split('T')[0];
+
     forkJoin(items.map(item => this.alacenaApi.createStock({
       nombre: item.productName.trim(),
       codigoBarras: null,
@@ -133,11 +144,26 @@ export class TicketScan {
       estaAbierto: false,
       porcentajeConsumido: 0,
     })))
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        switchMap(() => {
+          if (this.total() <= 0) return of(null);
+          return this.finanzasApi.createGasto({
+            monto: this.total(),
+            descripcion: this.merchantName() ?? 'Ticket escaneado',
+            categoria: 'Comida',
+            fecha: today,
+            pagadoPorId: null,
+          });
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
-        next: () => void this.router.navigate(['/alacena']),
+        next: () => {
+          const dest = this.isFromFinanzas() ? '/finanzas' : '/alacena';
+          void this.router.navigate([dest]);
+        },
         error: () => {
-          this.errorMessage.set('No se pudieron cargar los productos en la alacena.');
+          this.errorMessage.set('No se pudieron guardar los cambios. Intenta nuevamente.');
           this.isConfirming.set(false);
         },
       });
