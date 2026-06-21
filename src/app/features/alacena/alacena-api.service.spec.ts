@@ -20,13 +20,11 @@ describe('AlacenaApiService - Nutritional Data Integration', () => {
     httpMock.verify();
   });
 
-  describe('createItem', () => {
-    it('should send nutritional data when creating a stock item', (done) => {
-      // Arrange
-      const hogarId = 'test-hogar-id';
+  describe('createStock', () => {
+    it('should send nutritional data when creating a stock item', () => {
       const request: CreateStockItemRequest = {
         nombre: 'Yogur Natural 190g',
-        categoriaId: undefined,
+        categoriaId: null,
         codigoBarras: '7790630001234',
         imagen: 'https://example.com/yogur.jpg',
         ubicacion: 'Heladera',
@@ -42,22 +40,17 @@ describe('AlacenaApiService - Nutritional Data Integration', () => {
         grasas: 2,
       };
 
-      // Act
-      service.createItem(hogarId, request).subscribe((response) => {
-        // Assert
+      service.createStock(request).subscribe((response) => {
         expect(response.calorias).toBe(50);
         expect(response.proteinas).toBe(3);
         expect(response.cantidad).toBe(190);
-        done();
       });
 
-      // Assert HTTP request
       const req = httpMock.expectOne(`${environment.apiBaseUrl}/alacena/productos`);
       expect(req.request.method).toBe('POST');
       expect(req.request.body.calorias).toBe(50);
       expect(req.request.body.cantidad).toBe(190);
 
-      // Mock response
       const mockResponse: StockItemResponse = {
         id: 'item-id',
         productoId: 'producto-id',
@@ -76,23 +69,22 @@ describe('AlacenaApiService - Nutritional Data Integration', () => {
         proteinas: 3,
         carbohidratos: 5,
         grasas: 2,
+        origenCarga: 'codigo_barras',
       };
 
       req.flush(mockResponse);
     });
 
-    it('should handle null nutritional data gracefully', (done) => {
-      // Arrange
-      const hogarId = 'test-hogar-id';
+    it('should handle null nutritional data gracefully', () => {
       const request: CreateStockItemRequest = {
         nombre: 'Pan Integral',
-        categoriaId: undefined,
+        categoriaId: null,
         codigoBarras: '123456789',
         imagen: '',
         ubicacion: 'Despensa',
         cantidad: 1,
-        unidadMedida: undefined,
-        fechaVencimiento: undefined,
+        unidadMedida: null,
+        fechaVencimiento: null,
         estaAbierto: false,
         porcentajeConsumido: 0,
         cantidadEnvases: 1,
@@ -102,19 +94,14 @@ describe('AlacenaApiService - Nutritional Data Integration', () => {
         grasas: null,
       };
 
-      // Act
-      service.createItem(hogarId, request).subscribe((response) => {
-        // Assert
+      service.createStock(request).subscribe((response) => {
         expect(response.calorias).toBeNull();
         expect(response.proteinas).toBeNull();
-        done();
       });
 
-      // Assert HTTP request
       const req = httpMock.expectOne(`${environment.apiBaseUrl}/alacena/productos`);
       expect(req.request.body.calorias).toBeNull();
 
-      // Mock response
       const mockResponse: StockItemResponse = {
         id: 'item-id',
         productoId: 'producto-id',
@@ -124,8 +111,8 @@ describe('AlacenaApiService - Nutritional Data Integration', () => {
         categoriaNombre: 'Despensa',
         ubicacion: 'Despensa',
         cantidad: 1,
-        unidadMedida: undefined,
-        fechaVencimiento: undefined,
+        unidadMedida: null,
+        fechaVencimiento: null,
         estaAbierto: false,
         porcentajeConsumido: 0,
         cantidadEnvases: 1,
@@ -133,31 +120,24 @@ describe('AlacenaApiService - Nutritional Data Integration', () => {
         proteinas: null,
         carbohidratos: null,
         grasas: null,
+        origenCarga: 'manual',
       };
 
       req.flush(mockResponse);
     });
   });
 
-  describe('getItems', () => {
-    it('should retrieve stock items with nutritional data', (done) => {
-      // Arrange
-      const hogarId = 'test-hogar-id';
-
-      // Act
-      service.getItems(hogarId).subscribe((items) => {
-        // Assert
+  describe('getStock', () => {
+    it('should retrieve stock items with nutritional data', () => {
+      service.getStock().subscribe((items) => {
         expect(items.length).toBe(1);
         expect(items[0].calorias).toBe(60);
         expect(items[0].cantidad).toBe(200);
-        done();
       });
 
-      // Assert HTTP request
-      const req = httpMock.expectOne(`${environment.apiBaseUrl}/alacena/productos?hogarId=${hogarId}`);
+      const req = httpMock.expectOne(`${environment.apiBaseUrl}/alacena/productos`);
       expect(req.request.method).toBe('GET');
 
-      // Mock response
       const mockResponse: StockItemResponse[] = [
         {
           id: 'item-1',
@@ -177,6 +157,7 @@ describe('AlacenaApiService - Nutritional Data Integration', () => {
           proteinas: 3,
           carbohidratos: 5,
           grasas: 3,
+          origenCarga: 'manual',
         },
       ];
 
