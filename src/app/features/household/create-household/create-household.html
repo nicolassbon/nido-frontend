@@ -1,48 +1,17 @@
 <div class="flex flex-col min-h-screen bg-nido-cream" (click)="closeMenus()">
 
-  <!-- Header -->
-  <header class="relative bg-nido-green-dark px-4 py-4 flex items-center sm:px-6">
-
-    <!-- Logo -->
-    <div class="relative z-10 flex items-center shrink-0 cursor-pointer" (click)="onLogoClick($event)">
-      <img src="logo.png" alt="Nido" class="h-9 object-contain" />
+  <header class="bg-nido-green-dark px-4 py-4 flex items-center justify-center sm:px-6">
+    <div class="flex items-center justify-center cursor-pointer" (click)="onLogoClick($event)">
+      <img src="logo.png" alt="Nido" class="h-8 sm:h-9 object-contain" />
     </div>
-
-    <!-- Steps -->
-    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-      <div class="pointer-events-auto flex items-start">
-        @for (step of steps; track step.number; let last = $last) {
-
-        <!-- Step -->
-        <div class="flex flex-col items-center gap-1.5">
-          <div [class]="stepCircleClass(step)">
-            @if (step.completed) {
-            <lucide-icon name="check" [size]="15" class="text-nido-green-dark" />
-            } @else {
-            <span class="text-[0.8125rem] font-bold"
-              [class]="step.active ? 'text-nido-green-dark' : 'text-[rgba(247,241,230,0.45)]'">
-              {{ step.number }}
-            </span>
-            }
-          </div>
-          <span [class]="stepLabelClass(step)">{{ step.label }}</span>
-        </div>
-
-        <!-- Connector -->
-        @if (!last) {
-        <div class="w-6 h-px mt-4 mx-1 sm:w-12"
-          [class]="step.completed ? 'bg-nido-cream/60' : 'bg-[rgba(247,241,230,0.2)]'">
-        </div>
-        }
-
-        }
-      </div>
-    </div>
-
   </header>
 
+  <div class="flex justify-center px-4 py-4 sm:py-5">
+    <app-progress-steps [steps]="steps" />
+  </div>
+
   <!-- Main -->
-  <main class="flex-1 flex items-center justify-center px-4 py-8">
+  <main class="flex-1 flex items-center justify-center px-4 py-5 sm:py-6">
 
     <div
       class="bg-white rounded-2xl shadow-[0_4px_32px_rgba(38,63,48,0.10)] w-full max-w-[740px] px-5 py-8 sm:px-10 sm:py-10 flex flex-col items-center gap-6">

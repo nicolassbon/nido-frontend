@@ -1,27 +1,35 @@
-<nav [class]="sidebarClass()">
+<nav [class]="sidebarClass()"
+     style="padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);">
 
   <!-- Logo -->
-  <div class="px-2 pb-7">
-    <img src="logo.png" alt="Nido" class="w-full max-w-[130px] object-contain" />
+  <div class="relative px-3 py-6 border-b border-nido-cream/10">
+    <button
+      type="button"
+      (click)="close.emit()"
+      aria-label="Cerrar menú"
+      class="md:hidden absolute top-2 right-2 z-10 flex h-9 w-9 items-center justify-center rounded-full border-none cursor-pointer bg-nido-cream/10 text-nido-cream/80 transition-colors hover:bg-nido-cream/20 hover:text-nido-cream active:scale-95">
+      <lucide-icon [img]="icons['x']" [size]="18" [strokeWidth]="2.5" />
+    </button>
+    <img src="logo.png" alt="Nido" class="w-full max-w-[120px] object-contain" />
   </div>
 
   <!-- Items principales -->
-  <ul class="list-none m-0 p-0 flex flex-col gap-0.5 flex-1">
+  <ul class="list-none m-0 px-2 py-4 flex flex-col gap-1 flex-1">
     @for (item of mainNavItems; track item.route) {
       <li>
         @if (item.disabled) {
           <span
             aria-disabled="true"
             title="Próximamente"
-            class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-nido-cream/35 no-underline text-[0.8125rem] cursor-not-allowed select-none">
+            class="flex items-center gap-3 px-3 py-3 rounded-lg text-nido-cream/35 no-underline text-[0.875rem] cursor-not-allowed select-none">
             <lucide-icon [img]="icons[item.icon]" [size]="18" class="shrink-0" />
             <span>{{ item.label }}</span>
           </span>
         } @else {
           <a
             [routerLink]="item.route"
-            routerLinkActive="!text-nido-cream !bg-nido-green font-medium"
-            class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-nido-cream/60 no-underline text-[0.8125rem] transition-colors duration-150 hover:bg-nido-green hover:text-nido-cream">
+            routerLinkActive="!text-nido-cream !bg-nido-green/20 font-medium"
+            class="flex items-center gap-3 px-3 py-3 rounded-lg text-nido-cream/70 no-underline text-[0.875rem] transition-colors duration-150 hover:bg-nido-green/10 hover:text-nido-cream">
             <lucide-icon [img]="icons[item.icon]" [size]="18" class="shrink-0" />
             <span>{{ item.label }}</span>
             @if (item.icon === 'bell' && unreadNotificationsCount() > 0) {
@@ -36,13 +44,13 @@
   </ul>
 
   <!-- Items de abajo -->
-  <ul class="list-none m-0 pt-3 flex flex-col gap-0.5 border-t border-nido-cream/10">
+  <ul class="list-none m-0 px-2 py-4 flex flex-col gap-1 border-t border-nido-cream/10">
     @for (item of bottomNavItems; track item.route) {
       <li>
         <a
           [routerLink]="item.route"
-          routerLinkActive="!text-nido-cream !bg-nido-green font-medium"
-          class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-nido-cream/60 no-underline text-[0.8125rem] transition-colors duration-150 hover:bg-nido-green hover:text-nido-cream">
+          routerLinkActive="!text-nido-cream !bg-nido-green/20 font-medium"
+          class="flex items-center gap-3 px-3 py-3 rounded-lg text-nido-cream/70 no-underline text-[0.875rem] transition-colors duration-150 hover:bg-nido-green/10 hover:text-nido-cream">
           <lucide-icon [img]="icons[item.icon]" [size]="18" class="shrink-0" />
           <span>{{ item.label }}</span>
         </a>
@@ -51,7 +59,7 @@
     <li>
       <button
         (click)="logout()"
-        class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-nido-cream/60 bg-transparent border-none cursor-pointer text-[0.8125rem] transition-colors duration-150 hover:bg-nido-green hover:text-nido-cream">
+        class="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-nido-cream/70 bg-transparent border-none cursor-pointer text-[0.875rem] transition-colors duration-150 hover:bg-nido-green/10 hover:text-nido-cream">
         <lucide-icon [img]="icons['log-out']" [size]="18" class="shrink-0" />
         <span>Salir</span>
       </button>

@@ -153,7 +153,8 @@
     <div class="flex items-center justify-between px-5 py-4 border-b border-nido-border/40">
       <p class="text-sm font-semibold text-nido-green-dark">Transacciones recientes</p>
       <div class="flex items-center gap-2">
-        <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] border border-nido-border text-xs font-medium text-nido-brown hover:border-nido-green hover:text-nido-green transition-colors duration-150">
+        <button (click)="navegarAEscanear()"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] border border-nido-border text-xs font-medium text-nido-brown hover:border-nido-green hover:text-nido-green transition-colors duration-150">
           <lucide-icon name="scan-line" [size]="13"></lucide-icon>
           Escanear
         </button>
@@ -510,7 +511,9 @@
          (click)="$event.stopPropagation()">
 
       <!-- Header -->
-      <div class="relative overflow-hidden shrink-0 px-5 py-4 flex items-center justify-between [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
+      <div class="relative overflow-hidden shrink-0 px-5 py-4 flex items-center justify-between bg-nido-green-dark">
+        <div class="absolute inset-0 bg-[url('/images/banners/finanzas.png')] bg-center bg-cover"></div>
+        <div class="absolute inset-0 bg-[rgba(31,58,58,0.56)]"></div>
         <div class="flex items-center gap-2.5 relative z-10">
           <span class="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[10px] bg-[rgba(247,241,230,0.16)] ring-1 ring-[rgba(247,241,230,0.22)]">
             <lucide-icon name="wallet" [size]="18" class="text-nido-cream/80"></lucide-icon>
@@ -617,7 +620,9 @@
          (click)="$event.stopPropagation()">
 
       <!-- Header -->
-      <div class="relative overflow-hidden shrink-0 px-5 py-4 flex items-center justify-between [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
+      <div class="relative overflow-hidden shrink-0 px-5 py-4 flex items-center justify-between bg-nido-green-dark">
+        <div class="absolute inset-0 bg-[url('/images/banners/finanzas.png')] bg-center bg-cover"></div>
+        <div class="absolute inset-0 bg-[rgba(31,58,58,0.56)]"></div>
         <div class="flex items-center gap-2.5 relative z-10">
           <span class="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[10px] bg-[rgba(247,241,230,0.16)] ring-1 ring-[rgba(247,241,230,0.22)]">
             <lucide-icon name="target" [size]="18" class="text-nido-cream/80"></lucide-icon>
@@ -692,7 +697,9 @@
          (click)="$event.stopPropagation()">
 
       <!-- Header -->
-      <div class="relative overflow-hidden shrink-0 px-5 py-4 flex items-center justify-between [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
+      <div class="relative overflow-hidden shrink-0 px-5 py-4 flex items-center justify-between bg-nido-green-dark">
+        <div class="absolute inset-0 bg-[url('/images/banners/finanzas.png')] bg-center bg-cover"></div>
+        <div class="absolute inset-0 bg-[rgba(31,58,58,0.56)]"></div>
         <div class="flex items-center gap-2.5 relative z-10">
           <span class="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-[10px] bg-[rgba(247,241,230,0.16)] ring-1 ring-[rgba(247,241,230,0.22)]">
             <lucide-icon name="file-text" [size]="18" class="text-nido-cream/80"></lucide-icon>

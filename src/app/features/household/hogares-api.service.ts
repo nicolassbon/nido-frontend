@@ -47,6 +47,11 @@ export interface InvitacionPreviewResponse {
   expiraEn:      string | null;
 }
 
+export interface HogarResponse {
+  id:     string;
+  nombre: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class HogaresApiService {
   private readonly http = inject(HttpClient);
@@ -75,8 +80,14 @@ export class HogaresApiService {
     );
   }
 
+  /** Devuelve el hogar actual del usuario autenticado. */
   getHogar(): Observable<HogarResponse> {
     return this.http.get<HogarResponse>(`${this.base}/hogares`);
+  }
+
+  /** Actualiza el nombre del hogar actual. Solo el owner puede hacerlo. */
+  updateHogarNombre(nombre: string): Observable<HogarResponse> {
+    return this.http.patch<HogarResponse>(`${this.base}/hogares`, { nombre });
   }
 
   crearHogar(nombre: string): Observable<CrearHogarResponse> {

@@ -8,13 +8,99 @@
       </p>
     </div>
 
-    <button
-      class="relative z-10 flex w-full items-center justify-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)] sm:w-auto"
-      (click)="openCreateList()">
-      <fa-icon [icon]="faIcons.plus" [fixedWidth]="true" />
-      Crear lista
-    </button>
+    <div class="relative z-10 flex w-full flex-col gap-2 sm:w-auto">
+      <button
+        class="flex w-full items-center justify-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]"
+        (click)="openCreateList()">
+        <lucide-icon name="plus" [size]="16" />
+        Crear lista
+      </button>
+
+      <button
+        aria-label="telegram-send"
+        class="flex w-full items-center justify-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)] disabled:cursor-not-allowed disabled:opacity-50"
+        [disabled]="listas.length === 0 || isSendingTelegram"
+        (click)="sendActiveListToTelegram()">
+        <lucide-icon name="send" [size]="16" />
+        {{ isSendingTelegram ? 'Enviando…' : 'Enviar a Telegram' }}
+      </button>
+    </div>
   </section>
+
+  @if (showTelegramModal) {
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(15,25,20,0.72)] backdrop-blur-[2px] px-4"
+      role="presentation"
+      (click)="closeTelegramModal()">
+      <section
+        class="w-full max-w-[420px] rounded-[14px] bg-white p-5 shadow-[0_18px_45px_rgba(38,63,48,0.24)] sm:p-6"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="telegram-send-modal-title"
+        (click)="$event.stopPropagation()">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h2 id="telegram-send-modal-title" class="text-[1rem] font-bold text-nido-green-dark">Enviar a Telegram</h2>
+            <p class="mt-1 text-[0.82rem] text-nido-brown">Elegí una lista o enviá todas las compras pendientes.</p>
+          </div>
+          <button
+            type="button"
+            class="shrink-0 p-1 bg-transparent border-none cursor-pointer text-nido-muted hover:text-nido-brown transition-colors duration-150 mt-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+            [disabled]="isSendingTelegram"
+            (click)="closeTelegramModal()">
+            <lucide-icon name="x" [size]="18" />
+          </button>
+        </div>
+
+        <div class="mt-4 flex flex-col gap-2">
+          @for (option of telegramTargetOptions(); track option.id) {
+            <button
+              type="button"
+              class="flex w-full items-center justify-between rounded-[12px] border px-4 py-3 text-left cursor-pointer transition-colors duration-150 hover:bg-nido-cream/40"
+              [class.border-nido-green-dark]="selectedTelegramTargetId === option.id"
+              [class.bg-nido-cream]="selectedTelegramTargetId === option.id"
+              [class.text-nido-green-dark]="selectedTelegramTargetId === option.id"
+              [class.border-nido-border]="selectedTelegramTargetId !== option.id"
+              [class.bg-white]="selectedTelegramTargetId !== option.id"
+              [class.text-nido-brown]="selectedTelegramTargetId !== option.id"
+              (click)="selectedTelegramTargetId = option.id">
+              <span class="min-w-0">
+                <span class="block text-[0.84rem] font-semibold">{{ option.label }}</span>
+                <span class="mt-0.5 block text-[0.74rem] opacity-75">{{ option.pendingCount }} pendiente{{ option.pendingCount !== 1 ? 's' : '' }}</span>
+              </span>
+              <span
+                class="ml-3 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border"
+                [class.border-nido-green-dark]="selectedTelegramTargetId === option.id"
+                [class.bg-nido-green-dark]="selectedTelegramTargetId === option.id"
+                [class.border-nido-border]="selectedTelegramTargetId !== option.id">
+                @if (selectedTelegramTargetId === option.id) {
+                  <span class="h-2 w-2 rounded-full bg-nido-cream"></span>
+                }
+              </span>
+            </button>
+          }
+        </div>
+
+        <div class="mt-5 flex justify-end gap-3">
+          <button
+            type="button"
+            class="rounded-[20px] border border-nido-border bg-white px-4 py-2 text-[0.8rem] font-semibold text-nido-brown cursor-pointer transition-colors duration-150 hover:bg-nido-cream disabled:cursor-not-allowed disabled:opacity-50"
+            [disabled]="isSendingTelegram"
+            (click)="closeTelegramModal()">
+            Cancelar
+          </button>
+          <button
+            type="button"
+            aria-label="telegram-confirm-send"
+            class="rounded-[20px] bg-nido-green-dark px-4 py-2 text-[0.8rem] font-semibold text-nido-cream cursor-pointer transition-colors duration-150 hover:bg-nido-green disabled:cursor-not-allowed disabled:opacity-50"
+            [disabled]="isSendingTelegram"
+            (click)="confirmTelegramSend()">
+            {{ isSendingTelegram ? 'Enviando…' : 'Confirmar envío' }}
+          </button>
+        </div>
+      </section>
+    </div>
+  }
 
   @if (errorMessage) {
     <p class="rounded-[12px] border border-nido-red/25 bg-nido-red/10 px-4 py-3 text-sm text-nido-red">
@@ -36,13 +122,37 @@
         </label>
 
         <button
-          class="h-10 rounded-[20px] bg-nido-green-dark px-4 text-[0.8rem] font-semibold text-nido-cream disabled:cursor-not-allowed disabled:opacity-50"
+          class="h-10 rounded-[20px] bg-nido-green-dark px-4 text-[0.8rem] font-semibold text-nido-cream cursor-pointer transition-colors duration-150 hover:bg-nido-green disabled:cursor-not-allowed disabled:opacity-50"
           [disabled]="!listName.trim() || isSaving"
           (click)="saveList()">
           {{ editingListId ? 'Guardar' : 'Crear' }}
         </button>
       </div>
     </section>
+  }
+
+  @if (telegramSendState === 'sent' && telegramSendMessage) {
+    <p class="rounded-[12px] border border-nido-green/25 bg-nido-green/10 px-4 py-3 text-sm text-nido-green-dark">
+      {{ telegramSendMessage }}
+    </p>
+  }
+
+  @if (telegramSendState === 'empty' && telegramSendMessage) {
+    <p class="rounded-[12px] border border-nido-border bg-white px-4 py-3 text-sm text-nido-brown">
+      {{ telegramSendMessage }}
+    </p>
+  }
+
+  @if (telegramSendState === 'no_telegram_link' && telegramSendMessage) {
+    <div class="flex items-center justify-between gap-3 rounded-[12px] border border-nido-border bg-white px-4 py-3 text-sm text-nido-brown max-sm:flex-col max-sm:items-start">
+      <p>{{ telegramSendMessage }}</p>
+      <button
+        type="button"
+        class="rounded-[18px] border border-nido-border bg-white px-3 py-1.5 text-[0.75rem] font-semibold text-nido-green-dark cursor-pointer transition-colors duration-150 hover:bg-nido-cream"
+        (click)="goToConfiguracion()">
+        Ir a configuración
+      </button>
+    </div>
   }
 
   @if (listas.length === 0) {
@@ -63,10 +173,12 @@
       <div class="flex flex-wrap gap-2">
         @for (lista of listas; track lista.id) {
           <button
-            class="inline-flex items-center gap-2 rounded-[20px] border px-3.5 py-2 text-[0.8rem] font-medium"
+            class="inline-flex items-center gap-2 rounded-[20px] border px-3.5 py-2 text-[0.8rem] font-medium cursor-pointer transition-colors duration-150"
             [class.bg-nido-green-dark]="activeListId === lista.id && !showAllLists"
+            [class.hover:bg-nido-green]="activeListId === lista.id && !showAllLists"
             [class.text-nido-cream]="activeListId === lista.id && !showAllLists"
             [class.bg-white]="activeListId !== lista.id || showAllLists"
+            [class.hover:bg-nido-cream/50]="activeListId !== lista.id || showAllLists"
             [class.text-nido-brown]="activeListId !== lista.id || showAllLists"
             [class.border-nido-green-dark]="activeListId === lista.id && !showAllLists"
             [class.border-nido-border]="activeListId !== lista.id || showAllLists"
@@ -79,7 +191,7 @@
 
       @if (listas.length > 1) {
         <button
-          class="inline-flex h-9 items-center justify-center rounded-[20px] border border-nido-border bg-white px-4 text-[0.8rem] font-semibold text-nido-brown transition-colors duration-150 hover:border-nido-green-dark hover:text-nido-green-dark"
+          class="inline-flex h-9 items-center justify-center rounded-[20px] border border-nido-border bg-white px-4 text-[0.8rem] font-semibold text-nido-brown cursor-pointer transition-colors duration-150 hover:border-nido-green-dark hover:text-nido-green-dark hover:bg-nido-cream/50"
           (click)="toggleShowAllLists()">
           {{ showAllLists ? 'Ver una' : 'Ver todo' }}
         </button>
@@ -96,11 +208,11 @@
           <span class="text-[0.775rem] text-nido-brown">{{ pendientesDe(lista) }} pendiente{{ pendientesDe(lista) !== 1 ? 's' : '' }}</span>
         </div>
         <div class="flex gap-2">
-          <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown hover:text-nido-green-dark" (click)="editList(lista)" title="Editar lista">
-            <fa-icon [icon]="faIcons.pen" />
+          <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown cursor-pointer transition-all duration-150 hover:border-nido-green-dark hover:text-nido-green-dark hover:bg-nido-cream/50" (click)="editList(lista)" title="Editar lista">
+            <lucide-icon name="pencil" [size]="15" />
           </button>
-          <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown hover:text-nido-red" (click)="deleteList(lista.id, $event)" title="Eliminar lista">
-            <fa-icon [icon]="faIcons.trashCan" />
+          <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown cursor-pointer transition-all duration-150 hover:border-nido-red hover:text-nido-red hover:bg-nido-red/5" (click)="deleteList(lista.id, $event)" title="Eliminar lista">
+            <lucide-icon name="trash-2" [size]="15" />
           </button>
         </div>
       </div>
@@ -127,7 +239,7 @@
             [style.--nido-select-font-size]="'0.875rem'"
             placeholder="Unidad" />
         </label>
-        <button class="h-10 w-full rounded-[20px] bg-nido-green-dark px-4 text-[0.8rem] font-semibold text-nido-cream disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto" [disabled]="!itemNombre.trim() || isSaving" (click)="saveItem(lista.id)">
+        <button class="h-10 w-full rounded-[20px] bg-nido-green-dark px-4 text-[0.8rem] font-semibold text-nido-cream cursor-pointer transition-colors duration-150 hover:bg-nido-green disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto" [disabled]="!itemNombre.trim() || isSaving" (click)="saveItem(lista.id)">
           {{ editingItem ? 'Guardar' : 'Agregar' }}
         </button>
       </div>
@@ -136,7 +248,7 @@
         @for (item of lista.items; track item.id) {
           <li class="flex items-center gap-3 px-4 py-3.5 border-b border-nido-border/40 transition-colors duration-150 last:border-b-0 hover:bg-nido-cream/40 sm:px-5">
             <button
-              class="shrink-0 w-5 h-5 rounded-[5px] border-[1.5px] flex items-center justify-center"
+              class="shrink-0 w-5 h-5 rounded-[5px] border-[1.5px] flex items-center justify-center cursor-pointer transition-colors duration-150"
               [class.bg-nido-green-dark]="item.checked"
               [class.border-nido-green-dark]="item.checked"
               [class.bg-white]="!item.checked"
@@ -155,11 +267,11 @@
               }
             </div>
 
-            <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown hover:text-nido-green-dark" (click)="editItem(lista.id, item, $event)" title="Editar producto">
-              <fa-icon [icon]="faIcons.pen" />
+            <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown cursor-pointer transition-colors duration-150 hover:border-nido-green-dark hover:text-nido-green-dark hover:bg-nido-cream/50" (click)="editItem(lista.id, item, $event)" title="Editar producto">
+              <lucide-icon name="pencil" [size]="15" />
             </button>
-            <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown hover:text-nido-red" (click)="removeItem(lista.id, item.id, $event)" title="Quitar producto">
-              <fa-icon [icon]="faIcons.trashCan" />
+            <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown cursor-pointer transition-colors duration-150 hover:border-nido-red hover:text-nido-red hover:bg-nido-red/5" (click)="removeItem(lista.id, item.id, $event)" title="Quitar producto">
+              <lucide-icon name="trash-2" [size]="15" />
             </button>
           </li>
         }
@@ -169,7 +281,7 @@
 
   <section class="bg-white/[0.51] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] overflow-hidden">
     <div class="flex items-center gap-2 px-4 py-3.5 border-b border-nido-border/40 bg-nido-cream/30 sm:px-5">
-      <fa-icon [icon]="faIcons.clockRotateLeft" class="text-nido-green-dark" />
+      <lucide-icon name="history" [size]="16" class="text-nido-green-dark" />
       <h2 class="text-[0.9rem] font-semibold text-nido-green-dark">Historial de compras</h2>
     </div>
 
@@ -178,26 +290,25 @@
     } @else {
       <ul class="list-none m-0 p-0">
         @for (item of historial; track item.id) {
-          <li class="flex flex-col gap-1 px-4 py-3 border-b border-nido-border/40 last:border-b-0 sm:px-5">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <div class="min-w-0 flex flex-col gap-1">
-                <span class="text-[0.875rem] font-medium text-nido-green-dark">{{ item.nombre }}</span>
-                <span class="text-[0.775rem] text-nido-brown">{{ formatHistoryDate(item.compradoEn) }}</span>
-              </div>
-
-              <button
-                class="inline-flex h-8 items-center justify-center rounded-[18px] border border-nido-border bg-white px-3 text-[0.76rem] font-semibold text-nido-brown transition-colors duration-150 hover:border-nido-green-dark hover:text-nido-green-dark disabled:cursor-not-allowed disabled:opacity-50"
-                [disabled]="uploadingHistoryId !== null"
-                (click)="sendHistoryItemToPantry(item)">
-                {{ uploadingHistoryId === item.id ? 'Subiendo...' : 'Pasar a alacena' }}
-              </button>
+          <li class="flex items-center justify-between gap-3 px-4 py-3 border-b border-nido-border/40 last:border-b-0 sm:px-5">
+            <div class="min-w-0 flex flex-col gap-1">
+              <span class="text-[0.875rem] font-medium text-nido-green-dark">{{ item.nombre }}</span>
+              <span class="text-[0.775rem] text-nido-brown">{{ formatHistoryDate(item.compradoEn) }}</span>
+              <span class="text-[0.775rem] text-nido-brown">
+                {{ item.grupoNombre }}
+                @if (formatAmount(item.cantidad, item.unidad)) {
+                  - {{ formatAmount(item.cantidad, item.unidad) }}
+                }
+              </span>
             </div>
-            <span class="text-[0.775rem] text-nido-brown">
-              {{ item.grupoNombre }}
-              @if (formatAmount(item.cantidad, item.unidad)) {
-                - {{ formatAmount(item.cantidad, item.unidad) }}
-              }
-            </span>
+            <button
+              class="inline-flex shrink-0 items-center gap-1.5 rounded-[18px] border border-nido-border bg-white px-3 py-1.5 text-[0.75rem] font-semibold text-nido-green-dark cursor-pointer transition-colors duration-150 hover:border-nido-green hover:bg-nido-cream"
+              type="button"
+              [disabled]="uploadingHistoryId === item.id"
+              (click)="sendHistoryItemToPantry(item)">
+              <lucide-icon name="package-plus" [size]="13" />
+              Pasar a la alacena
+            </button>
           </li>
         }
       </ul>

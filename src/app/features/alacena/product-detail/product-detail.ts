@@ -7,8 +7,9 @@ import { LucideAngularModule } from 'lucide-angular';
 import { forkJoin } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ProductManualResponse, ProductService } from '../../../core/servicios/agregar-producto.service';
+import { AlacenaApiService, DeleteStockMotivo, NutritionInfoItemResponse, StockItemResponse } from '../alacena-api.service';
+import { EstimatedDateNoticeComponent } from '../../../shared/ui/estimated-date-notice/estimated-date-notice';
 import { ListaComprasService } from '../../lista-compras/lista-compras.service';
-import { AlacenaApiService, DeleteStockMotivo, StockItemResponse } from '../alacena-api.service';
 
 const SHOPPING_GROUP = 'Productos agregados';
 
@@ -114,7 +115,7 @@ function clamp(value: number, min: number, max: number): number {
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, AgregarProducto],
+  imports: [CommonModule, LucideAngularModule, AgregarProducto, EstimatedDateNoticeComponent],
   templateUrl: './product-detail.html',
   styleUrl: './product-detail.scss',
 })
@@ -256,13 +257,29 @@ export class ProductDetail {
       fechaVencimiento: item.fechaVencimiento,
       estaAbierto: item.estaAbierto,
       porcentajeConsumido: item.porcentajeConsumido,
-      cantidadEnvases: item.cantidadEnvases,
+      cantidadEnvases: item.cantidadEnvases ?? 1,
+      calorias: null,
+      proteinas: null,
+      carbohidratos: null,
+      grasas: null,
       origenCarga: item.origenCarga ?? 'manual',
+      informacionNutricional: null,
     };
+  }
+
+  /** True si el producto tiene al menos un dato nutricional cargado. */
+  protected hasNutrition(p: StockItemResponse): boolean {
+    return p.calorias != null || p.proteinas != null || p.carbohidratos != null || p.grasas != null;
   }
 
   protected goBack(): void {
     this.router.navigate(['/alacena']);
+  }
+
+  protected loadNutritionInfo(): void {
+    const id = this.product()?.id;
+    if (!id) return;
+    this.router.navigate(['/alacena', id, 'informacion-nutricional']);
   }
 
   protected onEditClosed(updated?: StockItemResponse | void): void {
@@ -441,6 +458,37 @@ export class ProductDetail {
       return 'Conserva el cafe en un lugar fresco y oscuro para mantenerlo mas tiempo.';
     }
     return 'Conservalo en un lugar seco, fresco y lejos de la luz directa.';
+  }
+
+  protected nutritionValue(item: NutritionInfoItemResponse): string {
+    if (item.valor === null || item.valor === undefined) return '-';
+
+    const formatted = new Intl.NumberFormat('es-AR', {
+      maximumFractionDigits: 2,
+    }).format(item.valor);
+
+    return `${formatted}${item.unidad ? ` ${item.unidad}` : ''}`;
+  }
+
+  protected mainNutritionItems(product: StockItemResponse): NutritionInfoItemResponse[] {
+    const nutrition = product.informacionNutricional;
+    if (!nutrition) return [];
+
+    const names = new Set(['carbohidratos', 'proteinas', 'grasas']);
+    return nutrition.items
+      .filter(item => names.has(this.normalizeToken(item.nombre)))
+      .sort((a, b) => {
+        const order = ['carbohidratos', 'proteinas', 'grasas'];
+        return order.indexOf(this.normalizeToken(a.nombre)) - order.indexOf(this.normalizeToken(b.nombre));
+      });
+  }
+
+  protected extraNutritionItems(product: StockItemResponse): NutritionInfoItemResponse[] {
+    const nutrition = product.informacionNutricional;
+    if (!nutrition) return [];
+
+    const main = new Set(['carbohidratos', 'proteinas', 'grasas']);
+    return nutrition.items.filter(item => !main.has(this.normalizeToken(item.nombre)));
   }
 
   protected daysUntilExpiry(value: string | null | undefined): number {

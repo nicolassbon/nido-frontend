@@ -70,6 +70,7 @@
               </span>
               <strong [class.vencido]="isExpired()" [title]="isExpired() ? 'Vencido' : ''">{{ formatDate(p.fechaVencimiento) }}</strong>
             </div>
+            <app-estimated-date-notice variant="compact" />
           }
 
           <div class="info-row">
@@ -137,11 +138,55 @@
           </div>
         </section>
 
+        @if (p.informacionNutricional) {
+          <section class="nutrition-card">
+            <header class="nutrition-header">
+              <div>
+                <h2>Información nutricional</h2>
+                @if (p.informacionNutricional.base || p.informacionNutricional.porcion) {
+                  <p>{{ p.informacionNutricional.base || p.informacionNutricional.porcion }}</p>
+                }
+              </div>
+              <span class="nutrition-icon">
+                <lucide-icon name="leaf" [size]="17" />
+              </span>
+            </header>
+
+            <div class="nutrition-list">
+              @for (item of mainNutritionItems(p); track item.nombre) {
+                <div class="nutrition-row">
+                  <span>{{ item.nombre }}</span>
+                  <strong>{{ nutritionValue(item) }}</strong>
+                </div>
+              }
+
+              @for (item of extraNutritionItems(p); track item.nombre) {
+                <div class="nutrition-row nutrition-row--muted">
+                  <span>{{ item.nombre }}</span>
+                  <strong>
+                    {{ nutritionValue(item) }}
+                    @if (item.porcentajeDiario !== null && item.porcentajeDiario !== undefined) {
+                      <small>{{ item.porcentajeDiario }}%</small>
+                    }
+                  </strong>
+                </div>
+              }
+            </div>
+          </section>
+        }
+
         <div class="actions">
           <button type="button" class="primary-action" (click)="addToShoppingList()">
             <span class="action-symbol">+</span>
             <span class="action-label">Agregar a la lista</span>
           </button>
+
+          @if (!p.informacionNutricional) {
+            <button type="button" class="secondary-action nutrition-action" (click)="loadNutritionInfo()">
+              <lucide-icon name="scan-line" [size]="16" />
+              <span class="action-label">Cargar información nutricional</span>
+            </button>
+          }
 
           <button type="button" class="secondary-action" (click)="showEditModal.set(true)">
             <span class="action-symbol">/</span>

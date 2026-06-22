@@ -62,6 +62,22 @@ select {
   font-family: var(--font-family-sans);
 }
 
+/* Landing: oculta la barra de scroll del documento sin perder el scroll.
+   Cubrimos html Y body porque, según el navegador, el scrollbar del viewport
+   queda asociado a uno u otro. */
+html.landing-no-scrollbar,
+html.landing-no-scrollbar body {
+  scrollbar-width: none !important;        /* Firefox */
+  -ms-overflow-style: none !important;     /* IE / Edge antiguo */
+}
+
+html.landing-no-scrollbar::-webkit-scrollbar,
+html.landing-no-scrollbar body::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;                /* Chrome / Safari / Edge */
+}
+
 lucide-icon {
   display: inline-block;
   vertical-align: middle;

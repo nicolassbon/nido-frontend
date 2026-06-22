@@ -1,20 +1,21 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { faClockRotateLeft, faPen, faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { ListaComprasService, RecipeShoppingList, ShoppingHistoryItem, ShoppingItem } from './lista-compras.service';
 import { CatalogoService } from '../../core/servicios/catalogo.service';
 import { NidoSelectComponent, NidoSelectOption } from '../../shared/ui/form/nido-select/nido-select';
 import { AlacenaApiService, CreateStockItemRequest } from '../alacena/alacena-api.service';
 
+const VIEW_ALL_LIST_ID = '__all__';
+const TELEGRAM_ALL_PENDING_OPTION = '__telegram_all_pending__';
+
 @Component({
   selector: 'app-lista-compras',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, LucideAngularModule, FontAwesomeModule, RouterModule, NidoSelectComponent],
+  imports: [FormsModule, LucideAngularModule, RouterModule, NidoSelectComponent],
   templateUrl: './lista-compras.html',
 })
 export class ListaCompras implements OnInit, OnDestroy {
@@ -41,13 +42,12 @@ export class ListaCompras implements OnInit, OnDestroy {
   protected editingItem: { listaId: string; itemId: string } | null = null;
   protected uploadingHistoryId: string | null = null;
   protected isSaving = false;
+  protected isSendingTelegram = false;
+  protected showTelegramModal = false;
+  protected selectedTelegramTargetId: string = TELEGRAM_ALL_PENDING_OPTION;
+  protected telegramSendState: 'idle' | 'sending' | 'sent' | 'empty' | 'no_telegram_link' | 'error' = 'idle';
+  protected telegramSendMessage: string | null = null;
   protected unidadesOpts: NidoSelectOption[] = [];
-  protected readonly faIcons = {
-    clockRotateLeft: faClockRotateLeft,
-    pen: faPen,
-    plus: faPlus,
-    trashCan: faTrashCan,
-  };
 
   private sub = new Subscription();
 
@@ -69,7 +69,7 @@ export class ListaCompras implements OnInit, OnDestroy {
 
     this.sub.add(this.service.listas$.subscribe(listas => {
       this.listas = listas;
-      if (!this.activeListId || !listas.some(lista => lista.id === this.activeListId)) {
+      if (!this.activeListId || (this.activeListId !== VIEW_ALL_LIST_ID && !listas.some(lista => lista.id === this.activeListId))) {
         this.activeListId = listas[0]?.id ?? null;
       }
       this.cdr.markForCheck();
@@ -139,6 +139,15 @@ export class ListaCompras implements OnInit, OnDestroy {
     });
   }
 
+  protected viewAll(): void {
+    if (this.listas.length === 0) return;
+
+    this.activeListId = VIEW_ALL_LIST_ID;
+    this.errorMessage = null;
+    this.cancelItemEdit();
+    this.cdr.markForCheck();
+  }
+
   protected selectList(listaId: string): void {
     this.activeListId = listaId;
     this.showAllLists = false;
@@ -191,7 +200,11 @@ export class ListaCompras implements OnInit, OnDestroy {
   }
 
   protected togglePurchased(listaId: string, item: ShoppingItem): void {
-    this.service.markPurchased(listaId, item.id, !item.checked).subscribe({
+    const refs = item.sourceItems?.length
+      ? item.sourceItems
+      : [{ listaId, itemId: item.id }];
+
+    forkJoin(refs.map(ref => this.service.markPurchased(ref.listaId, ref.itemId, !item.checked))).subscribe({
       error: () => this.fail('No se pudo actualizar el producto.'),
     });
   }
@@ -245,7 +258,72 @@ export class ListaCompras implements OnInit, OnDestroy {
     });
   }
 
+  protected sendActiveListToTelegram(): void {
+    if (this.isSendingTelegram || this.listas.length === 0) {
+      return;
+    }
+
+    this.selectedTelegramTargetId = this.defaultTelegramTargetId();
+    this.showTelegramModal = true;
+    this.errorMessage = null;
+    this.cdr.markForCheck();
+  }
+
+  protected closeTelegramModal(): void {
+    if (this.isSendingTelegram) {
+      return;
+    }
+
+    this.showTelegramModal = false;
+    this.cdr.markForCheck();
+  }
+
+  protected confirmTelegramSend(): void {
+    if (this.isSendingTelegram || this.listas.length === 0) {
+      return;
+    }
+
+    const targetListId = this.selectedTelegramTargetId === TELEGRAM_ALL_PENDING_OPTION
+      ? null
+      : this.selectedTelegramTargetId;
+    this.isSendingTelegram = true;
+    this.telegramSendState = 'sending';
+    this.telegramSendMessage = null;
+    this.errorMessage = null;
+    this.cdr.markForCheck();
+
+    this.service.sendToTelegram(targetListId).subscribe({
+      next: result => {
+        this.isSendingTelegram = false;
+        this.showTelegramModal = false;
+        this.telegramSendState = result.status === 'enqueued'
+          ? 'sent'
+          : 'empty';
+        this.telegramSendMessage = result.status === 'enqueued'
+          ? 'Lista enviada a Telegram.'
+          : 'La lista está vacía.';
+        this.cdr.markForCheck();
+      },
+      error: error => {
+        this.isSendingTelegram = false;
+        this.showTelegramModal = false;
+        if (error?.status === 409 && error?.error?.status === 'no_telegram_link') {
+          this.telegramSendState = 'no_telegram_link';
+          this.telegramSendMessage = 'Necesitás vincular Telegram para enviar la lista.';
+        } else {
+          this.telegramSendState = 'error';
+          this.fail('No se pudo enviar la lista a Telegram.');
+        }
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
   protected activeList(): RecipeShoppingList | null {
+    if (this.activeListId === VIEW_ALL_LIST_ID) {
+      return this.buildAllList();
+    }
+
     return this.listas.find(lista => lista.id === this.activeListId) ?? this.listas[0] ?? null;
   }
 
@@ -257,6 +335,10 @@ export class ListaCompras implements OnInit, OnDestroy {
 
   protected goToRecetas(): void {
     this.router.navigate(['/recetas']);
+  }
+
+  protected goToConfiguracion(): void {
+    this.router.navigate(['/configuracion']);
   }
 
   protected pendientesDe(lista: RecipeShoppingList): number {
@@ -281,10 +363,99 @@ export class ListaCompras implements OnInit, OnDestroy {
     }).format(date);
   }
 
+  protected telegramTargetOptions(): Array<{ id: string; label: string; pendingCount: number }> {
+    return [
+      {
+        id: TELEGRAM_ALL_PENDING_OPTION,
+        label: 'Todas las compras pendientes',
+        pendingCount: this.totalPendiente,
+      },
+      ...this.listas.map(lista => ({
+        id: lista.id,
+        label: lista.recetaNombre,
+        pendingCount: this.pendientesDe(lista),
+      })),
+    ];
+  }
+
   private fail(message: string): void {
     this.errorMessage = message;
+    this.uploadingHistoryId = null;
     this.isSaving = false;
     this.cdr.markForCheck();
+  }
+
+  private defaultTelegramTargetId(): string {
+    if (this.activeListId && this.activeListId !== VIEW_ALL_LIST_ID && !this.showAllLists) {
+      const exists = this.listas.some(lista => lista.id === this.activeListId);
+      if (exists) {
+        return this.activeListId;
+      }
+    }
+
+    if (this.listas.length === 1) {
+      return this.listas[0].id;
+    }
+
+    return TELEGRAM_ALL_PENDING_OPTION;
+  }
+
+  private buildAllList(): RecipeShoppingList {
+    const grouped = new Map<string, ShoppingItem>();
+
+    for (const lista of this.listas) {
+      for (const item of lista.items) {
+        const normalized = this.normalizeItemName(item.nombre);
+        const amount = this.normalizeAmount(item.cantidad, item.unidad);
+        const key = amount
+          ? `${normalized}|${amount.unit}`
+          : `${normalized}|${item.unidad ?? ''}|${item.id}`;
+        const existing = grouped.get(key);
+        const source = { listaId: lista.id, itemId: item.id };
+
+        if (existing && amount) {
+          existing.cantidad = (existing.cantidad ?? 0) + amount.value;
+          existing.checked = existing.checked && item.checked;
+          existing.sourceItems = [...(existing.sourceItems ?? []), source];
+          continue;
+        }
+
+        grouped.set(key, {
+          ...item,
+          id: `all-${key}`,
+          nombre: existing?.nombre ?? item.nombre,
+          cantidad: amount?.value ?? item.cantidad,
+          unidad: amount?.unit ?? item.unidad,
+          checked: item.checked,
+          sourceItems: [source],
+        });
+      }
+    }
+
+    return {
+      id: VIEW_ALL_LIST_ID,
+      recetaNombre: 'Ver Todo',
+      grupoNombre: 'Todas las listas',
+      items: Array.from(grouped.values()),
+    };
+  }
+
+  private normalizeItemName(value: string): string {
+    return value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  private normalizeAmount(cantidad: number | null, unidad: string | null): { value: number; unit: string } | null {
+    if (cantidad === null || cantidad === undefined || !unidad) return null;
+
+    const unit = this.stockUnitValue(unidad);
+    if (unit === 'kg') return { value: cantidad * 1000, unit: 'g' };
+    if (unit === 'lt') return { value: cantidad * 1000, unit: 'ml' };
+    if (unit) return { value: cantidad, unit };
+    return null;
   }
 
   private stockUnitValue(value: string | null | undefined): string | null {

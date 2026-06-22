@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -15,7 +15,7 @@ interface FaqItem {
   styleUrl: './landing.scss',
   host: { '(window:scroll)': 'onScroll()' },
 })
-export class Landing {
+export class Landing implements OnInit, OnDestroy {
   private readonly sanitizer = inject(DomSanitizer);
   readonly heroBg = this.sanitizer.bypassSecurityTrustStyle("url('images/hero.png')");
   readonly scrolled      = signal(false);
@@ -47,6 +47,15 @@ export class Landing {
       answer: 'Sí. Tu información está cifrada y almacenada de forma segura. Nunca compartimos tus datos con terceros bajo ninguna circunstancia.',
     },
   ];
+
+  ngOnInit(): void {
+    // Oculta la barra de scroll del documento solo mientras la landing está montada.
+    document.documentElement.classList.add('landing-no-scrollbar');
+  }
+
+  ngOnDestroy(): void {
+    document.documentElement.classList.remove('landing-no-scrollbar');
+  }
 
   onScroll(): void {
     this.scrolled.set(window.scrollY > 50);

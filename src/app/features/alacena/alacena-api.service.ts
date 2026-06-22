@@ -17,8 +17,43 @@ export interface StockItemResponse {
   fechaVencimiento:    string | null;   // ISO yyyy-MM-dd
   estaAbierto:         boolean;
   porcentajeConsumido: number;
+  /** Cantidad de envases idénticos del mismo producto (default 1). */
   cantidadEnvases:     number;
+  /** Información nutricional por 100 g (null si el producto no la tiene). */
+  calorias:            number | null;
+  proteinas:           number | null;
+  carbohidratos:       number | null;
+  grasas:              number | null;
   origenCarga:          'manual' | 'codigo_barras' | 'ticket_compra';
+  informacionNutricional?: NutritionInfoResponse | null;
+}
+
+export interface NutritionInfoItemResponse {
+  nombre:           string;
+  valor:            number | null;
+  unidad:           string | null;
+  porcentajeDiario: number | null;
+  orden:            number;
+}
+
+export interface NutritionInfoResponse {
+  calorias:       number | null;
+  proteinas:      number | null;
+  carbohidratos:  number | null;
+  grasas:         number | null;
+  porcion:        string | null;
+  base:           string | null;
+  items:          NutritionInfoItemResponse[];
+}
+
+export interface SaveNutritionInfoRequest {
+  calorias:       number | null;
+  proteinas:      number | null;
+  carbohidratos:  number | null;
+  grasas:         number | null;
+  porcion:        string | null;
+  base:           string | null;
+  items:          NutritionInfoItemResponse[];
 }
 
 export type DeleteStockMotivo = 'consumido' | 'descartado' | 'vencido';
@@ -36,6 +71,12 @@ export interface CreateStockItemRequest {
   estaAbierto:         boolean;
   porcentajeConsumido: number;
   cantidadEnvases?:    number;
+  // Información nutricional por 100 g (del escaneo a Open Food Facts).
+  calorias?:           number | null;
+  proteinas?:          number | null;
+  carbohidratos?:      number | null;
+  grasas?:             number | null;
+  informacionNutricional?: SaveNutritionInfoRequest | null;
   origenCarga?:         'manual' | 'codigo_barras' | 'ticket_compra';
 }
 
@@ -57,6 +98,15 @@ export interface ProductoApiResponse {
   imagen:          string | null;
   categoriaNombre: string | null;
   ttlDias:         number | null;
+  // Datos de la última compra del producto en el hogar (pre-llenan el re-escaneo).
+  gramaje:         number | null;
+  unidadMedida:    string | null;
+  // Información nutricional por 100 g (si está guardada).
+  calorias:        number | null;
+  proteinas:       number | null;
+  carbohidratos:   number | null;
+  grasas:          number | null;
+  informacionNutricional?: NutritionInfoResponse | null;
 }
 
 export interface StockMovementResponse {
@@ -125,6 +175,22 @@ export class AlacenaApiService {
   deleteStock(id: string, motivo?: DeleteStockMotivo): Observable<void> {
     const options = motivo ? { params: { motivo } } : undefined;
     return this.http.delete<void>(`${this.base}/alacena/productos/${id}`, options);
+  }
+
+  scanNutritionInfo(stockId: string, file: File): Observable<NutritionInfoResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<NutritionInfoResponse>(
+      `${this.base}/alacena/productos/${encodeURIComponent(stockId)}/informacion-nutricional/scan`,
+      formData,
+    );
+  }
+
+  saveNutritionInfo(stockId: string, request: SaveNutritionInfoRequest): Observable<NutritionInfoResponse> {
+    return this.http.put<NutritionInfoResponse>(
+      `${this.base}/alacena/productos/${encodeURIComponent(stockId)}/informacion-nutricional`,
+      request,
+    );
   }
 
   getMovimientos(filters: StockMovementFilters = {}): Observable<StockMovementResponse[]> {

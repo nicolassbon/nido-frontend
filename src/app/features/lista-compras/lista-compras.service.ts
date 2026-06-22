@@ -13,6 +13,7 @@ export interface ShoppingItem {
   checked: boolean;
   compradoEn?: string | null;
   orden?: number;
+  sourceItems?: Array<{ listaId: string; itemId: string }>;
 }
 
 export interface RecipeShoppingList {
@@ -31,6 +32,13 @@ export interface ShoppingHistoryItem {
   grupoNombre: string;
   compradoEn: string;
   compradoPor: string | null;
+}
+
+export interface SendToTelegramResponse {
+  status: 'enqueued' | 'empty' | 'no_telegram_link';
+  itemCount: number;
+  chatId?: number | null;
+  listaId?: string | null;
 }
 
 type AddItemInput = {
@@ -144,7 +152,17 @@ export class ListaComprasService {
   }
 
   markPurchased(listaId: string, itemId: string, comprado = true) {
-    return this.updateItem(listaId, itemId, { comprado });
+    if (!comprado) {
+      return this.updateItem(listaId, itemId, { comprado: false });
+    }
+
+    return this.http.patch<ApiShoppingItem>(
+      `${this.legacyBaseUrl}/items/${encodeURIComponent(itemId)}/comprado`,
+      {},
+    ).pipe(
+      switchMap(() => this.refresh()),
+      tap(() => this.refreshHistory().subscribe()),
+    );
   }
 
   markAddedToInventory(itemId: string) {
@@ -163,6 +181,14 @@ export class ListaComprasService {
     ).pipe(
       switchMap(() => this.refresh()),
     );
+  }
+
+  sendToTelegram(listaId?: string | null) {
+    const url = listaId
+      ? `${environment.apiBaseUrl}/lista-compras/enviar-telegram?listaId=${encodeURIComponent(listaId)}`
+      : `${environment.apiBaseUrl}/lista-compras/enviar-telegram`;
+
+    return this.http.post<SendToTelegramResponse>(url, {});
   }
 
   addGroupToLista(recetaNombre: string, faltantes: AddItemInput[]) {
