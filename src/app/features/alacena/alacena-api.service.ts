@@ -25,6 +25,35 @@ export interface StockItemResponse {
   carbohidratos:       number | null;
   grasas:              number | null;
   origenCarga:          'manual' | 'codigo_barras' | 'ticket_compra';
+  informacionNutricional?: NutritionInfoResponse | null;
+}
+
+export interface NutritionInfoItemResponse {
+  nombre:           string;
+  valor:            number | null;
+  unidad:           string | null;
+  porcentajeDiario: number | null;
+  orden:            number;
+}
+
+export interface NutritionInfoResponse {
+  calorias:       number | null;
+  proteinas:      number | null;
+  carbohidratos:  number | null;
+  grasas:         number | null;
+  porcion:        string | null;
+  base:           string | null;
+  items:          NutritionInfoItemResponse[];
+}
+
+export interface SaveNutritionInfoRequest {
+  calorias:       number | null;
+  proteinas:      number | null;
+  carbohidratos:  number | null;
+  grasas:         number | null;
+  porcion:        string | null;
+  base:           string | null;
+  items:          NutritionInfoItemResponse[];
 }
 
 export type DeleteStockMotivo = 'consumido' | 'descartado' | 'vencido';
@@ -47,6 +76,7 @@ export interface CreateStockItemRequest {
   proteinas?:          number | null;
   carbohidratos?:      number | null;
   grasas?:             number | null;
+  informacionNutricional?: SaveNutritionInfoRequest | null;
   origenCarga?:         'manual' | 'codigo_barras' | 'ticket_compra';
 }
 
@@ -76,6 +106,7 @@ export interface ProductoApiResponse {
   proteinas:       number | null;
   carbohidratos:   number | null;
   grasas:          number | null;
+  informacionNutricional?: NutritionInfoResponse | null;
 }
 
 export interface StockMovementResponse {
@@ -144,6 +175,22 @@ export class AlacenaApiService {
   deleteStock(id: string, motivo?: DeleteStockMotivo): Observable<void> {
     const options = motivo ? { params: { motivo } } : undefined;
     return this.http.delete<void>(`${this.base}/alacena/productos/${id}`, options);
+  }
+
+  scanNutritionInfo(stockId: string, file: File): Observable<NutritionInfoResponse> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<NutritionInfoResponse>(
+      `${this.base}/alacena/productos/${encodeURIComponent(stockId)}/informacion-nutricional/scan`,
+      formData,
+    );
+  }
+
+  saveNutritionInfo(stockId: string, request: SaveNutritionInfoRequest): Observable<NutritionInfoResponse> {
+    return this.http.put<NutritionInfoResponse>(
+      `${this.base}/alacena/productos/${encodeURIComponent(stockId)}/informacion-nutricional`,
+      request,
+    );
   }
 
   getMovimientos(filters: StockMovementFilters = {}): Observable<StockMovementResponse[]> {

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { NutritionInfoResponse } from './alacena-api.service';
 
 export interface FoodProduct {
   name:              string;
@@ -17,6 +18,7 @@ export interface FoodProduct {
   proteinas:         number | null;
   carbohidratos:     number | null;
   grasas:            number | null;
+  informacionNutricional?: NutritionInfoResponse | null;
   /** Gramaje extraído del nombre del producto (ej: 290 de "Producto 290g"). */
   gramajeExtraido:   number | null;
 }
@@ -50,7 +52,7 @@ export class OpenFoodFactsService {
   private emptyProduct(): FoodProduct {
     return {
       name: '', image: '', brands: '', categoriesTags: [], categoriaSugerida: 'General', foundInDb: false,
-      calorias: null, proteinas: null, carbohidratos: null, grasas: null, gramajeExtraido: null,
+      calorias: null, proteinas: null, carbohidratos: null, grasas: null, informacionNutricional: null, gramajeExtraido: null,
     };
   }
 }

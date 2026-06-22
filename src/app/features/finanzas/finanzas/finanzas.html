@@ -153,7 +153,8 @@
     <div class="flex items-center justify-between px-5 py-4 border-b border-nido-border/40">
       <p class="text-sm font-semibold text-nido-green-dark">Transacciones recientes</p>
       <div class="flex items-center gap-2">
-        <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] border border-nido-border text-xs font-medium text-nido-brown hover:border-nido-green hover:text-nido-green transition-colors duration-150">
+        <button (click)="navegarAEscanear()"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] border border-nido-border text-xs font-medium text-nido-brown hover:border-nido-green hover:text-nido-green transition-colors duration-150">
           <lucide-icon name="scan-line" [size]="13"></lucide-icon>
           Escanear
         </button>
