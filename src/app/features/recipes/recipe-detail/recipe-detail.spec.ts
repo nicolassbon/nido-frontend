@@ -98,7 +98,6 @@ describe('RecipeDetail', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/lista-compras']);
   });
 
-  it('mantiene la unidad original cuando no hay cantidad convertida para lista', () => {
   it('omite la cantidad y unidad cuando no hay compra estandar y la unidad original es de cocina (e.g. pizca)', () => {
     setRecipe({
       nombre: 'Salsa',

@@ -665,7 +665,7 @@ protected reloadProducts(): void { this.loadProducts(); }
       remainingPercent: 100 - item.porcentajeConsumido,
       barcode:          item.codigoBarras ?? undefined,
       iconoSvg:         item.iconoSvg ?? undefined,
-      icono:            item.icono ?? undefined
+      icono:            item.icono ?? undefined,
       packagesCount:    item.cantidadEnvases ?? 1,
       calorias:         item.calorias,
       proteinas:        item.proteinas,
@@ -687,7 +687,7 @@ protected reloadProducts(): void { this.loadProducts(); }
     isOpened: item.estaAbierto,
     remainingPercent: 100 - item.porcentajeConsumido,
     barcode: item.codigoBarras ?? undefined,
-    iconoSvg: item.iconoSvg ?? undefined
+    iconoSvg: item.iconoSvg ?? undefined,
     packagesCount: item.cantidadEnvases ?? 1,
   };
 }
@@ -1088,41 +1088,6 @@ protected reloadProducts(): void { this.loadProducts(); }
 
     const d = this.draft();
 
-    this.alacenaApi
-      .createStock({
-        nombre:              d.name.trim(),
-        codigoBarras:        d.barcode || null,
-        imagen:              d.image || null,
-        ubicacion:           d.location,
-        cantidad:            d.quantity,
-        unidadMedida:        'unidad',
-        fechaVencimiento:    d.expiryDate || null,
-        estaAbierto:         d.isOpened,
-        porcentajeConsumido: d.consumedPercent,
-        origenCarga:         d.barcode ? 'codigo_barras' : 'manual',
-      })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: created => {
-          this.products.update(list => [...list, this.toProduct(created)]);
-          this.closeScanner();
-        },
-        error: () => {
-          const product: Product = {
-            id:               crypto.randomUUID(),
-            name:             d.name.trim(),
-            image:            d.image,
-            location:         d.location,
-            expiryDate:       d.expiryDate,
-            quantity:         d.quantity,
-            isOpened:         d.isOpened,
-            remainingPercent: 100 - d.consumedPercent,
-            barcode:          d.barcode || undefined,
-          };
-          this.products.update(list => [...list, product]);
-          this.closeScanner();
-        },
-      });
     const existing = d.barcode
       ? this.products().find(p => p.barcode === d.barcode)
       : undefined;

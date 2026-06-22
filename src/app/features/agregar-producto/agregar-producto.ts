@@ -21,7 +21,6 @@ export interface KnownProduct {
   unidadMedida?:   string;
   ubicacion?:      string;
   stockId?:        string;   // id del stock_hogar si ya está en la alacena
-  cantidad?:       number;   // cantidad actual en la alacena
   icono?:          string | null;
   iconoSvg?:       string | null;
   cantidad?:       number;   // cantidad POR envase

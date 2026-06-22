@@ -173,13 +173,6 @@
       <div class="flex flex-wrap gap-2">
         @for (lista of listas; track lista.id) {
           <button
-            class="inline-flex items-center gap-2 rounded-[20px] border px-3.5 py-2 text-[0.8rem] font-medium"
-            [class.bg-nido-green-dark]="activeListId === lista.id"
-            [class.text-nido-cream]="activeListId === lista.id"
-            [class.bg-white]="activeListId !== lista.id"
-            [class.text-nido-brown]="activeListId !== lista.id"
-            [class.border-nido-green-dark]="activeListId === lista.id"
-            [class.border-nido-border]="activeListId !== lista.id"
             class="inline-flex items-center gap-2 rounded-[20px] border px-3.5 py-2 text-[0.8rem] font-medium cursor-pointer transition-colors duration-150"
             [class.bg-nido-green-dark]="activeListId === lista.id && !showAllLists"
             [class.hover:bg-nido-green]="activeListId === lista.id && !showAllLists"
@@ -198,17 +191,6 @@
 
       @if (listas.length > 1) {
         <button
-          class="inline-flex h-9 items-center justify-center rounded-[20px] border px-4 text-[0.8rem] font-semibold transition-colors duration-150"
-          [class.bg-nido-green-dark]="activeListId === '__all__'"
-          [class.text-nido-cream]="activeListId === '__all__'"
-          [class.border-nido-green-dark]="activeListId === '__all__'"
-          [class.bg-white]="activeListId !== '__all__'"
-          [class.text-nido-brown]="activeListId !== '__all__'"
-          [class.border-nido-border]="activeListId !== '__all__'"
-          [class.hover:border-nido-green-dark]="activeListId !== '__all__'"
-          [class.hover:text-nido-green-dark]="activeListId !== '__all__'"
-          (click)="toggleVerTodo()">
-          {{ activeListId === '__all__' ? 'Ver por lista' : 'Ver todo' }}
           class="inline-flex h-9 items-center justify-center rounded-[20px] border border-nido-border bg-white px-4 text-[0.8rem] font-semibold text-nido-brown cursor-pointer transition-colors duration-150 hover:border-nido-green-dark hover:text-nido-green-dark hover:bg-nido-cream/50"
           (click)="toggleShowAllLists()">
           {{ showAllLists ? 'Ver una' : 'Ver todo' }}
@@ -225,46 +207,6 @@
           <span class="text-[0.875rem] font-semibold text-nido-green-dark">{{ lista.recetaNombre }}</span>
           <span class="text-[0.775rem] text-nido-brown">{{ pendientesDe(lista) }} pendiente{{ pendientesDe(lista) !== 1 ? 's' : '' }}</span>
         </div>
-        @if (lista.id !== '__all__') {
-          <div class="flex gap-2">
-            <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown hover:text-nido-green-dark" (click)="editList(lista)" title="Editar lista">
-              <lucide-icon name="pencil" [size]="15" />
-            </button>
-            <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown hover:text-nido-red" (click)="deleteList(lista.id, $event)" title="Eliminar lista">
-              <lucide-icon name="trash-2" [size]="15" />
-            </button>
-          </div>
-        }
-      </div>
-
-      @if (lista.id !== '__all__') {
-        <div class="grid gap-3 border-b border-nido-border/40 px-4 py-4 sm:grid-cols-[minmax(0,1fr)_92px_132px_96px] sm:items-end sm:px-5 lg:grid-cols-[minmax(0,1fr)_96px_144px_104px]">
-          <label class="flex min-w-0 flex-col gap-1.5 text-[0.75rem] font-semibold text-nido-brown">
-            Producto
-            <input class="h-10 rounded-[10px] border border-nido-border bg-white px-3 text-[0.875rem] font-medium text-nido-green-dark outline-none focus:border-nido-green-dark" [(ngModel)]="itemNombre" name="itemNombre" autocomplete="off">
-          </label>
-          <label class="flex min-w-0 flex-col gap-1.5 text-[0.75rem] font-semibold text-nido-brown">
-            Cantidad
-            <input class="h-10 rounded-[10px] border border-nido-border bg-white px-3 text-[0.875rem] font-medium text-nido-green-dark outline-none focus:border-nido-green-dark" [(ngModel)]="itemCantidad" name="itemCantidad" type="number" min="0" step="0.01">
-          </label>
-          <label class="flex min-w-0 flex-col gap-1.5 text-[0.75rem] font-semibold text-nido-brown">
-            Unidad
-            <nido-select
-              [(ngModel)]="itemUnidad"
-              name="itemUnidad"
-              [options]="unidadesOpts"
-              [style.--nido-select-height]="'2.5rem'"
-              [style.--nido-select-radius]="'0.625rem'"
-              [style.--nido-select-border-color]="'var(--color-nido-border)'"
-              [style.--nido-select-background]="'#fff'"
-              [style.--nido-select-font-size]="'0.875rem'"
-              placeholder="Unidad" />
-          </label>
-          <button class="h-10 w-full rounded-[20px] bg-nido-green-dark px-4 text-[0.8rem] font-semibold text-nido-cream disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto" [disabled]="!itemNombre.trim() || isSaving" (click)="saveItem(lista.id)">
-            {{ editingItem ? 'Guardar' : 'Agregar' }}
-          </button>
-        </div>
-      }
         <div class="flex gap-2">
           <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown cursor-pointer transition-all duration-150 hover:border-nido-green-dark hover:text-nido-green-dark hover:bg-nido-cream/50" (click)="editList(lista)" title="Editar lista">
             <lucide-icon name="pencil" [size]="15" />
@@ -318,12 +260,6 @@
               }
             </button>
 
-            @if (item.icono) {
-              <div class="w-8 h-8 rounded-lg bg-nido-cream/40 flex items-center justify-center shrink-0 overflow-hidden border border-nido-border/30" [class.opacity-60]="item.checked">
-                <lucide-icon [name]="item.icono" [size]="18" class="text-nido-green-dark" />
-              </div>
-            }
-
             <div class="min-w-0 flex-1">
               <p class="truncate text-[0.875rem]" [class.line-through]="item.checked" [class.text-nido-brown]="item.checked" [class.text-nido-green-dark]="!item.checked" [class.font-medium]="!item.checked">{{ item.nombre }}</p>
               @if (formatAmount(item.cantidad, item.unidad)) {
@@ -331,14 +267,6 @@
               }
             </div>
 
-            @if (lista.id !== '__all__') {
-              <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown hover:text-nido-green-dark" (click)="editItem(lista.id, item, $event)" title="Editar producto">
-                <lucide-icon name="pencil" [size]="15" />
-              </button>
-              <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown hover:text-nido-red" (click)="removeItem(lista.id, item.id, $event)" title="Quitar producto">
-                <lucide-icon name="trash-2" [size]="15" />
-              </button>
-            }
             <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown cursor-pointer transition-colors duration-150 hover:border-nido-green-dark hover:text-nido-green-dark hover:bg-nido-cream/50" (click)="editItem(lista.id, item, $event)" title="Editar producto">
               <lucide-icon name="pencil" [size]="15" />
             </button>
@@ -363,47 +291,23 @@
       <ul class="list-none m-0 p-0">
         @for (item of historial; track item.id) {
           <li class="flex items-center justify-between gap-3 px-4 py-3 border-b border-nido-border/40 last:border-b-0 sm:px-5">
-            <div class="flex items-center gap-3 min-w-0 flex-1">
-              @if (item.icono) {
-                <div class="w-8 h-8 rounded-lg bg-nido-cream/40 flex items-center justify-center shrink-0 overflow-hidden border border-nido-border/30">
-                  <lucide-icon [name]="item.icono" [size]="18" class="text-nido-green-dark" />
-                </div>
-              }
-              <div class="min-w-0 flex-1">
-                <span class="block text-[0.875rem] font-medium text-nido-green-dark truncate">{{ item.nombre }}</span>
-                <span class="block text-[0.72rem] text-nido-brown/80 truncate mt-0.5">
-                  {{ formatHistoryDate(item.compradoEn) }}
-                  @if (item.grupoNombre) {
-                    · {{ item.grupoNombre }}
-                  }
-                  @if (formatAmount(item.cantidad, item.unidad)) {
-                    · {{ formatAmount(item.cantidad, item.unidad) }}
-                  }
-                </span>
-              </div>
+            <div class="min-w-0 flex flex-col gap-1">
+              <span class="text-[0.875rem] font-medium text-nido-green-dark">{{ item.nombre }}</span>
+              <span class="text-[0.775rem] text-nido-brown">{{ formatHistoryDate(item.compradoEn) }}</span>
+              <span class="text-[0.775rem] text-nido-brown">
+                {{ item.grupoNombre }}
+                @if (formatAmount(item.cantidad, item.unidad)) {
+                  - {{ formatAmount(item.cantidad, item.unidad) }}
+                }
+              </span>
             </div>
             <button
-              class="inline-flex shrink-0 items-center gap-1.5 rounded-[18px] border px-3 py-1.5 text-[0.75rem] font-semibold transition-colors duration-150"
-              [class.bg-white]="!item.agregadoAlInventario"
-              [class.text-nido-green-dark]="!item.agregadoAlInventario"
-              [class.border-nido-border]="!item.agregadoAlInventario"
-              [class.hover:border-nido-green]="!item.agregadoAlInventario"
-              [class.hover:bg-nido-cream]="!item.agregadoAlInventario"
-              [class.bg-gray-100]="item.agregadoAlInventario"
-              [class.text-gray-400]="item.agregadoAlInventario"
-              [class.border-gray-200]="item.agregadoAlInventario"
-              [class.cursor-not-allowed]="item.agregadoAlInventario"
               class="inline-flex shrink-0 items-center gap-1.5 rounded-[18px] border border-nido-border bg-white px-3 py-1.5 text-[0.75rem] font-semibold text-nido-green-dark cursor-pointer transition-colors duration-150 hover:border-nido-green hover:bg-nido-cream"
               type="button"
-              [disabled]="uploadingHistoryId === item.id || item.agregadoAlInventario"
+              [disabled]="uploadingHistoryId === item.id"
               (click)="sendHistoryItemToPantry(item)">
-              @if (item.agregadoAlInventario) {
-                <lucide-icon name="check" [size]="13" />
-                Agregado
-              } @else {
-                <lucide-icon name="package-plus" [size]="13" />
-                Pasar a la alacena
-              }
+              <lucide-icon name="package-plus" [size]="13" />
+              Pasar a la alacena
             </button>
           </li>
         }
