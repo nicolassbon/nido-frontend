@@ -266,7 +266,7 @@ function toShoppingList(list: ApiShoppingList): RecipeShoppingList {
       orden: item.orden,
       categoriaNombre: item.categoriaNombre,
       iconoSvg: item.iconoSvg,
-      icono: item.icono,
+      icono: resolveShoppingIcon(item),
     })),
   };
 }
@@ -284,6 +284,59 @@ function toHistoryItem(item: ApiHistoryItem): ShoppingHistoryItem {
     agregadoAlInventario: item.agregadoAlInventario,
     categoriaNombre: item.categoriaNombre,
     iconoSvg: item.iconoSvg,
-    icono: item.icono,
+    icono: null,
   };
+}
+
+const SHOPPING_ICON_ALIASES: Record<string, string> = {
+  salt: 'leaf',
+  sugar: 'candy',
+  bottle: 'chef-hat',
+  sausage: 'beef',
+  archive: 'package',
+  beer: 'glass-water',
+  wine: 'glass-water',
+  bath: 'package',
+  dog: 'package',
+  baby: 'package',
+  'heart-pulse': 'leaf',
+  'spray-can': 'package',
+};
+
+function resolveShoppingIcon(item: ApiShoppingItem): string {
+  const icon = normalizeIconName(item.icono);
+  if (icon) return SHOPPING_ICON_ALIASES[icon] ?? icon;
+
+  const normalizedName = normalizeText(item.nombre);
+  const normalizedCategory = normalizeText(item.categoriaNombre ?? '');
+
+  if (containsAny(normalizedName, 'harina', 'maicena', 'fecula') || containsAny(normalizedCategory, 'harina')) {
+    return 'wheat';
+  }
+
+  if (
+    containsAny(normalizedName, 'sal', 'pimienta', 'oregano', 'aji molido', 'pimenton', 'condimento', 'especia', 'caldo') ||
+    containsAny(normalizedCategory, 'condimento')
+  ) {
+    return 'leaf';
+  }
+
+  return 'package';
+}
+
+function normalizeIconName(value: string | null | undefined): string | null {
+  const trimmed = value?.trim().toLowerCase();
+  return trimmed || null;
+}
+
+function normalizeText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function containsAny(source: string, ...keywords: string[]): boolean {
+  return keywords.some(keyword => source.includes(keyword));
 }

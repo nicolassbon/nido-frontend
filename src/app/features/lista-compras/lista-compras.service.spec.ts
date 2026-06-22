@@ -37,6 +37,35 @@ describe('ListaComprasService', () => {
     expect(service.snapshot[0].items[0].nombre).toBe('Arroz');
   });
 
+  it('resuelve iconos de lista activa aunque la API venga sin icono o con alias viejo', () => {
+    service.refresh().subscribe();
+
+    http.expectOne(baseUrl).flush([shoppingList('lista-1', 'Pasteles', [
+      item({ id: 'item-1', nombre: 'Harina', icono: null }),
+      item({ id: 'item-2', nombre: 'Pimienta negra a gusto para el relleno', icono: 'salt' }),
+      item({ id: 'item-3', nombre: 'Aji molido opcional', icono: 'salt' }),
+    ])]);
+
+    expect(service.snapshot[0].items.find(i => i.nombre === 'Harina')?.icono).toBe('wheat');
+    expect(service.snapshot[0].items.find(i => i.nombre.startsWith('Pimienta'))?.icono).toBe('leaf');
+    expect(service.snapshot[0].items.find(i => i.nombre.startsWith('Aji'))?.icono).toBe('leaf');
+  });
+
+  it('no expone iconos en historial', () => {
+    service.refreshHistory().subscribe();
+
+    http.expectOne(`${baseUrl}/historial`).flush([
+      historyItem({ id: 'item-1', nombre: 'Pimienta negra', icono: 'leaf' }),
+    ]);
+
+    let latestHistory: any[] = [];
+    service.historial$.subscribe(items => {
+      latestHistory = items;
+    });
+
+    expect(latestHistory[0].icono).toBeNull();
+  });
+
   it('createList deberia llamar al endpoint nuevo', () => {
     service.createList('Verduleria').subscribe();
 
