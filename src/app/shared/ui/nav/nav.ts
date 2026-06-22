@@ -1,10 +1,10 @@
-import { Component, computed, inject, input, OnInit, OnDestroy } from '@angular/core';
+import { Component, computed, inject, input, output, OnInit, OnDestroy } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import {
   LucideAngularModule, LucideIconData,
   House, Refrigerator, ChefHat, Wallet,
   CheckSquare, Calendar, Zap, Bell,
-  User, Settings, LogOut, ShoppingCart,
+  User, Settings, LogOut, ShoppingCart, X,
 } from 'lucide-angular';
 import { AuthService } from '../../../core/auth/auth.service';
 import { NotificacionesApiService } from '../../../features/notificaciones/services/notificaciones-api.service';
@@ -27,6 +27,7 @@ export class Nav implements OnInit, OnDestroy {
   private readonly notificacionesApi = inject(NotificacionesApiService);
 
   readonly isOpen = input(false);
+  readonly close = output<void>();
 
   protected readonly unreadNotificationsCount = this.notificacionesApi.unreadCount;
 
@@ -75,6 +76,7 @@ export class Nav implements OnInit, OnDestroy {
   }
 
   protected readonly icons: Record<string, LucideIconData> = {
+    'x':            X,
     'house':        House,
     'refrigerator': Refrigerator,
     'chef-hat':     ChefHat,

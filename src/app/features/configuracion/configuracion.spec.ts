@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { Configuracion } from './configuracion';
 import { AuthService } from '../../core/auth/auth.service';
@@ -12,6 +12,7 @@ import { HogaresApiService } from '../household/hogares-api.service';
 import { appConfig } from '../../app.config';
 import { SwPush } from '@angular/service-worker';
 import { NotificacionesApiService } from '../notificaciones/services/notificaciones-api.service';
+import { TelegramApiService } from '../telegram/telegram-api';
 
 describe('Configuracion', () => {
   let component: Configuracion;
@@ -22,6 +23,8 @@ describe('Configuracion', () => {
   let mockHogaresApiService: any;
   let mockSwPush: any;
   let mockNotificacionesApiService: any;
+  let mockTelegramApiService: any;
+  let windowOpenSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(async () => {
     mockAuthService = {
@@ -74,6 +77,18 @@ describe('Configuracion', () => {
       subscribePush: vi.fn().mockReturnValue(of(undefined)),
     };
 
+    mockTelegramApiService = {
+      startPairing: vi.fn().mockReturnValue(of({
+        deepLinkUrl: 'https://t.me/nido_app_bot?start=abc123',
+        pairingCode: 'ABC123',
+        expiresAt: '2026-06-19T12:00:00.000Z',
+      })),
+      getStatus: vi.fn().mockReturnValue(of({ isLinked: false })),
+      unlink: vi.fn(),
+    };
+
+    windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => window);
+
     await TestBed.configureTestingModule({
       imports: [Configuracion, ReactiveFormsModule, LucideAngularModule],
       providers: [
@@ -84,6 +99,7 @@ describe('Configuracion', () => {
         { provide: HogaresApiService, useValue: mockHogaresApiService },
         { provide: SwPush, useValue: mockSwPush },
         { provide: NotificacionesApiService, useValue: mockNotificacionesApiService },
+        { provide: TelegramApiService, useValue: mockTelegramApiService },
         { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: { get: () => null } } } },
       ],
     }).compileComponents();
@@ -92,6 +108,15 @@ describe('Configuracion', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
+
+  afterEach(() => {
+    windowOpenSpy.mockRestore();
+  });
+
+  const findButton = (text: string): HTMLButtonElement | null => {
+    const buttons = fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>;
+    return Array.from(buttons).find((button) => button.textContent?.includes(text)) ?? null;
+  };
 
   it('should create and load profile successfully', () => {
     expect(component).toBeTruthy();
@@ -223,6 +248,283 @@ describe('Configuracion', () => {
 
       expect(component.showAddNewPassword()).toBe(true);
       expect(component.showAddConfirmPassword()).toBe(true);
+    });
+  });
+
+  describe('Telegram pairing flow', () => {
+    it('should start pairing, open Telegram, and expose the fallback code', () => {
+      component.connectTelegram();
+
+      expect(mockTelegramApiService.startPairing).toHaveBeenCalled();
+      expect(windowOpenSpy).toHaveBeenCalledWith('https://t.me/nido_app_bot?start=abc123', '_blank', 'noopener,noreferrer');
+      expect(component.telegramPairingStatus()).toBe('success');
+      expect(component.telegramPairingCode()).toBe('ABC123');
+      expect(component.telegramPairingMessage()).toContain('Abrimos Telegram');
+    });
+
+    it('should show a truthful fallback message when the popup is blocked', () => {
+      windowOpenSpy.mockImplementationOnce(() => null);
+
+      component.connectTelegram();
+
+      expect(component.telegramPairingStatus()).toBe('success');
+      expect(component.telegramPairingCode()).toBe('ABC123');
+      expect(component.telegramPairingMessage()).toBe(
+        'No pudimos abrir Telegram automáticamente. Abrí este enlace: https://t.me/nido_app_bot?start=abc123 o usá el código ABC123.'
+      );
+    });
+
+    it('should show a friendly message when pairing is rate limited', () => {
+      mockTelegramApiService.startPairing.mockReturnValue(
+        throwError(() => ({ status: 429, error: { title: 'TELEGRAM_PAIRING_RATE_LIMIT_EXCEEDED' } }))
+      );
+
+      component.connectTelegram();
+
+      expect(windowOpenSpy).not.toHaveBeenCalled();
+      expect(component.telegramPairingStatus()).toBe('error');
+      expect(component.telegramPairingMessage()).toBe('Ya generaste un intento hace poco. Esperá un momento y volvé a probar.');
+    });
+
+    it('should show a friendly message when Telegram is not configured', () => {
+      mockTelegramApiService.startPairing.mockReturnValue(
+        throwError(() => ({ status: 503, error: { title: 'TELEGRAM_CONFIGURATION' } }))
+      );
+
+      component.connectTelegram();
+
+      expect(component.telegramPairingStatus()).toBe('error');
+      expect(component.telegramPairingMessage()).toBe('Telegram no está disponible en este momento. Intentá nuevamente más tarde.');
+    });
+
+    it('should show the generic Telegram pairing error fallback message', () => {
+      mockTelegramApiService.startPairing.mockReturnValue(
+        throwError(() => ({ status: 500, error: { title: 'UNEXPECTED_ERROR' } }))
+      );
+
+      component.connectTelegram();
+
+      expect(component.telegramPairingStatus()).toBe('error');
+      expect(component.telegramPairingMessage()).toBe('No pudimos iniciar la vinculación con Telegram. Intentá de nuevo.');
+    });
+
+    it('should reject invalid Telegram deep links before opening them', () => {
+      mockTelegramApiService.startPairing.mockReturnValue(
+        of({
+          deepLinkUrl: 'https://t.me/other_bot?start=abc123',
+          pairingCode: 'ABC123',
+          expiresAt: '2026-06-19T12:00:00.000Z',
+        })
+      );
+
+      component.connectTelegram();
+
+      expect(windowOpenSpy).not.toHaveBeenCalled();
+      expect(component.telegramPairingStatus()).toBe('error');
+      expect(component.telegramPairingMessage()).toBe('No pudimos abrir Telegram porque el enlace devuelto no es válido. Probá de nuevo.');
+    });
+  });
+
+  describe('Telegram status and disconnect flow', () => {
+    it('should load Telegram status when the component loads', () => {
+      expect(mockTelegramApiService.getStatus).toHaveBeenCalled();
+      expect(component.telegramIsLinked()).toBe(false);
+    });
+
+    it('should render the disconnect button when Telegram is linked', () => {
+      mockTelegramApiService.getStatus.mockReturnValue(of({
+        isLinked: true,
+        chatId: 12345,
+        pairedAt: '2026-06-19T12:00:00.000Z',
+      }));
+
+      fixture = TestBed.createComponent(Configuracion);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      expect(component.telegramIsLinked()).toBe(true);
+      expect(findButton('Desconectar')).toBeTruthy();
+    });
+
+    it('should let the user verify Telegram connection after pairing and refresh the linked state', () => {
+      mockTelegramApiService.getStatus.mockReturnValueOnce(of({ isLinked: false }));
+
+      fixture = TestBed.createComponent(Configuracion);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      component.connectTelegram();
+      fixture.detectChanges();
+
+      const verifyButton = findButton('Verificar conexión');
+      expect(verifyButton).toBeTruthy();
+
+      mockTelegramApiService.getStatus.mockReturnValueOnce(of({
+        isLinked: true,
+        chatId: 12345,
+        pairedAt: '2026-06-19T12:30:00.000Z',
+      }));
+
+      verifyButton?.click();
+      fixture.detectChanges();
+
+      expect(component.telegramIsLinked()).toBe(true);
+      expect(findButton('Desconectar')).toBeTruthy();
+    });
+
+    it('should preserve the last known Telegram link state when status refresh fails', () => {
+      mockTelegramApiService.getStatus
+        .mockReturnValueOnce(of({
+          isLinked: true,
+          chatId: 12345,
+          pairedAt: '2026-06-19T12:00:00.000Z',
+        }))
+        .mockReturnValueOnce(throwError(() => ({ status: 503, error: { title: 'TELEGRAM_STATUS_UNAVAILABLE' } })));
+
+      fixture = TestBed.createComponent(Configuracion);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      component.refreshTelegramStatus();
+      fixture.detectChanges();
+
+      expect(component.telegramIsLinked()).toBe(true);
+      expect(component.telegramStatusError()).toBe(
+        'No pudimos comprobar el estado de Telegram. Conservamos la última conexión conocida. Probá de nuevo en unos segundos.'
+      );
+      expect(findButton('Desconectar')).toBeTruthy();
+      expect(fixture.nativeElement.textContent).toContain(
+        'No pudimos comprobar el estado de Telegram. Conservamos la última conexión conocida. Probá de nuevo en unos segundos.'
+      );
+    });
+
+    it('should clear stale pairing instructions after disconnecting Telegram', () => {
+      mockTelegramApiService.getStatus.mockReturnValue(of({
+        isLinked: true,
+        chatId: 12345,
+        pairedAt: '2026-06-19T12:00:00.000Z',
+      }));
+      mockTelegramApiService.unlink.mockReturnValue(of({
+        chatId: 12345,
+        unpairedAt: '2026-06-19T13:00:00.000Z',
+      }));
+
+      fixture = TestBed.createComponent(Configuracion);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      component.telegramPairingMessage.set('Abrimos Telegram para completar la vinculación.');
+      component.telegramPairingCode.set('ABC123');
+
+      findButton('Desconectar')?.click();
+      fixture.detectChanges();
+
+      expect(mockTelegramApiService.unlink).toHaveBeenCalled();
+      expect(component.telegramIsLinked()).toBe(false);
+      expect(component.telegramPairingMessage()).toBeNull();
+      expect(component.telegramPairingCode()).toBeNull();
+      expect(findButton('Conectar Telegram')).toBeTruthy();
+    });
+
+    it('should clear any previous unlink success timer before a later unlink cycle settles', () => {
+      vi.useFakeTimers();
+
+      try {
+        const secondUnlink$ = new Subject<{ chatId: number; unpairedAt: string }>();
+
+        mockTelegramApiService.getStatus.mockReturnValue(of({
+          isLinked: true,
+          chatId: 12345,
+          pairedAt: '2026-06-19T12:00:00.000Z',
+        }));
+        mockTelegramApiService.unlink
+          .mockReturnValueOnce(of({
+            chatId: 12345,
+            unpairedAt: '2026-06-19T13:00:00.000Z',
+          }))
+          .mockReturnValueOnce(secondUnlink$.asObservable());
+
+        fixture = TestBed.createComponent(Configuracion);
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+
+        component.disconnectTelegram();
+        expect(component.telegramUnlinkStatus()).toBe('success');
+
+        component.disconnectTelegram();
+
+        expect(mockTelegramApiService.unlink).toHaveBeenCalledTimes(2);
+        expect(component.telegramUnlinkStatus()).toBe('loading');
+
+        vi.advanceTimersByTime(2500);
+
+        expect(component.telegramUnlinkStatus()).toBe('loading');
+
+        secondUnlink$.next({
+          chatId: 12345,
+          unpairedAt: '2026-06-19T13:05:00.000Z',
+        });
+        secondUnlink$.complete();
+
+        expect(component.telegramUnlinkStatus()).toBe('success');
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('should ignore stale Telegram status responses after unlinking', () => {
+      const staleStatus$ = new Subject<{ isLinked: boolean; chatId?: number; pairedAt?: string }>();
+
+      mockTelegramApiService.getStatus
+        .mockReturnValueOnce(staleStatus$.asObservable())
+        .mockReturnValue(of({ isLinked: false }));
+
+      mockTelegramApiService.unlink.mockReturnValue(of({
+        chatId: 12345,
+        unpairedAt: '2026-06-19T13:00:00.000Z',
+      }));
+
+      fixture = TestBed.createComponent(Configuracion);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      component.disconnectTelegram();
+
+      expect(mockTelegramApiService.unlink).toHaveBeenCalled();
+      expect(component.telegramIsLinked()).toBe(false);
+
+      staleStatus$.next({
+        isLinked: true,
+        chatId: 12345,
+        pairedAt: '2026-06-19T12:30:00.000Z',
+      });
+      staleStatus$.complete();
+
+      expect(component.telegramIsLinked()).toBe(false);
+    });
+
+    it('should show a friendly error when unlink fails with 404', () => {
+      mockTelegramApiService.getStatus.mockReturnValue(of({
+        isLinked: true,
+        chatId: 12345,
+        pairedAt: '2026-06-19T12:00:00.000Z',
+      }));
+      mockTelegramApiService.unlink.mockReturnValue(
+        throwError(() => ({ status: 404, error: {} }))
+      );
+
+      fixture = TestBed.createComponent(Configuracion);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+
+      findButton('Desconectar')?.click();
+      fixture.detectChanges();
+
+      expect(component.telegramUnlinkStatus()).toBe('error');
+      expect(component.telegramIsLinked()).toBe(false);
+      expect(component.telegramUnlinkError()).toBe('No encontramos una cuenta de Telegram vinculada.');
+      expect(findButton('Conectar Telegram')).toBeTruthy();
+      expect(findButton('Desconectar')).toBeNull();
     });
   });
 

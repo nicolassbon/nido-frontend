@@ -9,6 +9,7 @@ import { NidoSelectComponent, NidoSelectOption } from '../../shared/ui/form/nido
 import { AlacenaApiService, CreateStockItemRequest } from '../alacena/alacena-api.service';
 
 const VIEW_ALL_LIST_ID = '__all__';
+const TELEGRAM_ALL_PENDING_OPTION = '__telegram_all_pending__';
 
 @Component({
   selector: 'app-lista-compras',
@@ -41,6 +42,11 @@ export class ListaCompras implements OnInit, OnDestroy {
   protected editingItem: { listaId: string; itemId: string } | null = null;
   protected uploadingHistoryId: string | null = null;
   protected isSaving = false;
+  protected isSendingTelegram = false;
+  protected showTelegramModal = false;
+  protected selectedTelegramTargetId: string = TELEGRAM_ALL_PENDING_OPTION;
+  protected telegramSendState: 'idle' | 'sending' | 'sent' | 'empty' | 'no_telegram_link' | 'error' = 'idle';
+  protected telegramSendMessage: string | null = null;
   protected unidadesOpts: NidoSelectOption[] = [];
 
   private sub = new Subscription();
@@ -252,6 +258,67 @@ export class ListaCompras implements OnInit, OnDestroy {
     });
   }
 
+  protected sendActiveListToTelegram(): void {
+    if (this.isSendingTelegram || this.listas.length === 0) {
+      return;
+    }
+
+    this.selectedTelegramTargetId = this.defaultTelegramTargetId();
+    this.showTelegramModal = true;
+    this.errorMessage = null;
+    this.cdr.markForCheck();
+  }
+
+  protected closeTelegramModal(): void {
+    if (this.isSendingTelegram) {
+      return;
+    }
+
+    this.showTelegramModal = false;
+    this.cdr.markForCheck();
+  }
+
+  protected confirmTelegramSend(): void {
+    if (this.isSendingTelegram || this.listas.length === 0) {
+      return;
+    }
+
+    const targetListId = this.selectedTelegramTargetId === TELEGRAM_ALL_PENDING_OPTION
+      ? null
+      : this.selectedTelegramTargetId;
+    this.isSendingTelegram = true;
+    this.telegramSendState = 'sending';
+    this.telegramSendMessage = null;
+    this.errorMessage = null;
+    this.cdr.markForCheck();
+
+    this.service.sendToTelegram(targetListId).subscribe({
+      next: result => {
+        this.isSendingTelegram = false;
+        this.showTelegramModal = false;
+        this.telegramSendState = result.status === 'enqueued'
+          ? 'sent'
+          : 'empty';
+        this.telegramSendMessage = result.status === 'enqueued'
+          ? 'Lista enviada a Telegram.'
+          : 'La lista está vacía.';
+        this.cdr.markForCheck();
+      },
+      error: error => {
+        this.isSendingTelegram = false;
+        this.showTelegramModal = false;
+        if (error?.status === 409 && error?.error?.status === 'no_telegram_link') {
+          this.telegramSendState = 'no_telegram_link';
+          this.telegramSendMessage = 'Necesitás vincular Telegram para enviar la lista.';
+        } else {
+          this.telegramSendState = 'error';
+          this.fail('No se pudo enviar la lista a Telegram.');
+        }
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
   protected activeList(): RecipeShoppingList | null {
     if (this.activeListId === VIEW_ALL_LIST_ID) {
       return this.buildAllList();
@@ -268,6 +335,10 @@ export class ListaCompras implements OnInit, OnDestroy {
 
   protected goToRecetas(): void {
     this.router.navigate(['/recetas']);
+  }
+
+  protected goToConfiguracion(): void {
+    this.router.navigate(['/configuracion']);
   }
 
   protected pendientesDe(lista: RecipeShoppingList): number {
@@ -292,11 +363,41 @@ export class ListaCompras implements OnInit, OnDestroy {
     }).format(date);
   }
 
+  protected telegramTargetOptions(): Array<{ id: string; label: string; pendingCount: number }> {
+    return [
+      {
+        id: TELEGRAM_ALL_PENDING_OPTION,
+        label: 'Todas las compras pendientes',
+        pendingCount: this.totalPendiente,
+      },
+      ...this.listas.map(lista => ({
+        id: lista.id,
+        label: lista.recetaNombre,
+        pendingCount: this.pendientesDe(lista),
+      })),
+    ];
+  }
+
   private fail(message: string): void {
     this.errorMessage = message;
     this.uploadingHistoryId = null;
     this.isSaving = false;
     this.cdr.markForCheck();
+  }
+
+  private defaultTelegramTargetId(): string {
+    if (this.activeListId && this.activeListId !== VIEW_ALL_LIST_ID && !this.showAllLists) {
+      const exists = this.listas.some(lista => lista.id === this.activeListId);
+      if (exists) {
+        return this.activeListId;
+      }
+    }
+
+    if (this.listas.length === 1) {
+      return this.listas[0].id;
+    }
+
+    return TELEGRAM_ALL_PENDING_OPTION;
   }
 
   private buildAllList(): RecipeShoppingList {

@@ -7,10 +7,11 @@ import {
   ElectrodomesticosService,
 } from '../../electrodomesticos/services/electrodomesticos.service';
 import { OnboardingApiService } from '../onboarding-api.service';
+import { ProgressStepsComponent } from '../../../shared/ui/progress-steps/progress-steps.component';
 
 @Component({
   selector: 'app-equipment-step',
-  imports: [LucideAngularModule],
+  imports: [LucideAngularModule, ProgressStepsComponent],
   templateUrl: './equipment-step.html',
   styleUrl: './equipment-step.scss',
 })
@@ -28,10 +29,10 @@ export class EquipmentStep implements OnInit {
   readonly showLeaveModal = signal(false);
 
   readonly steps = [
-    { number: 1, label: 'Tu cuenta', completed: true, active: false },
-    { number: 2, label: 'Tu hogar', completed: true, active: false },
-    { number: 3, label: 'Equipamiento', completed: false, active: true },
-    { number: 4, label: 'Preferencias', completed: false, active: false },
+    { number: 1, label: 'Tu Perfil - Crea tu cuenta', completed: true, active: false },
+    { number: 2, label: 'Tu hogar - Convivientes', completed: true, active: false },
+    { number: 3, label: 'Equipamiento - Electrodomésticos', completed: false, active: true },
+    { number: 4, label: 'Finalizar - Preferencias', completed: false, active: false },
   ];
 
   onLogoClick(event: Event): void {

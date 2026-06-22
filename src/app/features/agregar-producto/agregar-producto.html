@@ -111,7 +111,7 @@
 
       <!-- Cantidad + Unidad -->
       <div class="flex flex-col gap-1.5">
-        <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Cantidad</label>
+        <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Cantidad por envase</label>
         <div class="flex items-center gap-2 flex-wrap">
           <input
             formControlName="cantidad"
@@ -136,6 +136,37 @@
         @if (form.controls.unidadMedida.invalid && form.controls.unidadMedida.touched) {
           <p class="text-[0.775rem] text-nido-red">Seleccioná la unidad.</p>
         }
+      </div>
+
+      <!-- Cantidad de envases -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[0.8125rem] font-semibold text-nido-green-dark">
+          ¿Cuántos envases tenés?
+          <span class="text-[0.725rem] font-normal text-nido-muted ml-1">del mismo producto</span>
+        </label>
+        <div class="flex items-center gap-3 flex-wrap">
+          <div class="flex items-center border-[1.5px] border-solid border-nido-border rounded-lg overflow-hidden">
+            <button type="button"
+              class="flex items-center justify-center w-9 h-9 bg-nido-cream border-none cursor-pointer text-nido-green-dark transition-[background] duration-150 hover:bg-[#ede4d8] disabled:opacity-35 disabled:cursor-default"
+              (click)="updateEnvases(-1)"
+              [disabled]="((form.controls.cantidadEnvases.value ?? 1)) <= 1">
+              <lucide-icon name="minus" [size]="14" />
+            </button>
+            <span class="min-w-[44px] text-center text-[0.9375rem] font-semibold text-nido-green-dark px-1 select-none">
+              {{ form.controls.cantidadEnvases.value ?? 1 }}
+            </span>
+            <button type="button"
+              class="flex items-center justify-center w-9 h-9 bg-nido-cream border-none cursor-pointer text-nido-green-dark transition-[background] duration-150 hover:bg-[#ede4d8]"
+              (click)="updateEnvases(1)">
+              <lucide-icon name="plus" [size]="14" />
+            </button>
+          </div>
+          @if ((form.controls.cantidadEnvases.value ?? 1) > 1 && form.controls.cantidad.value && form.controls.unidadMedida.value) {
+            <span class="text-[0.775rem] text-nido-muted">
+              Total: {{ (form.controls.cantidadEnvases.value ?? 1) * (+form.controls.cantidad.value) }} {{ form.controls.unidadMedida.value === 'unidad' ? 'unidades' : form.controls.unidadMedida.value }}
+            </span>
+          }
+        </div>
       </div>
 
       <!-- Ubicación -->
@@ -167,6 +198,7 @@
         <nido-datepicker
           formControlName="fechaVencimiento"
           placeholder="Seleccionar fecha" />
+        <app-estimated-date-notice variant="compact" />
       </div>
 
       @if (!isEditMode) {

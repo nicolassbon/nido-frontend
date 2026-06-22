@@ -48,6 +48,10 @@ describe('AgregarProducto', () => {
       estaAbierto: false,
       porcentajeConsumido: 0,
       cantidadEnvases: 1,
+      calorias: null,
+      proteinas: null,
+      carbohidratos: null,
+      grasas: null,
       origenCarga: 'manual',
     } satisfies StockItemResponse;
 
@@ -72,6 +76,10 @@ describe('AgregarProducto', () => {
       estaAbierto: false,
       porcentajeConsumido: 0,
       cantidadEnvases: 1,
+      calorias: null,
+      proteinas: null,
+      carbohidratos: null,
+      grasas: null,
       origenCarga: 'manual',
     };
     const updatedFromApi: StockItemResponse = {
@@ -108,6 +116,10 @@ describe('AgregarProducto', () => {
       estaAbierto: false,
       porcentajeConsumido: 0,
       cantidadEnvases: 1,
+      calorias: null,
+      proteinas: null,
+      carbohidratos: null,
+      grasas: null,
       origenCarga: 'manual',
     };
     const createSpy = vi.spyOn(alacenaApi, 'createStock').mockReturnValue(of(createResponse));
@@ -152,6 +164,10 @@ describe('AgregarProducto', () => {
       estaAbierto: false,
       porcentajeConsumido: 0,
       cantidadEnvases: 1,
+      calorias: null,
+      proteinas: null,
+      carbohidratos: null,
+      grasas: null,
       origenCarga: 'ticket_compra',
     };
     const createSpy = vi.spyOn(alacenaApi, 'createStock').mockReturnValue(of(createResponse));
@@ -196,6 +212,10 @@ describe('AgregarProducto', () => {
       estaAbierto: false,
       porcentajeConsumido: 0,
       cantidadEnvases: 1,
+      calorias: null,
+      proteinas: null,
+      carbohidratos: null,
+      grasas: null,
       origenCarga: 'manual',
     };
 
@@ -246,7 +266,7 @@ describe('AgregarProducto', () => {
       nombre: 'Yerba',
       unidadMedida: 'kg',
       stockId: 'stock-1',
-      cantidad: 2,
+      cantidad: 1,
     }];
 
     const image = new File(['image'], 'yerba.png', { type: 'image/png' });

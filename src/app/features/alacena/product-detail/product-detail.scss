@@ -189,6 +189,54 @@
   font-weight: 500;
 }
 
+.nutrition-card {
+  display: grid;
+  gap: 10px;
+  padding: 16px 18px 18px;
+  border: 1px solid rgba(146, 115, 87, 0.16);
+  border-radius: 16px;
+  background: rgba(248, 240, 230, 0.51);
+  box-shadow: 0 3px 5px rgba(57, 44, 31, 0.22);
+  width: 100%;
+}
+
+.nutrition-card h2 {
+  margin: 0;
+  color: #2d201b;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.nutrition-note {
+  margin: -4px 0 4px;
+  color: rgba(85, 68, 51, 0.7);
+  font-size: 12px;
+}
+
+.nutrition-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 30px;
+}
+
+.nutrition-label {
+  color: #3d2d24;
+  font-size: 14px;
+}
+
+.nutrition-pill {
+  flex-shrink: 0;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(146, 115, 87, 0.16);
+  color: #3d2009;
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
 .summary-row {
   display: grid;
   grid-template-columns: 26px minmax(0, 1fr);

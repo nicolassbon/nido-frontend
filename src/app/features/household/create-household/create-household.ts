@@ -7,6 +7,7 @@ import { HogaresApiService } from '../hogares-api.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { OnboardingApiService } from '../../onboarding/onboarding-api.service';
 import { Avatar } from '../../../shared/ui/avatar/avatar';
+import { ProgressStepsComponent } from '../../../shared/ui/progress-steps/progress-steps.component';
 
 const MEMBER_COLORS = ['#263F30', '#B48B6A', '#927357', '#5C7A6E', '#8B4513', '#4A7C59'];
 
@@ -22,7 +23,7 @@ interface FamilyMember {
 
 @Component({
   selector: 'app-create-household',
-  imports: [LucideAngularModule, Avatar],
+  imports: [LucideAngularModule, Avatar, ProgressStepsComponent],
   templateUrl: './create-household.html',
   styleUrl: './create-household.scss',
 })
@@ -33,10 +34,10 @@ export class CreateHousehold {
   private readonly router        = inject(Router);
 
   readonly steps = [
-    { number: 1, label: 'Tu cuenta',    completed: true,  active: false },
-    { number: 2, label: 'Tu hogar',     completed: false, active: true  },
-    { number: 3, label: 'Equipamiento', completed: false, active: false },
-    { number: 4, label: 'Finalizar',    completed: false, active: false },
+    { number: 1, label: 'Tu Perfil - Crea tu cuenta', completed: true,  active: false },
+    { number: 2, label: 'Tu hogar - Convivientes', completed: false, active: true  },
+    { number: 3, label: 'Equipamiento - Electrodomésticos', completed: false, active: false },
+    { number: 4, label: 'Finalizar - Preferencias', completed: false, active: false },
   ];
 
   readonly members = signal<FamilyMember[]>([]);

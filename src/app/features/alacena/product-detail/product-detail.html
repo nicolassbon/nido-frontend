@@ -70,6 +70,7 @@
               </span>
               <strong [class.vencido]="isExpired()" [title]="isExpired() ? 'Vencido' : ''">{{ formatDate(p.fechaVencimiento) }}</strong>
             </div>
+            <app-estimated-date-notice variant="compact" />
           }
 
           <div class="info-row">

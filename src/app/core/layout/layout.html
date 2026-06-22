@@ -1,7 +1,7 @@
 <div class="flex h-dvh overflow-hidden">
 
   <!-- Sidebar -->
-  <app-nav [isOpen]="isMenuOpen()" />
+  <app-nav [isOpen]="isMenuOpen()" (close)="closeMenu()" />
 
   <!-- Overlay mobile -->
   @if (isMenuOpen()) {
@@ -15,15 +15,19 @@
   <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
 
     <!-- Header mobile -->
-    <header class="flex items-center px-4 py-3 border-b border-gray-200 bg-white md:hidden">
+    <header
+      class="relative flex items-center justify-center bg-nido-green-dark px-2 pb-2.5 shadow-[0_2px_10px_rgba(31,58,58,0.25)] md:hidden"
+      style="padding-top: max(0.625rem, env(safe-area-inset-top));">
       <button
-        class="flex flex-col justify-center gap-[5px] bg-transparent border-none cursor-pointer p-2"
+        type="button"
+        class="absolute left-1 flex h-11 w-11 flex-col items-center justify-center gap-[5px] rounded-full bg-transparent border-none cursor-pointer transition-colors active:bg-white/10"
         (click)="toggleMenu()"
         aria-label="Abrir menú">
-        <span class="block w-[22px] h-[2px] bg-nido-green-dark rounded-sm"></span>
-        <span class="block w-[22px] h-[2px] bg-nido-green-dark rounded-sm"></span>
-        <span class="block w-[22px] h-[2px] bg-nido-green-dark rounded-sm"></span>
+        <span class="block w-[22px] h-[2px] bg-nido-cream rounded-sm"></span>
+        <span class="block w-[22px] h-[2px] bg-nido-cream rounded-sm"></span>
+        <span class="block w-[22px] h-[2px] bg-nido-cream rounded-sm"></span>
       </button>
+      <img src="logo.png" alt="Nido" class="h-8 w-auto object-contain" />
     </header>
 
     <main class="w-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto">

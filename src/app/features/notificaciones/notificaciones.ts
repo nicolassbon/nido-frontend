@@ -24,8 +24,7 @@ export class Notificaciones implements OnInit {
 
   protected readonly notificaciones = this.api.notificaciones;
   protected readonly loading = signal(false);
-  protected readonly filtroActual = signal<'todas' | 'no-leidas'>('todas');
-  protected readonly mostrarFiltros = signal(false);
+  protected readonly filtroActual = signal<'todas' | 'no-leidas'>('no-leidas');
 
   protected readonly notificacionesFiltradas = computed(() => {
     const list = this.notificaciones();
@@ -54,13 +53,15 @@ export class Notificaciones implements OnInit {
     });
   }
 
-  protected toggleFiltros(): void {
-    this.mostrarFiltros.update(v => !v);
-  }
-
   protected setFiltro(filtro: 'todas' | 'no-leidas'): void {
     this.filtroActual.set(filtro);
-    this.mostrarFiltros.set(false);
+  }
+
+  protected filtroTabClass(filtro: 'todas' | 'no-leidas'): string {
+    const base = 'inline-flex items-center gap-1.5 rounded-[10px] px-3.5 py-2 text-[0.8125rem] font-bold transition-colors duration-150 cursor-pointer font-sans';
+    return this.filtroActual() === filtro
+      ? `${base} bg-nido-green-dark text-nido-cream`
+      : `${base} bg-white/70 text-nido-brown hover:text-nido-green-dark`;
   }
 
   protected marcarComoLeida(id: string, event: MouseEvent): void {
