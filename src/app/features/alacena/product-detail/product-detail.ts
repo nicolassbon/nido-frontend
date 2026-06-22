@@ -7,13 +7,9 @@ import { LucideAngularModule } from 'lucide-angular';
 import { forkJoin } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ProductManualResponse, ProductService } from '../../../core/servicios/agregar-producto.service';
-import { ListaComprasService } from '../../lista-compras/lista-compras.service';
-<<<<<<< HEAD
 import { AlacenaApiService, DeleteStockMotivo, NutritionInfoItemResponse, StockItemResponse } from '../alacena-api.service';
-=======
-import { AlacenaApiService, DeleteStockMotivo, StockItemResponse } from '../alacena-api.service';
 import { EstimatedDateNoticeComponent } from '../../../shared/ui/estimated-date-notice/estimated-date-notice';
->>>>>>> origin/dev-frontend
+import { ListaComprasService } from '../../lista-compras/lista-compras.service';
 
 const SHOPPING_GROUP = 'Productos agregados';
 

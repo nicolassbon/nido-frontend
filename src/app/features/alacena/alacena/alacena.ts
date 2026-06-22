@@ -14,7 +14,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin, of, switchMap } from 'rxjs';
+import { forkJoin, map, of, switchMap } from 'rxjs';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import {
   MultiFormatReader,
@@ -28,6 +28,7 @@ import { OpenFoodFactsService } from '../open-food-facts.service';
 import {
   AlacenaApiService,
   DeleteStockMotivo,
+  NutritionInfoResponse,
   StockItemResponse,
   StockMovementMotivo,
   StockMovementResponse,
@@ -98,6 +99,7 @@ interface ProductDraft {
   proteinas:         number | null;
   carbohidratos:     number | null;
   grasas:            number | null;
+  informacionNutricional?: NutritionInfoResponse | null;
 }
 
 interface DeleteConfirmation {
@@ -146,6 +148,7 @@ function makeEmptyDraft(): ProductDraft {
     proteinas:         null,
     carbohidratos:     null,
     grasas:            null,
+    informacionNutricional: null,
   };
 }
 
@@ -844,7 +847,32 @@ protected reloadProducts(): void { this.loadProducts(); }
             const ttl = getTtlForCategory([]);
             // Ya está en nuestro catálogo: usamos los datos guardados (nutrición +
             // gramaje/unidad de la última compra) en vez de ir a Open Food Facts.
-            return of({ name: dbProduct.nombre, image: dbProduct.imagen ?? '', category: dbProduct.categoriaNombre ?? '', ttl, fromDb: true, calorias: dbProduct.calorias, proteinas: dbProduct.proteinas, carbohidratos: dbProduct.carbohidratos, grasas: dbProduct.grasas, gramajeExtraido: dbProduct.gramaje, unidad: dbProduct.unidadMedida });
+            const hasSavedNutrition = dbProduct.informacionNutricional?.items?.length
+              || dbProduct.calorias != null
+              || dbProduct.proteinas != null
+              || dbProduct.carbohidratos != null
+              || dbProduct.grasas != null;
+
+            if (hasSavedNutrition) {
+              return of({ name: dbProduct.nombre, image: dbProduct.imagen ?? '', category: dbProduct.categoriaNombre ?? '', ttl, fromDb: true, calorias: dbProduct.calorias, proteinas: dbProduct.proteinas, carbohidratos: dbProduct.carbohidratos, grasas: dbProduct.grasas, informacionNutricional: dbProduct.informacionNutricional ?? null, gramajeExtraido: dbProduct.gramaje, unidad: dbProduct.unidadMedida });
+            }
+
+            return this.offService.lookup(barcode).pipe(
+              switchMap(p => of({
+                name: dbProduct.nombre,
+                image: dbProduct.imagen || p.image || '',
+                category: dbProduct.categoriaNombre || p.categoriaSugerida || '',
+                ttl,
+                fromDb: true,
+                calorias: p.calorias,
+                proteinas: p.proteinas,
+                carbohidratos: p.carbohidratos,
+                grasas: p.grasas,
+                informacionNutricional: p.informacionNutricional ?? null,
+                gramajeExtraido: dbProduct.gramaje ?? p.gramajeExtraido,
+                unidad: dbProduct.unidadMedida,
+              })),
+            );
           }
           return this.offService.lookup(barcode).pipe(
             switchMap(p => {
@@ -852,14 +880,14 @@ protected reloadProducts(): void { this.loadProducts(); }
               // El back mapea los tags crudos a una categoría canónica de Nido
               // (General, Lácteos, Bebidas, Congelados, Despensa).
               const category = p.categoriaSugerida || '';
-              return of({ name: p.name, image: p.image, category, ttl, fromDb: p.foundInDb, calorias: p.calorias, proteinas: p.proteinas, carbohidratos: p.carbohidratos, grasas: p.grasas, gramajeExtraido: p.gramajeExtraido, unidad: null as string | null });
+              return of({ name: p.name, image: p.image, category, ttl, fromDb: p.foundInDb, calorias: p.calorias, proteinas: p.proteinas, carbohidratos: p.carbohidratos, grasas: p.grasas, informacionNutricional: p.informacionNutricional ?? null, gramajeExtraido: p.gramajeExtraido, unidad: null as string | null });
             }),
           );
         }),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: ({ name, image, category, ttl, fromDb, calorias, proteinas, carbohidratos, grasas, gramajeExtraido, unidad }) => {
+        next: ({ name, image, category, ttl, fromDb, calorias, proteinas, carbohidratos, grasas, informacionNutricional, gramajeExtraido, unidad }) => {
           this.currentTtl.set(ttl);
           // Recomendación según categoría: dónde guardarlo y la unidad.
           // Prioridad de unidad: la guardada (última compra) > "gr" si hay gramaje > recomendada por categoría.
@@ -881,6 +909,7 @@ protected reloadProducts(): void { this.loadProducts(); }
             proteinas,
             carbohidratos,
             grasas,
+            informacionNutricional,
           });
 
           if (!name) {
@@ -1058,6 +1087,13 @@ protected reloadProducts(): void { this.loadProducts(); }
       const newQty = existing.quantity + d.quantity;
       this.alacenaApi
         .updateStock(existing.id, { cantidad: newQty })
+        .pipe(
+          switchMap(updated =>
+            d.informacionNutricional
+              ? this.alacenaApi.saveNutritionInfo(existing.id, d.informacionNutricional).pipe(map(() => updated))
+              : of(updated),
+          ),
+        )
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: updated => {
@@ -1090,6 +1126,7 @@ protected reloadProducts(): void { this.loadProducts(); }
           proteinas:           d.proteinas,
           carbohidratos:       d.carbohidratos,
           grasas:              d.grasas,
+          informacionNutricional: d.informacionNutricional ?? null,
           cantidadEnvases:     d.cantidadEnvases,
           origenCarga:         d.barcode ? 'codigo_barras' : 'manual',
         })

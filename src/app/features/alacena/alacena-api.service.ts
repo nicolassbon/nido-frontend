@@ -76,6 +76,7 @@ export interface CreateStockItemRequest {
   proteinas?:          number | null;
   carbohidratos?:      number | null;
   grasas?:             number | null;
+  informacionNutricional?: SaveNutritionInfoRequest | null;
   origenCarga?:         'manual' | 'codigo_barras' | 'ticket_compra';
 }
 
@@ -105,6 +106,7 @@ export interface ProductoApiResponse {
   proteinas:       number | null;
   carbohidratos:   number | null;
   grasas:          number | null;
+  informacionNutricional?: NutritionInfoResponse | null;
 }
 
 export interface StockMovementResponse {
