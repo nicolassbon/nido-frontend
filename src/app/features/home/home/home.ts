@@ -1,10 +1,12 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { NgClass } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/auth/auth.service';
 import { DashboardApiService, DashboardResponse } from './dashboard-api.service';
 import { StatCard } from '../../../shared/ui/stat-card/stat-card';
+import { InsightsPanel } from '../insights/insights-panel';
 
 interface QuickAction {
   label: string;
@@ -12,11 +14,12 @@ interface QuickAction {
   route: string;
   classes: string;
   iconBgClass: string;
+  chipClass: string;
 }
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, LucideAngularModule, StatCard],
+  imports: [NgClass, RouterLink,StatCard, LucideAngularModule, InsightsPanel],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
@@ -27,13 +30,13 @@ export class Home implements OnInit {
   protected readonly greeting = signal(this.buildGreeting());
   protected readonly userName = signal(this.authService.getNombre() ?? 'vos');
   protected readonly today = signal(
-    this.capitalizeFirstLetter(
-      new Date().toLocaleDateString('es-AR', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-      })
-    )
+
+    new Date().toLocaleDateString('es-AR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    }).toUpperCase()
+
   );
 
   private capitalizeFirstLetter(val: string): string {
@@ -48,13 +51,15 @@ export class Home implements OnInit {
       route: '/agregar-producto',
       classes: 'flex items-center justify-center gap-6 rounded-[8px] min-h-[72px] px-5 text-nido-cream no-underline text-[1rem] font-medium leading-none shadow-[0_3px_10px_rgba(38,63,48,0.08)] bg-nido-green-dark hover:bg-nido-green hover:-translate-y-0.5 transition-transform',
       iconBgClass: 'bg-transparent',
+      chipClass: 'bg-nido-green-dark text-nido-cream hover:bg-nido-green',
     },
     {
-      label: 'Nueva receta',
+      label: 'Explorar recetas',
       icon: 'chef-hat',
       route: '/recetas',
       classes: 'flex items-center justify-center gap-6 rounded-[8px] min-h-[72px] px-5 text-nido-cream no-underline text-[1rem] font-medium leading-none shadow-[0_3px_10px_rgba(38,63,48,0.08)] bg-nido-brown hover:bg-nido-gold hover:-translate-y-0.5 transition-transform',
       iconBgClass: 'bg-transparent',
+      chipClass: 'bg-nido-brown text-nido-cream hover:bg-nido-gold',
     },
   ];
 
@@ -122,21 +127,11 @@ export class Home implements OnInit {
   }
 
   private resolveImageUrl(url: string | null): string | null {
-    if (!url) {
-      return null;
-    }
-
-    if (/^(https?:)?\/\//i.test(url) || /^(data|blob):/i.test(url)) {
-      return url;
-    }
-
-    if (url.startsWith('/productos/')) {
-      return url;
-    }
-
+    if (!url) return null;
+    if (/^(https?:)?\/\//i.test(url) || /^(data|blob):/i.test(url)) return url;
+    if (url.startsWith('/productos/')) return url;
     const baseUrl = environment.apiBaseUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
     const path = url.startsWith('/') ? url : `/${url}`;
-
     return `${baseUrl}${path}`;
   }
 }

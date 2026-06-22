@@ -1,158 +1,58 @@
-import { Injectable } from '@angular/core';
-import { HttpBackend, HttpClient } from '@angular/common/http';
-import { Observable, of, switchMap } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { NutritionInfoResponse } from './alacena-api.service';
 
 export interface FoodProduct {
-  name:           string;
-  image:          string;
-  brands:         string;
-  categoriesTags: string[];
-  foundInDb:      boolean;
+  name:              string;
+  image:             string;
+  brands:            string;
+  categoriesTags:    string[];
+  /** Categoría canónica de Nido sugerida por el back: General, Lácteos, Bebidas, Congelados, Despensa. */
+  categoriaSugerida: string;
+  foundInDb:         boolean;
+  /** Información nutricional por 100 g (puede venir null si la fuente no la provee). */
+  calorias:          number | null;
+  proteinas:         number | null;
+  carbohidratos:     number | null;
+  grasas:            number | null;
+  informacionNutricional?: NutritionInfoResponse | null;
+  /** Gramaje extraído del nombre del producto (ej: 290 de "Producto 290g"). */
+  gramajeExtraido:   number | null;
 }
 
-// ── Open Food Facts ───────────────────────────────────────────────────────────
-
-interface OFFApiResponse {
-  status: number;
-  product?: {
-    product_name_es?: string;
-    product_name?:    string;
-    product_name_en?: string;
-    image_front_url?: string;
-    image_url?:       string;
-    brands?:          string;
-    categories_tags?: string[];
-  };
-}
-
-// ── UPC Item DB ───────────────────────────────────────────────────────────────
-// Free tier: 100 req/day, no API key required.
-// Covers EAN-13 and UPC-A globally, including many Latin American products.
-
-interface UPCItemDBResponse {
-  code:   string;
-  total:  number;
-  items?: Array<{
-    ean:      string;
-    title:    string;
-    brand:    string;
-    images?:  string[];
-    category: string;
-  }>;
-}
-
-// ── Service ───────────────────────────────────────────────────────────────────
-
+/**
+ * Resuelve un código de barras a datos del producto.
+ *
+ * La lógica de consultar fuentes externas (Open Food Facts mundial / Argentina /
+ * UPC Item DB en cascada) vive en el backend, en
+ * `GET /api/productos/external-lookup/{barcode}`. El back centraliza:
+ *   - el manejo de timeouts y errores de las APIs externas
+ *   - el header User-Agent requerido por Open Food Facts
+ *   - posibilidad de cachear los resultados a futuro
+ *
+ * Este servicio mantiene la misma interfaz pública que tenía la versión
+ * anterior (`lookup(barcode): Observable<FoodProduct>`) por compatibilidad
+ * con los componentes que ya lo consumen.
+ */
 @Injectable({ providedIn: 'root' })
 export class OpenFoodFactsService {
-  // HttpBackend bypasea todos los interceptores — necesario para que el interceptor
-  // de auth no agregue Authorization a requests externos (OFF, UPC Item DB),
-  // lo cual dispararía un preflight CORS que esas APIs rechazan.
-  private readonly http: HttpClient;
+  private readonly http    = inject(HttpClient);
+  private readonly baseUrl = environment.apiBaseUrl;
 
-  constructor(handler: HttpBackend) {
-    this.http = new HttpClient(handler);
-  }
-
-  /**
-   * Resolves a barcode to product data querying three sources in order:
-   *   1. Open Food Facts (global)
-   *   2. Open Food Facts Argentina — better coverage for local brands
-   *   3. UPC Item DB              — broad EAN-13/UPC-A coverage
-   *
-   * The cascade continues to the next source whenever the current one returns
-   * a result with no name (common for poorly-catalogued products). If a source
-   * returns null the previous result (which may still have categories/image) is
-   * preserved as a fallback — so TTL estimation still works even without a name.
-   *
-   * Always resolves. Returns `foundInDb: false` only when no source recognises
-   * the barcode at all.
-   */
   lookup(barcode: string): Observable<FoodProduct> {
-    return this.fetchFromOFF(environment.offWorldBase, barcode).pipe(
-      switchMap(p => p?.name
-        ? of(p)
-        : this.fetchFromOFF(environment.offArBase, barcode).pipe(
-            map(p2 => p2 ?? p),
-          ),
-      ),
-      switchMap(p => p?.name
-        ? of(p)
-        : this.fetchFromUPCItemDB(barcode).pipe(
-            map(p2 => p2 ?? p),
-          ),
-      ),
-      map(p => p ?? this.emptyProduct()),
+    const url = `${this.baseUrl}/productos/external-lookup/${encodeURIComponent(barcode)}`;
+    return this.http.get<FoodProduct>(url).pipe(
       catchError(() => of(this.emptyProduct())),
     );
   }
 
-  // ── Private: OFF ─────────────────────────────────────────
-
-  private fetchFromOFF(baseUrl: string, barcode: string): Observable<FoodProduct | null> {
-    const url = `${baseUrl}/api/v0/product/${encodeURIComponent(barcode)}.json`;
-    return this.http.get<OFFApiResponse>(url).pipe(
-      map(res => {
-        if (res.status !== 1 || !res.product) return null;
-        const p = res.product;
-        return {
-          name:           this.sanitizeName(p.product_name_es || p.product_name || p.product_name_en || ''),
-          image:          p.image_front_url || p.image_url || '',
-          brands:         p.brands || '',
-          categoriesTags: p.categories_tags ?? [],
-          foundInDb:      true,
-        };
-      }),
-      catchError(() => of(null)),
-    );
-  }
-
-  // ── Private: UPC Item DB ──────────────────────────────────
-
-  private fetchFromUPCItemDB(barcode: string): Observable<FoodProduct | null> {
-    const url = `${environment.upcItemDb}/prod/trial/lookup?upc=${encodeURIComponent(barcode)}`;
-    return this.http.get<UPCItemDBResponse>(url).pipe(
-      map(res => {
-        if (res.code !== 'OK' || !res.items?.length) return null;
-        const item = res.items[0];
-        return {
-          name:           this.sanitizeName(item.title || ''),
-          image:          item.images?.[0] || '',
-          brands:         item.brand || '',
-          categoriesTags: this.parseCategoryString(item.category || ''),
-          foundInDb:      true,
-        };
-      }),
-      catchError(() => of(null)),
-    );
-  }
-
-  // ── Private helpers ───────────────────────────────────────
-
-  /**
-   * Returns empty string when the name is just a barcode number (8–14 digits),
-   * which happens with poorly-catalogued products where the barcode was used
-   * as a placeholder name.
-   */
-  private sanitizeName(raw: string): string {
-    const trimmed = raw.trim();
-    return /^\d{8,14}$/.test(trimmed) ? '' : trimmed;
-  }
-
-  /**
-   * "Food & Grocery > Dairy > Spreads" → ['en:food-grocery', 'en:dairy', 'en:spreads']
-   */
-  private parseCategoryString(category: string): string[] {
-    return category
-      .split('>')
-      .map(s => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))
-      .filter(Boolean)
-      .map(s => `en:${s}`);
-  }
-
   private emptyProduct(): FoodProduct {
-    return { name: '', image: '', brands: '', categoriesTags: [], foundInDb: false };
+    return {
+      name: '', image: '', brands: '', categoriesTags: [], categoriaSugerida: 'General', foundInDb: false,
+      calorias: null, proteinas: null, carbohidratos: null, grasas: null, informacionNutricional: null, gramajeExtraido: null,
+    };
   }
 }

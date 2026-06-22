@@ -14,6 +14,11 @@ export interface CreateStockHomeRequest {
   estaAbierto?:        boolean;
   porcentajeConsumido?: number;
   cantidadEnvases?:    number;
+  // Información nutricional por 100 g (del escaneo a Open Food Facts).
+  calorias?:           number | null;
+  proteinas?:          number | null;
+  carbohidratos?:      number | null;
+  grasas?:             number | null;
 }
 
 export interface ProductManualResponse {
@@ -69,11 +74,26 @@ getProductManual(hogarId?: string) {
   );
 }
 
- uploadProductImage(productoId: string, image: File): Observable<void> {
+/** Busca productos en el catálogo global por nombre (substring, case-insensitive). */
+searchProductos(q: string) {
+  return this.http.get<SearchProductoResponse[]>(
+    `${this.baseUrl}/productos/search?q=${encodeURIComponent(q)}`
+  );
+}
+
+uploadProductImage(productoId: string, image: File): Observable<void> {
    const formData = new FormData();
    formData.append('imagen', image);
 
    return this.http.post<void>(`${this.baseUrl}/productos/${productoId}/imagen`, formData);
- }
+}
 
+}
+
+export interface SearchProductoResponse {
+  nombre:          string;
+  categoriaNombre: string | null;
+  categoriaId:     string | null;
+  unidadMedida:    string | null;
+  ubicacion:       string | null;
 }

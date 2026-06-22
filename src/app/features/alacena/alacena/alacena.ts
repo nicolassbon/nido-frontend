@@ -14,7 +14,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin, of, switchMap } from 'rxjs';
+import { forkJoin, map, of, switchMap } from 'rxjs';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import {
   MultiFormatReader,
@@ -28,6 +28,7 @@ import { OpenFoodFactsService } from '../open-food-facts.service';
 import {
   AlacenaApiService,
   DeleteStockMotivo,
+  NutritionInfoResponse,
   StockItemResponse,
   StockMovementMotivo,
   StockMovementResponse,
@@ -36,7 +37,9 @@ import { PreferenciasApiService } from '../preferencias-api.service';
 import { getTtlForCategory, TtlInfo } from '../ttl.config';
 import { RouterLink } from '@angular/router';
 import { ProductService, ProductManualResponse } from '../../../core/servicios/agregar-producto.service';
+import { CatalogoService } from '../../../core/servicios/catalogo.service';
 import { AgregarProducto, KnownProduct } from '../../agregar-producto/agregar-producto';
+import { EstimatedDateNoticeComponent } from '../../../shared/ui/estimated-date-notice/estimated-date-notice';
 import { environment } from '../../../../environments/environment';
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -61,7 +64,7 @@ export interface Product {
   image:            string;
   location:         Exclude<StorageLocation, 'Todos'>;
   expiryDate:       string;   // ISO date string (YYYY-MM-DD)
-  quantity:         number;
+  quantity:         number;   // cantidad por envase
   unit?:            string;
   categoriaNombre?: string;
   isOpened?:        boolean;
@@ -69,6 +72,13 @@ export interface Product {
   barcode?:         string;
   iconoSvg?:        string;
   icono?:           string;
+  /** Cantidad de envases idénticos del mismo producto. Default 1. */
+  packagesCount:    number;
+  /** Información nutricional por 100 g (opcional). */
+  calorias?:        number | null;
+  proteinas?:       number | null;
+  carbohidratos?:   number | null;
+  grasas?:          number | null;
 }
 
 interface ProductDraft {
@@ -83,7 +93,15 @@ interface ProductDraft {
   consumedPercent:   number;
   notFound:          boolean;
   quantity:          number;
+  unit:              string;
+  cantidadEnvases:   number;
   barcode:           string;
+  // Información nutricional por 100 g (del escaneo a Open Food Facts).
+  calorias:          number | null;
+  proteinas:         number | null;
+  carbohidratos:     number | null;
+  grasas:            number | null;
+  informacionNutricional?: NutritionInfoResponse | null;
 }
 
 interface DeleteConfirmation {
@@ -126,7 +144,37 @@ function makeEmptyDraft(): ProductDraft {
     notFound:          false,
     quantity:          1,
     barcode:           '',
+    unit:              'unidad',
+    cantidadEnvases:   1,
+    calorias:          null,
+    proteinas:         null,
+    carbohidratos:     null,
+    grasas:            null,
+    informacionNutricional: null,
   };
+}
+
+/**
+ * Recomienda dónde guardar y en qué unidad según la categoría detectada.
+ * Las categorías que llegan del escaneo son las canónicas del back
+ * (General, Lácteos, Bebidas, Congelados, Despensa).
+ */
+function recommendStorage(category: string): { location: Exclude<StorageLocation, 'Todos'>; unit: string } {
+  const c = category.toLowerCase();
+
+  let location: Exclude<StorageLocation, 'Todos'> = 'Alacena';
+  if (c.includes('congelados')) {
+    location = 'Freezer';
+  } else if (['lácteos', 'lacteos', 'carnes', 'fiambres', 'huevos', 'verduras', 'frutas'].some(k => c.includes(k))) {
+    location = 'Heladera';
+  }
+
+  let unit = 'unidad';
+  if (['bebidas', 'aceites', 'caldos'].some(k => c.includes(k))) {
+    unit = 'lt';
+  }
+
+  return { location, unit };
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -190,13 +238,6 @@ function fallbackProductImage(name: string | null | undefined): string {
   };
 
   return catalog[normalized] ?? catalog[aliases[normalized]] ?? '';
-}
-
-function formatCategoryTag(tag: string): string {
-  return tag
-    .replace(/^[a-z]{2}:/, '')
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, c => c.toUpperCase());
 }
 
 function normalizeUnit(value: string | null | undefined): string {
@@ -287,7 +328,7 @@ const DELETE_MOTIVO_OPTIONS: Record<DeleteStockMotivo, DeleteMotivoOption> = {
 
 @Component({
   selector: 'app-alacena',
-  imports: [LucideAngularModule, FormsModule, RouterLink, AgregarProducto],
+  imports: [LucideAngularModule, FormsModule, RouterLink, AgregarProducto, EstimatedDateNoticeComponent],
   templateUrl: './alacena.html',
   styleUrl: './alacena.scss',
 })
@@ -298,6 +339,10 @@ export class Alacena implements OnInit {
   private readonly destroyRef     = inject(DestroyRef);
   private readonly zone           = inject(NgZone);
   private readonly productService = inject(ProductService);
+  private readonly catalogo       = inject(CatalogoService);
+
+  /** Mapa nombre-de-categoría (minúsculas) → id, para resolver la categoría del escaneo. */
+  private readonly categoriaIdByName = new Map<string, string>();
 
 
   // ── List & filters ───────────────────────────────────────
@@ -341,6 +386,7 @@ export class Alacena implements OnInit {
   /** Productos conocidos para el autocomplete del form de agregar */
   protected readonly knownProducts = computed<KnownProduct[]>(() =>
     this.products().map(p => ({
+
       nombre:          p.name,
       categoriaNombre: p.categoriaNombre,
       unidadMedida:    p.unit,
@@ -349,6 +395,8 @@ export class Alacena implements OnInit {
       cantidad:        p.quantity,
       icono:           p.icono,
       iconoSvg:        p.iconoSvg,
+      cantidadEnvases:  p.packagesCount
+
     })),
   );
 
@@ -476,6 +524,20 @@ export class Alacena implements OnInit {
     this.loadProducts();
     this.loadMovements();
     this.loadPreferences();
+    this.loadCategorias();
+  }
+
+  /** Carga las categorías de la BD para poder resolver nombre → id al guardar un escaneo. */
+  private loadCategorias(): void {
+    this.catalogo.getCategorias()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: cats => {
+          for (const cat of cats) {
+            this.categoriaIdByName.set(cat.nombre.toLowerCase(), cat.id);
+          }
+        },
+      });
   }
 
   private loadPreferences(): void {
@@ -604,6 +666,11 @@ protected reloadProducts(): void { this.loadProducts(); }
       barcode:          item.codigoBarras ?? undefined,
       iconoSvg:         item.iconoSvg ?? undefined,
       icono:            item.icono ?? undefined
+      packagesCount:    item.cantidadEnvases ?? 1,
+      calorias:         item.calorias,
+      proteinas:        item.proteinas,
+      carbohidratos:    item.carbohidratos,
+      grasas:           item.grasas,
     };
   }
 
@@ -621,6 +688,7 @@ protected reloadProducts(): void { this.loadProducts(); }
     remainingPercent: 100 - item.porcentajeConsumido,
     barcode: item.codigoBarras ?? undefined,
     iconoSvg: item.iconoSvg ?? undefined
+    packagesCount: item.cantidadEnvases ?? 1,
   };
 }
 
@@ -786,30 +854,71 @@ protected reloadProducts(): void { this.loadProducts(); }
         switchMap(dbProduct => {
           if (dbProduct?.nombre) {
             const ttl = getTtlForCategory([]);
-            return of({ name: dbProduct.nombre, image: dbProduct.imagen ?? '', category: dbProduct.categoriaNombre ?? '', ttl, fromDb: true });
+            // Ya está en nuestro catálogo: usamos los datos guardados (nutrición +
+            // gramaje/unidad de la última compra) en vez de ir a Open Food Facts.
+            const hasSavedNutrition = dbProduct.informacionNutricional?.items?.length
+              || dbProduct.calorias != null
+              || dbProduct.proteinas != null
+              || dbProduct.carbohidratos != null
+              || dbProduct.grasas != null;
+
+            if (hasSavedNutrition) {
+              return of({ name: dbProduct.nombre, image: dbProduct.imagen ?? '', category: dbProduct.categoriaNombre ?? '', ttl, fromDb: true, calorias: dbProduct.calorias, proteinas: dbProduct.proteinas, carbohidratos: dbProduct.carbohidratos, grasas: dbProduct.grasas, informacionNutricional: dbProduct.informacionNutricional ?? null, gramajeExtraido: dbProduct.gramaje, unidad: dbProduct.unidadMedida });
+            }
+
+            return this.offService.lookup(barcode).pipe(
+              switchMap(p => of({
+                name: dbProduct.nombre,
+                image: dbProduct.imagen || p.image || '',
+                category: dbProduct.categoriaNombre || p.categoriaSugerida || '',
+                ttl,
+                fromDb: true,
+                calorias: p.calorias,
+                proteinas: p.proteinas,
+                carbohidratos: p.carbohidratos,
+                grasas: p.grasas,
+                informacionNutricional: p.informacionNutricional ?? null,
+                gramajeExtraido: dbProduct.gramaje ?? p.gramajeExtraido,
+                unidad: dbProduct.unidadMedida,
+              })),
+            );
           }
           return this.offService.lookup(barcode).pipe(
             switchMap(p => {
               const ttl = getTtlForCategory(p.categoriesTags);
-              const category = p.categoriesTags.length > 0 ? formatCategoryTag(p.categoriesTags[0]) : '';
-              return of({ name: p.name, image: p.image, category, ttl, fromDb: p.foundInDb });
+              // El back mapea los tags crudos a una categoría canónica de Nido
+              // (General, Lácteos, Bebidas, Congelados, Despensa).
+              const category = p.categoriaSugerida || '';
+              return of({ name: p.name, image: p.image, category, ttl, fromDb: p.foundInDb, calorias: p.calorias, proteinas: p.proteinas, carbohidratos: p.carbohidratos, grasas: p.grasas, informacionNutricional: p.informacionNutricional ?? null, gramajeExtraido: p.gramajeExtraido, unidad: null as string | null });
             }),
           );
         }),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: ({ name, image, category, ttl, fromDb }) => {
+        next: ({ name, image, category, ttl, fromDb, calorias, proteinas, carbohidratos, grasas, informacionNutricional, gramajeExtraido, unidad }) => {
           this.currentTtl.set(ttl);
+          // Recomendación según categoría: dónde guardarlo y la unidad.
+          // Prioridad de unidad: la guardada (última compra) > "gr" si hay gramaje > recomendada por categoría.
+          const reco = recommendStorage(category);
+          const unit = unidad ?? (gramajeExtraido != null ? 'gr' : reco.unit);
           this.draft.set({
             ...makeEmptyDraft(),
             name,
             image,
             category,
+            location:   reco.location,
+            unit,
             expiryDate: toIsoDate(addDays(new Date(), ttl.days)),
             ttlHint:    name ? ttl.hint : '',
             notFound:   !name,
             barcode,
+            quantity:   gramajeExtraido ?? 1,
+            calorias,
+            proteinas,
+            carbohidratos,
+            grasas,
+            informacionNutricional,
           });
 
           if (!name) {
@@ -942,6 +1051,25 @@ protected reloadProducts(): void { this.loadProducts(); }
     this.draft.update(d => ({ ...d, quantity: Math.max(1, d.quantity + delta) }));
   }
 
+  protected updateEnvases(delta: number): void {
+    this.draft.update(d => ({ ...d, cantidadEnvases: Math.max(1, d.cantidadEnvases + delta) }));
+  }
+
+  /** Formatea un valor nutricional a 1 decimal con coma (ej: 146.6666 → "146,7"). */
+  protected fmtNutrient(value: number | null | undefined): string {
+    if (value == null) return '';
+    return value.toLocaleString('es-AR', { maximumFractionDigits: 1 });
+  }
+
+  /** Unidades de medida para el selector del escaneo (mismas del alta manual). */
+  protected readonly unidadesEscaneo: { value: string; label: string }[] = [
+    { value: 'unidad', label: 'Unidad' },
+    { value: 'gr',     label: 'Gramos (gr)' },
+    { value: 'kg',     label: 'Kilogramos (kg)' },
+    { value: 'ml',     label: 'Mililitros (ml)' },
+    { value: 'lt',     label: 'Litros (lt)' },
+  ];
+
   protected triggerPhotoInput(): void {
     this.photoInputRef()?.nativeElement.click();
   }
@@ -995,6 +1123,81 @@ protected reloadProducts(): void { this.loadProducts(); }
           this.closeScanner();
         },
       });
+    const existing = d.barcode
+      ? this.products().find(p => p.barcode === d.barcode)
+      : undefined;
+
+    if (existing) {
+      const newQty = existing.quantity + d.quantity;
+      this.alacenaApi
+        .updateStock(existing.id, { cantidad: newQty })
+        .pipe(
+          switchMap(updated =>
+            d.informacionNutricional
+              ? this.alacenaApi.saveNutritionInfo(existing.id, d.informacionNutricional).pipe(map(() => updated))
+              : of(updated),
+          ),
+        )
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: updated => {
+            this.products.update(list =>
+              list.map(p => p.id === existing.id ? this.toProduct(updated) : p),
+            );
+            this.closeScanner();
+          },
+          error: () => {
+            this.products.update(list =>
+              list.map(p => p.id === existing.id ? { ...p, quantity: newQty } : p),
+            );
+            this.closeScanner();
+          },
+        });
+    } else {
+      this.alacenaApi
+        .createStock({
+          nombre:              d.name.trim(),
+          categoriaId:         this.categoriaIdByName.get(d.category.toLowerCase()) ?? null,
+          codigoBarras:        d.barcode || null,
+          imagen:              d.image || null,
+          ubicacion:           d.location,
+          cantidad:            d.quantity,
+          unidadMedida:        d.unit,
+          fechaVencimiento:    d.expiryDate || null,
+          estaAbierto:         d.isOpened,
+          porcentajeConsumido: d.consumedPercent,
+          calorias:            d.calorias,
+          proteinas:           d.proteinas,
+          carbohidratos:       d.carbohidratos,
+          grasas:              d.grasas,
+          informacionNutricional: d.informacionNutricional ?? null,
+          cantidadEnvases:     d.cantidadEnvases,
+          origenCarga:         d.barcode ? 'codigo_barras' : 'manual',
+        })
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: created => {
+            this.products.update(list => [...list, this.toProduct(created)]);
+            this.closeScanner();
+          },
+          error: () => {
+            const product: Product = {
+              id:               crypto.randomUUID(),
+              name:             d.name.trim(),
+              image:            d.image,
+              location:         d.location,
+              expiryDate:       d.expiryDate,
+              quantity:         d.quantity,
+              isOpened:         d.isOpened,
+              remainingPercent: 100 - d.consumedPercent,
+              barcode:          d.barcode || undefined,
+              packagesCount:    1,
+            };
+            this.products.update(list => [...list, product]);
+            this.closeScanner();
+          },
+        });
+    }
   }
 
   // ── Display helpers ──────────────────────────────────────
@@ -1038,6 +1241,11 @@ protected reloadProducts(): void { this.loadProducts(); }
 
   protected isExpired(product: Product): boolean {
     return this.getDaysRemaining(product.expiryDate) < 0;
+  }
+
+  /** True si el producto tiene al menos un dato nutricional. */
+  protected hasNutrition(p: { calorias?: number | null; proteinas?: number | null; carbohidratos?: number | null; grasas?: number | null }): boolean {
+    return p.calorias != null || p.proteinas != null || p.carbohidratos != null || p.grasas != null;
   }
 
   protected productCardClass(product: Product): string {
@@ -1133,23 +1341,24 @@ protected reloadProducts(): void { this.loadProducts(); }
 
   /**
    * Etiqueta de cantidad para la card.
-   * - Unidades contables ('unidad' o sin unidad): "x1", "x3", etc.
-   * - Unidades de medida (gr/kg/ml/lt/cda/cdita): "100 g", "1.5 kg", etc.
+   * - 1 envase, unidad contable: "x3"
+   * - 1 envase, unidad de medida: "100 g"
+   * - N envases: "2 × 100 g" (o "2 × x3" para unidades contables)
    */
   protected quantityBadge(product: Product): string {
-    const unit = normalizeUnit(product.unit);
-    const qty  = product.quantity;
-
-    if (unit === 'unidad') {
-      return `x${qty}`;
-    }
+    const unit     = normalizeUnit(product.unit);
+    const qty      = product.quantity;
+    const packages = product.packagesCount ?? 1;
 
     const labels: Record<string, string> = {
       gr: 'g', kg: 'kg', ml: 'ml', lt: 'l', cda: 'cda', cdita: 'cdita',
     };
-    const suffix = labels[unit] ?? unit;
-    const sep = (suffix === 'cda' || suffix === 'cdita') ? ' ' : '';
-    return `${qty}${sep}${suffix}`;
+
+    const perPackage = unit === 'unidad'
+      ? `x${qty}`
+      : `${qty}${(labels[unit] ?? unit) === 'cda' || (labels[unit] ?? unit) === 'cdita' ? ' ' : ''}${labels[unit] ?? unit}`;
+
+    return packages > 1 ? `${packages} × ${perPackage}` : perPackage;
   }
 
   protected quantityDetail(product: Product): string {

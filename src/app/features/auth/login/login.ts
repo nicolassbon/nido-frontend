@@ -66,7 +66,11 @@ export class Login {
       },
       error: (err) => {
         this.loading.set(false);
-        if (err.status === 401 || err.status === 403) {
+        if (err.status === 409) {
+          this.globalError.set(
+            'Esta cuenta se registró con Google y todavía no tiene contraseña. Iniciá sesión con Google, o creá una contraseña desde Configuración.',
+          );
+        } else if (err.status === 401 || err.status === 403) {
           this.globalError.set('Correo o contraseña incorrectos.');
         } else {
           this.globalError.set('Ocurrió un error. Intentá de nuevo.');

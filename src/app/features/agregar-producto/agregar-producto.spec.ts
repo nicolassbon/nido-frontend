@@ -48,6 +48,10 @@ describe('AgregarProducto', () => {
       estaAbierto: false,
       porcentajeConsumido: 0,
       cantidadEnvases: 1,
+      calorias: null,
+      proteinas: null,
+      carbohidratos: null,
+      grasas: null,
       origenCarga: 'manual',
     } satisfies StockItemResponse;
 
@@ -72,6 +76,10 @@ describe('AgregarProducto', () => {
       estaAbierto: false,
       porcentajeConsumido: 0,
       cantidadEnvases: 1,
+      calorias: null,
+      proteinas: null,
+      carbohidratos: null,
+      grasas: null,
       origenCarga: 'manual',
     };
     const updatedFromApi: StockItemResponse = {
@@ -108,6 +116,10 @@ describe('AgregarProducto', () => {
       estaAbierto: false,
       porcentajeConsumido: 0,
       cantidadEnvases: 1,
+      calorias: null,
+      proteinas: null,
+      carbohidratos: null,
+      grasas: null,
       origenCarga: 'manual',
     };
     const createSpy = vi.spyOn(alacenaApi, 'createStock').mockReturnValue(of(createResponse));
@@ -152,6 +164,10 @@ describe('AgregarProducto', () => {
       estaAbierto: false,
       porcentajeConsumido: 0,
       cantidadEnvases: 1,
+      calorias: null,
+      proteinas: null,
+      carbohidratos: null,
+      grasas: null,
       origenCarga: 'ticket_compra',
     };
     const createSpy = vi.spyOn(alacenaApi, 'createStock').mockReturnValue(of(createResponse));
@@ -196,6 +212,10 @@ describe('AgregarProducto', () => {
       estaAbierto: false,
       porcentajeConsumido: 0,
       cantidadEnvases: 1,
+      calorias: null,
+      proteinas: null,
+      carbohidratos: null,
+      grasas: null,
       origenCarga: 'manual',
     };
 
@@ -238,4 +258,37 @@ describe('AgregarProducto', () => {
     }));
   });
 
+  it('should require removing the selected image before merging into an existing stock item', () => {
+    const alacenaApi = TestBed.inject(AlacenaApiService);
+    const updateSpy = vi.spyOn(alacenaApi, 'updateStock').mockReturnValue(of({} as StockItemResponse));
+
+    component.knownProducts = [{
+      nombre: 'Yerba',
+      unidadMedida: 'kg',
+      stockId: 'stock-1',
+      cantidad: 1,
+    }];
+
+    const image = new File(['image'], 'yerba.png', { type: 'image/png' });
+    const input = document.createElement('input');
+    Object.defineProperty(input, 'files', {
+      value: [image],
+      configurable: true,
+    });
+
+    component.form.patchValue({
+      nombre: 'Yerba',
+      categoriaId: '33333333-3333-3333-3333-333333333333',
+      ubicacion: 'Alacena',
+      cantidad: 1,
+      unidadMedida: 'kg',
+      fechaVencimiento: '',
+    });
+    component.onImageSelected({ target: input } as unknown as Event);
+
+    component.onSubmit();
+
+    expect(updateSpy).not.toHaveBeenCalled();
+    expect(component['imageError']()).toBe('Este producto ya existe en tu alacena. Quitá la imagen seleccionada para sumar cantidad sin crear duplicados.');
+  });
 });

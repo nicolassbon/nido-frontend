@@ -24,6 +24,7 @@ import {
   ArcElement,
   Tooltip,
 } from 'chart.js';
+import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { HogaresApiService, MiembroResponse } from '../../household/hogares-api.service';
 import {
@@ -122,6 +123,7 @@ export class Finanzas {
   private readonly hogaresApi  = inject(HogaresApiService);
   private readonly finanzasApi = inject(FinanzasApiService);
   private readonly destroyRef  = inject(DestroyRef);
+  private readonly router      = inject(Router);
 
   // ── Canvas refs ───────────────────────────────────────
   private readonly lineCanvasRef  = viewChild<ElementRef<HTMLCanvasElement>>('lineCanvas');
@@ -723,5 +725,9 @@ export class Finanzas {
     if (tipo === 'alerta')    return '#b44c3c';
     if (tipo === 'tendencia') return '#B48B6A';
     return '#4a7c59';
+  }
+
+  protected navegarAEscanear(): void {
+    void this.router.navigate(['/alacena/escanear-ticket'], { queryParams: { returnTo: 'finanzas' } });
   }
 }

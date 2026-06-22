@@ -41,6 +41,13 @@ export interface ShoppingHistoryItem {
   icono?: string | null;
 }
 
+export interface SendToTelegramResponse {
+  status: 'enqueued' | 'empty' | 'no_telegram_link';
+  itemCount: number;
+  chatId?: number | null;
+  listaId?: string | null;
+}
+
 type AddItemInput = {
   nombre: string;
   cantidad: number | null;
@@ -183,6 +190,14 @@ export class ListaComprasService {
     ).pipe(
       switchMap(() => this.refresh()),
     );
+  }
+
+  sendToTelegram(listaId?: string | null) {
+    const url = listaId
+      ? `${environment.apiBaseUrl}/lista-compras/enviar-telegram?listaId=${encodeURIComponent(listaId)}`
+      : `${environment.apiBaseUrl}/lista-compras/enviar-telegram`;
+
+    return this.http.post<SendToTelegramResponse>(url, {});
   }
 
   addGroupToLista(recetaNombre: string, faltantes: AddItemInput[]) {

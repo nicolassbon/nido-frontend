@@ -99,6 +99,7 @@ describe('RecipeDetail', () => {
   });
 
   it('mantiene la unidad original cuando no hay cantidad convertida para lista', () => {
+  it('omite la cantidad y unidad cuando no hay compra estandar y la unidad original es de cocina (e.g. pizca)', () => {
     setRecipe({
       nombre: 'Salsa',
       ingredientes: [
@@ -124,8 +125,175 @@ describe('RecipeDetail', () => {
     expect(listaService.addGroupToLista).toHaveBeenCalledWith('Salsa', [
       {
         nombre: 'Pimienta',
+        cantidad: null,
+        unidad: null,
+      },
+    ]);
+  });
+
+  it('mantiene la unidad original cuando no hay compra estandar y la unidad es de compra (e.g. kg)', () => {
+    setRecipe({
+      nombre: 'Guiso',
+      ingredientes: [
+        {
+          id: 'ing-3',
+          productoId: null,
+          nombre: 'Carne picada',
+          productoNombre: null,
+          cantidad: 0.5,
+          unidad: 'kg',
+          cantidadCompraEstandar: null,
+          unidadCompraEstandar: null,
+          enStock: false,
+          alergenos: [],
+        },
+      ],
+    });
+
+    (component as any).agregarFaltantesALista();
+
+    expect(listaService.addGroupToLista).toHaveBeenCalledWith('Guiso', [
+      {
+        nombre: 'Carne',
+        cantidad: 0.5,
+        unidad: 'kg',
+      },
+    ]);
+  });
+
+  it('limpia instrucciones de preparacion del nombre del ingrediente', () => {
+    setRecipe({
+      nombre: 'Ensalada',
+      ingredientes: [
+        {
+          id: 'ing-4',
+          productoId: null,
+          nombre: 'Zucchini cortado en trozos chicos',
+          productoNombre: null,
+          cantidad: 2,
+          unidad: 'unidad',
+          cantidadCompraEstandar: null,
+          unidadCompraEstandar: null,
+          enStock: false,
+          alergenos: [],
+        },
+      ],
+    });
+
+    (component as any).agregarFaltantesALista();
+
+    expect(listaService.addGroupToLista).toHaveBeenCalledWith('Ensalada', [
+      {
+        nombre: 'Zucchini',
+        cantidad: 2,
+        unidad: 'unidad',
+      },
+    ]);
+  });
+
+  it('limpia frases como fresca para decorar y molida en orden del primer match', () => {
+    setRecipe({
+      nombre: 'Cena',
+      ingredientes: [
+        {
+          id: 'ing-5',
+          productoId: null,
+          nombre: 'Albahaca fresca para decorar',
+          productoNombre: null,
+          cantidad: 1,
+          unidad: 'unidad',
+          cantidadCompraEstandar: null,
+          unidadCompraEstandar: null,
+          enStock: false,
+          alergenos: [],
+        },
+        {
+          id: 'ing-6',
+          productoId: null,
+          nombre: 'Pimienta de Jamaica molida',
+          productoNombre: null,
+          cantidad: 1,
+          unidad: 'unidad',
+          cantidadCompraEstandar: null,
+          unidadCompraEstandar: null,
+          enStock: false,
+          alergenos: [],
+        }
+      ],
+    });
+
+    (component as any).agregarFaltantesALista();
+
+    expect(listaService.addGroupToLista).toHaveBeenCalledWith('Cena', [
+      {
+        nombre: 'Albahaca',
         cantidad: 1,
-        unidad: 'pizca',
+        unidad: 'unidad',
+      },
+      {
+        nombre: 'Pimienta de Jamaica',
+        cantidad: 1,
+        unidad: 'unidad',
+      }
+    ]);
+  });
+
+  it('omite la cantidad cuando no hay unidad y la cantidad es fraccionaria (e.g. 0.5 almendras crudas)', () => {
+    setRecipe({
+      nombre: 'Postre',
+      ingredientes: [
+        {
+          id: 'ing-7',
+          productoId: null,
+          nombre: 'Almendras crudas',
+          productoNombre: null,
+          cantidad: 0.5,
+          unidad: null,
+          cantidadCompraEstandar: null,
+          unidadCompraEstandar: null,
+          enStock: false,
+          alergenos: [],
+        },
+      ],
+    });
+
+    (component as any).agregarFaltantesALista();
+
+    expect(listaService.addGroupToLista).toHaveBeenCalledWith('Postre', [
+      {
+        nombre: 'Almendras crudas',
+        cantidad: null,
+        unidad: null,
+      },
+    ]);
+  });
+
+  it('mantiene la cantidad cuando no hay unidad pero es un valor entero (e.g. 2 limones)', () => {
+    setRecipe({
+      nombre: 'Bebida',
+      ingredientes: [
+        {
+          id: 'ing-8',
+          productoId: null,
+          nombre: 'Limón',
+          productoNombre: null,
+          cantidad: 2,
+          unidad: null,
+          cantidadCompraEstandar: null,
+          unidadCompraEstandar: null,
+          enStock: false,
+          alergenos: [],
+        },
+      ],
+    });
+
+    (component as any).agregarFaltantesALista();
+
+    expect(listaService.addGroupToLista).toHaveBeenCalledWith('Bebida', [
+      {
+        nombre: 'Limón',
+        cantidad: 2,
+        unidad: null,
       },
     ]);
   });

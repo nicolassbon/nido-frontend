@@ -31,6 +31,7 @@ describe('Alacena', () => {
       expiryDate: '',
       quantity: 1,
       unit: 'unidad',
+      packagesCount: 1,
     });
 
     expect(badge).toBe('x1');
@@ -48,6 +49,7 @@ describe('Alacena', () => {
       expiryDate: '',
       quantity: 1,
       unit: 'Unidad',
+      packagesCount: 1,
     });
 
     expect(badge).toBe('x1');
@@ -65,6 +67,7 @@ describe('Alacena', () => {
       expiryDate: '',
       quantity: 2,
       unit: 'unidades',
+      packagesCount: 1,
     });
 
     expect(badge).toBe('x2');
@@ -82,6 +85,7 @@ describe('Alacena', () => {
       expiryDate: '',
       quantity: 1.5,
       unit: 'kg',
+      packagesCount: 1,
     });
 
     expect(badge).toBe('1.5kg');
@@ -99,6 +103,7 @@ describe('Alacena', () => {
       expiryDate: '',
       quantity: 500,
       unit: 'gramos',
+      packagesCount: 1,
     });
 
     expect(detail).toBe('500 g');

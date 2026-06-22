@@ -1,19 +1,22 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { BehaviorSubject, of } from 'rxjs';
+import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import { expect, vi } from 'vitest';
 import { Router } from '@angular/router';
 import {
   Check,
   History,
+  ChevronDown,
   ListCollapse,
   LUCIDE_ICONS,
   LucideIconProvider,
   PackagePlus,
   Pencil,
   Plus,
+  Send,
   ShoppingBasket,
   ShoppingCart,
   Trash2,
+  X,
 } from 'lucide-angular';
 import { ListaCompras } from './lista-compras';
 import { ListaComprasService, RecipeShoppingList, ShoppingHistoryItem } from './lista-compras.service';
@@ -43,13 +46,16 @@ describe('ListaCompras', () => {
           useValue: new LucideIconProvider({
             Check,
             History,
+            ChevronDown,
             ListCollapse,
             PackagePlus,
             Pencil,
             Plus,
+            Send,
             ShoppingBasket,
             ShoppingCart,
             Trash2,
+            X,
           }),
         },
       ],
@@ -108,6 +114,154 @@ describe('ListaCompras', () => {
     expect(separated.recetaNombre).toBe('Receta A');
     expect(separated.items).toHaveLength(2);
   });
+
+  it('envia la lista activa a Telegram y muestra estado enviado', () => {
+    listaService.emitLists([
+      shoppingList('lista-1', 'Receta A', [
+        { id: 'item-1', productoId: null, nombre: 'Arroz', cantidad: 1, unidad: 'kg', checked: false },
+      ]),
+      shoppingList('lista-2', 'Receta B', [
+        { id: 'item-2', productoId: null, nombre: 'Fideos', cantidad: 1, unidad: 'paquete', checked: false },
+      ]),
+    ]);
+    fixture.detectChanges();
+
+    getTelegramButton().click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Todas las compras pendientes');
+    expect((component as any).showTelegramModal).toBe(true);
+  });
+
+  it('selecciona por defecto la lista activa seleccionada en la vista', () => {
+    listaService.emitLists([
+      shoppingList('lista-1', 'Receta A', [
+        { id: 'item-1', productoId: null, nombre: 'Arroz', cantidad: 1, unidad: 'kg', checked: false },
+      ]),
+      shoppingList('lista-2', 'Receta B', [
+        { id: 'item-2', productoId: null, nombre: 'Fideos', cantidad: 1, unidad: 'paquete', checked: false },
+      ]),
+    ]);
+    (component as any).selectList('lista-2');
+    fixture.detectChanges();
+
+    (component as any).sendActiveListToTelegram();
+    expect((component as any).selectedTelegramTargetId).toBe('lista-2');
+  });
+
+  it('selecciona por defecto todas las compras pendientes si se selecciono ver todas las listas o ver todo', () => {
+    listaService.emitLists([
+      shoppingList('lista-1', 'Receta A', [
+        { id: 'item-1', productoId: null, nombre: 'Arroz', cantidad: 1, unidad: 'kg', checked: false },
+      ]),
+      shoppingList('lista-2', 'Receta B', [
+        { id: 'item-2', productoId: null, nombre: 'Fideos', cantidad: 1, unidad: 'paquete', checked: false },
+      ]),
+    ]);
+    (component as any).toggleShowAllLists();
+    fixture.detectChanges();
+
+    (component as any).sendActiveListToTelegram();
+    expect((component as any).selectedTelegramTargetId).toBe('__telegram_all_pending__');
+  });
+
+  it('envia una lista concreta a Telegram desde el modal', () => {
+    listaService.emitLists([
+      shoppingList('lista-1', 'Receta A', [
+        { id: 'item-1', productoId: null, nombre: 'Arroz', cantidad: 1, unidad: 'kg', checked: false },
+      ]),
+      shoppingList('lista-2', 'Receta B', [
+        { id: 'item-2', productoId: null, nombre: 'Fideos', cantidad: 1, unidad: 'paquete', checked: false },
+      ]),
+    ]);
+
+    (component as any).sendActiveListToTelegram();
+    (component as any).selectedTelegramTargetId = 'lista-2';
+    (component as any).confirmTelegramSend();
+
+    expect(listaService.sendToTelegram).toHaveBeenCalledWith('lista-2');
+    expect((component as any).telegramSendState).toBe('sent');
+    expect((component as any).telegramSendMessage).toBe('Lista enviada a Telegram.');
+  });
+
+  it('envia todas las compras pendientes como null', () => {
+    listaService.emitLists([
+      shoppingList('lista-1', 'Receta A', [
+        { id: 'item-1', productoId: null, nombre: 'Arroz', cantidad: 1, unidad: 'kg', checked: false },
+      ]),
+      shoppingList('lista-2', 'Receta B', [
+        { id: 'item-2', productoId: null, nombre: 'Fideos', cantidad: 1, unidad: 'paquete', checked: false },
+      ]),
+    ]);
+
+    (component as any).sendActiveListToTelegram();
+    (component as any).selectedTelegramTargetId = '__telegram_all_pending__';
+    (component as any).confirmTelegramSend();
+
+    expect(listaService.sendToTelegram).toHaveBeenCalledWith(null);
+  });
+
+  it('muestra CTA para vincular Telegram cuando el backend responde sin enlace', () => {
+    (listaService as any).sendToTelegram = vi.fn(() => throwError(() => ({ status: 409, error: { status: 'no_telegram_link' } })));
+
+    listaService.emitLists([
+      shoppingList('lista-1', 'Receta A', [
+        { id: 'item-1', productoId: null, nombre: 'Arroz', cantidad: 1, unidad: 'kg', checked: false },
+      ]),
+    ]);
+
+    (component as any).sendActiveListToTelegram();
+    (component as any).confirmTelegramSend();
+    fixture.detectChanges();
+
+    expect((component as any).telegramSendState).toBe('no_telegram_link');
+    expect(fixture.nativeElement.textContent).toContain('Ir a configuración');
+  });
+
+  it('muestra estado vacio sin tratarlo como error', () => {
+    (listaService as any).sendToTelegram = vi.fn(() => of({ status: 'empty' as const, itemCount: 0, chatId: null, listaId: null }));
+
+    listaService.emitLists([
+      shoppingList('lista-1', 'Receta A', [
+        { id: 'item-1', productoId: null, nombre: 'Arroz', cantidad: 1, unidad: 'kg', checked: false },
+      ]),
+    ]);
+
+    (component as any).sendActiveListToTelegram();
+    (component as any).confirmTelegramSend();
+
+    expect((component as any).telegramSendState).toBe('empty');
+    expect((component as any).telegramSendMessage).toBe('La lista está vacía.');
+    expect((component as any).errorMessage).toBeNull();
+  });
+
+  it('deshabilita confirmar mientras la solicitud esta en curso', () => {
+    const pending = new Subject<{ status: 'enqueued'; itemCount: number; chatId: number; listaId: string | null }>();
+    (listaService as any).sendToTelegram = vi.fn(() => pending.asObservable());
+
+    listaService.emitLists([
+      shoppingList('lista-1', 'Receta A', [
+        { id: 'item-1', productoId: null, nombre: 'Arroz', cantidad: 1, unidad: 'kg', checked: false },
+      ]),
+    ]);
+
+    (component as any).sendActiveListToTelegram();
+    fixture.detectChanges();
+    getConfirmTelegramButton().click();
+    fixture.detectChanges();
+
+    expect((component as any).isSendingTelegram).toBe(true);
+    expect(getConfirmTelegramButton().disabled).toBe(true);
+  });
+
+  function getTelegramButton(): HTMLButtonElement {
+    return fixture.nativeElement.querySelector('button[aria-label="telegram-send"]')
+      ?? fixture.nativeElement.querySelectorAll('button')[1];
+  }
+
+  function getConfirmTelegramButton(): HTMLButtonElement {
+    return fixture.nativeElement.querySelector('button[aria-label="telegram-confirm-send"]');
+  }
 });
 
 class FakeListaComprasService {
@@ -129,6 +283,7 @@ class FakeListaComprasService {
   markPurchased = vi.fn(() => of([]));
   removeItem = vi.fn(() => of([]));
   markAddedToInventory = vi.fn(() => of([]));
+  sendToTelegram = vi.fn(() => of({ status: 'enqueued', itemCount: 1, chatId: 1, listaId: null }));
 
   emitLists(listas: RecipeShoppingList[]): void {
     this.listas.next(listas);
