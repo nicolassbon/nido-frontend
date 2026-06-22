@@ -35,7 +35,6 @@ export class ListaCompras implements OnInit, OnDestroy {
   protected editingListId: string | null = null;
 
   protected activeListId: string | null = null;
-  protected showAllLists = false;
   protected itemNombre = '';
   protected itemCantidad: number | null = null;
   protected itemUnidad = '';
@@ -150,14 +149,15 @@ export class ListaCompras implements OnInit, OnDestroy {
 
   protected selectList(listaId: string): void {
     this.activeListId = listaId;
-    this.showAllLists = false;
     this.cancelItemEdit();
   }
 
-  protected toggleShowAllLists(): void {
-    this.showAllLists = !this.showAllLists;
-    this.cancelItemEdit();
-    this.cdr.markForCheck();
+  protected toggleVerTodo(): void {
+    if (this.activeListId === VIEW_ALL_LIST_ID) {
+      this.activeListId = this.listas[0]?.id ?? null;
+    } else {
+      this.viewAll();
+    }
   }
 
   protected saveItem(listaId: string): void {
@@ -328,7 +328,6 @@ export class ListaCompras implements OnInit, OnDestroy {
   }
 
   protected visibleLists(): RecipeShoppingList[] {
-    if (this.showAllLists) return this.listas;
     const active = this.activeList();
     return active ? [active] : [];
   }

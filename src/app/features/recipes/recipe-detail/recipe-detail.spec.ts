@@ -65,19 +65,21 @@ describe('RecipeDetail', () => {
     expect(component).toBeTruthy();
   });
 
-  it('usa la compra estandar al agregar faltantes a la lista', () => {
+  it('usa la cantidad convertida para lista al agregar faltantes', () => {
     setRecipe({
-      nombre: 'Pollo al curry',
+      nombre: 'Limonada',
       ingredientes: [
         {
           id: 'ing-1',
           productoId: 'prod-1',
-          nombre: 'Ajo en polvo',
-          productoNombre: 'Ajo en polvo',
-          cantidad: 1,
-          unidad: 'cda',
+          nombre: 'Agua',
+          productoNombre: 'Agua',
+          cantidad: 2,
+          unidad: 'taza',
           cantidadCompraEstandar: 1,
-          unidadCompraEstandar: 'unidad',
+          unidadCompraEstandar: 'lt',
+          cantidadListaCompras: 480,
+          unidadListaCompras: 'ml',
           enStock: false,
           alergenos: [],
         },
@@ -86,16 +88,17 @@ describe('RecipeDetail', () => {
 
     (component as any).agregarFaltantesALista();
 
-    expect(listaService.addGroupToLista).toHaveBeenCalledWith('Pollo al curry', [
+    expect(listaService.addGroupToLista).toHaveBeenCalledWith('Limonada', [
       {
-        nombre: 'Ajo en polvo',
-        cantidad: 1,
-        unidad: 'unidad',
+        nombre: 'Agua',
+        cantidad: 480,
+        unidad: 'ml',
       },
     ]);
     expect(router.navigate).toHaveBeenCalledWith(['/lista-compras']);
   });
 
+  it('mantiene la unidad original cuando no hay cantidad convertida para lista', () => {
   it('omite la cantidad y unidad cuando no hay compra estandar y la unidad original es de cocina (e.g. pizca)', () => {
     setRecipe({
       nombre: 'Salsa',
@@ -109,6 +112,8 @@ describe('RecipeDetail', () => {
           unidad: 'pizca',
           cantidadCompraEstandar: null,
           unidadCompraEstandar: null,
+          cantidadListaCompras: null,
+          unidadListaCompras: null,
           enStock: false,
           alergenos: [],
         },

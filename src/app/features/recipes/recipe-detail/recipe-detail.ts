@@ -198,6 +198,11 @@ export class RecipeDetail {
     const faltantes = this.missingIngredients();
     if (!receta || faltantes.length === 0) return;
 
+    const items = faltantes.map(i => ({
+      nombre:   i.productoNombre || i.nombre,
+      cantidad: i.cantidadListaCompras ?? i.cantidad,
+      unidad:   i.unidadListaCompras ?? i.unidad,
+    }));
     const items = faltantes.map(i => {
       const targetUnit = i.unidadCompraEstandar ?? i.unidad;
       const isCooking = isCookingUnit(targetUnit);

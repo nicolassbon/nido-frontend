@@ -14,6 +14,9 @@ export interface ShoppingItem {
   compradoEn?: string | null;
   orden?: number;
   sourceItems?: Array<{ listaId: string; itemId: string }>;
+  categoriaNombre?: string | null;
+  iconoSvg?: string | null;
+  icono?: string | null;
 }
 
 export interface RecipeShoppingList {
@@ -32,6 +35,10 @@ export interface ShoppingHistoryItem {
   grupoNombre: string;
   compradoEn: string;
   compradoPor: string | null;
+  agregadoAlInventario: boolean;
+  categoriaNombre?: string | null;
+  iconoSvg?: string | null;
+  icono?: string | null;
 }
 
 export interface SendToTelegramResponse {
@@ -168,7 +175,9 @@ export class ListaComprasService {
   markAddedToInventory(itemId: string) {
     return this.http.patch<void>(`${this.legacyBaseUrl}/items/${encodeURIComponent(itemId)}/agregado-inventario`, {}).pipe(
       tap(() => {
-        this._historial$.next(this._historial$.value.filter(item => item.id !== itemId));
+        const current = this._historial$.value;
+        const updated = current.map(item => item.id === itemId ? { ...item, agregadoAlInventario: true } : item);
+        this._historial$.next(updated);
       }),
       switchMap(() => this.refreshHistory()),
       tap(() => this.refresh().subscribe()),
@@ -236,6 +245,9 @@ interface ApiShoppingItem {
   comprado: boolean;
   compradoEn: string | null;
   orden: number;
+  categoriaNombre?: string | null;
+  iconoSvg?: string | null;
+  icono?: string | null;
 }
 
 interface ApiHistoryItem {
@@ -247,6 +259,10 @@ interface ApiHistoryItem {
   grupoNombre: string;
   compradoEn: string;
   compradoPor: string | null;
+  agregadoAlInventario: boolean;
+  categoriaNombre?: string | null;
+  iconoSvg?: string | null;
+  icono?: string | null;
 }
 
 function toShoppingList(list: ApiShoppingList): RecipeShoppingList {
@@ -263,6 +279,9 @@ function toShoppingList(list: ApiShoppingList): RecipeShoppingList {
       checked: item.comprado,
       compradoEn: item.compradoEn,
       orden: item.orden,
+      categoriaNombre: item.categoriaNombre,
+      iconoSvg: item.iconoSvg,
+      icono: resolveShoppingIcon(item),
     })),
   };
 }
@@ -277,5 +296,62 @@ function toHistoryItem(item: ApiHistoryItem): ShoppingHistoryItem {
     grupoNombre: item.grupoNombre,
     compradoEn: item.compradoEn,
     compradoPor: item.compradoPor,
+    agregadoAlInventario: item.agregadoAlInventario,
+    categoriaNombre: item.categoriaNombre,
+    iconoSvg: item.iconoSvg,
+    icono: null,
   };
+}
+
+const SHOPPING_ICON_ALIASES: Record<string, string> = {
+  salt: 'leaf',
+  sugar: 'candy',
+  bottle: 'chef-hat',
+  sausage: 'beef',
+  archive: 'package',
+  beer: 'glass-water',
+  wine: 'glass-water',
+  bath: 'package',
+  dog: 'package',
+  baby: 'package',
+  'heart-pulse': 'leaf',
+  'spray-can': 'package',
+};
+
+function resolveShoppingIcon(item: ApiShoppingItem): string {
+  const icon = normalizeIconName(item.icono);
+  if (icon) return SHOPPING_ICON_ALIASES[icon] ?? icon;
+
+  const normalizedName = normalizeText(item.nombre);
+  const normalizedCategory = normalizeText(item.categoriaNombre ?? '');
+
+  if (containsAny(normalizedName, 'harina', 'maicena', 'fecula') || containsAny(normalizedCategory, 'harina')) {
+    return 'wheat';
+  }
+
+  if (
+    containsAny(normalizedName, 'sal', 'pimienta', 'oregano', 'aji molido', 'pimenton', 'condimento', 'especia', 'caldo') ||
+    containsAny(normalizedCategory, 'condimento')
+  ) {
+    return 'leaf';
+  }
+
+  return 'package';
+}
+
+function normalizeIconName(value: string | null | undefined): string | null {
+  const trimmed = value?.trim().toLowerCase();
+  return trimmed || null;
+}
+
+function normalizeText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function containsAny(source: string, ...keywords: string[]): boolean {
+  return keywords.some(keyword => source.includes(keyword));
 }

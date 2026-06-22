@@ -137,12 +137,17 @@ export class ProductDetail {
   protected readonly deleteConfirmation = signal<DeleteConfirmation | null>(null);
   protected readonly deleteError = signal<string | null>(null);
   protected readonly deleteMotivo = signal<DeleteStockMotivo>('consumido');
+  private timeoutId?: any;
 
-  protected readonly imageUrl = computed(() =>
-    this.imageFailed()
-      ? ''
-      : resolveImageUrl(this.product()?.imagen) || fallbackProductImage(this.product()?.nombre),
-  );
+  protected readonly imageUrl = computed(() => {
+    if (this.imageFailed()) return '';
+    const p = this.product();
+    if (!p) return '';
+    if (p.iconoSvg) {
+      return `/assets/icons/categorias/${p.iconoSvg}`;
+    }
+    return resolveImageUrl(p.imagen) || fallbackProductImage(p.nombre);
+  });
 
   protected readonly remainingPercent = computed(() =>
     clamp(100 - (this.product()?.porcentajeConsumido ?? 0), 0, 100),
@@ -184,6 +189,10 @@ export class ProductDetail {
   });
 
   constructor() {
+    this.destroyRef.onDestroy(() => {
+      if (this.timeoutId) clearTimeout(this.timeoutId);
+    });
+
     this.route.paramMap
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(params => {
@@ -263,6 +272,7 @@ export class ProductDetail {
       carbohidratos: null,
       grasas: null,
       origenCarga: item.origenCarga ?? 'manual',
+      iconoSvg: item.iconoSvg,
       informacionNutricional: null,
     };
   }
@@ -307,6 +317,15 @@ export class ProductDetail {
     this.imageFailed.set(true);
   }
 
+  private clearListMessageTimeout(): void {
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+    }
+    this.timeoutId = setTimeout(() => {
+      this.listMessage.set(null);
+    }, 3000);
+  }
+
   protected addToShoppingList(): void {
     const product = this.product();
     if (!product) return;
@@ -317,12 +336,35 @@ export class ProductDetail {
 
     if (exists) {
       this.listMessage.set('Ya estaba en tu lista.');
+      this.clearListMessageTimeout();
       return;
     }
 
-    this.listaService.addManualItem(product.nombre, product.cantidad || 1, this.displayUnit(product.unidadMedida)).subscribe({
-      next: () => this.listMessage.set('Agregado a la lista.'),
-      error: () => this.listMessage.set('No se pudo agregar a la lista.'),
+    let targetQuantity = product.cantidadCompraEstandar;
+    let targetUnit = product.unidadCompraEstandar;
+
+    if (!targetQuantity) {
+      targetQuantity = product.cantidad || 1;
+      const consumed = clamp(product.porcentajeConsumido ?? 0, 0, 99);
+      if (consumed > 0 && targetQuantity > 0) {
+        const calculated = targetQuantity / ((100 - consumed) / 100);
+        targetQuantity = Math.round(calculated * 100) / 100;
+      }
+    }
+
+    if (!targetUnit) {
+      targetUnit = this.displayUnit(product.unidadMedida) ?? '';
+    }
+
+    this.listaService.addManualItem(product.nombre, targetQuantity, targetUnit).subscribe({
+      next: () => {
+        this.listMessage.set('¡Agregado a la lista!');
+        this.clearListMessageTimeout();
+      },
+      error: () => {
+        this.listMessage.set('No se pudo agregar a la lista.');
+        this.clearListMessageTimeout();
+      },
     });
   }
 

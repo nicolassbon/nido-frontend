@@ -70,6 +70,8 @@ export interface Product {
   isOpened?:        boolean;
   remainingPercent?: number;  // 100 = full, 75 / 50 / 25 = approximate remaining
   barcode?:         string;
+  iconoSvg?:        string;
+  icono?:           string;
   /** Cantidad de envases idénticos del mismo producto. Default 1. */
   packagesCount:    number;
   /** Información nutricional por 100 g (opcional). */
@@ -384,13 +386,17 @@ export class Alacena implements OnInit {
   /** Productos conocidos para el autocomplete del form de agregar */
   protected readonly knownProducts = computed<KnownProduct[]>(() =>
     this.products().map(p => ({
-      nombre:           p.name,
-      categoriaNombre:  p.categoriaNombre,
-      unidadMedida:     p.unit,
-      ubicacion:        p.location,
-      stockId:          p.id,
-      cantidad:         p.quantity,
-      cantidadEnvases:  p.packagesCount,
+
+      nombre:          p.name,
+      categoriaNombre: p.categoriaNombre,
+      unidadMedida:    p.unit,
+      ubicacion:       p.location,
+      stockId:         p.id,
+      cantidad:        p.quantity,
+      icono:           p.icono,
+      iconoSvg:        p.iconoSvg,
+      cantidadEnvases:  p.packagesCount
+
     })),
   );
 
@@ -649,7 +655,7 @@ protected reloadProducts(): void { this.loadProducts(); }
     return {
       id:               item.id,
       name:             item.nombre,
-      image:            resolveImageUrl(item.imagen) || fallbackProductImage(item.nombre),
+      image:            item.iconoSvg ? `/assets/icons/categorias/${item.iconoSvg}` : (resolveImageUrl(item.imagen) || fallbackProductImage(item.nombre)),
       location:         item.ubicacion as Exclude<StorageLocation, 'Todos'>,
       expiryDate:       item.fechaVencimiento ?? '',
       quantity:         item.cantidad ?? 0,
@@ -658,6 +664,8 @@ protected reloadProducts(): void { this.loadProducts(); }
       isOpened:         item.estaAbierto,
       remainingPercent: 100 - item.porcentajeConsumido,
       barcode:          item.codigoBarras ?? undefined,
+      iconoSvg:         item.iconoSvg ?? undefined,
+      icono:            item.icono ?? undefined
       packagesCount:    item.cantidadEnvases ?? 1,
       calorias:         item.calorias,
       proteinas:        item.proteinas,
@@ -670,7 +678,7 @@ protected reloadProducts(): void { this.loadProducts(); }
   return {
     id: item.stockHogarId,
     name: item.nombre,
-    image: resolveImageUrl(item.imagenUrl) || fallbackProductImage(item.nombre),
+    image: item.iconoSvg ? `/assets/icons/categorias/${item.iconoSvg}` : (resolveImageUrl(item.imagenUrl) || fallbackProductImage(item.nombre)),
     location: item.ubicacion as Exclude<StorageLocation, 'Todos'>,
     expiryDate: item.fechaVencimiento ?? '',
     quantity: item.cantidad ?? 0,
@@ -679,6 +687,7 @@ protected reloadProducts(): void { this.loadProducts(); }
     isOpened: item.estaAbierto,
     remainingPercent: 100 - item.porcentajeConsumido,
     barcode: item.codigoBarras ?? undefined,
+    iconoSvg: item.iconoSvg ?? undefined
     packagesCount: item.cantidadEnvases ?? 1,
   };
 }
@@ -1079,6 +1088,41 @@ protected reloadProducts(): void { this.loadProducts(); }
 
     const d = this.draft();
 
+    this.alacenaApi
+      .createStock({
+        nombre:              d.name.trim(),
+        codigoBarras:        d.barcode || null,
+        imagen:              d.image || null,
+        ubicacion:           d.location,
+        cantidad:            d.quantity,
+        unidadMedida:        'unidad',
+        fechaVencimiento:    d.expiryDate || null,
+        estaAbierto:         d.isOpened,
+        porcentajeConsumido: d.consumedPercent,
+        origenCarga:         d.barcode ? 'codigo_barras' : 'manual',
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: created => {
+          this.products.update(list => [...list, this.toProduct(created)]);
+          this.closeScanner();
+        },
+        error: () => {
+          const product: Product = {
+            id:               crypto.randomUUID(),
+            name:             d.name.trim(),
+            image:            d.image,
+            location:         d.location,
+            expiryDate:       d.expiryDate,
+            quantity:         d.quantity,
+            isOpened:         d.isOpened,
+            remainingPercent: 100 - d.consumedPercent,
+            barcode:          d.barcode || undefined,
+          };
+          this.products.update(list => [...list, product]);
+          this.closeScanner();
+        },
+      });
     const existing = d.barcode
       ? this.products().find(p => p.barcode === d.barcode)
       : undefined;
