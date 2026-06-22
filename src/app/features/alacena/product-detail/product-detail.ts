@@ -323,16 +323,25 @@ export class ProductDetail {
       return;
     }
 
-    let targetQuantity = product.cantidad || 1;
-    const consumed = clamp(product.porcentajeConsumido ?? 0, 0, 99);
-    if (consumed > 0 && targetQuantity > 0) {
-      const calculated = targetQuantity / ((100 - consumed) / 100);
-      targetQuantity = Math.round(calculated * 100) / 100;
+    let targetQuantity = product.cantidadCompraEstandar;
+    let targetUnit = product.unidadCompraEstandar;
+
+    if (!targetQuantity) {
+      targetQuantity = product.cantidad || 1;
+      const consumed = clamp(product.porcentajeConsumido ?? 0, 0, 99);
+      if (consumed > 0 && targetQuantity > 0) {
+        const calculated = targetQuantity / ((100 - consumed) / 100);
+        targetQuantity = Math.round(calculated * 100) / 100;
+      }
     }
 
-    this.listaService.addManualItem(product.nombre, targetQuantity, this.displayUnit(product.unidadMedida)).subscribe({
+    if (!targetUnit) {
+      targetUnit = this.displayUnit(product.unidadMedida) ?? '';
+    }
+
+    this.listaService.addManualItem(product.nombre, targetQuantity, targetUnit).subscribe({
       next: () => {
-        this.listMessage.set('Agregado a la lista.');
+        this.listMessage.set('¡Agregado a la lista!');
         this.clearListMessageTimeout();
       },
       error: () => {

@@ -75,7 +75,7 @@
             <a routerLink="/alacena" class="text-[0.78rem] font-medium text-[#2D1E16] no-underline hover:text-nido-green">Ver todos</a>
           </div>
 
-          <div class="flex flex-col divide-y divide-nido-border/70" [style.minHeight]="expiringProducts().length > 0 ? '121px' : '56px'">
+          <div class="flex flex-col divide-y divide-nido-border/70">
             @for (product of expiringProducts(); track product.id) {
               <a routerLink="/alacena" class="grid grid-cols-[44px_minmax(0,1fr)_auto_18px] items-center gap-3 py-2 no-underline group">
                 <div class="w-10 h-10 rounded-[8px] border border-nido-border/70 bg-nido-cream/55 flex items-center justify-center overflow-hidden">
@@ -135,7 +135,7 @@
           <a routerLink="/recetas" class="text-[0.78rem] font-medium text-[#2D1E16] no-underline hover:text-nido-green">Ver todas</a>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3" [style.minHeight]="featuredRecipes().length > 0 ? '121px' : '56px'">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
           @for (recipe of featuredRecipes(); track recipe.id) {
             <a [routerLink]="['/recetas', recipe.id]" class="rounded-[8px] border border-nido-border/80 bg-white/[0.51] overflow-hidden no-underline text-nido-green-dark group">
               <div class="h-[74px] bg-nido-cream/70 overflow-hidden flex items-center justify-center">

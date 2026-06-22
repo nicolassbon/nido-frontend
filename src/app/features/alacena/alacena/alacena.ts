@@ -68,6 +68,7 @@ export interface Product {
   remainingPercent?: number;  // 100 = full, 75 / 50 / 25 = approximate remaining
   barcode?:         string;
   iconoSvg?:        string;
+  icono?:           string;
 }
 
 interface ProductDraft {
@@ -346,6 +347,8 @@ export class Alacena implements OnInit {
       ubicacion:       p.location,
       stockId:         p.id,
       cantidad:        p.quantity,
+      icono:           p.icono,
+      iconoSvg:        p.iconoSvg,
     })),
   );
 
@@ -599,7 +602,8 @@ protected reloadProducts(): void { this.loadProducts(); }
       isOpened:         item.estaAbierto,
       remainingPercent: 100 - item.porcentajeConsumido,
       barcode:          item.codigoBarras ?? undefined,
-      iconoSvg:         item.iconoSvg ?? undefined
+      iconoSvg:         item.iconoSvg ?? undefined,
+      icono:            item.icono ?? undefined
     };
   }
 

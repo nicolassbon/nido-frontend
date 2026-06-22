@@ -222,7 +222,12 @@
           [class]="productCardClass(product)">
 
           <div class="relative h-40 overflow-hidden bg-gradient-to-br from-nido-cream via-white/80 to-[#f3e8d9]">
-            @if (product.image) {
+            @if (product.iconoSvg) {
+              <div class="w-full h-full flex flex-col items-center justify-center p-6 sm:p-8">
+                <img [src]="'/assets/icons/categorias/' + product.iconoSvg" [alt]="product.name" loading="lazy"
+                     class="w-full h-full object-contain opacity-90 transition-transform duration-300 group-hover:scale-105" />
+              </div>
+            } @else if (product.image) {
               <div class="absolute inset-0 p-3 sm:p-4">
                 <img [src]="product.image" [alt]="product.name" loading="lazy" (error)="onImgError($event)"
                      class="w-full h-full object-contain transition-transform duration-300 group-hover:scale-[1.03] drop-shadow-[0_6px_14px_rgba(43,30,27,0.12)]" />

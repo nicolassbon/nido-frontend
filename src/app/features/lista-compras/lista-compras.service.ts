@@ -16,6 +16,7 @@ export interface ShoppingItem {
   sourceItems?: Array<{ listaId: string; itemId: string }>;
   categoriaNombre?: string | null;
   iconoSvg?: string | null;
+  icono?: string | null;
 }
 
 export interface RecipeShoppingList {
@@ -37,6 +38,7 @@ export interface ShoppingHistoryItem {
   agregadoAlInventario: boolean;
   categoriaNombre?: string | null;
   iconoSvg?: string | null;
+  icono?: string | null;
 }
 
 type AddItemInput = {
@@ -230,6 +232,7 @@ interface ApiShoppingItem {
   orden: number;
   categoriaNombre?: string | null;
   iconoSvg?: string | null;
+  icono?: string | null;
 }
 
 interface ApiHistoryItem {
@@ -244,6 +247,7 @@ interface ApiHistoryItem {
   agregadoAlInventario: boolean;
   categoriaNombre?: string | null;
   iconoSvg?: string | null;
+  icono?: string | null;
 }
 
 function toShoppingList(list: ApiShoppingList): RecipeShoppingList {
@@ -262,6 +266,7 @@ function toShoppingList(list: ApiShoppingList): RecipeShoppingList {
       orden: item.orden,
       categoriaNombre: item.categoriaNombre,
       iconoSvg: item.iconoSvg,
+      icono: item.icono,
     })),
   };
 }
@@ -279,5 +284,6 @@ function toHistoryItem(item: ApiHistoryItem): ShoppingHistoryItem {
     agregadoAlInventario: item.agregadoAlInventario,
     categoriaNombre: item.categoriaNombre,
     iconoSvg: item.iconoSvg,
+    icono: item.icono,
   };
 }

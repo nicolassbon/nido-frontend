@@ -47,14 +47,14 @@ export class Home implements OnInit {
       icon: 'shopping-basket',
       route: '/agregar-producto',
       classes: 'flex items-center justify-center gap-6 rounded-[8px] min-h-[72px] px-5 text-nido-cream no-underline text-[1rem] font-medium leading-none shadow-[0_3px_10px_rgba(38,63,48,0.08)] bg-nido-green-dark hover:bg-nido-green hover:-translate-y-0.5 transition-transform',
-      iconBgClass: 'bg-nido-green-dark',
+      iconBgClass: 'bg-transparent',
     },
     {
       label: 'Nueva receta',
       icon: 'chef-hat',
       route: '/recetas',
       classes: 'flex items-center justify-center gap-6 rounded-[8px] min-h-[72px] px-5 text-nido-cream no-underline text-[1rem] font-medium leading-none shadow-[0_3px_10px_rgba(38,63,48,0.08)] bg-nido-brown hover:bg-nido-gold hover:-translate-y-0.5 transition-transform',
-      iconBgClass: 'bg-nido-brown',
+      iconBgClass: 'bg-transparent',
     },
   ];
 

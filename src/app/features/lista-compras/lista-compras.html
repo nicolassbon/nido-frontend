@@ -160,9 +160,9 @@
               }
             </button>
 
-            @if (item.iconoSvg) {
+            @if (item.icono) {
               <div class="w-8 h-8 rounded-lg bg-nido-cream/40 flex items-center justify-center shrink-0 overflow-hidden border border-nido-border/30" [class.opacity-60]="item.checked">
-                <img [src]="'/assets/icons/categorias/' + item.iconoSvg" [alt]="item.categoriaNombre" class="w-6 h-6 object-contain" />
+                <lucide-icon [name]="item.icono" [size]="18" class="text-nido-green-dark" />
               </div>
             }
 
@@ -200,9 +200,9 @@
         @for (item of historial; track item.id) {
           <li class="flex items-center justify-between gap-3 px-4 py-3 border-b border-nido-border/40 last:border-b-0 sm:px-5">
             <div class="flex items-center gap-3 min-w-0 flex-1">
-              @if (item.iconoSvg) {
+              @if (item.icono) {
                 <div class="w-8 h-8 rounded-lg bg-nido-cream/40 flex items-center justify-center shrink-0 overflow-hidden border border-nido-border/30">
-                  <img [src]="'/assets/icons/categorias/' + item.iconoSvg" [alt]="item.categoriaNombre" class="w-6 h-6 object-contain" />
+                  <lucide-icon [name]="item.icono" [size]="18" class="text-nido-green-dark" />
                 </div>
               }
               <div class="min-w-0 flex-1">

@@ -20,6 +20,9 @@ export interface StockItemResponse {
   cantidadEnvases:     number;
   origenCarga:          'manual' | 'codigo_barras' | 'ticket_compra';
   iconoSvg?:            string | null;
+  icono?:               string | null;
+  cantidadCompraEstandar?: number | null;
+  unidadCompraEstandar?: string | null;
 }
 
 export type DeleteStockMotivo = 'consumido' | 'descartado' | 'vencido';
@@ -58,6 +61,7 @@ export interface ProductoApiResponse {
   imagen:          string | null;
   categoriaNombre: string | null;
   ttlDias:         number | null;
+  icono?:          string | null;
 }
 
 export interface StockMovementResponse {
