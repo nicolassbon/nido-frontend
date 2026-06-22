@@ -273,6 +273,8 @@ export class ProductDetail {
       grasas: null,
       origenCarga: item.origenCarga ?? 'manual',
       iconoSvg: item.iconoSvg,
+      cantidadCompraEstandar: item.cantidadCompraEstandar,
+      unidadCompraEstandar: item.unidadCompraEstandar,
       informacionNutricional: null,
     };
   }
@@ -340,23 +342,12 @@ export class ProductDetail {
       return;
     }
 
-    let targetQuantity = product.cantidadCompraEstandar;
-    let targetUnit = product.unidadCompraEstandar;
+    const targetQuantity = this.positiveAmount(product.cantidadCompraEstandar)
+      ?? this.positiveAmount(product.cantidad)
+      ?? 1;
+    const targetUnit = product.unidadCompraEstandar || this.displayUnit(product.unidadMedida) || '';
 
-    if (!targetQuantity) {
-      targetQuantity = product.cantidad || 1;
-      const consumed = clamp(product.porcentajeConsumido ?? 0, 0, 99);
-      if (consumed > 0 && targetQuantity > 0) {
-        const calculated = targetQuantity / ((100 - consumed) / 100);
-        targetQuantity = Math.round(calculated * 100) / 100;
-      }
-    }
-
-    if (!targetUnit) {
-      targetUnit = this.displayUnit(product.unidadMedida) ?? '';
-    }
-
-    this.listaService.addManualItem(product.nombre, targetQuantity, targetUnit).subscribe({
+    this.listaService.addManualItemToList(SHOPPING_GROUP, product.nombre, targetQuantity, targetUnit).subscribe({
       next: () => {
         this.listMessage.set('¡Agregado a la lista!');
         this.clearListMessageTimeout();
@@ -428,11 +419,12 @@ export class ProductDetail {
 
   protected quantitySummary(product: StockItemResponse): string {
     const current = this.formatAmount(product.cantidad, product.unidadMedida);
-    const consumed = clamp(product.porcentajeConsumido, 0, 99);
-    if (consumed <= 0 || product.cantidad <= 0) return current;
+    const standardQuantity = this.positiveAmount(product.cantidadCompraEstandar);
+    if (!standardQuantity) return current;
 
-    const total = product.cantidad / ((100 - consumed) / 100);
-    return `${current} / ${this.formatAmount(total, product.unidadMedida)}`;
+    const standardUnit = product.unidadCompraEstandar || product.unidadMedida;
+    const standard = this.formatAmount(standardQuantity, standardUnit);
+    return current === standard ? current : `${current} / ${standard}`;
   }
 
   protected formatDate(value: string | null | undefined): string {
@@ -581,6 +573,10 @@ export class ProductDetail {
     };
 
     return aliases[normalized] ?? normalized;
+  }
+
+  private positiveAmount(value: number | null | undefined): number | null {
+    return value !== null && value !== undefined && value > 0 ? value : null;
   }
 
   private normalizeToken(value: string): string {

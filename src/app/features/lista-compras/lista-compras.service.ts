@@ -142,6 +142,22 @@ export class ListaComprasService {
     );
   }
 
+  addManualItemToList(listName: string, nombre: string, cantidad: number | null, unidad: string | null) {
+    const normalizedListName = normalizeText(listName);
+    const target = this.snapshot.find(lista => normalizeText(lista.recetaNombre) === normalizedListName);
+
+    if (target) {
+      return this.addItem(target.id, nombre, cantidad, unidad);
+    }
+
+    return this.createList(listName).pipe(
+      switchMap(listas => {
+        const created = listas.find(lista => normalizeText(lista.recetaNombre) === normalizedListName);
+        return created ? this.addItem(created.id, nombre, cantidad, unidad) : of([]);
+      }),
+    );
+  }
+
   updateItem(
     listaId: string,
     itemId: string,
@@ -299,7 +315,7 @@ function toHistoryItem(item: ApiHistoryItem): ShoppingHistoryItem {
     agregadoAlInventario: item.agregadoAlInventario,
     categoriaNombre: item.categoriaNombre,
     iconoSvg: item.iconoSvg,
-    icono: null,
+    icono: resolveShoppingIcon(item),
   };
 }
 
@@ -308,6 +324,8 @@ const SHOPPING_ICON_ALIASES: Record<string, string> = {
   sugar: 'candy',
   bottle: 'chef-hat',
   sausage: 'beef',
+  croissant: 'wheat',
+  cake: 'chef-hat',
   archive: 'package',
   beer: 'glass-water',
   wine: 'glass-water',
@@ -318,7 +336,7 @@ const SHOPPING_ICON_ALIASES: Record<string, string> = {
   'spray-can': 'package',
 };
 
-function resolveShoppingIcon(item: ApiShoppingItem): string {
+function resolveShoppingIcon(item: ApiShoppingItem | ApiHistoryItem): string {
   const icon = normalizeIconName(item.icono);
   if (icon) return SHOPPING_ICON_ALIASES[icon] ?? icon;
 

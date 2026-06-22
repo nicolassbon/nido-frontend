@@ -51,7 +51,7 @@ describe('ListaComprasService', () => {
     expect(service.snapshot[0].items.find(i => i.nombre.startsWith('Aji'))?.icono).toBe('leaf');
   });
 
-  it('no expone iconos en historial', () => {
+  it('expone iconos en historial cuando la API los devuelve', () => {
     service.refreshHistory().subscribe();
 
     http.expectOne(`${baseUrl}/historial`).flush([
@@ -63,7 +63,7 @@ describe('ListaComprasService', () => {
       latestHistory = items;
     });
 
-    expect(latestHistory[0].icono).toBeNull();
+    expect(latestHistory[0].icono).toBe('leaf');
   });
 
   it('createList deberia llamar al endpoint nuevo', () => {
@@ -88,6 +88,42 @@ describe('ListaComprasService', () => {
 
     http.expectOne(baseUrl).flush([shoppingList('lista-1', 'Principal', [item({ id: 'item-1', nombre: 'Leche' })])]);
     expect(service.snapshot[0].items[0].nombre).toBe('Leche');
+  });
+
+  it('addManualItemToList agrega el producto a la lista indicada si ya existe', () => {
+    service.refresh().subscribe();
+    http.expectOne(baseUrl).flush([shoppingList('lista-productos', 'Productos agregados', [])]);
+
+    service.addManualItemToList('Productos agregados', 'Yerba', 1, 'kg').subscribe();
+
+    const post = http.expectOne(`${baseUrl}/lista-productos/items`);
+    expect(post.request.method).toBe('POST');
+    expect(post.request.body).toEqual({ nombre: 'Yerba', cantidad: 1, unidad: 'kg' });
+    post.flush(item({ id: 'item-yerba', nombre: 'Yerba', cantidad: 1, unidad: 'kg' }));
+
+    http.expectOne(baseUrl).flush([shoppingList('lista-productos', 'Productos agregados', [
+      item({ id: 'item-yerba', nombre: 'Yerba', cantidad: 1, unidad: 'kg' }),
+    ])]);
+  });
+
+  it('addManualItemToList crea la lista indicada cuando no existe y luego agrega el producto', () => {
+    service.addManualItemToList('Productos agregados', 'Yerba', 1, 'kg').subscribe();
+
+    const create = http.expectOne(baseUrl);
+    expect(create.request.method).toBe('POST');
+    expect(create.request.body).toEqual({ nombre: 'Productos agregados' });
+    create.flush(shoppingList('lista-productos', 'Productos agregados', []));
+
+    http.expectOne(baseUrl).flush([shoppingList('lista-productos', 'Productos agregados', [])]);
+
+    const post = http.expectOne(`${baseUrl}/lista-productos/items`);
+    expect(post.request.method).toBe('POST');
+    expect(post.request.body).toEqual({ nombre: 'Yerba', cantidad: 1, unidad: 'kg' });
+    post.flush(item({ id: 'item-yerba', nombre: 'Yerba', cantidad: 1, unidad: 'kg' }));
+
+    http.expectOne(baseUrl).flush([shoppingList('lista-productos', 'Productos agregados', [
+      item({ id: 'item-yerba', nombre: 'Yerba', cantidad: 1, unidad: 'kg' }),
+    ])]);
   });
 
   it('removeItem deberia borrar solo el item de su lista', () => {

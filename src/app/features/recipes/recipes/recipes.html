@@ -293,7 +293,6 @@
             (click)="buscarPorIngredientes()">
             <lucide-icon [img]="icons.Search" [size]="15" />
             Buscar receta
-            Buscar receta
           </button>
         }
       </div>
@@ -302,23 +301,22 @@
       <div class="bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
         <div class="flex items-center justify-between mb-3.5">
           <h3 class="text-[0.9375rem] font-semibold text-nido-green-dark">Tus ingredientes</h3>
-          <button class="flex items-center gap-1 bg-transparent border-none text-nido-gold text-[0.775rem] font-medium cursor-pointer hover:underline">
-            <lucide-icon [img]="icons.Pencil" [size]="13" />
-            Editar
-          </button>
         </div>
-        <ul class="list-none flex flex-col gap-2">
-          @for (item of pantryIngredients(); track item.name) {
-            <li class="flex items-center gap-2 text-[0.8125rem]">
-              <lucide-icon [img]="icons.ShoppingBasket" [size]="14" class="text-nido-green shrink-0" />
-              <span class="flex-1 text-nido-green-dark">{{ item.name }}</span>
-              <span class="text-nido-brown text-[0.775rem]">{{ item.amount }}</span>
-            </li>
-          }
-        </ul>
-        <button class="w-full mt-3 bg-transparent border-none text-nido-gold text-[0.8rem] font-medium cursor-pointer text-center block hover:underline">
-          Ver todo ({{ pantryIngredients().length }})
-        </button>
+        @if (pantryIngredients().length > 0) {
+          <ul class="list-none flex flex-col gap-2">
+            @for (item of pantryIngredients(); track item.name) {
+              <li class="flex items-center gap-2 text-[0.8125rem]">
+                <lucide-icon [img]="icons.ShoppingBasket" [size]="14" class="text-nido-green shrink-0" />
+                <span class="flex-1 text-nido-green-dark truncate">{{ item.name }}</span>
+                <span class="text-nido-brown text-[0.775rem] whitespace-nowrap">{{ item.amount }}</span>
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="text-[0.8125rem] leading-snug text-nido-brown">
+            Todavia no hay productos disponibles en tu alacena.
+          </p>
+        }
       </div>
 
     </aside>

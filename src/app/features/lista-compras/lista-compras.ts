@@ -50,6 +50,7 @@ export class ListaCompras implements OnInit, OnDestroy {
   protected unidadesOpts: NidoSelectOption[] = [];
 
   private sub = new Subscription();
+  private readonly categoriaIdByName = new Map<string, string>();
 
   constructor() {
     const nav = this.router.getCurrentNavigation();
@@ -64,6 +65,13 @@ export class ListaCompras implements OnInit, OnDestroy {
     this.service.refreshHistory().subscribe();
     this.sub.add(this.catalogoService.getUnidadesMedida().subscribe(unidades => {
       this.unidadesOpts = CatalogoService.toUnidadesOpts(unidades);
+      this.cdr.markForCheck();
+    }));
+    this.sub.add(this.catalogoService.getCategorias().subscribe(categorias => {
+      this.categoriaIdByName.clear();
+      for (const categoria of categorias) {
+        this.categoriaIdByName.set(this.normalizeLookup(categoria.nombre), categoria.id);
+      }
       this.cdr.markForCheck();
     }));
 
@@ -155,7 +163,14 @@ export class ListaCompras implements OnInit, OnDestroy {
   }
 
   protected toggleShowAllLists(): void {
-    this.showAllLists = !this.showAllLists;
+    if (this.activeListId === VIEW_ALL_LIST_ID) {
+      this.activeListId = this.listas[0]?.id ?? null;
+    } else {
+      this.viewAll();
+      return;
+    }
+
+    this.showAllLists = false;
     this.cancelItemEdit();
     this.cdr.markForCheck();
   }
@@ -217,7 +232,7 @@ export class ListaCompras implements OnInit, OnDestroy {
   }
 
   protected sendHistoryItemToPantry(item: ShoppingHistoryItem): void {
-    if (this.uploadingHistoryId) return;
+    if (this.uploadingHistoryId || item.agregadoAlInventario) return;
 
     this.uploadingHistoryId = item.id;
     this.errorMessage = null;
@@ -226,7 +241,7 @@ export class ListaCompras implements OnInit, OnDestroy {
     const amount = item.cantidad && item.cantidad > 0 ? item.cantidad : 1;
     const payload: CreateStockItemRequest = {
       nombre: item.nombre,
-      categoriaId: null,
+      categoriaId: this.categoryIdFor(item.categoriaNombre),
       codigoBarras: null,
       imagen: null,
       ubicacion: 'Alacena',
@@ -328,9 +343,16 @@ export class ListaCompras implements OnInit, OnDestroy {
   }
 
   protected visibleLists(): RecipeShoppingList[] {
-    if (this.showAllLists) return this.listas;
     const active = this.activeList();
     return active ? [active] : [];
+  }
+
+  protected isViewingAll(): boolean {
+    return this.activeListId === VIEW_ALL_LIST_ID;
+  }
+
+  protected isAllList(lista: RecipeShoppingList): boolean {
+    return lista.id === VIEW_ALL_LIST_ID;
   }
 
   protected goToRecetas(): void {
@@ -502,5 +524,18 @@ export class ListaCompras implements OnInit, OnDestroy {
 
     if (!normalized) return null;
     return aliases[normalized] ?? value?.trim() ?? null;
+  }
+
+  private categoryIdFor(categoryName: string | null | undefined): string | null {
+    if (!categoryName) return null;
+    return this.categoriaIdByName.get(this.normalizeLookup(categoryName)) ?? null;
+  }
+
+  private normalizeLookup(value: string): string {
+    return value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
   }
 }

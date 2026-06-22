@@ -16,6 +16,7 @@ import {
   ShoppingBasket,
   ShoppingCart,
   Trash2,
+  Wheat,
   X,
 } from 'lucide-angular';
 import { ListaCompras } from './lista-compras';
@@ -37,7 +38,13 @@ describe('ListaCompras', () => {
       imports: [ListaCompras],
       providers: [
         { provide: ListaComprasService, useValue: listaService },
-        { provide: CatalogoService, useValue: { getUnidadesMedida: () => of([]) } },
+        {
+          provide: CatalogoService,
+          useValue: {
+            getUnidadesMedida: () => of([]),
+            getCategorias: () => of([{ id: 'cat-harinas', nombre: 'Harinas', ttlDias: null }]),
+          },
+        },
         { provide: AlacenaApiService, useValue: alacenaApi },
         { provide: Router, useValue: { getCurrentNavigation: () => null, navigate: vi.fn() } },
         {
@@ -55,6 +62,7 @@ describe('ListaCompras', () => {
             ShoppingBasket,
             ShoppingCart,
             Trash2,
+            Wheat,
             X,
           }),
         },
@@ -67,7 +75,7 @@ describe('ListaCompras', () => {
   });
 
   it('pasa un item del historial a la alacena', () => {
-    const item = historyItem({ nombre: 'Harina', cantidad: 500, unidad: 'g' });
+    const item = historyItem({ nombre: 'Harina', cantidad: 500, unidad: 'g', categoriaNombre: 'Harinas' });
 
     (component as any).sendHistoryItemToPantry(item);
 
@@ -75,6 +83,7 @@ describe('ListaCompras', () => {
       nombre: 'Harina',
       cantidad: 500,
       unidadMedida: 'g',
+      categoriaId: 'cat-harinas',
       origenCarga: 'manual',
       ubicacion: 'Alacena',
     }));
@@ -89,6 +98,15 @@ describe('ListaCompras', () => {
     expect(listaService.markAddedToInventory).toHaveBeenCalledWith('hist-1');
   });
 
+  it('no reenvia un item del historial que ya fue agregado', () => {
+    const item = historyItem({ id: 'hist-1', agregadoAlInventario: true });
+
+    (component as any).sendHistoryItemToPantry(item);
+
+    expect(alacenaApi.createStock).not.toHaveBeenCalled();
+    expect(listaService.markAddedToInventory).not.toHaveBeenCalled();
+  });
+
   it('muestra Ver Todo como una lista virtual sin borrar la separacion original', () => {
     listaService.emitLists([
       shoppingList('lista-1', 'Receta A', [
@@ -101,10 +119,11 @@ describe('ListaCompras', () => {
       ]),
     ]);
 
-    (component as any).viewAll();
+    (component as any).toggleShowAllLists();
 
     const allList = (component as any).activeList() as RecipeShoppingList;
     expect(allList.recetaNombre).toBe('Ver Todo');
+    expect((component as any).visibleLists()).toHaveLength(1);
     expect(allList.items.find(item => item.nombre === 'Harina')?.cantidad).toBe(1500);
     expect(allList.items.find(item => item.nombre === 'Harina')?.unidad).toBe('g');
     expect(allList.items.filter(item => item.nombre === 'Acelga')).toHaveLength(2);

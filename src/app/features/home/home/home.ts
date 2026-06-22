@@ -1,5 +1,4 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { NgClass } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { environment } from '../../../../environments/environment';
@@ -7,16 +6,9 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { DashboardApiService, DashboardResponse } from './dashboard-api.service';
 import { InsightsPanel } from '../insights/insights-panel';
 
-interface QuickAction {
-  label: string;
-  icon: string;
-  route: string;
-  chipClass: string;
-}
-
 @Component({
   selector: 'app-home',
-  imports: [NgClass, RouterLink, LucideAngularModule, InsightsPanel],
+  imports: [RouterLink, LucideAngularModule, InsightsPanel],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
@@ -26,28 +18,13 @@ export class Home implements OnInit {
 
   protected readonly greeting = signal(this.buildGreeting());
   protected readonly userName = signal(this.authService.getNombre() ?? 'vos');
-  protected readonly today = signal(
+  protected readonly today = signal(this.toTitleCase(
     new Date().toLocaleDateString('es-AR', {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
-    }).toUpperCase()
-  );
-
-  protected readonly quickActions: QuickAction[] = [
-    {
-      label: 'Agregar a la alacena',
-      icon: 'shopping-basket',
-      route: '/agregar-producto',
-      chipClass: 'bg-nido-green-dark text-nido-cream hover:bg-nido-green',
-    },
-    {
-      label: 'Explorar recetas',
-      icon: 'chef-hat',
-      route: '/recetas',
-      chipClass: 'bg-nido-brown text-nido-cream hover:bg-nido-gold',
-    },
-  ];
+    }),
+  ));
 
   protected readonly dashboard = signal<DashboardResponse | null>(null);
   protected readonly isLoading = signal(true);
@@ -77,9 +54,17 @@ export class Home implements OnInit {
 
   private buildGreeting(): string {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Buenos dias';
-    if (hour < 19) return 'Buenas tardes';
-    return 'Buenas noches';
+    if (hour < 12) return 'Buenos Dias';
+    if (hour < 19) return 'Buenas Tardes';
+    return 'Buenas Noches';
+  }
+
+  protected formatMoney(value: number): string {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      maximumFractionDigits: 0,
+    }).format(value);
   }
 
   private withResolvedImages(dashboard: DashboardResponse): DashboardResponse {
@@ -109,5 +94,11 @@ export class Home implements OnInit {
     const baseUrl = environment.apiBaseUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
     const path = url.startsWith('/') ? url : `/${url}`;
     return `${baseUrl}${path}`;
+  }
+
+  private toTitleCase(value: string): string {
+    return value.replace(/\p{L}+/gu, word =>
+      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    );
   }
 }
