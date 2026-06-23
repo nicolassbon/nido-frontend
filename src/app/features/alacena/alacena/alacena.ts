@@ -81,6 +81,13 @@ export interface Product {
   grasas?:          number | null;
 }
 
+function compareProductsByName(a: Product, b: Product): number {
+  const byName = a.name.localeCompare(b.name, 'es', { sensitivity: 'base' });
+  return byName !== 0
+    ? byName
+    : a.id.localeCompare(b.id, 'es', { sensitivity: 'base' });
+}
+
 interface ProductDraft {
   name:              string;
   image:             string;
@@ -434,7 +441,7 @@ export class Alacena implements OnInit {
     if (q) {
       list = list.filter(p => normalizeProductName(p.name).includes(q));
     }
-    return list;
+    return [...list].sort(compareProductsByName);
   });
 
   protected readonly urgentCount = computed(() =>

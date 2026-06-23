@@ -70,7 +70,7 @@
                     <lucide-icon [name]="TIPO_ICONS[tipo]" [size]="15" />
                     {{ TIPO_LABELS[tipo] }}
                   </span>
-                  @if (slotItems.length > 0) {
+                  @if (slotItems.length > 0 && tipo === 'tarea') {
                     <button
                       type="button"
                       class="slot-mobile-add"
@@ -170,15 +170,6 @@
                     </article>
                   }
 
-                  @if (slotItems.length > 0) {
-                    <button
-                      type="button"
-                      class="slot-add slot-add--meal slot-add--meal-inline"
-                      (click)="openModal(dia.isoDate, tipo)"
-                      [title]="'Agregar ' + TIPO_LABELS[tipo]">
-                      <lucide-icon name="plus" [size]="17" />
-                    </button>
-                  }
                 }
 
                 @if (tipo === 'tarea' && slotItems.length > 0) {

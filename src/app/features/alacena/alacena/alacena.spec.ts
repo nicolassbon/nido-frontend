@@ -129,6 +129,23 @@ describe('Alacena', () => {
     expect(filtered[0].name).toBe('Café de Colombia');
   });
 
+  it('should sort filtered products alphabetically by name', () => {
+    const fixture = TestBed.createComponent(Alacena);
+    const component = fixture.componentInstance as any;
+
+    component.products.set([
+      { id: '3', name: 'Yerba', location: 'Alacena', expiryDate: '', quantity: 1, unit: 'unidad' },
+      { id: '1', name: 'aceite', location: 'Alacena', expiryDate: '', quantity: 1, unit: 'unidad' },
+      { id: '2', name: 'Arroz', location: 'Alacena', expiryDate: '', quantity: 1, unit: 'unidad' }
+    ]);
+
+    expect(component.filteredProducts().map((p: any) => p.name)).toEqual(['aceite', 'Arroz', 'Yerba']);
+
+    component.searchQuery.set('a');
+
+    expect(component.filteredProducts().map((p: any) => p.name)).toEqual(['aceite', 'Arroz', 'Yerba']);
+  });
+
   it('should filter products by next to expire status', () => {
     const fixture = TestBed.createComponent(Alacena);
     const component = fixture.componentInstance as any;
