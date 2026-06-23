@@ -30,7 +30,7 @@ interface RecetaTopBar {
 @Component({
   selector: 'app-insights-panel',
   standalone: true,
-  imports: [RouterLink, LucideAngularModule, NgClass],
+  imports: [RouterLink, LucideAngularModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './insights-panel.html',
 })
@@ -102,13 +102,13 @@ export class InsightsPanel implements OnInit {
   }
 
   protected etiquetaVence(dias: number): string {
-    if (dias <= 0) return 'vence hoy';
-    if (dias === 1) return 'vence mañana';
-    return `vence en ${dias} días`;
+    if (dias <= 0) return 'Vence hoy';
+    if (dias === 1) return 'Vence mañana';
+    return `Vence en ${dias} días`;
   }
 
   protected etiquetaAgotar(dias: number): string {
-    if (dias <= 0) return 'sin stock pronto';
+    if (dias <= 0) return 'Sin stock pronto';
     if (dias === 1) return '~1 día';
     return `~${dias} días`;
   }
@@ -124,12 +124,12 @@ export class InsightsPanel implements OnInit {
   }
 
   protected etiquetaFrecuencia(d: number): string {
-    if (d <= 0) return 'sin datos';
-    if (d === 1) return 'todos los días';
-    if (d <= 8) return `cada ${d} días`;
-    if (d <= 16) return 'cada ~2 semanas';
-    if (d <= 24) return 'cada ~3 semanas';
-    return 'cada mes';
+    if (d <= 0) return 'Sin datos';
+    if (d === 1) return 'Todos los días';
+    if (d <= 8) return `Cada ${d} días`;
+    if (d <= 16) return 'Cada ~2 semanas';
+    if (d <= 24) return 'Cada ~3 semanas';
+    return 'Cada mes';
   }
 
   private arcPath(startAngle: number, endAngle: number, full: boolean): string {

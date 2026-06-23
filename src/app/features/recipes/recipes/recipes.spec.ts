@@ -179,7 +179,7 @@ describe('Recipes', () => {
     const pantry = component['pantryIngredients']();
     expect(pantry).toHaveLength(1);
     expect(pantry[0].name).toBe('Arroz');
-    expect(pantry[0].amount).toBe('100');
+    expect(pantry[0].amount).toBe('100 g');
     expect(pantry[0].selected).toBe(true);
   });
 

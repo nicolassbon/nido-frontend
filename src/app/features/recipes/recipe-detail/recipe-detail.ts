@@ -199,6 +199,14 @@ export class RecipeDetail {
     if (!receta || faltantes.length === 0) return;
 
     const items = faltantes.map(i => {
+      if (i.cantidadListaCompras !== null && i.cantidadListaCompras !== undefined) {
+        return {
+          nombre:   i.productoNombre || cleanIngredientName(i.nombre),
+          cantidad: i.cantidadListaCompras,
+          unidad:   i.unidadListaCompras ?? i.unidadCompraEstandar ?? i.unidad,
+        };
+      }
+
       const targetUnit = i.unidadCompraEstandar ?? i.unidad;
       const isCooking = isCookingUnit(targetUnit);
       

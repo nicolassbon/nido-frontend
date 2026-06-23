@@ -14,7 +14,6 @@ import {
   Eye,
   Flame,
   LucideAngularModule,
-  Pencil,
   Search,
   Shield,
   ShoppingBasket,
@@ -161,7 +160,6 @@ export class Recipes implements OnInit {
     Clock,
     Eye,
     Flame,
-    Pencil,
     Search,
     Shield,
     ShoppingBasket,
@@ -255,7 +253,13 @@ export class Recipes implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: items => this.pantryIngredients.set(
-          items.map(item => ({ name: item.nombre, amount: `${item.cantidad}`, selected: true }))
+          items
+            .filter(item => item.cantidad > 0)
+            .map(item => ({
+              name: item.nombre,
+              amount: this.formatPantryAmount(item.cantidad, item.unidadMedida),
+              selected: true,
+            }))
         ),
         error: err => console.error('Error cargando alacena', err),
       });
@@ -634,6 +638,47 @@ export class Recipes implements OnInit {
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  private formatPantryAmount(cantidad: number, unidad: string | null | undefined): string {
+    const value = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(cantidad);
+    const suffix = this.displayUnit(unidad);
+    return suffix ? `${value} ${suffix}` : value;
+  }
+
+  private displayUnit(unit: string | null | undefined): string | null {
+    const normalized = this.normalizeText(unit ?? '');
+    const aliases: Record<string, string> = {
+      '': '',
+      unidad: 'unidad',
+      unidades: 'unidad',
+      u: 'unidad',
+      gr: 'g',
+      gramo: 'g',
+      gramos: 'g',
+      g: 'g',
+      kilo: 'kg',
+      kilos: 'kg',
+      kilogramo: 'kg',
+      kilogramos: 'kg',
+      kg: 'kg',
+      litro: 'l',
+      litros: 'l',
+      lt: 'l',
+      l: 'l',
+      mililitro: 'ml',
+      mililitros: 'ml',
+      ml: 'ml',
+      cucharada: 'cda',
+      cucharadas: 'cda',
+      cda: 'cda',
+      cucharadita: 'cdita',
+      cucharaditas: 'cdita',
+      cdita: 'cdita',
+      cdta: 'cdita',
+    };
+
+    return aliases[normalized] ?? normalized;
   }
 
   private mapDifficulty(value: string | null): Difficulty {

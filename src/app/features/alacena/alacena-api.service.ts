@@ -25,6 +25,10 @@ export interface StockItemResponse {
   carbohidratos:       number | null;
   grasas:              number | null;
   origenCarga:          'manual' | 'codigo_barras' | 'ticket_compra';
+  iconoSvg?:            string | null;
+  icono?:               string | null;
+  cantidadCompraEstandar?: number | null;
+  unidadCompraEstandar?: string | null;
   informacionNutricional?: NutritionInfoResponse | null;
 }
 
@@ -98,6 +102,7 @@ export interface ProductoApiResponse {
   imagen:          string | null;
   categoriaNombre: string | null;
   ttlDias:         number | null;
+  icono?:          string | null;
   // Datos de la última compra del producto en el hogar (pre-llenan el re-escaneo).
   gramaje:         number | null;
   unidadMedida:    string | null;

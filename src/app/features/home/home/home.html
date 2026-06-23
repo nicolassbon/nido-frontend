@@ -5,21 +5,9 @@
     <div class="absolute inset-0 bg-[url('/images/banners/home.png')] bg-center bg-cover"></div>
     <div class="relative z-10">
       <h1 class="text-nido-cream text-[1.4rem] sm:text-[1.75rem] leading-tight font-bold mb-1">{{ greeting() }}, {{ userName() }}.</h1>
-      <p class="text-nido-cream/75 text-[0.8rem] sm:text-sm">{{ today() }} &middot; Tu hogar está en buen estado.</p>
+      <p class="text-nido-cream/75 text-[0.8rem] sm:text-sm">{{ today() }} &middot; Tu Hogar Esta En Buen Estado.</p>
     </div>
   </section>
-
-  <!-- Accesos rápidos — arriba, compactos, siempre visibles -->
-  <div class="flex gap-2.5 overflow-x-auto pb-0.5">
-    @for (action of quickActions; track action.route) {
-      <a [routerLink]="action.route"
-         [ngClass]="action.chipClass"
-         class="flex items-center gap-2 px-4 py-2.5 rounded-full no-underline text-[0.875rem] font-medium whitespace-nowrap transition-colors duration-150 shadow-[0_2px_8px_rgba(38,63,48,0.15)] shrink-0">
-        <lucide-icon [name]="action.icon" [size]="15" />
-        {{ action.label }}
-      </a>
-    }
-  </div>
 
   @if (isLoading()) {
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -30,10 +18,42 @@
     <section class="bg-white/[0.51] rounded-[14px] px-6 py-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
       <div class="flex items-center gap-3 text-nido-brown">
         <lucide-icon name="alert-circle" [size]="20" />
-        <p class="text-sm">No pudimos cargar el resumen del hogar.</p>
+        <p class="text-sm">No Pudimos Cargar El Resumen Del Hogar.</p>
       </div>
     </section>
   } @else if (dashboard(); as data) {
+
+    <section class="grid grid-cols-1 gap-3 rounded-[14px] bg-white/[0.51] p-3 shadow-[0_1px_4px_rgba(38,63,48,0.07)] sm:grid-cols-3">
+      <div class="flex items-center gap-3 rounded-[10px] border border-nido-border/70 bg-white/[0.51] px-4 py-3">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] bg-nido-green-dark text-nido-cream shadow-[0_3px_9px_rgba(31,58,58,0.18)]">
+          <lucide-icon name="chef-hat" [size]="21" />
+        </span>
+        <span class="min-w-0">
+          <strong class="block text-[1.35rem] leading-none font-semibold text-[#2D2D2D]">{{ data.recetas.recetasCocinadas }}</strong>
+          <span class="mt-1 block text-[0.82rem] leading-tight text-[#2D1E16]">Recetas Cocinadas</span>
+        </span>
+      </div>
+
+      <div class="flex items-center gap-3 rounded-[10px] border border-nido-border/70 bg-white/[0.51] px-4 py-3">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] bg-nido-green-dark text-nido-cream shadow-[0_3px_9px_rgba(31,58,58,0.18)]">
+          <lucide-icon name="check-square" [size]="21" />
+        </span>
+        <span class="min-w-0">
+          <strong class="block text-[1.35rem] leading-none font-semibold text-[#2D2D2D]">{{ data.tareas.tareasCompletadas }}</strong>
+          <span class="mt-1 block text-[0.82rem] leading-tight text-[#2D1E16]">Tareas Realizadas</span>
+        </span>
+      </div>
+
+      <div class="flex items-center gap-3 rounded-[10px] border border-nido-border/70 bg-white/[0.51] px-4 py-3">
+        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] bg-nido-green-dark text-nido-cream shadow-[0_3px_9px_rgba(31,58,58,0.18)]">
+          <lucide-icon name="wallet" [size]="21" />
+        </span>
+        <span class="min-w-0">
+          <strong class="block text-[1.35rem] leading-none font-semibold text-[#2D2D2D]">{{ formatMoney(data.finanzas.gastoMensual) }}</strong>
+          <span class="mt-1 block text-[0.82rem] leading-tight text-[#2D1E16]">Presupuesto Gastado</span>
+        </span>
+      </div>
+    </section>
 
     <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
 
@@ -44,22 +64,22 @@
             <lucide-icon name="shopping-basket" [size]="21" />
           </div>
           <h2 class="text-[1.15rem] font-semibold text-nido-green-dark">Alacena</h2>
-          <a routerLink="/alacena" class="ml-auto text-[0.78rem] text-nido-brown no-underline hover:text-nido-green transition-colors">Ver todo →</a>
+          <a routerLink="/alacena" class="ml-auto text-[0.78rem] text-nido-brown no-underline hover:text-nido-green transition-colors">Ver Todo -></a>
         </header>
 
         <div class="grid grid-cols-2 gap-3 mb-3">
           <div class="rounded-[8px] border border-nido-border/80 px-4 py-3 text-center bg-white/[0.51]">
             <strong class="block text-[2rem] leading-none font-semibold text-[#2D2D2D]">{{ data.alacena.productosEnStock }}</strong>
-            <span class="block text-[0.82rem] leading-tight text-[#2D1E16] mt-1">en stock</span>
+            <span class="block text-[0.82rem] leading-tight text-[#2D1E16] mt-1">En Stock</span>
           </div>
           <div class="rounded-[8px] border border-nido-border/80 px-4 py-3 text-center bg-white/[0.51]">
             <strong class="block text-[2rem] leading-none font-semibold text-[#2D2D2D]">{{ data.alacena.productosPorVencerEstaSemana }}</strong>
-            <span class="block text-[0.82rem] leading-tight text-[#2D1E16] mt-1">por vencer esta semana</span>
+            <span class="block text-[0.82rem] leading-tight text-[#2D1E16] mt-1">Por Vencer Esta Semana</span>
           </div>
         </div>
 
         <div class="border-t border-nido-border/80 pt-3 mb-3">
-          <h3 class="text-[0.88rem] font-semibold text-[#2D1E16] mb-2">Próximos a vencer</h3>
+          <h3 class="text-[0.88rem] font-semibold text-[#2D1E16] mb-2">Proximos A Vencer</h3>
           <div class="flex flex-col divide-y divide-nido-border/70 min-h-[132px]">
             @for (product of expiringProducts(); track product.id) {
               <a routerLink="/alacena" class="grid grid-cols-[40px_minmax(0,1fr)_auto_16px] items-center gap-3 py-2 no-underline group">
@@ -77,7 +97,7 @@
             } @empty {
               <div class="flex items-center gap-2 py-7 text-[0.85rem] text-nido-brown">
                 <lucide-icon name="check" [size]="17" />
-                No hay productos por vencer esta semana.
+                No Hay Productos Por Vencer Esta Semana.
               </div>
             }
           </div>
@@ -85,7 +105,7 @@
 
         <a routerLink="/agregar-producto" class="mt-auto flex h-11 items-center justify-center gap-2.5 rounded-[8px] bg-nido-green-dark text-nido-cream no-underline text-[0.9rem] font-medium hover:bg-nido-green transition-colors">
           <lucide-icon name="plus" [size]="18" />
-          Agregar a la alacena
+          Agregar A La Alacena
         </a>
       </section>
 
@@ -96,17 +116,17 @@
             <lucide-icon name="chef-hat" [size]="21" />
           </div>
           <h2 class="text-[1.15rem] font-semibold text-nido-green-dark">Recetas</h2>
-          <a routerLink="/recetas" class="ml-auto text-[0.78rem] text-nido-brown no-underline hover:text-nido-green transition-colors">Ver todas →</a>
+          <a routerLink="/recetas" class="ml-auto text-[0.78rem] text-nido-brown no-underline hover:text-nido-green transition-colors">Ver Todas -></a>
         </header>
 
         <div class="grid grid-cols-2 gap-3 mb-4">
           <div class="rounded-[8px] border border-nido-border/80 px-4 py-3 text-center bg-white/[0.51]">
             <strong class="block text-[2rem] leading-none font-semibold text-[#2D2D2D]">{{ data.recetas.recetasGuardadas }}</strong>
-            <span class="block text-[0.82rem] leading-tight text-[#2D1E16] mt-1">guardadas</span>
+            <span class="block text-[0.82rem] leading-tight text-[#2D1E16] mt-1">Guardadas</span>
           </div>
           <div class="rounded-[8px] border border-nido-border/80 px-4 py-3 text-center bg-white/[0.51]">
             <strong class="block text-[2rem] leading-none font-semibold text-[#2D2D2D]">{{ data.recetas.recetasSugeridas }}</strong>
-            <span class="block text-[0.82rem] leading-tight text-[#2D1E16] mt-1">sugeridas hoy</span>
+            <span class="block text-[0.82rem] leading-tight text-[#2D1E16] mt-1">Sugeridas Hoy</span>
           </div>
         </div>
 
@@ -129,14 +149,14 @@
           } @empty {
             <div class="w-full sm:col-span-3 flex items-center gap-2 py-7 text-[0.85rem] text-nido-brown">
               <lucide-icon name="chef-hat" [size]="18" />
-              Todavía no hay recetas para destacar.
+              Todavia No Hay Recetas Para Destacar.
             </div>
           }
         </div>
 
         <a routerLink="/recetas" class="mt-auto flex h-11 items-center justify-center gap-2.5 rounded-[8px] bg-nido-green-dark text-nido-cream no-underline text-[0.9rem] font-medium hover:bg-nido-green transition-colors">
           <lucide-icon name="search" [size]="18" />
-          Explorar recetas
+          Explorar Recetas
         </a>
       </section>
 
