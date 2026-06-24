@@ -3,11 +3,11 @@
      (click)="onClose()">
 
   <!-- Modal -->
-  <div class="rounded-[14px] w-full max-w-[480px] overflow-hidden shadow-[0_8px_32px_rgba(38,63,48,0.18)] flex flex-col my-auto"
+  <div class="rounded-[14px] w-full max-w-[480px] overflow-visible shadow-[0_8px_32px_rgba(38,63,48,0.18)] flex flex-col my-auto"
        (click)="$event.stopPropagation()">
 
     <!-- Banner header -->
-    <div class="relative overflow-hidden shrink-0 px-5 py-4 flex items-center justify-between [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
+    <div class="relative overflow-hidden shrink-0 px-5 py-4 flex items-center justify-between bg-nido-green-dark rounded-t-[14px]">
       <div class="absolute inset-0 bg-[url('/images/banners/alacena.png')] bg-center bg-cover"></div>
       <div class="absolute inset-0 bg-nido-green-dark/35"></div>
 
@@ -33,7 +33,7 @@
 
     <!-- Scrollable content -->
     <form [formGroup]="form" (ngSubmit)="onSubmit()"
-          class="flex flex-col gap-4 px-6 py-5 bg-white">
+          class="flex flex-col gap-4 px-6 py-5 bg-white rounded-b-[14px]">
 
       <!-- Nombre -->
       <div class="flex flex-col gap-1.5 relative">
@@ -60,7 +60,11 @@
                 type="button"
                 class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-nido-cream transition-colors duration-100 border-none bg-transparent cursor-pointer"
                 (mousedown)="selectSuggestion(s)">
-                <lucide-icon name="package" [size]="14" class="text-nido-muted shrink-0" />
+                @if (s.icono) {
+                  <lucide-icon [name]="s.icono" [size]="16" class="text-nido-muted shrink-0" />
+                } @else {
+                  <lucide-icon name="package" [size]="14" class="text-nido-muted shrink-0" />
+                }
                 <div class="min-w-0 flex-1">
                   <p class="text-[0.875rem] font-medium text-nido-green-dark m-0 truncate">{{ s.nombre }}</p>
                   <p class="text-[0.72rem] text-nido-muted m-0">
@@ -82,11 +86,16 @@
       @if (!isEditMode) {
         <div class="flex flex-col gap-1.5">
           <label class="text-[0.8125rem] font-semibold text-nido-green-dark">
-            Categoría <span class="text-nido-red">*</span>
+            Categoría
+            @if (!initialProduct) {
+              <span class="text-nido-red">*</span>
+            } @else {
+              <span class="text-[0.725rem] font-normal text-nido-muted ml-1">opcional</span>
+            }
           </label>
           <nido-select
             formControlName="categoriaId"
-            [options]="categoriasOpts"
+            [options]="categoriasOpts()"
             placeholder="Seleccionar categoría"
             [hasError]="form.controls.categoriaId.invalid && form.controls.categoriaId.touched" />
           @if (form.controls.categoriaId.invalid && form.controls.categoriaId.touched) {
@@ -106,7 +115,7 @@
 
       <!-- Cantidad + Unidad -->
       <div class="flex flex-col gap-1.5">
-        <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Cantidad</label>
+        <label class="text-[0.8125rem] font-semibold text-nido-green-dark">Cantidad por envase</label>
         <div class="flex items-center gap-2 flex-wrap">
           <input
             formControlName="cantidad"
@@ -120,7 +129,7 @@
           <div class="flex-1 min-w-[160px]">
             <nido-select
               formControlName="unidadMedida"
-              [options]="unidadesOpts"
+              [options]="unidadesOpts()"
               placeholder="Unidad de medida"
               [hasError]="form.controls.unidadMedida.invalid && form.controls.unidadMedida.touched" />
           </div>
@@ -133,21 +142,52 @@
         }
       </div>
 
+      <!-- Cantidad de envases -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[0.8125rem] font-semibold text-nido-green-dark">
+          ¿Cuántos envases tenés?
+          <span class="text-[0.725rem] font-normal text-nido-muted ml-1">del mismo producto</span>
+        </label>
+        <div class="flex items-center gap-3 flex-wrap">
+          <div class="flex items-center border-[1.5px] border-solid border-nido-border rounded-lg overflow-hidden">
+            <button type="button"
+              class="flex items-center justify-center w-9 h-9 bg-nido-cream border-none cursor-pointer text-nido-green-dark transition-[background] duration-150 hover:bg-[#ede4d8] disabled:opacity-35 disabled:cursor-default"
+              (click)="updateEnvases(-1)"
+              [disabled]="((form.controls.cantidadEnvases.value ?? 1)) <= 1">
+              <lucide-icon name="minus" [size]="14" />
+            </button>
+            <span class="min-w-[44px] text-center text-[0.9375rem] font-semibold text-nido-green-dark px-1 select-none">
+              {{ form.controls.cantidadEnvases.value ?? 1 }}
+            </span>
+            <button type="button"
+              class="flex items-center justify-center w-9 h-9 bg-nido-cream border-none cursor-pointer text-nido-green-dark transition-[background] duration-150 hover:bg-[#ede4d8]"
+              (click)="updateEnvases(1)">
+              <lucide-icon name="plus" [size]="14" />
+            </button>
+          </div>
+          @if ((form.controls.cantidadEnvases.value ?? 1) > 1 && form.controls.cantidad.value && form.controls.unidadMedida.value) {
+            <span class="text-[0.775rem] text-nido-muted">
+              Total: {{ (form.controls.cantidadEnvases.value ?? 1) * (+form.controls.cantidad.value) }} {{ form.controls.unidadMedida.value === 'unidad' ? 'unidades' : form.controls.unidadMedida.value }}
+            </span>
+          }
+        </div>
+      </div>
+
       <!-- Ubicación -->
       <div class="flex flex-col gap-1.5">
         <label class="text-[0.8125rem] font-semibold text-nido-green-dark">
           ¿Dónde lo guardás? <span class="text-nido-red">*</span>
         </label>
         <div class="flex gap-2">
-          @for (loc of ubicaciones; track loc) {
+          @for (loc of ubicaciones(); track loc.id) {
             <button type="button"
               class="flex-1 flex flex-col items-center gap-1.5 py-3 px-2 rounded-[10px] border-[1.5px] border-solid text-[0.8rem] font-medium cursor-pointer transition-all duration-150"
-              [style.background]="form.controls.ubicacion.value === loc ? getLocationColor(loc) : '#fff'"
-              [style.border-color]="form.controls.ubicacion.value === loc ? getLocationColor(loc) : '#d8c6b2'"
-              [style.color]="form.controls.ubicacion.value === loc ? '#fff' : '#927357'"
-              (click)="form.patchValue({ ubicacion: loc })">
+              [style.background]="form.controls.ubicacion.value === loc.nombre ? getLocationColor(loc) : '#fff'"
+              [style.border-color]="form.controls.ubicacion.value === loc.nombre ? getLocationColor(loc) : '#d8c6b2'"
+              [style.color]="form.controls.ubicacion.value === loc.nombre ? '#fff' : '#927357'"
+              (click)="form.patchValue({ ubicacion: loc.nombre })">
               <lucide-icon [name]="getLocationIcon(loc)" [size]="16" />
-              {{ loc }}
+              {{ loc.nombre }}
             </button>
           }
         </div>
@@ -162,7 +202,52 @@
         <nido-datepicker
           formControlName="fechaVencimiento"
           placeholder="Seleccionar fecha" />
+        <app-estimated-date-notice variant="compact" />
       </div>
+
+      @if (!isEditMode) {
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[0.8125rem] font-semibold text-nido-green-dark">
+            Imagen del producto
+            <span class="text-[0.725rem] font-normal text-nido-muted ml-1">opcional</span>
+          </label>
+          <div
+            class="border-[1.5px] border-dashed border-nido-border rounded-lg px-4 py-3 flex items-center justify-between gap-3 cursor-pointer hover:border-nido-green hover:bg-[rgba(62,94,74,0.03)] transition-all duration-150"
+            (click)="imageInput.click()">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-nido-cream text-nido-green-dark">
+                <lucide-icon name="camera" [size]="16" />
+              </span>
+              <div class="min-w-0">
+                <p class="m-0 text-[0.8125rem] font-semibold text-nido-green-dark truncate">
+                  {{ selectedImage()?.name ?? 'Seleccionar imagen' }}
+                </p>
+                <p class="m-0 text-[0.72rem] text-nido-muted">
+                  JPG, PNG o WebP, hasta 5 MB.
+                </p>
+              </div>
+            </div>
+            @if (selectedImage()) {
+              <button
+                type="button"
+                class="border-none bg-transparent text-nido-brown hover:text-nido-green-dark cursor-pointer p-1"
+                (click)="$event.stopPropagation(); removeSelectedImage()"
+                title="Quitar imagen seleccionada">
+                <lucide-icon name="x" [size]="16" />
+              </button>
+            }
+            <input
+              #imageInput
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              class="hidden"
+              (change)="onImageSelected($event)" />
+          </div>
+          @if (imageError()) {
+            <p class="text-[0.775rem] text-nido-red">{{ imageError() }}</p>
+          }
+        </div>
+      }
 
       <!-- ¿Ya está abierto? -->
       <div class="flex flex-col gap-1.5">
@@ -217,6 +302,13 @@
         <div class="flex items-center gap-2 rounded-lg border border-[rgba(180,76,60,0.25)] bg-[rgba(180,76,60,0.06)] px-3 py-2 text-[0.8125rem] font-medium text-nido-red">
           <lucide-icon name="alert-circle" [size]="15" />
           {{ errorMessage }}
+        </div>
+      }
+
+      @if (warningMessage) {
+        <div class="flex items-center gap-2 rounded-lg border border-[rgba(146,115,87,0.28)] bg-[rgba(146,115,87,0.09)] px-3 py-2 text-[0.8125rem] font-medium text-nido-brown">
+          <lucide-icon name="alert-circle" [size]="15" />
+          {{ warningMessage }}
         </div>
       }
 

@@ -1,0 +1,192 @@
+<div class="w-full p-4 sm:p-6 flex flex-col gap-5">
+  <section class="relative overflow-hidden rounded-[14px] px-6 sm:px-8 py-6 flex items-center justify-between gap-4 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_55%,#927357_100%)]">
+    <div class="absolute inset-0 bg-[url('/images/banners/alacena.png')] bg-center bg-cover opacity-35"></div>
+    <div class="relative z-10 min-w-0">
+      <a [routerLink]="['/alacena', stockId()]" class="inline-flex items-center gap-1.5 text-nido-cream/80 text-[0.8rem] font-medium no-underline mb-3 hover:text-nido-cream">
+        <lucide-icon name="arrow-left" [size]="14" />
+        Detalle del producto
+      </a>
+      <h1 class="text-nido-cream text-[1.55rem] sm:text-[1.85rem] font-bold leading-tight">Información nutricional</h1>
+      <p class="text-nido-cream/75 text-sm mt-1 max-w-[560px]">
+        Sacá una foto o subí una imagen de la tabla nutricional para revisar los datos antes de guardarlos.
+      </p>
+    </div>
+  </section>
+
+  @if (errorMessage()) {
+    <div class="flex items-start gap-2 rounded-[12px] border border-[rgba(180,76,60,0.25)] bg-[rgba(180,76,60,0.06)] px-4 py-3 text-nido-red text-[0.875rem]">
+      <lucide-icon name="alert-circle" [size]="16" class="mt-px" />
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+
+  <section class="grid grid-cols-1 xl:grid-cols-[minmax(280px,380px)_1fr_minmax(260px,320px)] gap-5 items-start">
+    <div class="bg-white/60 rounded-[14px] border border-nido-border p-4 flex flex-col gap-4">
+      <div class="aspect-[3/4] rounded-[12px] overflow-hidden bg-[#f7f1e6] border border-nido-border flex items-center justify-center">
+        @if (previewUrl()) {
+          <img [src]="previewUrl()" alt="Información nutricional seleccionada" class="w-full h-full object-contain bg-white" />
+        } @else {
+          <div class="flex flex-col items-center gap-2 text-nido-brown text-center px-6">
+            <lucide-icon name="scan-line" [size]="42" />
+            <span class="text-[0.9rem] font-semibold">Sin etiqueta seleccionada</span>
+          </div>
+        }
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-3">
+        <label class="flex items-center justify-center gap-2 rounded-lg bg-nido-green-dark text-nido-cream px-4 py-3 text-[0.875rem] font-semibold cursor-pointer hover:bg-nido-green transition-colors">
+          <lucide-icon name="camera" [size]="16" />
+          Sacar foto
+          <input type="file" accept="image/*" capture="environment" class="hidden" (change)="onFileSelected($event)" />
+        </label>
+        <label class="flex items-center justify-center gap-2 rounded-lg border-[1.5px] border-solid border-nido-border bg-white text-nido-brown px-4 py-3 text-[0.875rem] font-semibold cursor-pointer hover:border-nido-brown hover:text-nido-green-dark transition-colors">
+          <lucide-icon name="image" [size]="16" />
+          Subir imagen
+          <input type="file" accept="image/*" class="hidden" (change)="onFileSelected($event)" />
+        </label>
+      </div>
+
+      <button
+        type="button"
+        class="flex items-center justify-center gap-2 rounded-lg bg-nido-gold text-white px-4 py-3 text-[0.875rem] font-bold cursor-pointer border-none transition-colors hover:bg-[#a17858] disabled:opacity-50 disabled:cursor-default"
+        [disabled]="!selectedFile() || isScanning()"
+        (click)="scanNutrition()">
+        @if (isScanning()) {
+          <span class="w-4 h-4 rounded-full border-2 border-solid border-white/40 border-t-white animate-[spin_0.75s_linear_infinite]"></span>
+          Extrayendo datos...
+        } @else {
+          <lucide-icon name="scan" [size]="16" />
+          Escanear etiqueta
+        }
+      </button>
+    </div>
+
+    <div class="bg-white/60 rounded-[14px] border border-nido-border p-4 sm:p-5 flex flex-col gap-4 min-w-0">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h2 class="text-[1.05rem] font-bold text-nido-green-dark">Nutrientes detectados</h2>
+          <p class="text-[0.8125rem] text-nido-brown mt-1">
+            @if (items().length > 0) {
+              Editá lo que necesites antes de guardar.
+            } @else {
+              Todavía no hay nutrientes detectados.
+            }
+          </p>
+        </div>
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 rounded-lg border-[1.5px] border-solid border-nido-border bg-white px-3 py-2 text-[0.8125rem] font-semibold text-nido-brown cursor-pointer hover:border-nido-brown hover:text-nido-green-dark"
+          (click)="addItem()">
+          <lucide-icon name="plus" [size]="14" />
+          Agregar
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <label class="flex flex-col gap-1.5 min-w-0">
+          <span class="text-[0.75rem] font-semibold text-nido-green-dark">Base</span>
+          <input
+            class="w-full rounded-lg border-[1.5px] border-solid border-nido-border bg-white px-3 py-2 text-[0.875rem] text-nido-green-dark outline-none focus:border-nido-green"
+            type="text"
+            placeholder="Por porción, por 100 g..."
+            [ngModel]="base()"
+            (ngModelChange)="setBase($event)" />
+        </label>
+        <label class="flex flex-col gap-1.5 min-w-0">
+          <span class="text-[0.75rem] font-semibold text-nido-green-dark">Porción</span>
+          <input
+            class="w-full rounded-lg border-[1.5px] border-solid border-nido-border bg-white px-3 py-2 text-[0.875rem] text-nido-green-dark outline-none focus:border-nido-green"
+            type="text"
+            placeholder="1 ración = 250 ml"
+            [ngModel]="porcion()"
+            (ngModelChange)="setPorcion($event)" />
+        </label>
+      </div>
+
+      <div class="flex flex-col gap-3">
+        @for (item of items(); track item.id) {
+          <div class="grid grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_110px_82px_96px_38px] gap-3 items-end rounded-[12px] bg-white border border-nido-border p-3">
+            <label class="flex flex-col gap-1.5 min-w-0">
+              <span class="text-[0.75rem] font-semibold text-nido-green-dark">Nutriente</span>
+              <input
+                class="w-full rounded-lg border-[1.5px] border-solid border-nido-border bg-white px-3 py-2 text-[0.875rem] text-nido-green-dark outline-none focus:border-nido-green"
+                type="text"
+                [ngModel]="item.nombre"
+                (ngModelChange)="updateItem(item.id, 'nombre', $event)" />
+            </label>
+            <label class="flex flex-col gap-1.5 min-w-0">
+              <span class="text-[0.75rem] font-semibold text-nido-green-dark">Valor</span>
+              <input
+                class="w-full rounded-lg border-[1.5px] border-solid border-nido-border bg-white px-3 py-2 text-[0.875rem] text-nido-green-dark outline-none focus:border-nido-green"
+                type="number"
+                step="0.01"
+                [ngModel]="item.valor"
+                (ngModelChange)="updateItem(item.id, 'valor', $event === '' ? null : +$event)" />
+            </label>
+            <label class="flex flex-col gap-1.5 min-w-0">
+              <span class="text-[0.75rem] font-semibold text-nido-green-dark">Unidad</span>
+              <input
+                class="w-full rounded-lg border-[1.5px] border-solid border-nido-border bg-white px-3 py-2 text-[0.875rem] text-nido-green-dark outline-none focus:border-nido-green"
+                type="text"
+                [ngModel]="item.unidad"
+                (ngModelChange)="updateItem(item.id, 'unidad', $event)" />
+            </label>
+            <label class="flex flex-col gap-1.5 min-w-0">
+              <span class="text-[0.75rem] font-semibold text-nido-green-dark">% diario</span>
+              <input
+                class="w-full rounded-lg border-[1.5px] border-solid border-nido-border bg-white px-3 py-2 text-[0.875rem] text-nido-green-dark outline-none focus:border-nido-green"
+                type="number"
+                step="0.01"
+                [ngModel]="item.porcentajeDiario"
+                (ngModelChange)="updateItem(item.id, 'porcentajeDiario', $event === '' ? null : +$event)" />
+            </label>
+            <button
+              type="button"
+              class="h-[38px] w-[38px] justify-self-end 2xl:justify-self-auto rounded-lg border border-[rgba(180,76,60,0.25)] bg-[rgba(180,76,60,0.06)] text-nido-red cursor-pointer flex items-center justify-center hover:bg-[rgba(180,76,60,0.12)]"
+              (click)="removeItem(item.id)">
+              <lucide-icon name="trash-2" [size]="15" />
+            </button>
+          </div>
+        } @empty {
+          <div class="rounded-[12px] border border-dashed border-nido-border bg-white/70 px-4 py-10 text-center text-nido-brown">
+            <lucide-icon name="scan-line" [size]="34" />
+            <p class="mt-2 text-[0.875rem] font-semibold">Escaneá una etiqueta para empezar.</p>
+          </div>
+        }
+      </div>
+    </div>
+
+    <aside class="bg-white/70 rounded-[14px] border border-nido-border p-5 flex flex-col gap-4 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
+      <div>
+        <span class="text-[0.75rem] uppercase tracking-[0.08em] text-nido-muted font-bold">Resumen</span>
+        <p class="text-[1rem] font-bold text-nido-green-dark mt-1">{{ validItems().length }} nutrientes</p>
+      </div>
+
+      <div class="h-px bg-nido-border"></div>
+
+      <div class="flex flex-col gap-2 text-[0.8125rem] text-nido-brown">
+        @for (item of validItems().slice(0, 6); track item.id) {
+          <div class="flex items-center justify-between gap-3">
+            <span class="min-w-0 truncate">{{ item.nombre }}</span>
+            <strong class="text-nido-green-dark whitespace-nowrap">{{ formatValue(item) }}</strong>
+          </div>
+        }
+      </div>
+
+      <button
+        type="button"
+        class="mt-2 flex items-center justify-center gap-2 rounded-lg bg-nido-green-dark text-nido-cream px-4 py-3 text-[0.875rem] font-bold border-none cursor-pointer hover:bg-nido-green disabled:opacity-50 disabled:cursor-default"
+        [disabled]="validItems().length === 0 || isSaving()"
+        (click)="saveNutrition()">
+        @if (isSaving()) {
+          <span class="w-4 h-4 rounded-full border-2 border-solid border-nido-cream/40 border-t-nido-cream animate-[spin_0.75s_linear_infinite]"></span>
+          Guardando...
+        } @else {
+          <lucide-icon name="check" [size]="16" />
+          Confirmar información
+        }
+      </button>
+    </aside>
+  </section>
+</div>
+

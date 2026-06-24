@@ -1,0 +1,39 @@
+<div class="w-full flex justify-center px-4">
+  <div class="w-full max-w-[740px]">
+    <!-- Contenedor con línea conectora -->
+    <div class="relative flex items-center justify-around gap-1 sm:gap-2">
+
+      <!-- Línea de fondo que une los pasos -->
+      <div class="absolute h-0.5 bg-nido-brown/20 rounded-full" style="z-index: 0; left: 12%; right: 12%; top: 19px;"></div>
+
+      @for (step of steps; track step.number) {
+        <div class="relative flex flex-col items-center flex-shrink-0 w-1/4 sm:w-auto" style="z-index: 1;">
+
+          <!-- Círculo del paso con número -->
+          <div
+            [class]="getStepCircleClass(step)"
+            class="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 mb-3">
+
+            @if (step.completed) {
+              <lucide-icon name="check" [size]="20" class="text-white" />
+            } @else {
+              <span class="text-base sm:text-lg font-bold leading-none">{{ step.number }}</span>
+            }
+          </div>
+
+          <!-- Título y descripción -->
+          <div class="text-center">
+            <h3 class="text-xs sm:text-sm font-bold leading-tight" [class]="step.active || step.completed ? 'text-nido-green-dark' : 'text-nido-brown'">
+              {{ step.label.split(' - ')[0] }}
+            </h3>
+            <p class="text-[0.65rem] sm:text-xs leading-tight" [class]="step.active || step.completed ? 'text-nido-green-dark/70' : 'text-nido-muted'">
+              {{ step.label.split(' - ')[1] || '' }}
+            </p>
+          </div>
+
+        </div>
+      }
+
+    </div>
+  </div>
+</div>

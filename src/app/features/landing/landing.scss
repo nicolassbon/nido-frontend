@@ -152,9 +152,13 @@
   Los delays crean la cascada visual: badge → title → sub → CTAs → social.
 */
 .hero-badge   { animation: hero-enter 0.70s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
-.hero-title   { font-size: clamp(2rem, 3.5vw, 2.375rem);
+.hero-title   { font-size: clamp(1.875rem, 4.5vw, 3rem);
+                font-weight: 700;
                 animation: hero-enter 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
-.hero-sub     { animation: hero-enter 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.36s both; }
+.hero-sub     { font-size: clamp(0.9375rem, 2.5vw, 1.0625rem);
+                font-weight: 400;
+                color: rgba(122, 90, 69, 0.85);
+                animation: hero-enter 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.36s both; }
 .hero-cta     { animation: hero-enter 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.50s both; }
 .hero-social  { animation: hero-enter 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.63s both; }
 
@@ -240,20 +244,42 @@
 
 /* ── Feature strip ─────────────────────────────────────────── */
 .feature-strip {
-  border-top: 3px solid transparent;
-  border-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(199, 143, 90, 0.35) 25%,
-    rgba(62, 94, 74, 0.4) 50%,
-    rgba(199, 143, 90, 0.35) 75%,
-    transparent 100%
-  ) 1;
+  border-top: 1px solid rgba(216, 198, 178, 0.6);
+  border-bottom: 1px solid rgba(216, 198, 178, 0.3);
   box-shadow: 0 1px 4px rgba(38, 63, 48, 0.05);
+  padding: 1rem 0;
+
+  @media (min-width: 640px) {
+    padding: 1.5rem 0;
+  }
+}
+
+/* Icono circular estándar en toda la app */
+.icon-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  shrink: 0;
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+
+  @media (min-width: 640px) {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  @media (min-width: 1024px) {
+    width: 4rem;
+    height: 4rem;
+  }
 }
 
 .feature-icon {
+  @extend .icon-circle;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  box-shadow: 0 4px 16px rgba(38, 63, 48, 0.22);
 }
 
 .feature-item:hover .feature-icon {
@@ -262,10 +288,15 @@
 }
 
 /* ── Stats ─────────────────────────────────────────────────── */
+.stats-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
 .stat-item {
   .stat-number {
     font-family: 'Comfortaa', cursive;
-    font-size: clamp(2.25rem, 4vw, 3.125rem);
+    font-size: clamp(2rem, 3.5vw, 3.5rem);
     font-weight: 700;
     color: #f7f1e6;
     line-height: 1;
@@ -274,8 +305,8 @@
   }
 
   .stat-label {
-    font-size: 0.8rem;
-    color: rgba(247, 241, 230, 0.38);
+    font-size: clamp(0.75rem, 1.5vw, 0.9rem);
+    color: rgba(247, 241, 230, 0.45);
     font-weight: 500;
     letter-spacing: 0.01em;
   }
@@ -300,10 +331,11 @@
 }
 
 .section-title {
-  font-size: clamp(1.625rem, 3.5vw, 2.125rem);
+  font-size: clamp(1.625rem, 3.5vw, 2.25rem);
   font-weight: 700;
   color: #263f30;
-  line-height: 1.25;
+  line-height: 1.35;
+  margin-bottom: 0.75rem;
 }
 
 /* ── Scroll reveal (CSS-driven) ────────────────────────────── */
@@ -355,6 +387,20 @@
   pointer-events: none;
 }
 
+/* Divisor entre items en feature strip */
+.feature-item {
+  &:not(:last-child) {
+    border-bottom: 1px solid rgba(38, 63, 48, 0.08);
+  }
+
+  @media (min-width: 768px) {
+    &:not(:last-child) {
+      border-bottom: none;
+      border-right: 1px solid rgba(38, 63, 48, 0.08);
+    }
+  }
+}
+
 /* Divisor vertical entre pasos */
 .step-item {
   &:not(:last-child) {
@@ -372,10 +418,10 @@
 /* Número decorativo de fondo */
 .step-deco-number {
   position: absolute;
-  top: -0.75rem;
-  right: 1.25rem;
+  top: -0.5rem;
+  right: 0.75rem;
   font-family: 'Comfortaa', cursive;
-  font-size: clamp(4.5rem, 7vw, 6.5rem);
+  font-size: clamp(3.5rem, 5vw, 6.5rem);
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.04em;
@@ -404,6 +450,11 @@
 }
 
 /* ── App Showcase ──────────────────────────────────────────── */
+.showcase-section {
+  border-top: 1px solid rgba(216, 198, 178, 0.4);
+  border-bottom: 1px solid rgba(216, 198, 178, 0.2);
+}
+
 .showcase-visual {
   transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -426,11 +477,18 @@
   background-image:
     radial-gradient(circle, rgba(38, 63, 48, 0.042) 1px, transparent 1px);
   background-size: 28px 28px;
+  border-top: 1px solid rgba(216, 198, 178, 0.4);
+  border-bottom: 1px solid rgba(216, 198, 178, 0.2);
 }
 
 .module-card {
   box-shadow: 0 2px 12px rgba(38, 63, 48, 0.07);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+  padding: 1.5rem 1.25rem;
+
+  @media (min-width: 640px) {
+    padding: 1.875rem;
+  }
 
   &:hover {
     transform: translateY(-5px);
@@ -442,10 +500,6 @@
   }
 }
 
-.module-icon {
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
 .module-feature {
   transition: color 0.2s;
   &:hover { color: #3e5e4a; }
@@ -455,6 +509,11 @@
 .testimonial-card {
   box-shadow: 0 2px 12px rgba(38, 63, 48, 0.06);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+  padding: 1.75rem 1.5rem;
+
+  @media (min-width: 640px) {
+    padding: 1.75rem;
+  }
 
   &:hover {
     transform: translateY(-5px);
@@ -530,7 +589,9 @@
 }
 
 .cta-title {
-  font-size: clamp(1.875rem, 4vw, 2.75rem);
+  font-size: clamp(1.75rem, 4.5vw, 2.875rem);
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .cta-glow {
@@ -544,9 +605,13 @@
   background: rgba(255, 255, 255, 0.51);
   border: 1.5px solid #e5ddd0;
   border-radius: 20px;
-  padding: 2rem;
+  padding: 1.75rem 1.5rem;
   box-shadow: 0 2px 12px rgba(38, 63, 48, 0.06);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+
+  @media (min-width: 640px) {
+    padding: 2.25rem;
+  }
 
   &:hover {
     transform: translateY(-5px);
@@ -582,23 +647,12 @@
   box-shadow: 0 2px 10px rgba(199, 143, 90, 0.35);
 }
 
-.pricing-icon {
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1.25rem;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-
-  .pricing-card:hover & { transform: scale(1.08); }
-}
 
 .pricing-name {
-  font-size: 1.0625rem;
+  font-size: clamp(1rem, 2vw, 1.125rem);
   font-weight: 700;
-  margin-bottom: 0.5rem;
+  color: #263f30;
+  margin-bottom: 0.75rem;
 }
 
 .pricing-amount {
@@ -629,8 +683,8 @@
   }
 }
 
-/* ── Convivientes Banner ───────────────────────────────────── */
-.convivientes-banner {
+/* ── Integrantes Banner ───────────────────────────────────── */
+.integrantes-banner {
   background: linear-gradient(135deg, #263f30 0%, #3e5e4a 60%, #4a6b54 100%);
   box-shadow:
     0 4px 24px rgba(38, 63, 48, 0.22),

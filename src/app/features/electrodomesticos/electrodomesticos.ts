@@ -33,10 +33,7 @@ export class Electrodomesticos {
   protected readonly showAddModal = signal(false);
   protected readonly selectedCatalogoValue = signal('');
 
-  protected readonly searchQuery = signal('');
-  protected readonly activeTipo = signal('Todos');
 
-  protected readonly tipos = ['Todos', 'Cocina', 'Lavadero', 'Living', 'Otro'];
 
   protected readonly draft = signal<CrearElectrodomesticoRequest>({
     catalogoId: null,
@@ -46,25 +43,6 @@ export class Electrodomesticos {
     imagenUrl: null,
   });
 
-  protected readonly electrodomesticosFiltrados = computed(() => {
-    let lista = this.electrodomesticos();
-
-    const tipoActivo = this.activeTipo();
-
-    if (tipoActivo !== 'Todos') {
-      lista = lista.filter((item) => (item.tipo ?? 'Otro') === tipoActivo);
-    }
-
-    const busqueda = this.searchQuery().trim().toLowerCase();
-
-    if (busqueda) {
-      lista = lista.filter((item) =>
-        item.nombre.toLowerCase().includes(busqueda)
-      );
-    }
-
-    return lista;
-  });
 
   readonly cantidadFueraDeServicio = computed(() =>
     this.electrodomesticos().filter(
@@ -243,14 +221,6 @@ export class Electrodomesticos {
     }));
   }
 
-  protected tipoChipClass(tipo: string): string {
-    const base =
-      'px-4 py-2 rounded-full text-sm font-medium border transition cursor-pointer';
-
-    return this.activeTipo() === tipo
-      ? `${base} bg-nido-green-dark text-nido-cream border-nido-green-dark`
-      : `${base} bg-white text-nido-green-dark border-nido-border hover:bg-nido-cream`;
-  }
 
  protected getIconByElectrodomestico(nombre: string, tipo: string | null): string {
   const value = `${nombre} ${tipo ?? ''}`.toLowerCase();
@@ -311,5 +281,9 @@ export class Electrodomesticos {
 
   private normalizarEstado(estado: string | null): string {
     return (estado ?? 'activo').trim().toLowerCase();
+  }
+
+  protected formatEstado(estado: string | null): string {
+    return this.normalizarEstado(estado) === 'fuera de servicio' ? 'Fuera de servicio' : 'Activo';
   }
 }

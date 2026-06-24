@@ -2,18 +2,25 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { LucideAngularModule } from 'lucide-angular';
+import { Bookmark, BookmarkCheck, LucideAngularModule } from 'lucide-angular';
 import { environment } from '../../../../environments/environment';
 import { ApiReceta, ApiRecetaIngrediente, RecipesApiService } from '../recipes/services/recipes-api.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ProductService } from '../../../core/servicios/agregar-producto.service';
 import { ListaComprasService } from '../../lista-compras/lista-compras.service';
 import { Electrodomestico, ElectrodomesticosService } from '../../electrodomesticos/services/electrodomesticos.service';
+import { RecipeResenasComponent } from '../recipe-resenas/recipe-resenas';
+
+const SOURCE_LABELS: Record<string, string> = {
+  spoonacular: 'Spoonacular',
+  manual: 'Nido',
+  nido: 'Nido',
+};
 
 @Component({
   selector: 'app-recipe-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, LucideAngularModule],
+  imports: [CommonModule, RouterModule, LucideAngularModule, RecipeResenasComponent],
   templateUrl: './recipe-detail.html',
   styleUrl: './recipe-detail.scss',
 })
@@ -26,11 +33,14 @@ export class RecipeDetail {
   private readonly electrodomesticosService = inject(ElectrodomesticosService);
   protected readonly router       = inject(Router);
   private readonly destroyRef     = inject(DestroyRef);
+  protected readonly bookmarkIcon = Bookmark;
+  protected readonly bookmarkCheckIcon = BookmarkCheck;
 
   protected readonly recipe           = signal<ApiReceta | null>(null);
   protected readonly loading          = signal(false);
   protected readonly errorMessage     = signal<string | null>(null);
   protected readonly imageFailed      = signal(false);
+  protected readonly savingRecipe     = signal(false);
 
   // Modal de confirmación para cocinar
   protected readonly showCookModal    = signal(false);
@@ -160,25 +170,70 @@ export class RecipeDetail {
       });
   }
 
+  protected toggleSaved(): void {
+    const receta = this.recipe();
+    if (!receta || this.savingRecipe()) return;
+
+    this.savingRecipe.set(true);
+    const request = receta.guardada
+      ? this.recipesService.unsave(receta.id)
+      : this.recipesService.save(receta.id);
+
+    request
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.recipe.set({ ...receta, guardada: !receta.guardada });
+          this.savingRecipe.set(false);
+        },
+        error: () => {
+          this.errorMessage.set('No se pudo actualizar la receta guardada.');
+          this.savingRecipe.set(false);
+        },
+      });
+  }
+
   protected agregarFaltantesALista(): void {
     const receta    = this.recipe();
     const faltantes = this.missingIngredients();
     if (!receta || faltantes.length === 0) return;
 
-    const items = faltantes.map(i => ({
-      nombre:   i.productoNombre || i.nombre,
-      cantidad: i.cantidad,
-      unidad:   i.unidad,
-      checked:  false,
-    }));
+    const items = faltantes.map(i => {
+      if (i.cantidadListaCompras !== null && i.cantidadListaCompras !== undefined) {
+        return {
+          nombre:   i.productoNombre || cleanIngredientName(i.nombre),
+          cantidad: i.cantidadListaCompras,
+          unidad:   i.unidadListaCompras ?? i.unidadCompraEstandar ?? i.unidad,
+        };
+      }
 
-    // Guardar en el servicio (persiste en localStorage)
-    this.listaService.addToLista(receta.nombre, items);
+      const targetUnit = i.unidadCompraEstandar ?? i.unidad;
+      const isCooking = isCookingUnit(targetUnit);
+      
+      let cantidad = isCooking ? null : (i.cantidadCompraEstandar ?? i.cantidad);
+      let unidad = isCooking ? null : targetUnit;
+
+      if (!unidad && cantidad !== null && cantidad !== undefined && cantidad % 1 !== 0) {
+        cantidad = null;
+      }
+
+      return {
+        nombre:   i.productoNombre || cleanIngredientName(i.nombre),
+        cantidad,
+        unidad,
+      };
+    });
+
+    this.listaService.addGroupToLista(receta.nombre, items).subscribe({
+      next: () => {
+        this.router.navigate(['/lista-compras']);
+      },
+      error: () => {
+        this.errorMessage.set('No se pudo agregar los faltantes a la lista de compras.');
+      },
+    });
 
     // Pasar también por router state para garantizar el primer render
-    this.router.navigate(['/lista-compras'], {
-      state: { recetaNombre: receta.nombre, items },
-    });
   }
 
   protected goBack(): void {
@@ -205,6 +260,13 @@ export class RecipeDetail {
     if (normalized === 'facil')   return 'Facil';
     if (normalized === 'dificil') return 'Dificil';
     return value?.trim() || '-';
+  }
+
+  protected nutritionSourceLabel(fuenteId: string | null | undefined): string | null {
+    const sourceKey = fuenteId?.trim().split('-')[0]?.toLowerCase();
+    if (!sourceKey) return null;
+
+    return SOURCE_LABELS[sourceKey] ?? this.toTitleCase(sourceKey);
   }
 
   protected formatApplianceName(value: string | null | undefined): string {
@@ -234,8 +296,8 @@ export class RecipeDetail {
     const normalized = this.normalizeText(value);
     if (normalized.includes('horno')) return 'cooking-pot';
     if (normalized.includes('micro')) return 'microwave';
-    if (normalized.includes('licuadora')) return 'blender';
-    if (normalized.includes('batidora')) return 'hand';
+    if (normalized.includes('licuadora')) return 'blend';
+    if (normalized.includes('batidora')) return 'cog';
     if (normalized.includes('heladera')) return 'refrigerator';
     if (normalized.includes('freezer')) return 'snowflake';
     return 'plug';
@@ -250,6 +312,13 @@ export class RecipeDetail {
       .trim();
   }
 
+  private toTitleCase(value: string): string {
+    return value
+      .replace(/[_\s]+/g, ' ')
+      .trim()
+      .replace(/\b\w/g, letter => letter.toUpperCase());
+  }
+
   private resolveImageUrl(url: string | null): string | null {
     if (!url) return null;
     if (/^(https?:)?\/\//i.test(url) || /^(data|blob):/i.test(url)) return url;
@@ -258,3 +327,42 @@ export class RecipeDetail {
     return `${baseUrl}${path}`;
   }
 }
+
+const COOKING_UNITS = new Set([
+  'taza', 'tazas', 'cup', 'cups',
+  'cda', 'cdas', 'cucharada', 'cucharadas', 'tbsp', 'tablespoon', 'tablespoons',
+  'cdta', 'cdtas', 'cucharadita', 'cucharaditas', 'tsp', 'teaspoon', 'teaspoons',
+  'pizca', 'pizcas', 'pinch', 'pinches',
+  'chorrito', 'chorritos', 'splash',
+  'al gusto', 'c/n', 'gota', 'gotas'
+]);
+
+export function isCookingUnit(unit: string | null | undefined): boolean {
+  if (!unit) return false;
+  return COOKING_UNITS.has(unit.trim().toLowerCase().replace(/\./g, ''));
+}
+
+const PREP_KEYWORDS = [
+  'cortado', 'picado', 'rallado', 'troceado', 'fileteado',
+  'en trozos', 'en cubos', 'finamente', 'groseramente', 'bien',
+  'pelado', 'cocido', 'cocido al vapor', 'desmenuzado', 'picada',
+  'para decorar', 'decorar', 'para servir', 'al gusto', 'a gusto',
+  'opcional', ' molido', ' molida', ' picada', ' picado',
+  ' fresco', ' fresca', ' frescos', ' frescas', ' seco', ' seca'
+];
+
+export function cleanIngredientName(name: string): string {
+  const lower = name.toLowerCase();
+  let minIdx = -1;
+  for (const keyword of PREP_KEYWORDS) {
+    const idx = lower.indexOf(keyword);
+    if (idx > 0 && (minIdx === -1 || idx < minIdx)) {
+      minIdx = idx;
+    }
+  }
+  if (minIdx > 0) {
+    return name.slice(0, minIdx).trim().replace(/[,.:]$/, '').trim();
+  }
+  return name.trim();
+}
+

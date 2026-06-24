@@ -1,0 +1,348 @@
+<div class="w-full p-4 sm:p-6 flex flex-col gap-5">
+
+  <!-- ── Banner ──────────────────────────────────────────── -->
+  <section class="relative overflow-hidden rounded-[14px] px-8 py-7 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
+    <div class="absolute inset-0 bg-[url('/images/banners/tareas.png')] bg-center bg-cover"></div>
+    <div class="relative z-10">
+      <h1 class="text-nido-cream text-[1.6rem] font-bold">Tareas del hogar</h1>
+      <p class="text-nido-cream/70 text-sm mt-0.5">Organizá las tareas con tu familia</p>
+    </div>
+    <button
+      class="relative z-10 flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]"
+      (click)="abrirModal()">
+      <lucide-icon name="plus" [img]="icons.Plus" size="14"></lucide-icon>
+      Nueva tarea
+    </button>
+  </section>
+
+  <!-- ── Grid ─────────────────────────────────────────────── -->
+  <div class="lista-grid">
+
+    <!-- ── Tareas ──────────────────────────────────────────── -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Tareas</h2>
+      </div>
+
+      @if (loading()) {
+        <p class="text-muted p-4">Cargando...</p>
+      } @else if (tareasPreview().length === 0) {
+        <div class="empty-state">
+          <lucide-icon name="check-square" [img]="icons.CheckSquare" size="32" class="text-nido-muted"></lucide-icon>
+          <p>No hay tareas pendientes</p>
+          <button class="btn-nueva" (click)="abrirModal()">Crear una tarea</button>
+        </div>
+      } @else {
+        <ul class="tarea-list tarea-list-preview">
+          @for (tarea of tareasPreview(); track tarea.id) {
+            <li class="tarea-item" [class.vencida]="estaVencida(tarea)">
+              <button class="tarea-check" (click)="completarTarea(tarea)" title="Marcar como completada">
+                <lucide-icon name="check" [img]="icons.Check" size="14"></lucide-icon>
+              </button>
+              <div class="tarea-icon-wrap">
+                <lucide-icon name="clock" [img]="icons.Clock" size="16"></lucide-icon>
+              </div>
+              <div class="tarea-info">
+                <span class="tarea-titulo">{{ tarea.titulo }}</span>
+                @if (tarea.fechaLimite) {
+                  <span class="tarea-fecha" [class.vencida-text]="estaVencida(tarea)">
+                    <lucide-icon name="calendar" [img]="icons.Calendar" size="12"></lucide-icon>
+                    {{ formatFecha(tarea.fechaLimite) }}
+                  </span>
+                }
+              </div>
+              <div class="asignado-wrap">
+                <button class="asignado-btn"
+                  [style.background-color]="tarea.asignadoA ? badgeColor(tarea.asignadoA.nombre) : 'var(--color-nido-border)'"
+                  [style.color]="tarea.asignadoA ? '#fff' : 'var(--color-nido-muted)'"
+                  (click)="toggleReasignacion(tarea.id, $event)">
+                  {{ tarea.asignadoA ? tarea.asignadoA.nombre.split(' ')[0] : 'Asignar' }}
+                  <lucide-icon name="chevron-down" [img]="icons.ChevronDown" size="9"></lucide-icon>
+                </button>
+                @if (reasignandoTareaId() === tarea.id && reasignandoPos()) {
+                  <div class="asignado-dropdown" [style.top.px]="reasignandoPos()!.top" [style.left.px]="reasignandoPos()!.left">
+                    <button class="asignado-opt" (click)="reasignarTarea(tarea, null)">Sin asignar</button>
+                    @for (m of miembros(); track m.usuarioId) {
+                      <button class="asignado-opt" [class.active]="tarea.asignadoA?.usuarioId === m.usuarioId"
+                        (click)="reasignarTarea(tarea, m.usuarioId)">
+                        {{ m.nombre.split(' ')[0] }}
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+              @if (estaVencida(tarea)) {
+                <lucide-icon name="alert-circle" [img]="icons.AlertCircle" size="16" class="vencida-icon" title="Vencida"></lucide-icon>
+              }
+            </li>
+          }
+        </ul>
+
+        <button class="ver-todas" (click)="abrirModalMisTareas()">
+          Ver mis tareas
+          <lucide-icon name="chevron-right" [img]="icons.ChevronRight" size="14"></lucide-icon>
+        </button>
+      }
+    </div>
+
+    <!-- ── Distribución semanal ────────────────────────────── -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Distribución semanal</h2>
+        <span class="semana-badge">Esta semana</span>
+      </div>
+
+      @if (distribucion()) {
+        <div class="chart-wrap">
+          <p class="chart-subtitle">Tareas completadas por persona</p>
+          <div class="chart-legend">
+            @for (m of distribucion()!.dias[0].miembros; track m.usuarioId; let i = $index) {
+              <span class="legend-item">
+                <span class="legend-dot" [style.background-color]="colorMiembro(i)"></span>
+                {{ m.nombre.split(' ')[0] }}
+              </span>
+            }
+          </div>
+          <div class="chart-container">
+            <div class="chart-y-axis">
+              @if (maxCompletadas() > 0) {
+                <span>{{ maxCompletadas() }}</span>
+                <span>{{ (maxCompletadas() * 0.75 | number:'1.0-0') }}</span>
+                <span>{{ (maxCompletadas() * 0.5 | number:'1.0-0') }}</span>
+                <span>{{ (maxCompletadas() * 0.25 | number:'1.0-0') }}</span>
+              } @else {
+                <span>0</span>
+                <span></span>
+                <span></span>
+                <span></span>
+              }
+              <span>0</span>
+            </div>
+            <div class="chart-bars-area">
+              @for (dia of distribucion()!.dias; track dia.dia) {
+                <div class="chart-day">
+                  <div class="chart-bars">
+                    @for (m of dia.miembros; track m.usuarioId; let i = $index) {
+                      @if (m.completadas > 0) {
+                        <div
+                          class="chart-bar"
+                          [style.height]="alturaBar(m.completadas)"
+                          [style.background-color]="colorMiembro(i)"
+                          [title]="m.nombre + ': ' + m.completadas + ' tareas'">
+                        </div>
+                      } @else {
+                        <div class="chart-bar-empty"></div>
+                      }
+                    }
+                  </div>
+                  <span class="chart-day-label">{{ dia.dia }}</span>
+                </div>
+              }
+            </div>
+          </div>
+          @if (maxCompletadas() === 0) {
+            <p class="chart-no-data">Sin tareas completadas esta semana</p>
+          }
+        </div>
+      } @else {
+        <div class="empty-state">
+          <p>Sin datos esta semana</p>
+        </div>
+      }
+    </div>
+
+  </div>
+
+  <!-- ── Historial de tareas completadas ──────────────────── -->
+  <section class="bg-white/[0.51] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] overflow-hidden">
+    <div class="flex items-center gap-2 px-4 py-3.5 border-b border-nido-border/40 bg-nido-cream/30 sm:px-5">
+      <lucide-icon name="history" [img]="icons.History" size="16" class="text-nido-green-dark"></lucide-icon>
+      <h2 class="text-[0.9rem] font-semibold text-nido-green-dark">Historial de tareas</h2>
+    </div>
+
+    @if (historialTareas().length === 0) {
+      <p class="px-4 py-5 text-[0.875rem] text-nido-brown sm:px-5">Todavía no hay tareas completadas.</p>
+    } @else {
+      <ul class="list-none m-0 p-0">
+        @for (tarea of historialTareas(); track tarea.id) {
+          <li class="flex flex-col gap-1 px-4 py-3 border-b border-nido-border/40 last:border-b-0 sm:px-5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="text-[0.875rem] font-medium text-nido-green-dark line-through">{{ tarea.titulo }}</span>
+              <span class="text-[0.775rem] text-nido-brown shrink-0">{{ formatFechaHora(tarea.fechaCompletado) }}</span>
+            </div>
+            @if (tarea.descripcion) {
+              <span class="text-[0.775rem] text-nido-brown">{{ tarea.descripcion }}</span>
+            }
+            @if (tarea.completadoPorNombre) {
+              <div class="flex items-center gap-1 text-[0.75rem] text-nido-brown/80">
+                <lucide-icon name="check" [img]="icons.Check" size="11"></lucide-icon>
+                Completada por {{ tarea.completadoPorNombre }}
+              </div>
+            }
+          </li>
+        }
+      </ul>
+    }
+  </section>
+
+</div>
+
+<!-- backdrop para cerrar dropdown de reasignación -->
+@if (reasignandoTareaId()) {
+  <div class="asignado-backdrop" (click)="cerrarReasignacion()"></div>
+}
+
+<!-- ══════════════════════════════════════════════════════
+     MODAL MIS TAREAS
+══════════════════════════════════════════════════════ -->
+@if (mostrarModalMisTareas()) {
+  <div class="modal-overlay" (click)="cerrarModalMisTareas()">
+    <div class="modal modal-mis-tareas" (click)="$event.stopPropagation()">
+
+      <div class="modal-banner">
+        <div class="modal-banner-bg"></div>
+        <div class="modal-banner-overlay"></div>
+        <div class="modal-banner-content">
+          <span class="modal-banner-icon">
+            <lucide-icon name="clipboard-list" [img]="icons.ClipboardList" size="18"></lucide-icon>
+          </span>
+          <div>
+            <h3 class="modal-banner-title">Mis tareas</h3>
+            <p class="modal-banner-sub">Tareas asignadas a vos</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" (click)="cerrarModalMisTareas()">
+          <lucide-icon name="x" [img]="icons.X" size="20"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="modal-mis-body">
+        @if (misTareasConResaltada().length === 0) {
+          <div class="empty-state">
+            <lucide-icon name="check-square" [img]="icons.CheckSquare" size="36"></lucide-icon>
+            <p>No tenés tareas asignadas</p>
+          </div>
+        } @else {
+          <ul class="tarea-list">
+            @for (tarea of misTareasConResaltada(); track tarea.id) {
+              <li class="tarea-item" [class.vencida]="estaVencida(tarea)" [class.highlighted]="tarea.id === highlightedTaskId()">
+                <button class="tarea-check"
+                  [class.completada]="tarea.estado === 'completada'"
+                  [disabled]="tarea.estado === 'completada'"
+                  (click)="tarea.estado !== 'completada' ? completarTarea(tarea) : null; cerrarModalMisTareas()"
+                  [title]="tarea.estado === 'completada' ? 'Completada' : 'Completar'">
+                  <lucide-icon name="check" [img]="icons.Check" size="14"></lucide-icon>
+                </button>
+                <div class="tarea-icon-wrap">
+                  <lucide-icon name="clock" [img]="icons.Clock" size="16"></lucide-icon>
+                </div>
+                <div class="tarea-info">
+                  <span class="tarea-titulo" [class.completada-titulo]="tarea.estado === 'completada'">{{ tarea.titulo }}</span>
+                  @if (tarea.descripcion) {
+                    <span class="tarea-desc">{{ tarea.descripcion }}</span>
+                  }
+                  @if (tarea.fechaLimite) {
+                    <span class="tarea-fecha" [class.vencida-text]="estaVencida(tarea)">
+                      <lucide-icon name="calendar" [img]="icons.Calendar" size="11"></lucide-icon>
+                      {{ formatFecha(tarea.fechaLimite) }}
+                    </span>
+                  }
+                </div>
+                <span class="estado-pill" [attr.data-estado]="tarea.estado">
+                  {{ estadoLabel(tarea.estado) }}
+                </span>
+                @if (estaVencida(tarea)) {
+                  <span class="vencida-chip">Vencida</span>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ══════════════════════════════════════════════════════
+     MODAL NUEVA TAREA
+══════════════════════════════════════════════════════ -->
+@if (mostrarModal()) {
+  <div class="modal-overlay" (click)="cerrarModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+
+      <div class="modal-banner">
+        <div class="modal-banner-bg"></div>
+        <div class="modal-banner-overlay"></div>
+        <div class="modal-banner-content">
+          <span class="modal-banner-icon">
+            <lucide-icon name="check-square" [img]="icons.CheckSquare" size="18"></lucide-icon>
+          </span>
+          <div>
+            <h3 class="modal-banner-title">Nueva tarea</h3>
+            <p class="modal-banner-sub">Asigná una tarea al hogar</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" (click)="cerrarModal()">
+          <lucide-icon name="x" [img]="icons.X" size="20"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="modal-form-body">
+
+        <div class="nido-field">
+          <label class="nido-label">Título <span class="required">*</span></label>
+          <input
+            class="nido-input"
+            type="text"
+            [(ngModel)]="nuevoTitulo"
+            placeholder="Ej: Barrer el comedor"
+            maxlength="255"
+            autocomplete="off" />
+        </div>
+
+        <div class="nido-field">
+          <label class="nido-label">Descripción</label>
+          <textarea
+            class="nido-input nido-textarea"
+            [(ngModel)]="nuevaDescripcion"
+            placeholder="Descripción opcional..."
+            rows="2"></textarea>
+        </div>
+
+        <div class="nido-row">
+          <div class="nido-field">
+            <label class="nido-label">
+              Fecha límite
+              <span class="nido-label-opt">opcional</span>
+            </label>
+            <nido-datepicker
+              [(ngModel)]="nuevaFechaLimite"
+              placeholder="Seleccionar fecha" />
+          </div>
+
+          <div class="nido-field">
+            <label class="nido-label">
+              Asignar a
+              <span class="nido-label-opt">opcional</span>
+            </label>
+            <nido-select
+              [(ngModel)]="nuevoAsignadoA"
+              [options]="miembrosOpts()"
+              placeholder="Sin asignar" />
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="cerrarModal()">Cancelar</button>
+        <button
+          class="btn-guardar"
+          (click)="guardarTarea()"
+          [disabled]="!nuevoTitulo.trim() || guardando">
+          {{ guardando ? 'Guardando...' : 'Crear tarea' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

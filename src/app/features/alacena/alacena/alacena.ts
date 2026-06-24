@@ -14,7 +14,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin, of, switchMap } from 'rxjs';
+import { forkJoin, map, of, switchMap } from 'rxjs';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import {
   MultiFormatReader,
@@ -25,18 +25,30 @@ import {
   BarcodeFormat,
 } from '@zxing/library';
 import { OpenFoodFactsService } from '../open-food-facts.service';
-import { AlacenaApiService, StockItemResponse } from '../alacena-api.service';
+import {
+  AlacenaApiService,
+  DeleteStockMotivo,
+  NutritionInfoResponse,
+  StockItemResponse,
+  StockMovementMotivo,
+  StockMovementResponse,
+} from '../alacena-api.service';
 import { PreferenciasApiService } from '../preferencias-api.service';
 import { getTtlForCategory, TtlInfo } from '../ttl.config';
 import { RouterLink } from '@angular/router';
 import { ProductService, ProductManualResponse } from '../../../core/servicios/agregar-producto.service';
+import { CatalogoService } from '../../../core/servicios/catalogo.service';
 import { AgregarProducto, KnownProduct } from '../../agregar-producto/agregar-producto';
+import { EstimatedDateNoticeComponent } from '../../../shared/ui/estimated-date-notice/estimated-date-notice';
 import { environment } from '../../../../environments/environment';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
 type StorageLocation = 'Todos' | 'Alacena' | 'Freezer' | 'Heladera';
 type ScannerStep     = 'scanning' | 'loading' | 'confirm' | 'error';
+type AlacenaView     = 'stock' | 'historial';
+type MovementRange   = '7' | '30' | '90' | 'all';
+type MovementMotivoFilter = StockMovementMotivo | 'todos';
 
 // BarcodeDetector is experimental; not yet in TypeScript's DOM lib.
 type NativeBarcodeDetector = {
@@ -52,12 +64,28 @@ export interface Product {
   image:            string;
   location:         Exclude<StorageLocation, 'Todos'>;
   expiryDate:       string;   // ISO date string (YYYY-MM-DD)
-  quantity:         number;
+  quantity:         number;   // cantidad por envase
   unit?:            string;
   categoriaNombre?: string;
   isOpened?:        boolean;
   remainingPercent?: number;  // 100 = full, 75 / 50 / 25 = approximate remaining
   barcode?:         string;
+  iconoSvg?:        string;
+  icono?:           string;
+  /** Cantidad de envases idénticos del mismo producto. Default 1. */
+  packagesCount:    number;
+  /** Información nutricional por 100 g (opcional). */
+  calorias?:        number | null;
+  proteinas?:       number | null;
+  carbohidratos?:   number | null;
+  grasas?:          number | null;
+}
+
+function compareProductsByName(a: Product, b: Product): number {
+  const byName = a.name.localeCompare(b.name, 'es', { sensitivity: 'base' });
+  return byName !== 0
+    ? byName
+    : a.id.localeCompare(b.id, 'es', { sensitivity: 'base' });
 }
 
 interface ProductDraft {
@@ -72,7 +100,29 @@ interface ProductDraft {
   consumedPercent:   number;
   notFound:          boolean;
   quantity:          number;
+  unit:              string;
+  cantidadEnvases:   number;
   barcode:           string;
+  // Información nutricional por 100 g (del escaneo a Open Food Facts).
+  calorias:          number | null;
+  proteinas:         number | null;
+  carbohidratos:     number | null;
+  grasas:            number | null;
+  informacionNutricional?: NutritionInfoResponse | null;
+}
+
+interface DeleteConfirmation {
+  product:      Product;
+  title:        string;
+  message:      string;
+  confirmLabel: string;
+}
+
+interface DeleteMotivoOption {
+  value:       DeleteStockMotivo;
+  label:       string;
+  description: string;
+  icon:        string;
 }
 
 // ── Module-level utilities ────────────────────────────────────────────────────
@@ -101,7 +151,37 @@ function makeEmptyDraft(): ProductDraft {
     notFound:          false,
     quantity:          1,
     barcode:           '',
+    unit:              'unidad',
+    cantidadEnvases:   1,
+    calorias:          null,
+    proteinas:         null,
+    carbohidratos:     null,
+    grasas:            null,
+    informacionNutricional: null,
   };
+}
+
+/**
+ * Recomienda dónde guardar y en qué unidad según la categoría detectada.
+ * Las categorías que llegan del escaneo son las canónicas del back
+ * (General, Lácteos, Bebidas, Congelados, Despensa).
+ */
+function recommendStorage(category: string): { location: Exclude<StorageLocation, 'Todos'>; unit: string } {
+  const c = category.toLowerCase();
+
+  let location: Exclude<StorageLocation, 'Todos'> = 'Alacena';
+  if (c.includes('congelados')) {
+    location = 'Freezer';
+  } else if (['lácteos', 'lacteos', 'carnes', 'fiambres', 'huevos', 'verduras', 'frutas'].some(k => c.includes(k))) {
+    location = 'Heladera';
+  }
+
+  let unit = 'unidad';
+  if (['bebidas', 'aceites', 'caldos'].some(k => c.includes(k))) {
+    unit = 'lt';
+  }
+
+  return { location, unit };
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -167,13 +247,6 @@ function fallbackProductImage(name: string | null | undefined): string {
   return catalog[normalized] ?? catalog[aliases[normalized]] ?? '';
 }
 
-function formatCategoryTag(tag: string): string {
-  return tag
-    .replace(/^[a-z]{2}:/, '')
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, c => c.toUpperCase());
-}
-
 function normalizeUnit(value: string | null | undefined): string {
   const normalized = (value ?? '')
     .trim()
@@ -237,11 +310,32 @@ const LOCATION_COLORS: Record<string, string> = {
   Heladera: '#927357',
 };
 
+const DELETE_MOTIVO_OPTIONS: Record<DeleteStockMotivo, DeleteMotivoOption> = {
+  consumido: {
+    value: 'consumido',
+    label: 'Consumido',
+    description: 'Lo usaron o se terminó.',
+    icon: 'check-circle',
+  },
+  descartado: {
+    value: 'descartado',
+    label: 'Descartado',
+    description: 'Lo tiraron o ya no sirve.',
+    icon: 'trash-2',
+  },
+  vencido: {
+    value: 'vencido',
+    label: 'Vencido',
+    description: 'Salió por fecha vencida.',
+    icon: 'alert-triangle',
+  },
+};
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 @Component({
   selector: 'app-alacena',
-  imports: [LucideAngularModule, FormsModule, RouterLink, AgregarProducto],
+  imports: [LucideAngularModule, FormsModule, RouterLink, AgregarProducto, EstimatedDateNoticeComponent],
   templateUrl: './alacena.html',
   styleUrl: './alacena.scss',
 })
@@ -252,11 +346,18 @@ export class Alacena implements OnInit {
   private readonly destroyRef     = inject(DestroyRef);
   private readonly zone           = inject(NgZone);
   private readonly productService = inject(ProductService);
+  private readonly catalogo       = inject(CatalogoService);
+
+  /** Mapa nombre-de-categoría (minúsculas) → id, para resolver la categoría del escaneo. */
+  private readonly categoriaIdByName = new Map<string, string>();
 
 
   // ── List & filters ───────────────────────────────────────
   protected readonly activeLocation  = signal<StorageLocation>('Todos');
+  protected readonly activeView      = signal<AlacenaView>('stock');
   protected readonly searchQuery     = signal('');
+  protected readonly onlyExpiring    = signal<boolean>(false);
+  protected readonly onlyExpired     = signal<boolean>(false);
   protected readonly locations:        StorageLocation[]                      = ['Todos', 'Alacena', 'Freezer', 'Heladera'];
   protected readonly productLocations: Exclude<StorageLocation, 'Todos'>[]   = ['Alacena', 'Freezer', 'Heladera'];
   protected readonly consumedOptions = CONSUMED_OPTIONS;
@@ -265,16 +366,44 @@ export class Alacena implements OnInit {
   protected readonly products           = signal<Product[]>([]);
   protected readonly isLoadingProducts  = signal(false);
   protected readonly apiError           = signal<string | null>(null);
+  protected readonly deleteConfirmation = signal<DeleteConfirmation | null>(null);
+  protected readonly isDeletingStock    = signal(false);
+  protected readonly deleteError        = signal<string | null>(null);
+  protected readonly deleteMotivo       = signal<DeleteStockMotivo>('consumido');
+  protected readonly movements          = signal<StockMovementResponse[]>([]);
+  protected readonly isLoadingMovements = signal(false);
+  protected readonly movementSearch     = signal('');
+  protected readonly movementMotivo     = signal<MovementMotivoFilter>('todos');
+  protected readonly movementRange      = signal<MovementRange>('30');
+  protected readonly movementError      = signal<string | null>(null);
+  protected readonly movementMotivos: { value: MovementMotivoFilter; label: string }[] = [
+    { value: 'todos', label: 'Todos' },
+    { value: 'consumido', label: 'Consumidos' },
+    { value: 'cocinado', label: 'Cocinados' },
+    { value: 'descartado', label: 'Descartados' },
+    { value: 'vencido', label: 'Vencidos' },
+  ];
+  protected readonly movementRanges: { value: MovementRange; label: string }[] = [
+    { value: '7', label: '7 días' },
+    { value: '30', label: '30 días' },
+    { value: '90', label: '90 días' },
+    { value: 'all', label: 'Todo' },
+  ];
 
   /** Productos conocidos para el autocomplete del form de agregar */
   protected readonly knownProducts = computed<KnownProduct[]>(() =>
     this.products().map(p => ({
+
       nombre:          p.name,
       categoriaNombre: p.categoriaNombre,
       unidadMedida:    p.unit,
       ubicacion:       p.location,
       stockId:         p.id,
       cantidad:        p.quantity,
+      icono:           p.icono,
+      iconoSvg:        p.iconoSvg,
+      cantidadEnvases:  p.packagesCount
+
     })),
   );
 
@@ -288,25 +417,60 @@ export class Alacena implements OnInit {
     if (this.activeLocation() !== 'Todos') {
       list = list.filter(p => p.location === this.activeLocation());
     }
-    const q = this.searchQuery().trim().toLowerCase();
-    if (q) list = list.filter(p => p.name.toLowerCase().includes(q));
-    return list;
+    
+    const showExpiring = this.onlyExpiring();
+    const showExpired = this.onlyExpired();
+
+    if (showExpiring || showExpired) {
+      list = list.filter(p => {
+        const days = this.getDaysRemaining(p.expiryDate);
+        const isExpiring = days >= 0 && days <= this.diasAlerta();
+        const isExpired = days < 0;
+
+        if (showExpiring && showExpired) {
+          return isExpiring || isExpired;
+        }
+        if (showExpiring) {
+          return isExpiring;
+        }
+        return isExpired;
+      });
+    }
+
+    const q = normalizeProductName(this.searchQuery());
+    if (q) {
+      list = list.filter(p => normalizeProductName(p.name).includes(q));
+    }
+    return [...list].sort(compareProductsByName);
   });
 
   protected readonly urgentCount = computed(() =>
     this.products().filter(p => {
       const days = this.getDaysRemaining(p.expiryDate);
-      return days >= 0 && days <= this.diasAlerta();
+      return days <= this.diasAlerta();
     }).length
   );
 
-  protected readonly expiringProducts = computed(() =>
+  protected readonly expiringSoonProducts = computed(() =>
     this.products()
       .filter(p => {
         const days = this.getDaysRemaining(p.expiryDate);
         return days >= 0 && days <= this.diasAlerta();
       })
       .sort((a, b) => this.getDaysRemaining(a.expiryDate) - this.getDaysRemaining(b.expiryDate))
+  );
+
+  protected readonly expiredProducts = computed(() =>
+    this.products()
+      .filter(p => {
+        const days = this.getDaysRemaining(p.expiryDate);
+        return days < 0;
+      })
+      .sort((a, b) => this.getDaysRemaining(a.expiryDate) - this.getDaysRemaining(b.expiryDate))
+  );
+
+  protected readonly hasAnyWarning = computed(() =>
+    this.expiringSoonProducts().length > 0 || this.expiredProducts().length > 0
   );
 
   // ── Scanner state ────────────────────────────────────────
@@ -365,7 +529,22 @@ export class Alacena implements OnInit {
 
   ngOnInit(): void {
     this.loadProducts();
+    this.loadMovements();
     this.loadPreferences();
+    this.loadCategorias();
+  }
+
+  /** Carga las categorías de la BD para poder resolver nombre → id al guardar un escaneo. */
+  private loadCategorias(): void {
+    this.catalogo.getCategorias()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: cats => {
+          for (const cat of cats) {
+            this.categoriaIdByName.set(cat.nombre.toLowerCase(), cat.id);
+          }
+        },
+      });
   }
 
   private loadPreferences(): void {
@@ -428,11 +607,62 @@ protected reloadProducts(): void { this.loadProducts(); }
     });
 }
 
+  protected switchView(view: AlacenaView): void {
+    this.activeView.set(view);
+    if (view === 'historial') {
+      this.loadMovements();
+    }
+  }
+
+  protected loadMovements(): void {
+    this.isLoadingMovements.set(true);
+    this.movementError.set(null);
+
+    const range = this.movementRange();
+    const desde = range === 'all'
+      ? null
+      : toIsoDate(addDays(new Date(), -Number(range)));
+
+    this.alacenaApi.getMovimientos({
+      motivo: this.movementMotivo(),
+      desde,
+      q: this.movementSearch(),
+      limit: 100,
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: movements => {
+          this.movements.set(movements);
+          this.isLoadingMovements.set(false);
+        },
+        error: () => {
+          this.movementError.set('No se pudo cargar el historial.');
+          this.movements.set([]);
+          this.isLoadingMovements.set(false);
+        },
+      });
+  }
+
+  protected updateMovementSearch(value: string): void {
+    this.movementSearch.set(value);
+    this.loadMovements();
+  }
+
+  protected updateMovementMotivo(value: MovementMotivoFilter): void {
+    this.movementMotivo.set(value);
+    this.loadMovements();
+  }
+
+  protected updateMovementRange(value: MovementRange): void {
+    this.movementRange.set(value);
+    this.loadMovements();
+  }
+
   private toProduct(item: StockItemResponse): Product {
     return {
       id:               item.id,
       name:             item.nombre,
-      image:            resolveImageUrl(item.imagen) || fallbackProductImage(item.nombre),
+      image:            item.iconoSvg ? `/assets/icons/categorias/${item.iconoSvg}` : (resolveImageUrl(item.imagen) || fallbackProductImage(item.nombre)),
       location:         item.ubicacion as Exclude<StorageLocation, 'Todos'>,
       expiryDate:       item.fechaVencimiento ?? '',
       quantity:         item.cantidad ?? 0,
@@ -441,6 +671,13 @@ protected reloadProducts(): void { this.loadProducts(); }
       isOpened:         item.estaAbierto,
       remainingPercent: 100 - item.porcentajeConsumido,
       barcode:          item.codigoBarras ?? undefined,
+      iconoSvg:         item.iconoSvg ?? undefined,
+      icono:            item.icono ?? undefined,
+      packagesCount:    item.cantidadEnvases ?? 1,
+      calorias:         item.calorias,
+      proteinas:        item.proteinas,
+      carbohidratos:    item.carbohidratos,
+      grasas:           item.grasas,
     };
   }
 
@@ -448,7 +685,7 @@ protected reloadProducts(): void { this.loadProducts(); }
   return {
     id: item.stockHogarId,
     name: item.nombre,
-    image: resolveImageUrl(item.imagenUrl) || fallbackProductImage(item.nombre),
+    image: item.iconoSvg ? `/assets/icons/categorias/${item.iconoSvg}` : (resolveImageUrl(item.imagenUrl) || fallbackProductImage(item.nombre)),
     location: item.ubicacion as Exclude<StorageLocation, 'Todos'>,
     expiryDate: item.fechaVencimiento ?? '',
     quantity: item.cantidad ?? 0,
@@ -457,6 +694,8 @@ protected reloadProducts(): void { this.loadProducts(); }
     isOpened: item.estaAbierto,
     remainingPercent: 100 - item.porcentajeConsumido,
     barcode: item.codigoBarras ?? undefined,
+    iconoSvg: item.iconoSvg ?? undefined,
+    packagesCount: item.cantidadEnvases ?? 1,
   };
 }
 
@@ -622,30 +861,71 @@ protected reloadProducts(): void { this.loadProducts(); }
         switchMap(dbProduct => {
           if (dbProduct?.nombre) {
             const ttl = getTtlForCategory([]);
-            return of({ name: dbProduct.nombre, image: dbProduct.imagen ?? '', category: dbProduct.categoriaNombre ?? '', ttl, fromDb: true });
+            // Ya está en nuestro catálogo: usamos los datos guardados (nutrición +
+            // gramaje/unidad de la última compra) en vez de ir a Open Food Facts.
+            const hasSavedNutrition = dbProduct.informacionNutricional?.items?.length
+              || dbProduct.calorias != null
+              || dbProduct.proteinas != null
+              || dbProduct.carbohidratos != null
+              || dbProduct.grasas != null;
+
+            if (hasSavedNutrition) {
+              return of({ name: dbProduct.nombre, image: dbProduct.imagen ?? '', category: dbProduct.categoriaNombre ?? '', ttl, fromDb: true, calorias: dbProduct.calorias, proteinas: dbProduct.proteinas, carbohidratos: dbProduct.carbohidratos, grasas: dbProduct.grasas, informacionNutricional: dbProduct.informacionNutricional ?? null, gramajeExtraido: dbProduct.gramaje, unidad: dbProduct.unidadMedida });
+            }
+
+            return this.offService.lookup(barcode).pipe(
+              switchMap(p => of({
+                name: dbProduct.nombre,
+                image: dbProduct.imagen || p.image || '',
+                category: dbProduct.categoriaNombre || p.categoriaSugerida || '',
+                ttl,
+                fromDb: true,
+                calorias: p.calorias,
+                proteinas: p.proteinas,
+                carbohidratos: p.carbohidratos,
+                grasas: p.grasas,
+                informacionNutricional: p.informacionNutricional ?? null,
+                gramajeExtraido: dbProduct.gramaje ?? p.gramajeExtraido,
+                unidad: dbProduct.unidadMedida,
+              })),
+            );
           }
           return this.offService.lookup(barcode).pipe(
             switchMap(p => {
               const ttl = getTtlForCategory(p.categoriesTags);
-              const category = p.categoriesTags.length > 0 ? formatCategoryTag(p.categoriesTags[0]) : '';
-              return of({ name: p.name, image: p.image, category, ttl, fromDb: p.foundInDb });
+              // El back mapea los tags crudos a una categoría canónica de Nido
+              // (General, Lácteos, Bebidas, Congelados, Despensa).
+              const category = p.categoriaSugerida || '';
+              return of({ name: p.name, image: p.image, category, ttl, fromDb: p.foundInDb, calorias: p.calorias, proteinas: p.proteinas, carbohidratos: p.carbohidratos, grasas: p.grasas, informacionNutricional: p.informacionNutricional ?? null, gramajeExtraido: p.gramajeExtraido, unidad: null as string | null });
             }),
           );
         }),
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
-        next: ({ name, image, category, ttl, fromDb }) => {
+        next: ({ name, image, category, ttl, fromDb, calorias, proteinas, carbohidratos, grasas, informacionNutricional, gramajeExtraido, unidad }) => {
           this.currentTtl.set(ttl);
+          // Recomendación según categoría: dónde guardarlo y la unidad.
+          // Prioridad de unidad: la guardada (última compra) > "gr" si hay gramaje > recomendada por categoría.
+          const reco = recommendStorage(category);
+          const unit = unidad ?? (gramajeExtraido != null ? 'gr' : reco.unit);
           this.draft.set({
             ...makeEmptyDraft(),
             name,
             image,
             category,
+            location:   reco.location,
+            unit,
             expiryDate: toIsoDate(addDays(new Date(), ttl.days)),
             ttlHint:    name ? ttl.hint : '',
             notFound:   !name,
             barcode,
+            quantity:   gramajeExtraido ?? 1,
+            calorias,
+            proteinas,
+            carbohidratos,
+            grasas,
+            informacionNutricional,
           });
 
           if (!name) {
@@ -709,6 +989,50 @@ protected reloadProducts(): void { this.loadProducts(); }
     this.scannerStep.set('confirm');
   }
 
+  protected requestDeleteExpired(event: Event, product: Product): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.deleteError.set(null);
+    this.deleteMotivo.set(this.isExpired(product) ? 'vencido' : 'consumido');
+    this.deleteConfirmation.set({
+      product,
+      title: 'Registrar salida de stock',
+      message: `${product.name} se va a quitar de tu alacena. Elegi que paso con este producto.`,
+      confirmLabel: 'Confirmar salida',
+    });
+  }
+
+  protected cancelDeleteConfirmation(): void {
+    if (this.isDeletingStock()) return;
+    this.deleteConfirmation.set(null);
+    this.deleteError.set(null);
+  }
+
+  protected confirmDeleteProduct(): void {
+    const pending = this.deleteConfirmation();
+    if (!pending || this.isDeletingStock()) return;
+
+    this.isDeletingStock.set(true);
+    this.deleteError.set(null);
+
+    this.alacenaApi
+      .deleteStock(pending.product.id, this.deleteMotivo())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.products.update(list => list.filter(product => product.id !== pending.product.id));
+          this.isDeletingStock.set(false);
+          this.deleteConfirmation.set(null);
+          this.loadMovements();
+        },
+        error: () => {
+          this.deleteError.set('No se pudo eliminar el producto. Intenta de nuevo.');
+          this.isDeletingStock.set(false);
+        },
+      });
+  }
+
   // ── Form field updates ───────────────────────────────────
 
   protected updateDraftField<K extends keyof ProductDraft>(field: K, value: ProductDraft[K]): void {
@@ -733,6 +1057,25 @@ protected reloadProducts(): void { this.loadProducts(); }
   protected updateQuantity(delta: number): void {
     this.draft.update(d => ({ ...d, quantity: Math.max(1, d.quantity + delta) }));
   }
+
+  protected updateEnvases(delta: number): void {
+    this.draft.update(d => ({ ...d, cantidadEnvases: Math.max(1, d.cantidadEnvases + delta) }));
+  }
+
+  /** Formatea un valor nutricional a 1 decimal con coma (ej: 146.6666 → "146,7"). */
+  protected fmtNutrient(value: number | null | undefined): string {
+    if (value == null) return '';
+    return value.toLocaleString('es-AR', { maximumFractionDigits: 1 });
+  }
+
+  /** Unidades de medida para el selector del escaneo (mismas del alta manual). */
+  protected readonly unidadesEscaneo: { value: string; label: string }[] = [
+    { value: 'unidad', label: 'Unidad' },
+    { value: 'gr',     label: 'Gramos (gr)' },
+    { value: 'kg',     label: 'Kilogramos (kg)' },
+    { value: 'ml',     label: 'Mililitros (ml)' },
+    { value: 'lt',     label: 'Litros (lt)' },
+  ];
 
   protected triggerPhotoInput(): void {
     this.photoInputRef()?.nativeElement.click();
@@ -760,6 +1103,13 @@ protected reloadProducts(): void { this.loadProducts(); }
       const newQty = existing.quantity + d.quantity;
       this.alacenaApi
         .updateStock(existing.id, { cantidad: newQty })
+        .pipe(
+          switchMap(updated =>
+            d.informacionNutricional
+              ? this.alacenaApi.saveNutritionInfo(existing.id, d.informacionNutricional).pipe(map(() => updated))
+              : of(updated),
+          ),
+        )
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: updated => {
@@ -779,14 +1129,22 @@ protected reloadProducts(): void { this.loadProducts(); }
       this.alacenaApi
         .createStock({
           nombre:              d.name.trim(),
+          categoriaId:         this.categoriaIdByName.get(d.category.toLowerCase()) ?? null,
           codigoBarras:        d.barcode || null,
           imagen:              d.image || null,
           ubicacion:           d.location,
           cantidad:            d.quantity,
-          unidadMedida:        'unidad',
+          unidadMedida:        d.unit,
           fechaVencimiento:    d.expiryDate || null,
           estaAbierto:         d.isOpened,
           porcentajeConsumido: d.consumedPercent,
+          calorias:            d.calorias,
+          proteinas:           d.proteinas,
+          carbohidratos:       d.carbohidratos,
+          grasas:              d.grasas,
+          informacionNutricional: d.informacionNutricional ?? null,
+          cantidadEnvases:     d.cantidadEnvases,
+          origenCarga:         d.barcode ? 'codigo_barras' : 'manual',
         })
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
@@ -805,6 +1163,7 @@ protected reloadProducts(): void { this.loadProducts(); }
               isOpened:         d.isOpened,
               remainingPercent: 100 - d.consumedPercent,
               barcode:          d.barcode || undefined,
+              packagesCount:    1,
             };
             this.products.update(list => [...list, product]);
             this.closeScanner();
@@ -844,9 +1203,105 @@ protected reloadProducts(): void { this.loadProducts(); }
   }
 
   protected getExpiryLabel(days: number): string {
-    if (days < 0)   return 'Vencido';
+    if (days < 0) {
+      const abs = Math.abs(days);
+      return `Vencido hace ${abs} día${abs === 1 ? '' : 's'}`;
+    }
     if (days === 0) return 'Vence hoy';
     return `Vence en ${days} día${days === 1 ? '' : 's'}`;
+  }
+
+  protected isExpired(product: Product): boolean {
+    return this.getDaysRemaining(product.expiryDate) < 0;
+  }
+
+  /** True si el producto tiene al menos un dato nutricional. */
+  protected hasNutrition(p: { calorias?: number | null; proteinas?: number | null; carbohidratos?: number | null; grasas?: number | null }): boolean {
+    return p.calorias != null || p.proteinas != null || p.carbohidratos != null || p.grasas != null;
+  }
+
+  protected productCardClass(product: Product): string {
+    const base = 'block no-underline text-inherit bg-white/[0.51] rounded-[14px] overflow-hidden shadow-[0_1px_4px_rgba(38,63,48,0.07)] transition-[transform,box-shadow,border-color,background-color] duration-[180ms] cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_6px_20px_rgba(38,63,48,0.13)] group border';
+
+    if (!this.isExpired(product)) {
+      return `${base} border-transparent`;
+    }
+
+    return `${base} border-[#b44c3c] bg-[rgba(180,76,60,0.08)] shadow-[0_2px_10px_rgba(180,76,60,0.16)]`;
+  }
+
+  protected deleteMotivoOptions(product: Product): DeleteMotivoOption[] {
+    const base = [DELETE_MOTIVO_OPTIONS.consumido, DELETE_MOTIVO_OPTIONS.descartado];
+    return this.isExpired(product)
+      ? [DELETE_MOTIVO_OPTIONS.vencido, ...base]
+      : base;
+  }
+
+  protected deleteMotivoButtonClass(value: DeleteStockMotivo): string {
+    const base = 'flex min-w-[120px] flex-1 items-start gap-2 rounded-lg border-[1.5px] border-solid px-3 py-2 text-left transition-colors duration-150';
+    return this.deleteMotivo() === value
+      ? `${base} border-nido-green-dark bg-[rgba(62,94,74,0.1)] text-nido-green-dark`
+      : `${base} border-nido-border bg-white text-nido-brown hover:border-nido-green`;
+  }
+
+  protected deleteMotivoIcon(): string {
+    return DELETE_MOTIVO_OPTIONS[this.deleteMotivo()].icon;
+  }
+
+  protected deleteSubmitClass(): string {
+    const base = 'inline-flex items-center justify-center gap-1.5 rounded-lg border-none px-4 py-2 text-[0.875rem] font-semibold text-white transition-colors duration-150 disabled:opacity-60';
+    return this.deleteMotivo() === 'consumido'
+      ? `${base} bg-nido-green-dark hover:bg-nido-green`
+      : `${base} bg-[#b44c3c] hover:bg-[#963c30]`;
+  }
+
+  protected viewTabClass(view: AlacenaView): string {
+    const base = 'inline-flex items-center gap-1.5 rounded-[10px] px-3 py-2 text-[0.8125rem] font-bold transition-colors duration-150';
+    return this.activeView() === view
+      ? `${base} bg-nido-green-dark text-nido-cream`
+      : `${base} bg-white/70 text-nido-brown hover:text-nido-green-dark`;
+  }
+
+  protected movementMotivoLabel(motivo: string): string {
+    const normalized = motivo.toLowerCase();
+    if (normalized === 'terminado') return 'Consumido';
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  }
+
+  protected movementChipClass(motivo: string): string {
+    const normalized = motivo.toLowerCase();
+    const base = 'inline-flex w-fit items-center rounded-[20px] px-2.5 py-0.5 text-[0.72rem] font-bold';
+
+    if (normalized === 'vencido') return `${base} bg-[rgba(180,76,60,0.12)] text-[#b44c3c]`;
+    if (normalized === 'descartado') return `${base} bg-[rgba(146,115,87,0.14)] text-nido-brown`;
+    if (normalized === 'cocinado') return `${base} bg-[rgba(180,139,106,0.15)] text-nido-green-dark`;
+    return `${base} bg-[rgba(62,94,74,0.12)] text-nido-green`;
+  }
+
+  protected formatMovementDate(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+
+    return new Intl.DateTimeFormat('es-AR', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  }
+
+  protected movementAmount(movement: StockMovementResponse): string {
+    const formatted = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(movement.cantidad);
+    return `${formatted}${movement.unidadMedida ? ` ${this.displayUnit(movement.unidadMedida)}` : ''}`;
+  }
+
+  private displayUnit(unit: string | null | undefined): string {
+    const normalized = normalizeUnit(unit);
+    const labels: Record<string, string> = {
+      unidad: 'unidad', gr: 'g', kg: 'kg', ml: 'ml', lt: 'l', cda: 'cda', cdita: 'cdita',
+    };
+    return labels[normalized] ?? normalized;
   }
 
   protected getQuantityLabel(pct: number): string {
@@ -858,23 +1313,35 @@ protected reloadProducts(): void { this.loadProducts(); }
 
   /**
    * Etiqueta de cantidad para la card.
-   * - Unidades contables ('unidad' o sin unidad): "x1", "x3", etc.
-   * - Unidades de medida (gr/kg/ml/lt/cda/cdita): "100 g", "1.5 kg", etc.
+   * - 1 envase, unidad contable: "x3"
+   * - 1 envase, unidad de medida: "100 g"
+   * - N envases: "2 × 100 g" (o "2 × x3" para unidades contables)
    */
   protected quantityBadge(product: Product): string {
-    const unit = normalizeUnit(product.unit);
-    const qty  = product.quantity;
-
-    if (unit === 'unidad') {
-      return `x${qty}`;
-    }
+    const unit     = normalizeUnit(product.unit);
+    const qty      = product.quantity;
+    const packages = product.packagesCount ?? 1;
 
     const labels: Record<string, string> = {
       gr: 'g', kg: 'kg', ml: 'ml', lt: 'l', cda: 'cda', cdita: 'cdita',
     };
-    const suffix = labels[unit] ?? unit;
-    const sep = (suffix === 'cda' || suffix === 'cdita') ? ' ' : '';
-    return `${qty}${sep}${suffix}`;
+
+    const perPackage = unit === 'unidad'
+      ? `x${qty}`
+      : `${qty}${(labels[unit] ?? unit) === 'cda' || (labels[unit] ?? unit) === 'cdita' ? ' ' : ''}${labels[unit] ?? unit}`;
+
+    return packages > 1 ? `${packages} × ${perPackage}` : perPackage;
+  }
+
+  protected quantityDetail(product: Product): string {
+    const unit = normalizeUnit(product.unit);
+    const qty = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(product.quantity);
+
+    if (unit === 'unidad') {
+      return `${qty} ${product.quantity === 1 ? 'unidad' : 'unidades'}`;
+    }
+
+    return `${qty} ${this.displayUnit(unit)}`;
   }
 
   protected getLocationIcon(location: StorageLocation): string {
@@ -903,6 +1370,13 @@ protected reloadProducts(): void { this.loadProducts(); }
     return this.activeLocation() === loc
       ? `${base} bg-nido-green-dark border-nido-green-dark text-nido-cream`
       : `${base} bg-white border-nido-border text-nido-brown hover:border-nido-green hover:text-nido-green`;
+  }
+
+  protected filterButtonClass(active: boolean): string {
+    const base = 'flex items-center gap-1.5 px-3 py-1 rounded-[20px] border text-[0.75rem] font-semibold cursor-pointer transition-all duration-150 border-solid';
+    return active
+      ? `${base} bg-[#b44c3c] border-[#b44c3c] text-white`
+      : `${base} bg-transparent border-[rgba(180,76,60,0.3)] text-[#b44c3c] hover:bg-[rgba(180,76,60,0.1)]`;
   }
 
   protected confirmImageClass(): string {

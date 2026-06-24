@@ -31,7 +31,7 @@
   <section id="inicio"
     class="hero-section relative flex items-center rounded-b-[2.5rem] overflow-hidden"
     [style.background-image]="heroBg"
-    style="min-height: 96vh; background-size: cover; background-position: center;">
+    style="min-height: clamp(75vh, 90vh, 96vh); background-size: cover; background-position: center;">
 
     <!-- Overlays apilados — profundidad controlada -->
     <div class="absolute inset-0 hero-gradient"></div>
@@ -39,7 +39,7 @@
     <div class="absolute inset-0 hero-grain pointer-events-none"></div>
     <div class="hero-content-glow absolute pointer-events-none" aria-hidden="true"></div>
 
-    <div class="relative z-10 w-full max-w-7xl mx-auto px-5 pt-24 pb-16 sm:px-8">
+    <div class="relative z-10 w-full max-w-7xl mx-auto px-4 pt-12 pb-12 sm:px-8 sm:pt-20 sm:pb-16 md:pt-24 md:pb-16">
       <div class="flex flex-col">
 
         <!-- ── Copy ──────────────────────────────────────────────────── -->
@@ -125,21 +125,21 @@
   <section class="feature-strip bg-nido-cream">
       <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-nido-border">
 
-      <div class="feature-item flex items-center gap-5 px-5 py-8 sm:px-10 sm:py-9">
-        <div class="feature-icon w-14 h-14 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0 shadow-[0_4px_16px_rgba(38,63,48,0.22)]">
-          <lucide-icon name="refrigerator" [size]="22" class="text-nido-cream" />
+      <div class="feature-item flex items-center gap-4 sm:gap-6 px-4 py-7 sm:px-6 sm:py-10 md:px-10 md:py-12">
+        <div class="feature-icon bg-nido-green-dark">
+          <lucide-icon name="refrigerator" [size]="20" class="text-nido-cream" />
         </div>
         <div>
-          <h3 class="font-bold text-nido-green-dark text-[0.9375rem] mb-1">Inventario inteligente</h3>
-          <p class="text-nido-brown text-[0.8125rem] leading-relaxed">
+          <h3 class="font-bold text-nido-green-dark text-[1rem] sm:text-[1.0625rem] mb-2">Inventario inteligente</h3>
+          <p class="text-nido-brown text-[0.9375rem] sm:text-[1rem] font-[500] leading-relaxed">
             Sabé qué tenés, dónde está y cuándo vence, en tiempo real.
           </p>
         </div>
       </div>
 
-      <div class="feature-item flex items-center gap-5 px-5 py-8 sm:px-10 sm:py-9">
-        <div class="feature-icon w-14 h-14 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0 shadow-[0_4px_16px_rgba(38,63,48,0.22)]">
-          <lucide-icon name="chef-hat" [size]="22" class="text-nido-cream" />
+      <div class="feature-item flex items-center gap-4 sm:gap-6 px-4 py-7 sm:px-6 sm:py-10 md:px-10 md:py-12">
+        <div class="feature-icon w-12 sm:w-14 h-12 sm:h-14 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0 shadow-[0_4px_16px_rgba(38,63,48,0.22)]">
+          <lucide-icon name="chef-hat" [size]="18" class="text-nido-cream" />
         </div>
         <div>
           <h3 class="font-bold text-nido-green-dark text-[0.9375rem] mb-1">Recetas personalizadas</h3>
@@ -149,7 +149,7 @@
         </div>
       </div>
 
-      <div class="feature-item flex items-center gap-5 px-5 py-8 sm:px-10 sm:py-9">
+      <div class="feature-item flex items-center gap-4 sm:gap-6 px-4 py-7 sm:px-6 sm:py-10 md:px-10 md:py-12">
         <div class="feature-icon w-14 h-14 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0 shadow-[0_4px_16px_rgba(38,63,48,0.22)]">
           <lucide-icon name="users" [size]="22" class="text-nido-cream" />
         </div>
@@ -164,8 +164,8 @@
   </section>
 
   <!-- ── STATS ─────────────────────────────────────────────────── -->
-  <section class="stats-section bg-nido-green-dark py-16 px-6">
-    <div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-10">
+  <section class="stats-section bg-nido-green-dark py-12 px-4 sm:py-16 sm:px-6">
+    <div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-10">
       <div class="stat-item reveal-section text-center">
         <p class="stat-number">+500</p>
         <p class="stat-label">productos organizados</p>
@@ -186,26 +186,26 @@
   </section>
 
   <!-- ── CÓMO FUNCIONA ─────────────────────────────────────────── -->
-  <section id="beneficios" class="bg-nido-cream px-4 py-16 sm:px-6 sm:py-28">
+  <section id="beneficios" class="bg-nido-cream px-4 py-16 sm:px-6 sm:py-24 md:py-32">
     <div class="max-w-6xl mx-auto">
 
-      <div class="reveal-section text-center mb-20">
+      <div class="reveal-section text-center mb-12 sm:mb-20">
         <p class="section-eyebrow">¿Cómo funciona?</p>
         <h2 class="section-title">Tres pasos para tener tu<br>hogar bajo <span class="text-accent-gradient">control</span></h2>
       </div>
 
-      <div class="steps-grid relative grid grid-cols-1 md:grid-cols-3">
+      <div class="steps-grid relative grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-0">
 
         <!-- Línea conectora desktop -->
         <div class="steps-track hidden md:block" aria-hidden="true"></div>
 
         <!-- Paso 01 -->
-        <div class="step-item reveal-section relative px-5 pt-4 pb-10 sm:px-8">
+        <div class="step-item reveal-section relative px-4 py-6 sm:px-6 sm:py-8 md:px-8 md:pb-10">
           <div class="step-deco-number" aria-hidden="true">01</div>
           <div class="relative z-10">
             <div class="flex items-center gap-3 mb-5">
-              <div class="w-10 h-10 rounded-xl bg-nido-green-dark flex items-center justify-center shrink-0 shadow-[0_4px_14px_rgba(38,63,48,0.2)]">
-                <lucide-icon name="scan-line" [size]="17" class="text-nido-cream" />
+              <div class="w-12 sm:w-14 h-12 sm:h-14 rounded-xl bg-nido-green-dark flex items-center justify-center shrink-0">
+                <lucide-icon name="scan-line" [size]="18" class="text-nido-cream" />
               </div>
               <span class="step-pill">Paso 01</span>
             </div>
@@ -221,8 +221,8 @@
           <div class="step-deco-number" aria-hidden="true">02</div>
           <div class="relative z-10">
             <div class="flex items-center gap-3 mb-5">
-              <div class="w-10 h-10 rounded-xl bg-nido-gold flex items-center justify-center shrink-0 shadow-[0_4px_14px_rgba(199,143,90,0.24)]">
-                <lucide-icon name="house" [size]="17" class="text-white" />
+              <div class="w-12 sm:w-14 h-12 sm:h-14 rounded-xl bg-nido-gold flex items-center justify-center shrink-0">
+                <lucide-icon name="house" [size]="18" class="text-white" />
               </div>
               <span class="step-pill step-pill--gold">Paso 02</span>
             </div>
@@ -238,8 +238,8 @@
           <div class="step-deco-number" aria-hidden="true">03</div>
           <div class="relative z-10">
             <div class="flex items-center gap-3 mb-5">
-              <div class="w-10 h-10 rounded-xl bg-nido-green-dark flex items-center justify-center shrink-0 shadow-[0_4px_14px_rgba(38,63,48,0.2)]">
-                <lucide-icon name="chef-hat" [size]="17" class="text-nido-cream" />
+              <div class="w-12 sm:w-14 h-12 sm:h-14 rounded-xl bg-nido-green-dark flex items-center justify-center shrink-0">
+                <lucide-icon name="chef-hat" [size]="18" class="text-nido-cream" />
               </div>
               <span class="step-pill">Paso 03</span>
             </div>
@@ -255,10 +255,10 @@
   </section>
 
   <!-- ── APP SHOWCASE ──────────────────────────────────────────── -->
-  <section class="showcase-section px-4 py-16 sm:px-6 sm:py-24 bg-nido-bg">
+  <section class="showcase-section px-4 py-16 sm:px-6 sm:py-20 md:py-28 bg-nido-bg">
     <div class="max-w-7xl mx-auto">
 
-      <div class="reveal-section text-center mb-20">
+      <div class="reveal-section text-center mb-12 sm:mb-20">
         <p class="section-eyebrow">El producto</p>
         <h2 class="section-title">Una app pensada para<br>la vida <span class="text-accent-gradient">real</span></h2>
       </div>
@@ -433,10 +433,10 @@
   </section>
 
   <!-- ── MÓDULOS DESTACADOS ────────────────────────────────────── -->
-  <section id="funciones" class="modules-section px-4 py-16 sm:px-6 sm:py-24">
+  <section id="funciones" class="modules-section px-4 py-16 sm:px-6 sm:py-20 md:py-28">
     <div class="max-w-7xl mx-auto">
 
-      <div class="reveal-section text-center mb-16">
+      <div class="reveal-section text-center mb-12 sm:mb-16">
         <p class="section-eyebrow">Módulos</p>
         <h2 class="section-title">Todo lo que tu hogar necesita,<br>en un solo lugar</h2>
         <p class="text-nido-brown text-[0.9375rem] mt-3 max-w-[480px] mx-auto leading-relaxed">
@@ -445,12 +445,12 @@
       </div>
 
       <!-- Módulos principales -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 mb-8">
 
         <div class="module-card reveal-section bg-white/[0.51] rounded-[18px] overflow-hidden">
           <div class="h-[3px] bg-nido-green"></div>
           <div class="p-7">
-            <div class="module-icon w-11 h-11 rounded-[10px] bg-[rgba(62,94,74,0.08)] flex items-center justify-center mb-5">
+            <div class="icon-circle bg-[rgba(62,94,74,0.08)] mb-5">
               <lucide-icon name="refrigerator" [size]="22" class="text-nido-green" />
             </div>
             <h3 class="font-bold text-nido-green-dark text-[1.0625rem] mb-2.5">Alacena inteligente</h3>
@@ -522,11 +522,11 @@
       </div>
 
       <!-- Módulos adicionales (compact) -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 reveal-section">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 reveal-section">
 
         <div class="compact-module bg-white/[0.51] rounded-[14px] p-4.5 flex items-center gap-3.5 border border-nido-border shadow-[0_1px_6px_rgba(38,63,48,0.06)] hover:shadow-[0_6px_20px_rgba(38,63,48,0.1)] hover:-translate-y-[3px] transition-all duration-200">
-          <div class="w-10 h-10 rounded-[10px] bg-[rgba(62,94,74,0.08)] flex items-center justify-center shrink-0">
-            <lucide-icon name="calendar" [size]="19" class="text-nido-green" />
+          <div class="icon-circle bg-[rgba(62,94,74,0.08)]">
+            <lucide-icon name="calendar" [size]="18" class="text-nido-green" />
           </div>
           <div>
             <p class="text-nido-green-dark font-semibold text-[0.875rem]">Planificador</p>
@@ -535,8 +535,8 @@
         </div>
 
         <div class="compact-module bg-white/[0.51] rounded-[14px] p-4.5 flex items-center gap-3.5 border border-nido-border shadow-[0_1px_6px_rgba(38,63,48,0.06)] hover:shadow-[0_6px_20px_rgba(38,63,48,0.1)] hover:-translate-y-[3px] transition-all duration-200">
-          <div class="w-10 h-10 rounded-[10px] bg-[rgba(199,143,90,0.08)] flex items-center justify-center shrink-0">
-            <lucide-icon name="shopping-basket" [size]="19" class="text-nido-gold" />
+          <div class="icon-circle bg-[rgba(199,143,90,0.08)]">
+            <lucide-icon name="shopping-basket" [size]="18" class="text-nido-gold" />
           </div>
           <div>
             <p class="text-nido-green-dark font-semibold text-[0.875rem]">Compras inteligentes</p>
@@ -545,8 +545,8 @@
         </div>
 
         <div class="compact-module bg-white/[0.51] rounded-[14px] p-4.5 flex items-center gap-3.5 border border-nido-border shadow-[0_1px_6px_rgba(38,63,48,0.06)] hover:shadow-[0_6px_20px_rgba(38,63,48,0.1)] hover:-translate-y-[3px] transition-all duration-200">
-          <div class="w-10 h-10 rounded-[10px] bg-[rgba(146,115,87,0.08)] flex items-center justify-center shrink-0">
-            <lucide-icon name="check-square" [size]="19" class="text-nido-brown" />
+          <div class="icon-circle bg-[rgba(146,115,87,0.08)]">
+            <lucide-icon name="check-square" [size]="18" class="text-nido-brown" />
           </div>
           <div>
             <p class="text-nido-green-dark font-semibold text-[0.875rem]">Tareas del hogar</p>
@@ -555,25 +555,25 @@
         </div>
 
         <div class="compact-module bg-white/[0.51] rounded-[14px] p-4.5 flex items-center gap-3.5 border border-nido-border shadow-[0_1px_6px_rgba(38,63,48,0.06)] hover:shadow-[0_6px_20px_rgba(38,63,48,0.1)] hover:-translate-y-[3px] transition-all duration-200">
-          <div class="w-10 h-10 rounded-[10px] bg-[rgba(62,94,74,0.08)] flex items-center justify-center shrink-0">
-            <lucide-icon name="wallet" [size]="19" class="text-nido-green" />
+          <div class="icon-circle bg-[rgba(62,94,74,0.08)]">
+            <lucide-icon name="wallet" [size]="18" class="text-nido-green" />
           </div>
           <div>
             <p class="text-nido-green-dark font-semibold text-[0.875rem]">Finanzas del hogar</p>
-            <p class="text-nido-muted text-[0.775rem] mt-0.5">Gastos compartidos entre convivientes</p>
+            <p class="text-nido-muted text-[0.775rem] mt-0.5">Gastos compartidos entre integrantes</p>
           </div>
         </div>
 
       </div>
 
-      <!-- Banner convivientes -->
-      <div class="convivientes-banner reveal-section mt-6 rounded-[18px] px-5 py-6 sm:px-8 flex flex-col sm:flex-row items-center gap-5 justify-between">
+      <!-- Banner integrantes -->
+      <div class="integrantes-banner reveal-section mt-6 rounded-[18px] px-5 py-6 sm:px-8 flex flex-col sm:flex-row items-center gap-5 justify-between">
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center shrink-0">
             <lucide-icon name="users" [size]="22" class="text-nido-cream" />
           </div>
           <div>
-            <h3 class="text-nido-cream font-bold text-[1.0625rem] mb-0.5">Invitá a todos tus convivientes</h3>
+            <h3 class="text-nido-cream font-bold text-[1.0625rem] mb-0.5">Invitá a todos tus integrantes</h3>
             <p class="text-nido-cream/60 text-[0.875rem]">Cada miembro tiene su perfil, sus alérgenos y sus preferencias. El hogar siempre sincronizado.</p>
           </div>
         </div>
@@ -588,15 +588,15 @@
   </section>
 
   <!-- ── TESTIMONIOS ───────────────────────────────────────────── -->
-  <section class="px-4 py-16 sm:px-6 sm:py-24 bg-white">
+  <section class="px-4 py-16 sm:px-6 sm:py-20 md:py-28 bg-white">
     <div class="max-w-7xl mx-auto">
 
-      <div class="reveal-section text-center mb-14">
+      <div class="reveal-section text-center mb-12 sm:mb-14">
         <p class="section-eyebrow">Testimonios</p>
         <h2 class="section-title">Lo que dice nuestra <span class="text-accent-gradient">comunidad</span></h2>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
 
         <div class="testimonial-card reveal-section bg-nido-bg rounded-[18px] p-6 relative overflow-hidden">
           <div class="testimonial-quote">&ldquo;</div>
@@ -660,23 +660,23 @@
   </section>
 
   <!-- ── PLANES ───────────────────────────────────────────────── -->
-  <section class="px-4 py-16 sm:px-6 sm:py-24 bg-nido-bg" id="precios">
+  <section class="px-4 py-16 sm:px-6 sm:py-20 md:py-28 bg-nido-bg" id="precios">
     <div class="max-w-7xl mx-auto">
 
-      <div class="reveal-section text-center mb-14">
+      <div class="reveal-section text-center mb-12 sm:mb-14">
         <p class="section-eyebrow">Precios</p>
         <h2 class="section-title">Planes simples y transparentes</h2>
-        <p class="text-nido-brown text-[0.9375rem] mt-3 max-w-[440px] mx-auto leading-relaxed">
+        <p class="text-nido-brown text-[0.8125rem] sm:text-[0.9375rem] mt-3 max-w-[440px] mx-auto leading-relaxed">
           Empezá gratis y escalá cuando tu hogar lo necesite.
         </p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 max-w-5xl mx-auto">
 
         <!-- Plan Básico -->
         <div class="pricing-card reveal-section flex flex-col">
-          <div class="pricing-icon bg-[rgba(62,94,74,0.08)]">
-            <lucide-icon name="sprout" [size]="22" class="text-nido-green" />
+          <div class="icon-circle bg-[rgba(62,94,74,0.08)] mb-5">
+            <lucide-icon name="sprout" [size]="20" class="text-nido-green" />
           </div>
           <h3 class="pricing-name text-nido-green-dark">Plan Básico</h3>
           <div class="flex items-baseline gap-1.5 mb-7">
@@ -698,8 +698,8 @@
         <!-- Plan Hogar (destacado) -->
         <div class="pricing-card pricing-card--featured reveal-section flex flex-col relative">
           <div class="pricing-badge">Más popular</div>
-          <div class="pricing-icon bg-white/[0.12]">
-            <lucide-icon name="house" [size]="22" class="text-nido-cream" />
+          <div class="icon-circle bg-white/[0.12] mb-5">
+            <lucide-icon name="house" [size]="20" class="text-nido-cream" />
           </div>
           <h3 class="pricing-name text-nido-cream">Plan Hogar</h3>
           <div class="flex items-baseline gap-1 mb-7">
@@ -748,15 +748,15 @@
   </section>
 
   <!-- ── FAQ ───────────────────────────────────────────────────── -->
-  <section class="px-4 py-16 sm:px-6 sm:py-24 bg-nido-bg" id="faq">
+  <section class="px-4 py-16 sm:px-6 sm:py-20 md:py-28 bg-nido-bg" id="faq">
     <div class="max-w-2xl mx-auto">
 
-      <div class="reveal-section text-center mb-14">
+      <div class="reveal-section text-center mb-14 sm:mb-16">
         <p class="section-eyebrow">Preguntas frecuentes</p>
         <h2 class="section-title">Todo lo que necesitás saber</h2>
       </div>
 
-      <div class="flex flex-col gap-3 reveal-section">
+      <div class="flex flex-col gap-2 sm:gap-3 reveal-section">
         @for (item of faqItems; track item.question; let i = $index) {
           <div class="faq-item" [class.is-open]="activeFaq() === i">
             <button class="faq-question" (click)="toggleFaq(i)">
@@ -774,19 +774,19 @@
   </section>
 
   <!-- ── CTA FINAL ─────────────────────────────────────────────── -->
-  <section class="cta-section py-40 px-6 text-center relative overflow-hidden">
+  <section class="cta-section py-20 px-4 sm:py-32 sm:px-6 md:py-40 text-center relative overflow-hidden">
     <div class="cta-glow absolute inset-0 pointer-events-none"></div>
     <div class="absolute -top-32 -left-32 w-80 h-80 rounded-full bg-nido-gold/[0.06] blur-3xl pointer-events-none"></div>
     <div class="absolute -bottom-32 -right-32 w-80 h-80 rounded-full bg-[rgba(62,94,74,0.1)] blur-3xl pointer-events-none"></div>
     <div class="relative z-10 max-w-2xl mx-auto reveal-section">
-      <p class="section-eyebrow-light mb-4">Empezá hoy</p>
-      <h2 class="cta-title text-nido-cream font-bold leading-tight mb-5">
+      <p class="section-eyebrow-light mb-3 sm:mb-4">Empezá hoy</p>
+      <h2 class="cta-title text-nido-cream font-bold leading-tight mb-4 sm:mb-5">
         Tu hogar organizado,<br>desde el <span class="text-nido-gold">primer día</span>
       </h2>
-      <p class="text-nido-cream/50 text-[0.9375rem] leading-relaxed mb-10 max-w-[460px] mx-auto">
+      <p class="text-nido-cream/50 text-[0.8125rem] sm:text-[0.9375rem] leading-relaxed mb-8 sm:mb-10 max-w-[460px] mx-auto">
         Creá tu cuenta gratis y descubrí cómo Nido transforma la gestión diaria de tu hogar en algo simple y conectado.
       </p>
-      <div class="flex items-center justify-center gap-4 flex-wrap">
+      <div class="flex items-center justify-center gap-3 sm:gap-4 flex-wrap">
         <a routerLink="/registro"
            class="inline-flex items-center gap-2 bg-nido-gold text-white px-8 py-3.5 rounded-full text-[1rem] font-semibold no-underline hover:opacity-90 transition-opacity shadow-[0_6px_32px_rgba(199,143,90,0.5)]">
           Crear mi cuenta gratis

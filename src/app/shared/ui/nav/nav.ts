@@ -1,12 +1,13 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject, input, output, OnInit, OnDestroy } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import {
   LucideAngularModule, LucideIconData,
   House, Refrigerator, ChefHat, Wallet,
   CheckSquare, Calendar, Zap, Bell,
-  User, Settings, LogOut, ShoppingCart,
+  User, Settings, LogOut, ShoppingCart, X,
 } from 'lucide-angular';
 import { AuthService } from '../../../core/auth/auth.service';
+import { NotificacionesApiService } from '../../../features/notificaciones/services/notificaciones-api.service';
 
 interface NavItem {
   label: string;
@@ -21,10 +22,24 @@ interface NavItem {
   templateUrl: './nav.html',
   styleUrl:    './nav.scss',
 })
-export class Nav {
+export class Nav implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
+  private readonly notificacionesApi = inject(NotificacionesApiService);
 
   readonly isOpen = input(false);
+  readonly close = output<void>();
+
+  protected readonly unreadNotificationsCount = this.notificacionesApi.unreadCount;
+
+  ngOnInit(): void {
+    if (this.authService.isAuthenticated()) {
+      this.notificacionesApi.iniciarPolleo(30000);
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.notificacionesApi.detenerPolleo();
+  }
 
   protected readonly sidebarClass = computed(() => {
     const base = [
@@ -44,11 +59,11 @@ export class Nav {
     { label: 'Alacena',           route: '/alacena',          icon: 'refrigerator'},
     { label: 'Recetas',           route: '/recetas',          icon: 'chef-hat'      },
     { label: 'Lista de compras',  route: '/lista-compras',    icon: 'shopping-cart' },
-    { label: 'Finanzas',          route: '/finanzas',         icon: 'wallet',       disabled: true },
-    { label: 'Tareas',            route: '/tareas',           icon: 'check-square', disabled: true },
-    { label: 'Planificador',      route: '/planificador',     icon: 'calendar',     disabled: true },
+    { label: 'Finanzas',          route: '/finanzas',         icon: 'wallet'        },
+    { label: 'Tareas',            route: '/tareas',           icon: 'check-square' },
+    { label: 'Planificador',      route: '/planificador',     icon: 'calendar' },
     { label: 'Electrodomésticos', route: '/electrodomesticos',icon: 'zap'         },
-    { label: 'Notificaciones',    route: '/notificaciones',   icon: 'bell',         disabled: true },
+    { label: 'Notificaciones',    route: '/notificaciones',   icon: 'bell'        },
     { label: 'Mi perfil',         route: '/perfil',           icon: 'user'        },
   ];
 
@@ -61,6 +76,7 @@ export class Nav {
   }
 
   protected readonly icons: Record<string, LucideIconData> = {
+    'x':            X,
     'house':        House,
     'refrigerator': Refrigerator,
     'chef-hat':     ChefHat,

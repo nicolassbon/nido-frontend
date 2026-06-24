@@ -1,15 +1,18 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, Output, EventEmitter, Input, signal, OnInit, OnDestroy } from '@angular/core';
-import { switchMap, of, Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { switchMap, of, Subject, debounceTime, distinctUntilChanged, takeUntil, map, catchError, forkJoin } from 'rxjs';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
-import { ProductService } from '../../core/servicios/agregar-producto.service';
+import { ProductService, SearchProductoResponse } from '../../core/servicios/agregar-producto.service';
 import { AlacenaApiService, StockItemResponse } from '../alacena/alacena-api.service';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../core/auth/auth.service';
 import { ListaComprasService } from '../lista-compras/lista-compras.service';
 import { NidoSelectComponent, NidoSelectOption } from '../../shared/ui/form/nido-select/nido-select';
+import { CatalogoService, UbicacionDto } from '../../core/servicios/catalogo.service';
 import { NidoDatepickerComponent } from '../../shared/ui/form/nido-datepicker/nido-datepicker';
+import { EstimatedDateNoticeComponent } from '../../shared/ui/estimated-date-notice/estimated-date-notice';
+import { validatePhotoFile } from '../../shared/validators/photo';
 
 /** Producto conocido para autocompletar (proviene de la alacena ya cargada) */
 export interface KnownProduct {
@@ -18,12 +21,22 @@ export interface KnownProduct {
   unidadMedida?:   string;
   ubicacion?:      string;
   stockId?:        string;   // id del stock_hogar si ya está en la alacena
-  cantidad?:       number;   // cantidad actual en la alacena
+  icono?:          string | null;
+  iconoSvg?:       string | null;
+  cantidad?:       number;   // cantidad POR envase
+  cantidadEnvases?: number;  // número de envases del mismo producto
+}
+
+export interface InitialProductDraft {
+  nombre: string;
+  cantidad: number | null;
+  unidadMedida: string | null;
+  origenCarga?: 'manual' | 'codigo_barras' | 'ticket_compra';
 }
 
 @Component({
   selector: 'app-agregar-producto',
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule, NidoSelectComponent, NidoDatepickerComponent],
+  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule, NidoSelectComponent, NidoDatepickerComponent, EstimatedDateNoticeComponent],
   templateUrl: './agregar-producto.html',
   styleUrl: './agregar-producto.scss',
 })
@@ -34,8 +47,13 @@ export class AgregarProducto implements OnInit, OnDestroy {
   /** Productos ya conocidos (de la alacena) para sugerir al escribir el nombre */
   @Input() knownProducts: KnownProduct[] = [];
 
+  @Input() initialProduct?: InitialProductDraft;
+
+  @Input() syncShoppingListOnSave = true;
+
   @Input() isModal = false;
   @Output() closed = new EventEmitter<StockItemResponse | void>();
+  @Output() saved = new EventEmitter<StockItemResponse | void>();
 
   private readonly fb                  = inject(FormBuilder);
   private readonly productService      = inject(ProductService);
@@ -43,9 +61,13 @@ export class AgregarProducto implements OnInit, OnDestroy {
   private readonly router              = inject(Router);
   private readonly authService         = inject(AuthService);
   private readonly listaComprasService = inject(ListaComprasService);
+  private readonly catalogoService     = inject(CatalogoService);
 
   protected isSaving     = false;
   protected errorMessage = '';
+  protected warningMessage = '';
+  protected selectedImage = signal<File | null>(null);
+  protected imageError = signal<string | null>(null);
 
   protected isOpened    = signal(false);
   protected consumedPct = signal(0);
@@ -58,41 +80,47 @@ export class AgregarProducto implements OnInit, OnDestroy {
 
   protected get isEditMode(): boolean { return !!this.stockItem; }
 
-  // ── Opciones ──────────────────────────────────────────────
-  protected readonly categoriasOpts: NidoSelectOption[] = [
-    { value: '33333333-3333-3333-3333-333333333333', label: 'General' },
-    { value: '44444444-4444-4444-4444-444444444444', label: 'Lácteos' },
-    { value: '55555555-5555-5555-5555-555555555555', label: 'Bebidas' },
-    { value: '66666666-6666-6666-6666-666666666666', label: 'Congelados' },
-    { value: '77777777-7777-7777-7777-777777777777', label: 'Despensa' },
-  ];
+  // ── Opciones dinámicas (desde la BD) ─────────────────────
+  protected categoriasOpts = signal<NidoSelectOption[]>([]);
+  protected unidadesOpts   = signal<NidoSelectOption[]>([]);
+  protected ubicaciones    = signal<UbicacionDto[]>([]);
 
-  protected readonly unidadesOpts: NidoSelectOption[] = [
-    { value: 'unidad', label: 'Unidad' },
-    { value: 'gr',     label: 'Gramos (gr)' },
-    { value: 'kg',     label: 'Kilogramos (kg)' },
-    { value: 'ml',     label: 'Mililitros (ml)' },
-    { value: 'lt',     label: 'Litros (lt)' },
-    { value: 'cdita',  label: 'Cucharadita' },
-    { value: 'cda',    label: 'Cucharada' },
-  ];
+  getLocationIcon(loc: UbicacionDto): string  { return loc.icono  ?? 'package'; }
+  getLocationColor(loc: UbicacionDto): string { return loc.color  ?? '#263F30'; }
 
-  protected readonly ubicaciones = ['Alacena', 'Freezer', 'Heladera'] as const;
+  /**
+   * Combina los resultados del back con los productos ya cargados en la
+   * alacena. Si un producto del back coincide con uno local, hereda
+   * stockId/cantidad/unidad/ubicación del local (más actualizado).
+   */
+  private mergeSuggestions(results: SearchProductoResponse[]): KnownProduct[] {
+    const localByName = new Map<string, KnownProduct>();
+    for (const local of this.knownProducts) {
+      localByName.set(local.nombre.trim().toLowerCase(), local);
+    }
 
-  private readonly locationIcons: Record<string, string> = {
-    Alacena:  'tag',
-    Freezer:  'snowflake',
-    Heladera: 'refrigerator',
-  };
+    const seen   = new Set<string>();
+    const merged: KnownProduct[] = [];
 
-  private readonly locationColors: Record<string, string> = {
-    Alacena:  '#B48B6A',
-    Freezer:  '#3E5E4A',
-    Heladera: '#927357',
-  };
+    for (const r of results) {
+      const key = r.nombre.trim().toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
 
-  getLocationIcon(loc: string): string  { return this.locationIcons[loc]  ?? 'package'; }
-  getLocationColor(loc: string): string { return this.locationColors[loc] ?? '#263F30'; }
+      const local = localByName.get(key);
+      merged.push({
+        nombre:           r.nombre,
+        categoriaNombre:  r.categoriaNombre ?? local?.categoriaNombre,
+        unidadMedida:     local?.unidadMedida ?? r.unidadMedida ?? undefined,
+        ubicacion:        local?.ubicacion    ?? r.ubicacion    ?? undefined,
+        stockId:          local?.stockId,
+        cantidad:         local?.cantidad,
+        cantidadEnvases:  local?.cantidadEnvases,
+      });
+    }
+
+    return merged.slice(0, 6);
+  }
 
   private normalizeUnit(value: string | null | undefined): string {
     const normalized = (value ?? '')
@@ -143,34 +171,38 @@ export class AgregarProducto implements OnInit, OnDestroy {
     cantidad:         [null as number | null, Validators.required],
     unidadMedida:     ['', Validators.required],
     fechaVencimiento: [''],
+    // Cantidad de envases idénticos. Ej: "2 paquetes de 100g cada uno"
+    cantidadEnvases:  [1, [Validators.required, Validators.min(1)]],
   });
 
   // ── Lifecycle ─────────────────────────────────────────────
   ngOnInit(): void {
     document.body.style.overflow = 'hidden';
 
+    // Cargar cat\u00e1logos desde la API
+    forkJoin({
+      cats:  this.catalogoService.getCategorias(),
+      units: this.catalogoService.getUnidadesMedida(),
+      locs:  this.catalogoService.getUbicaciones(),
+    }).subscribe(({ cats, units, locs }) => {
+      this.categoriasOpts.set(CatalogoService.toCategoriasOpts(cats));
+      this.unidadesOpts.set(CatalogoService.toUnidadesOpts(units));
+      this.ubicaciones.set(locs);
+    });
+
     // Autocomplete: filtra los productos ya cargados en la alacena (localmente,
     // sin consultar la BD). Deduplica por nombre.
     if (!this.isEditMode) {
       this.searchInput$.pipe(
-        debounceTime(150),
+        debounceTime(250),
         distinctUntilChanged(),
+        switchMap(q => {
+          const query = q.trim();
+          if (query.length < 2) return of([] as SearchProductoResponse[]);
+          return this.productService.searchProductos(query);
+        }),
         takeUntil(this.destroy$),
-      ).subscribe(q => {
-        const query = q.trim().toLowerCase();
-        if (query.length < 2) { this.suggestions.set([]); return; }
-
-        const seen = new Set<string>();
-        const matches = this.knownProducts.filter(p => {
-          if (!p.nombre.toLowerCase().includes(query)) return false;
-          const key = p.nombre.trim().toLowerCase();
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        }).slice(0, 6);
-
-        this.suggestions.set(matches);
-      });
+      ).subscribe(results => this.suggestions.set(this.mergeSuggestions(results)));
     }
 
     if (this.stockItem) {
@@ -185,10 +217,21 @@ export class AgregarProducto implements OnInit, OnDestroy {
         cantidad:         s.cantidad ?? null,
         unidadMedida:     this.normalizeUnit(s.unidadMedida),
         fechaVencimiento: s.fechaVencimiento ?? '',
+        cantidadEnvases:  s.cantidadEnvases ?? 1,
       });
 
       this.isOpened.set(s.estaAbierto ?? false);
       this.consumedPct.set(s.porcentajeConsumido ?? 0);
+    } else if (this.initialProduct) {
+      this.form.get('categoriaId')?.clearValidators();
+      this.form.get('categoriaId')?.updateValueAndValidity();
+
+      this.form.patchValue({
+        nombre:       this.initialProduct.nombre,
+        ubicacion:    'Alacena',
+        cantidad:     this.initialProduct.cantidad,
+        unidadMedida: this.normalizeUnit(this.initialProduct.unidadMedida),
+      });
     }
   }
 
@@ -206,7 +249,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
 
   selectSuggestion(s: KnownProduct): void {
     // Mapear el nombre de categoría al id correspondiente
-    const catId = this.categoriasOpts.find(
+    const catId = this.categoriasOpts().find(
       o => o.label.toLowerCase() === (s.categoriaNombre ?? '').toLowerCase(),
     )?.value ?? '';
 
@@ -230,9 +273,43 @@ export class AgregarProducto implements OnInit, OnDestroy {
     if (!this.isModal) this.router.navigate(['/alacena']);
   }
 
+  onImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+
+    if (!file) {
+      return;
+    }
+
+    this.imageError.set(null);
+    this.warningMessage = '';
+
+    const validationError = validatePhotoFile(file);
+    if (validationError) {
+      this.selectedImage.set(null);
+      this.imageError.set(validationError);
+      input.value = '';
+      return;
+    }
+
+    this.selectedImage.set(file);
+    input.value = '';
+  }
+
+  removeSelectedImage(): void {
+    this.selectedImage.set(null);
+    this.imageError.set(null);
+    this.warningMessage = '';
+  }
+
   updateQuantity(delta: number): void {
     const current = this.parseCantidad(this.form.get('cantidad')?.value) || 1;
     this.form.patchValue({ cantidad: Math.max(1, current + delta) });
+  }
+
+  updateEnvases(delta: number): void {
+    const current = (this.form.get('cantidadEnvases')?.value as number) ?? 1;
+    this.form.patchValue({ cantidadEnvases: Math.max(1, current + delta) });
   }
 
   onSubmit(): void {
@@ -243,6 +320,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
 
     this.isSaving     = true;
     this.errorMessage = '';
+    this.warningMessage = '';
 
     if (this.isEditMode) {
       this.submitEdit();
@@ -258,40 +336,62 @@ export class AgregarProducto implements OnInit, OnDestroy {
   }
 
   private submitCreate(): void {
+    const cantidadEnvasesInput = (this.form.value.cantidadEnvases as number) ?? 1;
+    const isOpened    = this.isOpened();
+    const consumedPct = this.consumedPct();
     const payload = {
       nombre:              this.form.value.nombre!,
-      categoriaId:         this.form.value.categoriaId!,
+      categoriaId:         this.form.value.categoriaId || null,
+      codigoBarras:        null,
+      imagen:              null,
       ubicacion:           this.form.value.ubicacion!,
       cantidad:            this.parseCantidad(this.form.value.cantidad),
       unidadMedida:        this.normalizeUnit(this.form.value.unidadMedida),
-      fechaVencimiento:    this.form.value.fechaVencimiento || undefined,
+      fechaVencimiento:    this.form.value.fechaVencimiento || null,
+      cantidadEnvases:     cantidadEnvasesInput,
+      estaAbierto:         isOpened,
+      porcentajeConsumido: consumedPct,
+      origenCarga:         this.initialProduct?.origenCarga ?? 'manual' as const,
     };
 
-    const isOpened    = this.isOpened();
-    const consumedPct = this.consumedPct();
+    let imageUploadFailed = false;
 
-    // ¿Ya existe en la alacena con el mismo nombre y unidad? → sumar cantidad
+    // ¿Ya existe en la alacena con el mismo nombre, unidad y cantidad-por-envase?
+    // → en vez de duplicar la tarjeta, sumamos cantidad de envases al existente.
+    // Si la cantidad-por-envase difiere, no se hace match: el usuario está
+    // cargando una presentación distinta (ej: paquete 100g vs 250g).
     const existing = this.knownProducts.find(p =>
       p.stockId &&
       p.nombre.trim().toLowerCase() === payload.nombre.trim().toLowerCase() &&
-      this.normalizeUnit(p.unidadMedida) === payload.unidadMedida,
+      this.normalizeUnit(p.unidadMedida) === payload.unidadMedida &&
+      Number(p.cantidad) === payload.cantidad,
     );
 
     if (existing?.stockId) {
+      if (this.selectedImage()) {
+        this.imageError.set('Este producto ya existe en tu alacena. Quitá la imagen seleccionada para sumar cantidad sin crear duplicados.');
+        this.isSaving = false;
+        return;
+      }
+
+      const nuevosEnvases = (existing.cantidadEnvases ?? 1) + cantidadEnvasesInput;
       const nuevaCantidad = (existing.cantidad ?? 0) + payload.cantidad;
-      this.alacenaApi.updateStock(existing.stockId, { cantidad: nuevaCantidad }).subscribe({
-        next: () => {
-          this.listaComprasService.marcarCompradoPorNombre(payload.nombre);
-          this.form.reset({ cantidad: null, ubicacion: 'Alacena' });
+      this.alacenaApi.updateStock(existing.stockId, { cantidadEnvases: nuevosEnvases, cantidad: nuevaCantidad }).subscribe({
+        next: (updated) => {
+          if (this.syncShoppingListOnSave) {
+            this.listaComprasService.marcarCompradoPorNombre(payload.nombre);
+          }
+          this.form.reset({ cantidad: null, ubicacion: 'Alacena', cantidadEnvases: 1 });
           this.isOpened.set(false);
           this.consumedPct.set(0);
           this.isSaving = false;
+          this.saved.emit(updated);
           this.closed.emit();
           if (!this.isModal) this.router.navigate(['/alacena']);
         },
         error: (err) => {
           console.error('Error:', err);
-          this.errorMessage = 'No se pudo actualizar la cantidad.';
+          this.errorMessage = 'No se pudo actualizar la cantidad de envases.';
           this.isSaving     = false;
         },
       });
@@ -301,24 +401,39 @@ export class AgregarProducto implements OnInit, OnDestroy {
     // Primero creamos el producto, luego si tiene datos de consumo
     // hacemos un PATCH inmediato porque el endpoint de creación
     // no acepta esos campos (los maneja /alacena/productos).
-    this.productService.createStockHome(payload).pipe(
+    this.alacenaApi.createStock(payload).pipe(
       switchMap(created => {
-        const needsPatch = isOpened || consumedPct > 0;
-        if (!needsPatch) return of(null);
-        const id = created?.stockHogarId;
-        if (!id) return of(null);
-        return this.alacenaApi.updateStock(id, {
-          estaAbierto:         isOpened,
-          porcentajeConsumido: consumedPct,
-        });
+        const selectedImage = this.selectedImage();
+        if (!selectedImage || !created?.productoId) {
+          return of(created);
+        }
+
+        return this.productService.uploadProductImage(created.productoId, selectedImage).pipe(
+          map(() => created),
+          catchError((error) => {
+            imageUploadFailed = true;
+            console.warn('Product was created but image upload failed.', error);
+            return of(created);
+          }),
+        );
       }),
     ).subscribe({
-      next: () => {
-        this.listaComprasService.marcarCompradoPorNombre(payload.nombre);
-        this.form.reset({ cantidad: null, ubicacion: 'Alacena' });
-        this.isOpened.set(false);
-        this.consumedPct.set(0);
+      next: (created) => {
+        if (imageUploadFailed) {
+          if (this.syncShoppingListOnSave) {
+            this.listaComprasService.marcarCompradoPorNombre(payload.nombre);
+          }
+          this.resetCreateForm();
+          this.warningMessage = 'El producto se guardó, pero no se pudo subir la imagen.';
+          this.isSaving = false;
+          return;
+        }
+        if (this.syncShoppingListOnSave) {
+          this.listaComprasService.marcarCompradoPorNombre(payload.nombre);
+        }
+        this.resetCreateForm();
         this.isSaving = false;
+        this.saved.emit(created);
         this.closed.emit();
         if (!this.isModal) this.router.navigate(['/alacena']);
       },
@@ -330,6 +445,14 @@ export class AgregarProducto implements OnInit, OnDestroy {
     });
   }
 
+  private resetCreateForm(): void {
+    this.form.reset({ cantidad: null, ubicacion: 'Alacena', cantidadEnvases: 1 });
+    this.isOpened.set(false);
+    this.consumedPct.set(0);
+    this.selectedImage.set(null);
+    this.imageError.set(null);
+  }
+
   private submitEdit(): void {
     const patch = {
       nombre:              this.form.value.nombre!,
@@ -339,6 +462,7 @@ export class AgregarProducto implements OnInit, OnDestroy {
       fechaVencimiento:    this.form.value.fechaVencimiento || null,
       estaAbierto:         this.isOpened(),
       porcentajeConsumido: this.consumedPct(),
+      cantidadEnvases:     (this.form.value.cantidadEnvases as number) ?? 1,
     };
 
     this.alacenaApi.updateStock(this.stockItem!.id, patch).subscribe({
@@ -352,8 +476,11 @@ export class AgregarProducto implements OnInit, OnDestroy {
           fechaVencimiento: patch.fechaVencimiento,
           estaAbierto: patch.estaAbierto,
           porcentajeConsumido: patch.porcentajeConsumido,
+          cantidadEnvases: updated.cantidadEnvases,
+          origenCarga: updated.origenCarga,
         };
         this.isSaving = false;
+        this.saved.emit(edited);
         this.closed.emit(edited);
         if (!this.isModal) this.router.navigate(['/alacena']);
       },

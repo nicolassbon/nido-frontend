@@ -50,6 +50,7 @@ describe('AuthService', () => {
         password: 'Password123!',
         sexo: 'Masculino',
         foto: null,
+        aceptaTerminos: true,
       };
 
       const mockResponse: RegisterResponse = {
@@ -75,6 +76,7 @@ describe('AuthService', () => {
       expect(body.get('password')).toBe('Password123!');
       expect(body.get('sexo')).toBe('Masculino');
       expect(body.get('foto')).toBeNull();
+      expect(body.get('aceptaTerminos')).toBe('true');
       expect(req.request.withCredentials).toBe(true);
 
       req.flush(mockResponse);
@@ -89,6 +91,7 @@ describe('AuthService', () => {
         password: 'Password123!',
         sexo: 'Masculino',
         foto,
+        aceptaTerminos: true,
       }).subscribe();
 
       const req = httpMock.expectOne(`${environment.apiBaseUrl}/auth/register`);
@@ -105,6 +108,7 @@ describe('AuthService', () => {
         password: 'Password123!',
         sexo: 'Masculino',
         foto: null,
+        aceptaTerminos: true,
       };
 
       service.register(mockRequest).subscribe((res) => {

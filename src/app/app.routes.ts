@@ -6,6 +6,8 @@ import { Recipes } from './features/recipes/recipes/recipes';
 import { RecipeDetail } from './features/recipes/recipe-detail/recipe-detail';
 import { Alacena } from './features/alacena/alacena/alacena';
 import { ProductDetail } from './features/alacena/product-detail/product-detail';
+import { TicketScan } from './features/alacena/ticket-scan/ticket-scan';
+import { NutritionScan } from './features/alacena/nutrition-scan/nutrition-scan';
 import { ListaCompras } from './features/lista-compras/lista-compras';
 import { CreateHousehold } from './features/household/create-household/create-household';
 import { AcceptInvitation } from './features/household/accept-invitation/accept-invitation';
@@ -19,7 +21,12 @@ import { EquipmentStep } from './features/onboarding/equipment-step/equipment-st
 import { ForgotPassword } from './features/auth/forgot-password/forgot-password';
 import { ResetPassword } from './features/auth/reset-password/reset-password';
 import { Configuracion } from './features/configuracion/configuracion';
+import { Estadisticas } from './features/estadisticas/estadisticas';
 import { Landing } from './features/landing/landing';
+import { Finanzas } from './features/finanzas/finanzas/finanzas';
+import { Tareas } from './features/tareas/tareas';
+import { Notificaciones } from './features/notificaciones/notificaciones';
+import { Planificador } from './features/planificador/planificador/planificador';
 
 export const routes: Routes = [
   { path: '', component: Landing, pathMatch: 'full', canActivate: [guestGuard] },
@@ -41,12 +48,19 @@ export const routes: Routes = [
       { path: 'recetas', component: Recipes },
       { path: 'recetas/:id',    component: RecipeDetail  },
       { path: 'alacena',        component: Alacena       },
+      { path: 'alacena/escanear-ticket', component: TicketScan },
+      { path: 'alacena/:id/informacion-nutricional', component: NutritionScan },
       { path: 'alacena/:id',    component: ProductDetail },
       { path: 'lista-compras',  component: ListaCompras  },
       { path: 'electrodomesticos', component: Electrodomesticos },
+      { path: 'estadisticas', component: Estadisticas },
       { path: 'perfil', component: PerfilComponent },
       { path: 'configuracion', component: Configuracion },
       { path: 'agregar-producto', component: AgregarProducto },
+      { path: 'finanzas', component: Finanzas },
+      { path: 'tareas', component: Tareas },
+      { path: 'notificaciones', component: Notificaciones },
+      { path: 'planificador', component: Planificador },
     ],
   },
   { path: '**', redirectTo: '' },

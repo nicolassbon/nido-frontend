@@ -2,18 +2,39 @@ import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angula
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { LucideAngularModule } from 'lucide-angular';
+import {
+  AlarmClock,
+  AlertTriangle,
+  Bookmark,
+  Check,
+  CheckSquare,
+  ChevronDown,
+  ChefHat,
+  Clock,
+  Eye,
+  Flame,
+  LucideAngularModule,
+  Search,
+  Shield,
+  ShoppingBasket,
+  Shuffle,
+  SlidersHorizontal,
+  Star,
+  X,
+  Zap,
+} from 'lucide-angular';
 import { ElectrodomesticosService } from '../../electrodomesticos/services/electrodomesticos.service';
 import { HogaresApiService, MiembroResponse } from '../../household/hogares-api.service';
 import { environment } from '../../../../environments/environment';
 import { ApiReceta, RecipesApiService } from './services/recipes-api.service';
+import { StarRatingComponent } from '../../../shared/ui/star-rating/star-rating';
 import { ProductService } from '../../../core/servicios/agregar-producto.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { PerfilApiService } from '../../perfil/perfil-api.service';
 
 type Difficulty = 'Fácil' | 'Medio' | 'Difícil';
-type FilterOption = 'Todos' | Difficulty;
-type SortOption = 'default' | 'rating' | 'coincidencia';
+type FilterOption = 'Todos' | 'Guardadas' | Difficulty;
+type SortOption = 'default' | 'rating' | 'coincidencia' | 'urgencia';
 
 interface RecipeIngredient {
   name: string;
@@ -21,20 +42,30 @@ interface RecipeIngredient {
   allergenTypes: string[];
 }
 
+interface ExpiringRecipeProduct {
+  productId: string;
+  name: string;
+  expirationDate: string;
+  daysUntilExpiration: number;
+}
+
 interface Recipe {
   id: string;
   name: string;
   image: string;
   rating: number;
+  ratingCount: number;
   difficulty: Difficulty;
   timeMinutes: number;
   calories: number;
-  proteinas: number;
-  carbohidratos: number;
-  grasas: number;
   ingredients: RecipeIngredient[];
   requiredAppliances: string[];
   vecesCocinada: number;
+  tieneProductosPorVencer: boolean;
+  fechaVencimientoMasProxima: string | null;
+  diasHastaVencimiento: number | null;
+  productosPorVencer: ExpiringRecipeProduct[];
+  guardada: boolean;
 }
 
 interface RecipeWithAvailability extends Recipe {
@@ -104,7 +135,7 @@ const APPLIANCE_ALIASES: Record<string, string[]> = {
 
 @Component({
   selector: 'app-recipes',
-  imports: [LucideAngularModule, FormsModule, RouterModule],
+  imports: [LucideAngularModule, FormsModule, RouterModule, StarRatingComponent],
   templateUrl: './recipes.html',
   styleUrl: './recipes.scss',
 })
@@ -118,16 +149,40 @@ export class Recipes implements OnInit {
   private readonly perfilApi         = inject(PerfilApiService);
   private readonly destroyRef        = inject(DestroyRef);
 
+  protected readonly icons = {
+    AlarmClock,
+    AlertTriangle,
+    Bookmark,
+    Check,
+    CheckSquare,
+    ChevronDown,
+    ChefHat,
+    Clock,
+    Eye,
+    Flame,
+    Search,
+    Shield,
+    ShoppingBasket,
+    Shuffle,
+    SlidersHorizontal,
+    Star,
+    X,
+    Zap,
+  };
+
   protected readonly searchQuery              = signal('');
+  protected readonly nutritionalObjective     = signal('');
   protected readonly activeFilter             = signal<FilterOption>('Todos');
-  protected readonly sortBy                   = signal<SortOption>('default');
+  protected readonly sortBy                   = signal<SortOption>('urgencia');
   protected readonly showSortDropdown         = signal(false);
   protected readonly showRoulettePopup        = signal(false);
+  protected readonly rouletteRecipe           = signal<RecipeWithAvailability | null>(null);
   protected readonly excludeAllergens         = signal(false);
   protected readonly excludeMissingAppliances = signal(false);
   protected readonly filterByIngredients      = signal(false);
   protected readonly isLoadingIa              = signal(false);
-  protected readonly iaFilteredRecipes        = signal<any[]>([]);
+  protected readonly iaErrorMessage           = signal<string | null>(null);
+  private readonly iaRecipeIds                = signal<Set<string> | null>(null);
 
   protected readonly filterOptions: FilterOption[] = ['Todos', 'Fácil', 'Medio', 'Difícil'];
 
@@ -202,7 +257,13 @@ export class Recipes implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: items => this.pantryIngredients.set(
-          items.map(item => ({ name: item.nombre, amount: `${item.cantidad}`, selected: true }))
+          items
+            .filter(item => item.cantidad > 0)
+            .map(item => ({
+              name: item.nombre,
+              amount: this.formatPantryAmount(item.cantidad, item.unidadMedida),
+              selected: true,
+            }))
         ),
         error: err => console.error('Error cargando alacena', err),
       });
@@ -271,41 +332,40 @@ export class Recipes implements OnInit {
     });
   });
 
-protected readonly filteredRecipes = computed(() => {
-    // 🌟 LA MAGIA DE LA BIFURCACIÓN:
-    // Si la IA tiene resultados guardados, arranca el filtro desde ahí. Si no, usa el catálogo base de siempre.
-    let result = this.iaFilteredRecipes().length > 0 
-      ? [...this.iaFilteredRecipes()] 
-      : [...this.recipesWithAvailability()];
+  protected readonly filteredRecipes = computed(() => {
+    let result = [...this.recipesWithAvailability()];
+    const iaIds = this.iaRecipeIds();
 
-    // 1. Filtro por Categorías/Dificultad (¡Ahora también aplica sobre las de la IA!)
-    if (this.activeFilter() !== 'Todos') {
+    if (iaIds !== null) {
+      result = result.filter(recipe => iaIds.has(recipe.id));
+    }
+
+    if (this.activeFilter() === 'Guardadas') {
+      result = result.filter(recipe => recipe.guardada);
+    } else if (this.activeFilter() !== 'Todos') {
       result = result.filter(recipe => recipe.difficulty === this.activeFilter());
     }
 
-    // 2. Filtro por input de texto tradicional (Sólo actúa si no está la IA mediando)
     const query = this.searchQuery().trim().toLowerCase();
-    if (query && this.iaFilteredRecipes().length === 0) {
+    if (query && iaIds === null) {
       result = result.filter(recipe => recipe.name.toLowerCase().includes(query));
     }
 
-    // 3. Filtro de Alérgenos
     if (this.excludeAllergens()) {
       result = result.filter(recipe => !recipe.hasAllergen);
     }
 
-    // 4. Filtro de Electrodomésticos faltantes
     if (this.excludeMissingAppliances()) {
       result = result.filter(recipe => !recipe.hasMissingAppliance);
     }
 
-    // 5. Filtro por disponibilidad de ingredientes
     if (this.filterByIngredients()) {
       result = result.filter(recipe => recipe.availabilityPercent > 0);
     }
 
-    // 6. Lógica de Ordenamiento (Rating, Coincidencia, Alacena)
-    if (this.sortBy() === 'rating') {
+    if (this.sortBy() === 'urgencia') {
+      result.sort((a, b) => this.compareByUrgency(a, b));
+    } else if (this.sortBy() === 'rating') {
       result.sort((a, b) => b.rating - a.rating);
     } else if (this.sortBy() === 'coincidencia') {
       result.sort((a, b) => b.availabilityPercent - a.availabilityPercent);
@@ -364,14 +424,35 @@ protected readonly filteredRecipes = computed(() => {
 
   protected clearSearch(): void {
     this.searchQuery.set('');
+    this.nutritionalObjective.set('');
+    this.iaRecipeIds.set(null);
+    this.iaErrorMessage.set(null);
+    this.isLoadingIa.set(false);
   }
 
   protected openRoulettePopup(): void {
+    this.rerollRoulette();
     this.showRoulettePopup.set(true);
   }
 
   protected closeRoulettePopup(): void {
     this.showRoulettePopup.set(false);
+  }
+
+  protected rerollRoulette(): void {
+    const currentId = this.rouletteRecipe()?.id;
+    const candidates = this.recipesWithAvailability()
+      .filter(recipe => recipe.availabilityPercent > 50 && !recipe.hasAllergen);
+    const pool = candidates.length > 1
+      ? candidates.filter(recipe => recipe.id !== currentId)
+      : candidates;
+    this.rouletteRecipe.set(pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : null);
+  }
+
+  protected missingIngredientNames(recipe: RecipeWithAvailability): string[] {
+    return recipe.ingredients
+      .filter(ingredient => !ingredient.inStock)
+      .map(ingredient => ingredient.name);
   }
 
   protected get selectedIngredients(): PantryIngredient[] {
@@ -385,6 +466,7 @@ protected readonly filteredRecipes = computed(() => {
   }
 
   protected getSortLabel(): string {
+    if (this.sortBy() === 'urgencia') return 'Mayor urgencia';
     if (this.sortBy() === 'rating') return 'Mejor valoradas';
     if (this.sortBy() === 'coincidencia') return 'Mayor coincidencia';
     return 'Ordenar';
@@ -439,20 +521,61 @@ protected readonly filteredRecipes = computed(() => {
       : `${base} bg-nido-cream border-nido-border`;
   }
 
+  protected onSearchSubmit(textoIngresado: string, objetivoNutricional: string): void {
+    const textoUsuario = textoIngresado.trim();
+    const objetivo = objetivoNutricional.trim();
+    const requiereIA = textoUsuario.split(/\s+/).filter(Boolean).length > 2 || objetivo.length > 0;
+
+    this.searchQuery.set(textoUsuario);
+    this.nutritionalObjective.set(objetivo);
+    this.iaErrorMessage.set(null);
+
+    if (!requiereIA) {
+      this.iaRecipeIds.set(null);
+      this.isLoadingIa.set(false);
+      return;
+    }
+
+    this.isLoadingIa.set(true);
+    this.recipesApi.recomendarPorIa(textoUsuario, objetivo)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: recetas => {
+          this.iaRecipeIds.set(new Set(recetas.map(receta => receta.id)));
+          this.iaErrorMessage.set(recetas.length === 0 ? 'No encontramos recetas con IA para ese criterio.' : null);
+          this.isLoadingIa.set(false);
+        },
+        error: err => {
+          console.error('Error buscando recetas con IA', err);
+          this.iaRecipeIds.set(new Set());
+          this.iaErrorMessage.set('No pudimos consultar la IA en este momento.');
+          this.isLoadingIa.set(false);
+        },
+      });
+  }
+
   // ── Métodos de la compañera — sin modificar ───────────────
   private toRecipe(receta: ApiReceta): Recipe {
     return {
       id: receta.id,
       name: receta.nombre,
       image: this.resolveImageUrl(receta.imagenUrl) ?? 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=250&fit=crop',
-      rating: 4.5,
+      rating: receta.calificacionPromedio ?? 0,
+      ratingCount: receta.calificacionTotal ?? 0,
       difficulty: this.mapDifficulty(receta.dificultad),
       timeMinutes: receta.tiempoCoccionMin ?? 0,
       calories: Math.round(receta.calorias ?? 0),
-      proteinas: Math.round(receta.proteinas ?? 0),
-      carbohidratos: Math.round(receta.carbohidratos ?? 0),
-      grasas: Math.round(receta.grasas ?? 0),
       vecesCocinada: receta.vecesCocinada ?? 0,
+      tieneProductosPorVencer: receta.tieneProductosPorVencer ?? false,
+      fechaVencimientoMasProxima: receta.fechaVencimientoMasProxima ?? null,
+      diasHastaVencimiento: receta.diasHastaVencimiento ?? null,
+      productosPorVencer: (receta.productosPorVencer ?? []).map(producto => ({
+        productId: producto.productoId,
+        name: producto.nombre,
+        expirationDate: producto.fechaVencimiento,
+        daysUntilExpiration: producto.diasHastaVencimiento,
+      })),
+      guardada: receta.guardada ?? false,
       ingredients: receta.ingredientes.map(ingrediente => {
         const ingredientName = ingrediente.productoNombre || ingrediente.nombre;
         return {
@@ -468,6 +591,35 @@ protected readonly filteredRecipes = computed(() => {
         .map(electrodomestico => electrodomestico.tipoRequerido?.trim())
         .filter((tipo): tipo is string => !!tipo),
     };
+  }
+
+  private compareByUrgency(a: RecipeWithAvailability, b: RecipeWithAvailability): number {
+    const urgencyDiff = Number(b.tieneProductosPorVencer) - Number(a.tieneProductosPorVencer);
+    if (urgencyDiff !== 0) return urgencyDiff;
+
+    const aDays = a.diasHastaVencimiento ?? Number.POSITIVE_INFINITY;
+    const bDays = b.diasHastaVencimiento ?? Number.POSITIVE_INFINITY;
+    if (aDays !== bDays) return aDays - bDays;
+
+    if (a.availabilityPercent !== b.availabilityPercent) {
+      return b.availabilityPercent - a.availabilityPercent;
+    }
+
+    return a.name.localeCompare(b.name, 'es');
+  }
+
+  protected formatExpiringProductDays(days: number): string {
+    if (days <= 0) return 'Vence hoy';
+    if (days === 1) return 'Vence mañana';
+    return `Vence en ${days} días`;
+  }
+
+  protected getUrgencyFallbackText(recipe: Recipe): string {
+    if (recipe.diasHastaVencimiento === null) {
+      return 'Producto próximo a vencer';
+    }
+
+    return this.formatExpiringProductDays(recipe.diasHastaVencimiento);
   }
 
   private toHouseholdMember(member: MiembroResponse, index: number): HouseholdMember {
@@ -534,6 +686,47 @@ protected readonly filteredRecipes = computed(() => {
       .replace(/[\u0300-\u036f]/g, '');
   }
 
+  private formatPantryAmount(cantidad: number, unidad: string | null | undefined): string {
+    const value = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(cantidad);
+    const suffix = this.displayUnit(unidad);
+    return suffix ? `${value} ${suffix}` : value;
+  }
+
+  private displayUnit(unit: string | null | undefined): string | null {
+    const normalized = this.normalizeText(unit ?? '');
+    const aliases: Record<string, string> = {
+      '': '',
+      unidad: 'unidad',
+      unidades: 'unidad',
+      u: 'unidad',
+      gr: 'g',
+      gramo: 'g',
+      gramos: 'g',
+      g: 'g',
+      kilo: 'kg',
+      kilos: 'kg',
+      kilogramo: 'kg',
+      kilogramos: 'kg',
+      kg: 'kg',
+      litro: 'l',
+      litros: 'l',
+      lt: 'l',
+      l: 'l',
+      mililitro: 'ml',
+      mililitros: 'ml',
+      ml: 'ml',
+      cucharada: 'cda',
+      cucharadas: 'cda',
+      cda: 'cda',
+      cucharadita: 'cdita',
+      cucharaditas: 'cdita',
+      cdita: 'cdita',
+      cdta: 'cdita',
+    };
+
+    return aliases[normalized] ?? normalized;
+  }
+
   private mapDifficulty(value: string | null): Difficulty {
     const normalized = value?.trim().toLowerCase();
     if (normalized === 'facil' || normalized === 'fácil') return 'Fácil';
@@ -559,60 +752,4 @@ protected readonly filteredRecipes = computed(() => {
 
     return `${baseUrl}${path}`;
   }
-
-  // =====================================================================
-  // 🔥 BUSCADOR INTELIGENTE CON IA - CONECTA CON .NET Y PYTHON
-  // =====================================================================
-onSearchSubmit(textoIngresado: string, objetivoNutricional: string): void {
-    const textoUsuario = textoIngresado.trim();
-    
-    console.log("Texto buscado:", textoUsuario);
-    console.log("Objetivo seleccionado:", objetivoNutricional);
-
-    // Activamos la IA si es una frase larga O si el usuario eligió un objetivo nutricional
-    const requiereIA = (textoUsuario.split(/\s+/).length > 2) || objetivoNutricional !== '';
-
-    if (requiereIA) {
-      this.isLoadingIa.set(true);
-      console.log(`🔮 Conectando con IA. Buscando: "${textoUsuario}" | Objetivo: "${objetivoNutricional}"`);
-      
-      // 🌟 Le pasamos ambos parámetros al servicio
-      this.recipesApi.recomendarPorIa(textoUsuario, objetivoNutricional).subscribe({
-        next: (recetasResultantes: any) => {
-          if (recetasResultantes && recetasResultantes.length > 0) {
-            console.log(`✅ IA exitosa! Encontró ${recetasResultantes.length} recetas.`);
-            
-            const recetasMapeadas = recetasResultantes.map((r: any) => ({
-              id: r.id,
-              name: r.nombre || r.name, 
-              image: r.imagenUrl || r.image || '/images/default-recipe.png', 
-              difficulty: r.dificultad || r.difficulty || 'Medio',
-              rating: r.rating || 5.0, 
-              timeMinutes: r.tiempoCoccionMin || r.timeMinutes || 20,
-              calories: r.calorias || r.calories || 0,
-              proteinas: r.proteinas || r.proteinas || 0,
-              vecesCocinada: r.vecesCocinada || 0,
-              availabilityPercent: r.availabilityPercent || 100, 
-              hasMissingAppliance: r.hasMissingAppliance || false
-            }));
-
-            this.iaFilteredRecipes.set(recetasMapeadas);
-          } else {
-            this.iaFilteredRecipes.set([]);
-          }
-          this.isLoadingIa.set(false);
-        },
-        error: (err) => {
-          console.error('❌ La IA no encontró coincidencias o los peajes están caídos:', err);
-          this.isLoadingIa.set(false);
-          this.iaFilteredRecipes.set([]);
-          this.searchQuery.set(textoUsuario);
-        }
-      });
-    } else {
-      // Búsqueda común de texto simple en el frontend sin objetivos nutricionales
-      this.iaFilteredRecipes.set([]);
-      this.searchQuery.set(textoUsuario);
-    }
-}
 }
