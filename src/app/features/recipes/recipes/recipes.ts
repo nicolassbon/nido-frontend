@@ -58,6 +58,9 @@ interface Recipe {
   difficulty: Difficulty;
   timeMinutes: number;
   calories: number;
+  proteinas: number;
+  carbohidratos: number;
+  grasas: number;
   ingredients: RecipeIngredient[];
   requiredAppliances: string[];
   vecesCocinada: number;
@@ -565,6 +568,9 @@ export class Recipes implements OnInit {
       difficulty: this.mapDifficulty(receta.dificultad),
       timeMinutes: receta.tiempoCoccionMin ?? 0,
       calories: Math.round(receta.calorias ?? 0),
+      proteinas: Math.round(receta.proteinas ?? 0),
+      carbohidratos: Math.round(receta.carbohidratos ?? 0),
+      grasas: Math.round(receta.grasas ?? 0),
       vecesCocinada: receta.vecesCocinada ?? 0,
       tieneProductosPorVencer: receta.tieneProductosPorVencer ?? false,
       fechaVencimientoMasProxima: receta.fechaVencimientoMasProxima ?? null,
