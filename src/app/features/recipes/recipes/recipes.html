@@ -32,9 +32,8 @@
         type="text"
         placeholder="Buscar receta o preguntale a Nido (ej: 'Tengo fideos y pescado')..."
         #searchInput
-        [ngModel]="searchQuery()"
-        (ngModelChange)="searchQuery.set($event)"
-        (keydown.enter)="onSearchSubmit(searchInput.value, nutritionalObjective())"
+        [value]="searchQuery()"
+        (keydown.enter)="searchQuery.set(searchInput.value); onSearchSubmit(searchInput.value, nutritionalObjective())"
       />
       @if (searchQuery()) {
         <button class="absolute right-2.5 top-1/2 -translate-y-1/2 h-8 w-8 bg-transparent border-none text-nido-brown cursor-pointer flex items-center justify-center rounded hover:text-nido-green-dark" (click)="clearSearch()">
@@ -188,12 +187,30 @@
                   </span>
                 </div>
 
-                <div class="flex min-h-[1.15rem] items-center gap-3.5">
-                  <span class="flex items-center gap-1 text-[0.775rem] text-nido-brown">
-                    <lucide-icon [img]="icons.Flame" [size]="13" />
+              <div class="flex flex-col gap-1 mt-1.5">
+                <span class="text-[0.68rem] font-bold tracking-wider text-nido-green-dark/60 uppercase mb-1">
+                  Información Nutricional <span class="lowercase font-normal text-nido-brown">(por 100g)</span>
+                </span>
+
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <span class="flex items-center gap-1 text-[0.72rem] text-nido-brown bg-nido-brown/5 px-1.5 py-0.5 rounded-[4px] font-medium">
+                    <lucide-icon name="flame" [size]="12" />
                     {{ recipe.calories }} kcal
                   </span>
+
+                  <span class="text-[0.72rem] text-nido-green-dark bg-nido-green/10 border border-nido-green/20 px-1.5 py-0.5 rounded-[4px] font-semibold">
+                    💪 {{ recipe.proteinas }} Prot
+                  </span>
+
+                  <span class="text-[0.72rem] text-nido-brown bg-nido-border/40 px-1.5 py-0.5 rounded-[4px]">
+                    🌾 {{ recipe.carbohidratos }} Carb
+                  </span>
+
+                  <span class="text-[0.72rem] text-nido-brown bg-nido-border/40 px-1.5 py-0.5 rounded-[4px]">
+                    🥑 {{ recipe.grasas }} Gras
+                  </span>
                 </div>
+              </div>
 
                 <div class="mt-0.5 flex min-h-[1.15rem] items-center gap-1">
                   @if (recipe.vecesCocinada > 0) {
