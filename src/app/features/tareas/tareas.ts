@@ -214,6 +214,9 @@ export class Tareas implements OnInit {
         next: updated => {
           this.misTareas.update(ts => ts.filter(t => t.id !== updated.id));
           this.todasTareas.update(ts => ts.map(t => t.id === updated.id ? updated : t));
+          this.api.getDistribucionSemanal()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({ next: d => this.distribucion.set(d), error: () => {} });
         },
         error: () => {},
       });
