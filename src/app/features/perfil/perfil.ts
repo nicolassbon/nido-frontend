@@ -110,6 +110,7 @@ export class PerfilComponent implements OnInit {
         this.crearHogarNombreCreado.set(res.hogarNombre);
         this.nombreHogar.set(res.hogarNombre);
         this.crearHogarState.set('success');
+        this.cargarPerfil();
       },
       error: (err) => {
         this.crearHogarErrorMsg.set(err.error?.message ?? 'Error al crear el hogar.');
