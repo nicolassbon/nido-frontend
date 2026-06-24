@@ -58,6 +58,9 @@ interface Recipe {
   difficulty: Difficulty;
   timeMinutes: number;
   calories: number;
+  proteinas: number;
+  carbohidratos: number;
+  grasas: number;
   ingredients: RecipeIngredient[];
   requiredAppliances: string[];
   vecesCocinada: number;
@@ -171,6 +174,7 @@ export class Recipes implements OnInit {
   };
 
   protected readonly searchQuery              = signal('');
+  protected readonly nutritionalObjective     = signal('');
   protected readonly activeFilter             = signal<FilterOption>('Todos');
   protected readonly sortBy                   = signal<SortOption>('urgencia');
   protected readonly showSortDropdown         = signal(false);
@@ -179,6 +183,9 @@ export class Recipes implements OnInit {
   protected readonly excludeAllergens         = signal(false);
   protected readonly excludeMissingAppliances = signal(false);
   protected readonly filterByIngredients      = signal(false);
+  protected readonly isLoadingIa              = signal(false);
+  protected readonly iaErrorMessage           = signal<string | null>(null);
+  private readonly iaRecipeIds                = signal<Set<string> | null>(null);
 
   protected readonly filterOptions: FilterOption[] = ['Todos', 'Fácil', 'Medio', 'Difícil'];
 
@@ -330,6 +337,11 @@ export class Recipes implements OnInit {
 
   protected readonly filteredRecipes = computed(() => {
     let result = [...this.recipesWithAvailability()];
+    const iaIds = this.iaRecipeIds();
+
+    if (iaIds !== null) {
+      result = result.filter(recipe => iaIds.has(recipe.id));
+    }
 
     if (this.activeFilter() === 'Guardadas') {
       result = result.filter(recipe => recipe.guardada);
@@ -338,7 +350,7 @@ export class Recipes implements OnInit {
     }
 
     const query = this.searchQuery().trim().toLowerCase();
-    if (query) {
+    if (query && iaIds === null) {
       result = result.filter(recipe => recipe.name.toLowerCase().includes(query));
     }
 
@@ -415,6 +427,10 @@ export class Recipes implements OnInit {
 
   protected clearSearch(): void {
     this.searchQuery.set('');
+    this.nutritionalObjective.set('');
+    this.iaRecipeIds.set(null);
+    this.iaErrorMessage.set(null);
+    this.isLoadingIa.set(false);
   }
 
   protected openRoulettePopup(): void {
@@ -508,6 +524,39 @@ export class Recipes implements OnInit {
       : `${base} bg-nido-cream border-nido-border`;
   }
 
+  protected onSearchSubmit(textoIngresado: string, objetivoNutricional: string): void {
+    const textoUsuario = textoIngresado.trim();
+    const objetivo = objetivoNutricional.trim();
+    const requiereIA = textoUsuario.split(/\s+/).filter(Boolean).length > 2 || objetivo.length > 0;
+
+    this.searchQuery.set(textoUsuario);
+    this.nutritionalObjective.set(objetivo);
+    this.iaErrorMessage.set(null);
+
+    if (!requiereIA) {
+      this.iaRecipeIds.set(null);
+      this.isLoadingIa.set(false);
+      return;
+    }
+
+    this.isLoadingIa.set(true);
+    this.recipesApi.recomendarPorIa(textoUsuario, objetivo)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: recetas => {
+          this.iaRecipeIds.set(new Set(recetas.map(receta => receta.id)));
+          this.iaErrorMessage.set(recetas.length === 0 ? 'No encontramos recetas con IA para ese criterio.' : null);
+          this.isLoadingIa.set(false);
+        },
+        error: err => {
+          console.error('Error buscando recetas con IA', err);
+          this.iaRecipeIds.set(new Set());
+          this.iaErrorMessage.set('No pudimos consultar la IA en este momento.');
+          this.isLoadingIa.set(false);
+        },
+      });
+  }
+
   // ── Métodos de la compañera — sin modificar ───────────────
   private toRecipe(receta: ApiReceta): Recipe {
     return {
@@ -519,6 +568,9 @@ export class Recipes implements OnInit {
       difficulty: this.mapDifficulty(receta.dificultad),
       timeMinutes: receta.tiempoCoccionMin ?? 0,
       calories: Math.round(receta.calorias ?? 0),
+      proteinas: Math.round(receta.proteinas ?? 0),
+      carbohidratos: Math.round(receta.carbohidratos ?? 0),
+      grasas: Math.round(receta.grasas ?? 0),
       vecesCocinada: receta.vecesCocinada ?? 0,
       tieneProductosPorVencer: receta.tieneProductosPorVencer ?? false,
       fechaVencimientoMasProxima: receta.fechaVencimientoMasProxima ?? null,

@@ -14,4 +14,12 @@ describe('Home', () => {
     const fixture = TestBed.createComponent(Home);
     expect(fixture.componentInstance).toBeTruthy();
   });
+
+  it('should keep local category icon assets on the frontend', () => {
+    const fixture = TestBed.createComponent(Home);
+    const component = fixture.componentInstance as unknown as { resolveImageUrl(url: string): string };
+
+    expect(component.resolveImageUrl('/assets/icons/categorias/lacteos.svg'))
+      .toBe('/assets/icons/categorias/lacteos.svg');
+  });
 });
