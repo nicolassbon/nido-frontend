@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
@@ -122,6 +122,14 @@ export class RecipesApiService {
   /** POST /recetas/{id}/cocinar — endpoint a implementar por el backend (US-14) */
   cocinar(id: string): Observable<CocinarRecetaResponse> {
     return this.http.post<CocinarRecetaResponse>(`${this.base}/recetas/${id}/cocinar`, {});
+  }
+
+  recomendarPorIa(busqueda: string, objetivo: string): Observable<ApiReceta[]> {
+    const params = new HttpParams()
+      .set('busqueda', busqueda)
+      .set('objetivo', objetivo);
+
+    return this.http.get<ApiReceta[]>(`${this.base}/recetas/ia/recomendar`, { params });
   }
 
   // ── Reseñas ──────────────────────────────────────────────
