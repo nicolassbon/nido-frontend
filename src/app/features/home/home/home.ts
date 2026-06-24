@@ -90,7 +90,7 @@ export class Home implements OnInit {
   private resolveImageUrl(url: string | null): string | null {
     if (!url) return null;
     if (/^(https?:)?\/\//i.test(url) || /^(data|blob):/i.test(url)) return url;
-    if (url.startsWith('/productos/')) return url;
+    if (url.startsWith('/productos/') || url.startsWith('/assets/')) return url;
     const baseUrl = environment.apiBaseUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
     const path = url.startsWith('/') ? url : `/${url}`;
     return `${baseUrl}${path}`;
