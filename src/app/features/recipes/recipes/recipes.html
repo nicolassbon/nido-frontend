@@ -280,12 +280,14 @@
               (click)="toggleEatingToday(member.id)"
               [attr.aria-pressed]="isEatingToday(member.id)"
               [title]="member.name + (member.allergens.length ? ' - Alergico a: ' + member.allergens.join(', ') : ' - Sin alergenos')">
-              <div
-                class="w-7 h-7 rounded-full text-[0.65rem] font-bold flex items-center justify-center shrink-0 transition-[background] duration-150"
-                [style.background]="isEatingToday(member.id) ? member.color : '#e5ddd0'"
-                [style.color]="isEatingToday(member.id) ? '#fff' : '#927357'">
-                {{ member.initials }}
-              </div>
+              <app-avatar
+                [fotoUrl]="member.fotoUrl"
+                [nombre]="member.name"
+                sizeClass="w-7 h-7"
+                fontSizeClass="text-[0.65rem]"
+                class="shrink-0 transition-opacity duration-150"
+                [class.opacity-60]="!isEatingToday(member.id)"
+              />
               <span
                 class="min-w-0 flex-1 truncate text-[0.8rem] font-medium text-left transition-[color] duration-150"
                 [style.color]="isEatingToday(member.id) ? '#263F30' : '#927357'">

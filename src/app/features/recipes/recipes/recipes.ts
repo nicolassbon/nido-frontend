@@ -31,6 +31,7 @@ import { StarRatingComponent } from '../../../shared/ui/star-rating/star-rating'
 import { ProductService } from '../../../core/servicios/agregar-producto.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { PerfilApiService } from '../../perfil/perfil-api.service';
+import { Avatar } from '../../../shared/ui/avatar/avatar';
 
 type Difficulty = 'Fácil' | 'Medio' | 'Difícil';
 type FilterOption = 'Todos' | 'Guardadas' | Difficulty;
@@ -89,6 +90,7 @@ interface HouseholdMember {
   initials: string;
   color: string;
   allergens: string[];
+  fotoUrl?: string | null;
 }
 
 const MEMBER_COLORS = ['#3E5E4A', '#B48B6A', '#927357', '#263F30', '#b44c3c', '#5f6f52'];
@@ -138,7 +140,7 @@ const APPLIANCE_ALIASES: Record<string, string[]> = {
 
 @Component({
   selector: 'app-recipes',
-  imports: [LucideAngularModule, FormsModule, RouterModule, StarRatingComponent],
+  imports: [LucideAngularModule, FormsModule, RouterModule, StarRatingComponent, Avatar],
   templateUrl: './recipes.html',
   styleUrl: './recipes.scss',
 })
@@ -635,6 +637,7 @@ export class Recipes implements OnInit {
       initials: this.getInitials(member.nombre),
       color: MEMBER_COLORS[index % MEMBER_COLORS.length],
       allergens: this.expandRestrictions(member.alergias ?? []),
+      fotoUrl: member.fotoUrl,
     };
   }
 
