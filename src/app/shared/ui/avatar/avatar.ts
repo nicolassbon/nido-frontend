@@ -1,4 +1,12 @@
-import { Component, computed, signal, input, ChangeDetectionStrategy, effect, untracked } from '@angular/core';
+import {
+  Component,
+  computed,
+  signal,
+  input,
+  ChangeDetectionStrategy,
+  effect,
+  untracked,
+} from '@angular/core';
 
 @Component({
   selector: 'app-avatar',
@@ -8,6 +16,7 @@ import { Component, computed, signal, input, ChangeDetectionStrategy, effect, un
       <img
         [src]="fotoUrl()"
         [alt]="nombre() || 'Usuario'"
+        referrerpolicy="no-referrer"
         (error)="handleImgError()"
         [class]="'rounded-full object-cover ' + sizeClass()"
       />
@@ -15,12 +24,17 @@ import { Component, computed, signal, input, ChangeDetectionStrategy, effect, un
       <div
         [style.backgroundColor]="avatarStyles().bg"
         [style.color]="avatarStyles().text"
-        [class]="'rounded-full flex items-center justify-center font-bold font-title uppercase select-none border border-nido-border/20 ' + sizeClass() + ' ' + fontSizeClass()"
+        [class]="
+          'rounded-full flex items-center justify-center font-bold font-title uppercase select-none border border-nido-border/20 ' +
+          sizeClass() +
+          ' ' +
+          fontSizeClass()
+        "
       >
         {{ initials() }}
       </div>
     }
-  `
+  `,
 })
 export class Avatar {
   readonly nombre = input<string | null | undefined>('');
@@ -55,7 +69,7 @@ export class Avatar {
       { bg: '#2B4A47', text: '#EADCC9' },
       { bg: '#B48B6A', text: '#1F3A3A' },
       { bg: '#7A5A45', text: '#EADCC9' },
-      { bg: '#b44c3c', text: '#ffffff' }
+      { bg: '#b44c3c', text: '#ffffff' },
     ];
     if (!name) {
       return colors[0];
