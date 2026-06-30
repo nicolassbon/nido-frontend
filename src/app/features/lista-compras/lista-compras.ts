@@ -38,7 +38,7 @@ export class ListaCompras implements OnInit, OnDestroy {
   protected showAllLists = false;
   protected itemNombre = '';
   protected itemCantidad: number | null = null;
-  protected itemUnidad = '';
+  protected itemUnidad = 'unidad';
   protected editingItem: { listaId: string; itemId: string } | null = null;
   protected uploadingHistoryId: string | null = null;
   protected isSaving = false;
@@ -204,14 +204,14 @@ export class ListaCompras implements OnInit, OnDestroy {
     this.editingItem = { listaId, itemId: item.id };
     this.itemNombre = item.nombre;
     this.itemCantidad = item.cantidad;
-    this.itemUnidad = item.unidad ?? '';
+    this.itemUnidad = item.unidad ?? 'unidad';
   }
 
   protected cancelItemEdit(): void {
     this.editingItem = null;
     this.itemNombre = '';
     this.itemCantidad = null;
-    this.itemUnidad = '';
+    this.itemUnidad = 'unidad';
   }
 
   protected togglePurchased(listaId: string, item: ShoppingItem): void {
