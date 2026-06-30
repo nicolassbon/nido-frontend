@@ -1,4 +1,4 @@
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal, HostListener } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -31,6 +31,7 @@ import { StarRatingComponent } from '../../../shared/ui/star-rating/star-rating'
 import { ProductService } from '../../../core/servicios/agregar-producto.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { PerfilApiService } from '../../perfil/perfil-api.service';
+import { NidoSelectComponent, NidoSelectOption } from '../../../shared/ui/form/nido-select/nido-select';
 
 type Difficulty = 'Fácil' | 'Medio' | 'Difícil';
 type FilterOption = 'Todos' | 'Guardadas' | Difficulty;
@@ -138,7 +139,7 @@ const APPLIANCE_ALIASES: Record<string, string[]> = {
 
 @Component({
   selector: 'app-recipes',
-  imports: [LucideAngularModule, FormsModule, RouterModule, StarRatingComponent],
+  imports: [LucideAngularModule, FormsModule, RouterModule, StarRatingComponent, NidoSelectComponent],
   templateUrl: './recipes.html',
   styleUrl: './recipes.scss',
 })
@@ -188,6 +189,13 @@ export class Recipes implements OnInit {
   private readonly iaRecipeIds                = signal<Set<string> | null>(null);
 
   protected readonly filterOptions: FilterOption[] = ['Todos', 'Fácil', 'Medio', 'Difícil'];
+
+  protected readonly nutritionalOptions = signal<NidoSelectOption[]>([
+    { value: '', label: 'Sin objetivo nutricional' },
+    { value: 'alta-proteina', label: 'Alta proteina' },
+    { value: 'bajo-calorias', label: 'Bajo en calorias' },
+    { value: 'vegetariano', label: 'Vegetariano' },
+  ]);
 
   protected readonly householdMembers = signal<HouseholdMember[]>([]);
   protected readonly eatingToday = signal<Set<string>>(new Set());
@@ -388,6 +396,14 @@ export class Recipes implements OnInit {
     this.showSortDropdown.set(false);
   }
 
+  @HostListener('document:click', ['$event'])
+  onClickOutside(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (this.showSortDropdown() && !target.closest('.sort-dropdown-container')) {
+      this.showSortDropdown.set(false);
+    }
+  }
+
   protected toggleAllergens(): void {
     this.excludeAllergens.update(value => !value);
   }
@@ -499,7 +515,7 @@ export class Recipes implements OnInit {
   protected applianceChipClass(): string {
     const base = 'px-4 py-[0.4rem] rounded-[20px] border-[1.5px] border-solid font-medium text-[0.8125rem] cursor-pointer transition-all duration-150 inline-flex items-center gap-1.5';
     return this.excludeMissingAppliances()
-      ? `${base} bg-nido-green-dark border-nido-green-dark text-nido-cream`
+      ? `${base} bg-nido-gold border-nido-gold text-nido-cream`
       : `${base} bg-white border-nido-border text-nido-brown hover:border-nido-green hover:text-nido-green`;
   }
 
