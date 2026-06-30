@@ -15,6 +15,8 @@ import {
 import { HogaresApiService, MiembroResponse } from '../../household/hogares-api.service';
 import { TareasApiService } from '../../tareas/services/tareas-api.service';
 
+import { NidoTimepickerComponent } from '../../../shared/ui/form/nido-timepicker/nido-timepicker';
+
 type TipoComida = 'desayuno' | 'almuerzo' | 'cena' | 'tarea';
 
 interface SlotModal {
@@ -29,7 +31,7 @@ interface SlotModal {
 @Component({
   selector: 'app-planificador',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule, NidoTimepickerComponent],
   templateUrl: './planificador.html',
   styleUrl: './planificador.scss',
 })
@@ -258,8 +260,13 @@ export class Planificador implements OnInit, OnDestroy {
     const slot = this.modalSlot();
     if (!slot) return;
 
-    this.modalSlot.set({ ...slot, recetaId: receta.id });
-    this.recipeQuery.set(receta.nombre);
+    if (slot.recetaId === receta.id) {
+      this.modalSlot.set({ ...slot, recetaId: '' });
+      this.recipeQuery.set('');
+    } else {
+      this.modalSlot.set({ ...slot, recetaId: receta.id });
+      this.recipeQuery.set(receta.nombre);
+    }
     this.errorMessage.set(null);
   }
 

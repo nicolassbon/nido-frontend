@@ -179,7 +179,7 @@
                     (click)="openModal(dia.isoDate, tipo)"
                     title="Agregar otra tarea">
                     <lucide-icon name="plus" [size]="14" />
-                    <span>Aniadir otra tarea</span>
+                    <span>Añadir otra tarea</span>
                   </button>
                 }
 
@@ -192,7 +192,7 @@
                     [title]="'Agregar ' + TIPO_LABELS[tipo]">
                     <lucide-icon name="plus" [size]="tipo === 'tarea' ? 14 : 22" />
                     @if (tipo === 'tarea') {
-                      <span>Aniadir tarea</span>
+                      <span>Añadir tarea</span>
                     }
                   </button>
                 }
@@ -274,7 +274,7 @@
         <button type="button" class="modal-secondary" (click)="closeTaskDayDetail()">Cerrar</button>
         <button type="button" class="modal-primary" (click)="openModal(taskDayDate, 'tarea')">
           <lucide-icon name="plus" [size]="15" />
-          Anadir otra tarea
+          Añadir otra tarea
         </button>
       </footer>
     </section>
@@ -371,11 +371,9 @@
         }
 
         <label class="field-label field-label--inline">Hora</label>
-        <input
-          class="field-input field-input--time"
-          type="time"
+        <nido-timepicker
           [ngModel]="modalSlot()!.hora"
-          (ngModelChange)="updateSlotTime($event)" />
+          (ngModelChange)="updateSlotTime($event)"></nido-timepicker>
 
         @if (errorMessage()) {
           <p class="modal-error">
