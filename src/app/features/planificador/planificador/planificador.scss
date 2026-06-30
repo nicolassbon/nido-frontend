@@ -384,6 +384,15 @@
   text-overflow: ellipsis;
 }
 
+.plan-card:not(.plan-card--task) .plan-card__time {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 2;
+  background: rgba(30, 63, 58, 0.82);
+  color: #fff;
+}
+
 .plan-card__assignee {
   color: var(--brown);
   font-size: 0.56rem;
@@ -701,7 +710,7 @@
   box-shadow: 0 22px 60px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .plan-modal__header {
@@ -755,7 +764,7 @@
 
 .plan-modal__body {
   padding: 16px 18px;
-  overflow: auto;
+  overflow: visible;
   display: flex;
   flex-direction: column;
   gap: 10px;
