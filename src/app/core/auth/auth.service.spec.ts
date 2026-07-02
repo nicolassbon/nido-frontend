@@ -8,11 +8,14 @@ describe('AuthService', () => {
   let service: AuthService;
   let httpMock: HttpTestingController;
 
-  const toBase64Url = (value: string): string =>
-    btoa(value)
+  const toBase64Url = (value: string): string => {
+    const bytes = new TextEncoder().encode(value);
+    const binString = String.fromCodePoint(...bytes);
+    return btoa(binString)
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=+$/g, '');
+  };
 
   const createToken = (payload: Record<string, unknown>): string => {
     const header = toBase64Url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
@@ -232,6 +235,12 @@ describe('AuthService', () => {
       service.setToken(createToken({ exp: Math.floor(Date.now() / 1000) + 60, email: 'nico-test_01@example.com' }));
 
       expect(service.isAuthenticated()).toBe(true);
+    });
+
+    it('correctly decodes a UTF-8 payload with accents/tildes', () => {
+      service.setToken(createToken({ exp: Math.floor(Date.now() / 1000) + 60, nombre: 'Nicolás Bon' }));
+
+      expect(service.getNombre()).toBe('Nicolás Bon');
     });
   });
 });

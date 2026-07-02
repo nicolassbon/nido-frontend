@@ -32,10 +32,17 @@ export class PerfilApiService {
     return this.http.get<PerfilApiResponse>(this.endpoint);
   }
 
-  updateProfile(nombre: string, sexo: string, telefono: string, foto: File | null): Observable<PerfilApiResponse> {
+  updateProfile(
+    nombre: string,
+    sexo: string,
+    telefono: string,
+    foto: File | null,
+    removeFoto: boolean,
+  ): Observable<PerfilApiResponse> {
     const formData = new FormData();
     formData.append('nombre', nombre);
     formData.append('sexo', sexo);
+    formData.append('removeFoto', String(removeFoto));
     if (telefono) {
       formData.append('telefono', telefono);
     }

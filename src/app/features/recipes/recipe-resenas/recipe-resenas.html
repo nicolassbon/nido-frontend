@@ -60,14 +60,12 @@
                    style="background: linear-gradient(135deg, #fdf9f3 0%, #f7f0e6 100%); border: 1px solid #e8d9c4;">
             <!-- Avatar + autor + fecha + borrar -->
             <div class="flex items-center gap-2">
-              @if (nota.usuarioFotoUrl) {
-                <img [src]="nota.usuarioFotoUrl" [alt]="nota.usuarioNombre"
-                     class="w-7 h-7 rounded-full object-cover shrink-0 border border-nido-border/50" />
-              } @else {
-                <div class="w-7 h-7 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0 text-nido-cream text-[0.7rem] font-bold">
-                  {{ nota.usuarioNombre[0]?.toUpperCase() }}
-                </div>
-              }
+              <app-avatar
+                [fotoUrl]="nota.usuarioFotoUrl"
+                [nombre]="nota.usuarioNombre"
+                sizeClass="w-7 h-7"
+                fontSizeClass="text-[0.7rem]"
+              />
               <span class="text-[0.78rem] font-semibold text-nido-green-dark">{{ nota.usuarioNombre }}</span>
               <span class="text-[0.68rem] text-nido-brown ml-auto shrink-0">{{ formatDate(nota.createdAt) }}</span>
               @if (esMia(nota)) {
