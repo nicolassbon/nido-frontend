@@ -69,7 +69,9 @@ function decodeBase64Url(value: string): string {
   const normalizedValue = value.replace(/-/g, '+').replace(/_/g, '/');
   const paddedValue = normalizedValue.padEnd(Math.ceil(normalizedValue.length / 4) * 4, '=');
 
-  return atob(paddedValue);
+  const binaryString = atob(paddedValue);
+  const bytes = Uint8Array.from(binaryString, (char) => char.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
 }
 
 @Injectable({ providedIn: 'root' })
