@@ -960,6 +960,10 @@ lucide-icon svg {
   app-editar-perfil,
   app-electrodomesticos,
   app-home,
+  app-register,
+  app-create-household,
+  app-equipment-step,
+  app-wellness-step,
   app-alacena,
   app-recipes,
   app-recipe-detail,
@@ -1086,6 +1090,260 @@ lucide-icon svg {
         color: #ef5350 !important;
         stroke: #ef5350 !important;
       }
+    }
+  }
+
+  /* ==========================================================================
+     Ajustes para el onboarding / crear hogar en modo oscuro
+     ========================================================================== */
+  app-register,
+  app-create-household,
+  app-equipment-step,
+  app-wellness-step {
+    display: block;
+    min-height: 100vh;
+    background-color: #121815 !important;
+    color: #EAE3D9 !important;
+
+    .min-h-screen,
+    .bg-nido-cream,
+    .bg-nido-bg {
+      background-color: #121815 !important;
+    }
+
+    header.bg-nido-green-dark {
+      background-color: #142424 !important;
+      border-bottom: 1px solid rgba(216, 198, 178, 0.08);
+    }
+
+    form.bg-white,
+    main > .bg-white,
+    main > div.bg-white,
+    .fixed > .bg-white,
+    .fixed > div.bg-white {
+      background-color: rgba(28, 36, 32, 0.65) !important;
+      border: 1px solid rgba(216, 198, 178, 0.12) !important;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28) !important;
+    }
+
+    .fixed > .bg-white,
+    .fixed > div.bg-white,
+    .absolute.bg-white,
+    .absolute[class*="bg-white"] {
+      background-color: #1c2320 !important;
+      border-color: rgba(216, 198, 178, 0.18) !important;
+      box-shadow: 0 18px 54px rgba(0, 0, 0, 0.45) !important;
+    }
+
+    .auth-title,
+    .step-title,
+    .card-title,
+    h1,
+    h2,
+    h3,
+    label,
+    .text-nido-green-dark,
+    .text-\[\#2D1E16\],
+    .text-\[\#2D2D2D\] {
+      color: #EAE3D9 !important;
+    }
+
+    .auth-description,
+    .step-description,
+    .card-subtitle,
+    .auth-tagline,
+    .step-tagline,
+    .text-nido-brown,
+    .text-nido-muted,
+    [class*="text-nido-green-dark/"] {
+      color: #a8b9b0 !important;
+    }
+
+    a,
+    .text-nido-green,
+    .text-nido-gold,
+    .underline {
+      color: #B48B6A !important;
+    }
+
+    a:hover,
+    button.bg-transparent:hover,
+    .hover\:text-nido-green-dark:hover,
+    .hover\:text-nido-brown:hover {
+      color: #EAE3D9 !important;
+    }
+
+    input,
+    textarea,
+    select,
+    .nido-select__trigger {
+      background-color: rgba(18, 24, 22, 0.72) !important;
+      border-color: rgba(216, 198, 178, 0.2) !important;
+      color: #EAE3D9 !important;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #5c6f66 !important;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus,
+    .nido-select__trigger:focus {
+      border-color: #B48B6A !important;
+      box-shadow: 0 0 0 3px rgba(180, 139, 106, 0.15) !important;
+    }
+
+    .bg-white\/\[0\.51\],
+    .bg-white\/90,
+    [class*="bg-white/"],
+    button.bg-white,
+    div.bg-white,
+    .bg-\[\#fff\] {
+      background-color: rgba(28, 36, 32, 0.65) !important;
+      border-color: rgba(216, 198, 178, 0.12) !important;
+    }
+
+    .border-nido-border,
+    [class*="border-nido-border/"],
+    .divide-nido-border\/70 > :not([hidden]) ~ :not([hidden]) {
+      border-color: rgba(216, 198, 178, 0.12) !important;
+    }
+
+    .bg-\[rgba\(62\,94\,74\,0\.03\)\],
+    .bg-\[rgba\(62\,94\,74\,0\.04\)\],
+    .bg-\[rgba\(62\,94\,74\,0\.08\)\],
+    .bg-nido-gold\/10 {
+      background-color: rgba(247, 241, 230, 0.05) !important;
+    }
+
+    button.bg-nido-green-dark,
+    .bg-nido-green-dark.text-nido-cream,
+    .bg-nido-green-dark.border-nido-green-dark {
+      background-color: #7A5A45 !important;
+      border-color: #7A5A45 !important;
+      color: #EAE3D9 !important;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22) !important;
+
+      lucide-icon,
+      svg,
+      path,
+      span {
+        color: #EAE3D9 !important;
+        stroke: #EAE3D9 !important;
+      }
+
+      &:hover {
+        background-color: #654937 !important;
+        border-color: #654937 !important;
+      }
+    }
+
+    button.bg-transparent.border-nido-border,
+    .text-nido-brown.border-nido-border {
+      background-color: rgba(247, 241, 230, 0.04) !important;
+      border-color: rgba(216, 198, 178, 0.2) !important;
+      color: #a8b9b0 !important;
+
+      &:hover {
+        background-color: rgba(247, 241, 230, 0.08) !important;
+        border-color: #7A5A45 !important;
+        color: #EAE3D9 !important;
+      }
+    }
+
+    button.border-dashed,
+    button[class*="border-dashed"] {
+      background-color: rgba(247, 241, 230, 0.03) !important;
+      border-color: rgba(180, 139, 106, 0.28) !important;
+      color: #a8b9b0 !important;
+
+      div {
+        border-color: rgba(180, 139, 106, 0.4) !important;
+        color: #B48B6A !important;
+      }
+
+      &:hover {
+        background-color: rgba(180, 139, 106, 0.08) !important;
+        border-color: #B48B6A !important;
+      }
+    }
+
+    button.bg-nido-green-dark.border-nido-green-dark,
+    button.bg-nido-green-dark.text-nido-cream {
+      background-color: #7A5A45 !important;
+      border-color: #7A5A45 !important;
+      color: #EAE3D9 !important;
+    }
+
+    button.bg-white\/\[0\.51\],
+    button[class*="bg-white/"][class*="border-nido-border"] {
+      background-color: rgba(28, 36, 32, 0.65) !important;
+      border-color: rgba(216, 198, 178, 0.12) !important;
+      color: #EAE3D9 !important;
+
+      &:hover {
+        background-color: rgba(247, 241, 230, 0.08) !important;
+        border-color: #B48B6A !important;
+      }
+
+      lucide-icon,
+      svg,
+      path {
+        color: #B48B6A !important;
+        stroke: #B48B6A !important;
+      }
+    }
+
+    .absolute.bg-white,
+    .absolute[class*="bg-white"] {
+      background-color: #1c2320 !important;
+      border-color: rgba(216, 198, 178, 0.18) !important;
+
+      button:hover {
+        background-color: rgba(247, 241, 230, 0.08) !important;
+      }
+    }
+
+    .bg-\[rgba\(180\,76\,60\,0\.07\)\] {
+      background-color: rgba(180, 76, 60, 0.15) !important;
+      border-color: rgba(180, 76, 60, 0.3) !important;
+    }
+
+    .text-nido-red,
+    lucide-icon.text-nido-red {
+      color: #e57373 !important;
+    }
+  }
+
+  app-register app-progress-steps,
+  app-create-household app-progress-steps,
+  app-equipment-step app-progress-steps,
+  app-wellness-step app-progress-steps {
+    .bg-nido-green,
+    .bg-nido-green-dark {
+      background-color: #7A5A45 !important;
+      color: #EAE3D9 !important;
+      border-color: #7A5A45 !important;
+    }
+
+    .bg-white {
+      background-color: rgba(28, 36, 32, 0.65) !important;
+      color: #a8b9b0 !important;
+      border-color: rgba(216, 198, 178, 0.18) !important;
+    }
+
+    .bg-nido-brown\/20 {
+      background-color: rgba(180, 139, 106, 0.22) !important;
+    }
+
+    h3 {
+      color: #EAE3D9 !important;
+    }
+
+    p {
+      color: #a8b9b0 !important;
     }
   }
 

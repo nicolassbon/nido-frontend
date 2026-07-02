@@ -10,4 +10,8 @@ import { ThemeService } from './core/theme/theme.service';
 })
 export class App {
   private readonly themeService = inject(ThemeService);
+
+  constructor() {
+    this.themeService.syncFromRemote();
+  }
 }
