@@ -141,8 +141,7 @@ const APPLIANCE_ALIASES: Record<string, string[]> = {
 
 @Component({
   selector: 'app-recipes',
-  imports: [LucideAngularModule, FormsModule, RouterModule, StarRatingComponent, NidoSelectComponent],
-  imports: [LucideAngularModule, FormsModule, RouterModule, StarRatingComponent, Avatar],
+  imports: [LucideAngularModule, FormsModule, RouterModule, StarRatingComponent, NidoSelectComponent, Avatar],
   templateUrl: './recipes.html',
   styleUrl: './recipes.scss',
 })

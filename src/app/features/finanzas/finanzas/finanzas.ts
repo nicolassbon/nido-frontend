@@ -117,8 +117,7 @@ function emptyFacturaForm(): NuevaFacturaForm {
 
 @Component({
   selector: 'app-finanzas',
-  imports: [LucideAngularModule, FormsModule, NidoDatepickerComponent],
-  imports: [LucideAngularModule, FormsModule, Avatar],
+  imports: [LucideAngularModule, FormsModule, NidoDatepickerComponent, Avatar],
   templateUrl: './finanzas.html',
 })
 export class Finanzas {
