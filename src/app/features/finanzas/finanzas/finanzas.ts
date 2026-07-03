@@ -27,6 +27,7 @@ import {
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { HogaresApiService, MiembroResponse } from '../../household/hogares-api.service';
+import { Avatar } from '../../../shared/ui/avatar/avatar';
 import {
   FinanzasApiService,
   GastoResponse,
@@ -117,6 +118,7 @@ function emptyFacturaForm(): NuevaFacturaForm {
 @Component({
   selector: 'app-finanzas',
   imports: [LucideAngularModule, FormsModule, NidoDatepickerComponent],
+  imports: [LucideAngularModule, FormsModule, Avatar],
   templateUrl: './finanzas.html',
 })
 export class Finanzas {

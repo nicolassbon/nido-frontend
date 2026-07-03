@@ -102,6 +102,7 @@ export class Configuracion {
   readonly userName = signal(this.auth.getNombre() ?? '');
   readonly email = signal(this.auth.getEmail() ?? '');
   readonly userId = signal(this.auth.getUserId() ?? '');
+  readonly fotoUrl = signal<string | null>(null);
 
   // ── Notificaciones (Giulianna) ───────────────────────────
   readonly diasAlerta = signal(7);
@@ -214,6 +215,9 @@ export class Configuracion {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (profile) => {
+          this.userName.set(profile.nombre ?? '');
+          this.email.set(profile.email ?? '');
+          this.fotoUrl.set(profile.fotoUrl ?? null);
           this.hasPassword.set(!!profile.hasPassword);
           this.hasGoogleLinked.set(!!profile.hasGoogleLinked);
           this.loadingProfile.set(false);

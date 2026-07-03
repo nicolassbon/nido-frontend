@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { LucideAngularModule } from 'lucide-angular';
 import { RecipesApiService, ApiResena, ApiNota } from '../recipes/services/recipes-api.service';
 import { StarRatingComponent } from '../../../shared/ui/star-rating/star-rating';
+import { Avatar } from '../../../shared/ui/avatar/avatar';
 
 @Component({
   selector: 'app-recipe-resenas',
   standalone: true,
-  imports: [CommonModule, LucideAngularModule, StarRatingComponent],
+  imports: [CommonModule, LucideAngularModule, StarRatingComponent, Avatar],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './recipe-resenas.html',
 })

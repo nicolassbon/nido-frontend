@@ -1,4 +1,13 @@
-import { Component, inject, OnInit, signal, DestroyRef, Input, Output, EventEmitter } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnInit,
+  signal,
+  DestroyRef,
+  Input,
+  Output,
+  EventEmitter,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -44,6 +53,7 @@ export class EditarPerfil implements OnInit {
   protected readonly fotoUrl = signal<string | null>(null);
   protected readonly photoPreview = signal<string | null>(null);
   protected readonly selectedPhoto = signal<File | null>(null);
+  protected readonly removeFoto = signal(false);
   protected readonly photoError = signal<string | null>(null);
 
   ngOnInit(): void {
@@ -63,6 +73,7 @@ export class EditarPerfil implements OnInit {
           sexo: profile.sexo ?? 'Otro',
         });
         this.fotoUrl.set(profile.fotoUrl ?? null);
+        this.removeFoto.set(false);
         this.isLoading.set(false);
       },
       error: () => {
@@ -92,6 +103,7 @@ export class EditarPerfil implements OnInit {
     }
 
     this.clearSelectedPhoto();
+    this.removeFoto.set(false);
     this.selectedPhoto.set(file);
     this.photoObjectUrl = URL.createObjectURL(file);
     this.photoPreview.set(this.photoObjectUrl);
@@ -101,6 +113,8 @@ export class EditarPerfil implements OnInit {
   protected onRemovePhoto(event: Event): void {
     event.stopPropagation();
     this.clearSelectedPhoto();
+    this.fotoUrl.set(null);
+    this.removeFoto.set(true);
     this.photoError.set(null);
   }
 
@@ -125,19 +139,23 @@ export class EditarPerfil implements OnInit {
 
     const { nombre, sexo, telefono } = this.form.getRawValue();
 
-    this.perfilApi.updateProfile(nombre, sexo, telefono, this.selectedPhoto()).subscribe({
-      next: () => {
-        if (this.isModal) {
-          this.closed.emit(true);
-        } else {
-          this.router.navigate(['/perfil']);
-        }
-      },
-      error: () => {
-        this.apiError.set('No se pudo guardar los cambios en el perfil. Intentá nuevamente más tarde.');
-        this.isSaving.set(false);
-      },
-    });
+    this.perfilApi
+      .updateProfile(nombre, sexo, telefono, this.selectedPhoto(), this.removeFoto())
+      .subscribe({
+        next: () => {
+          if (this.isModal) {
+            this.closed.emit(true);
+          } else {
+            this.router.navigate(['/perfil']);
+          }
+        },
+        error: () => {
+          this.apiError.set(
+            'No se pudo guardar los cambios en el perfil. Intentá nuevamente más tarde.',
+          );
+          this.isSaving.set(false);
+        },
+      });
   }
 
   protected onCancel(): void {
@@ -147,5 +165,4 @@ export class EditarPerfil implements OnInit {
       this.router.navigate(['/perfil']);
     }
   }
-
 }

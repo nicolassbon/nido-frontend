@@ -90,13 +90,12 @@
           <div class="mt-1.5 flex flex-col gap-1.5">
             @for (m of balanceMiembros(); track m.usuarioId) {
               <div class="flex items-center gap-2">
-                @if (m.fotoUrl) {
-                  <img [src]="m.fotoUrl" [alt]="m.nombre" class="w-5 h-5 rounded-full object-cover shrink-0">
-                } @else {
-                  <div class="w-5 h-5 rounded-full bg-nido-cream flex items-center justify-center shrink-0">
-                    <span class="text-[9px] font-bold text-nido-green-dark">{{ m.nombre.charAt(0) }}</span>
-                  </div>
-                }
+                <app-avatar
+                  [fotoUrl]="m.fotoUrl"
+                  [nombre]="m.nombre"
+                  sizeClass="w-5 h-5"
+                  fontSizeClass="text-[9px]"
+                />
                 <span class="text-xs text-nido-green-dark font-medium truncate">{{ m.nombre }}</span>
                 <span class="text-xs font-semibold ml-auto shrink-0" [class]="balanceColor(m.balance)">
                   {{ balanceLabel(m.balance) }}
