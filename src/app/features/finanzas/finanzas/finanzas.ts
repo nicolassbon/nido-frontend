@@ -41,6 +41,7 @@ import {
   AlacenaOportunidadesResponse,
   PresupuestoResponse,
 } from '../finanzas-api.service';
+import { NidoDatepickerComponent } from '../../../shared/ui/form/nido-datepicker/nido-datepicker';
 
 Chart.register(
   LineController, LineElement, PointElement, LinearScale, CategoryScale, Filler,
@@ -116,7 +117,7 @@ function emptyFacturaForm(): NuevaFacturaForm {
 
 @Component({
   selector: 'app-finanzas',
-  imports: [LucideAngularModule, FormsModule, Avatar],
+  imports: [LucideAngularModule, FormsModule, NidoDatepickerComponent, Avatar],
   templateUrl: './finanzas.html',
 })
 export class Finanzas {

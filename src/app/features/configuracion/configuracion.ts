@@ -12,6 +12,7 @@ import { Avatar } from '../../shared/ui/avatar/avatar';
 import { SwPush } from '@angular/service-worker';
 import { NotificacionesApiService } from '../notificaciones/services/notificaciones-api.service';
 import { TelegramApiService } from '../telegram/telegram-api';
+import { ThemeService, ThemeMode } from '../../core/theme/theme.service';
 
 export function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
   const password = control.get('newPassword')?.value;
@@ -81,6 +82,13 @@ export class Configuracion {
   private readonly notifApi = inject(NotificacionesApiService);
   private readonly telegramApi = inject(TelegramApiService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly themeService = inject(ThemeService);
+
+  readonly currentTheme = this.themeService.themeMode;
+
+  setTheme(mode: ThemeMode): void {
+    this.themeService.setTheme(mode);
+  }
 
   private telegramUnlinkSuccessTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private telegramStatusRequestSeq = 0;
