@@ -3,6 +3,17 @@
   <head>
     <meta charset="utf-8" />
     <title>Nido</title>
+    <script>
+      (function() {
+        try {
+          const stored = localStorage.getItem('nido-theme-mode');
+          const isDark = stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />

@@ -64,6 +64,7 @@ export interface AddPasswordRequest {
 }
 
 const TOKEN_KEY = 'accessToken';
+const AUTH_TOKEN_CHANGED_EVENT = 'nido-auth-token-changed';
 
 function decodeBase64Url(value: string): string {
   const normalizedValue = value.replace(/-/g, '+').replace(/_/g, '/');
@@ -86,10 +87,12 @@ export class AuthService {
 
   setToken(token: string): void {
     localStorage.setItem(TOKEN_KEY, token);
+    window.dispatchEvent(new Event(AUTH_TOKEN_CHANGED_EVENT));
   }
 
   clearToken(): void {
     localStorage.removeItem(TOKEN_KEY);
+    window.dispatchEvent(new Event(AUTH_TOKEN_CHANGED_EVENT));
   }
 
   isAuthenticated(): boolean {

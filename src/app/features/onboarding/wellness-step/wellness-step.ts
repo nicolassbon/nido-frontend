@@ -8,6 +8,7 @@ import {
   MetaCatalogo,
 } from '../onboarding-api.service';
 import { AuthService } from '../../../core/auth/auth.service';
+import { ThemeService, ThemeMode } from '../../../core/theme/theme.service';
 import { ProgressStepsComponent } from '../../../shared/ui/progress-steps/progress-steps.component';
 
 @Component({
@@ -20,6 +21,9 @@ export class WellnessStep implements OnInit {
   private readonly onboardingApi = inject(OnboardingApiService);
   private readonly router        = inject(Router);
   private readonly auth          = inject(AuthService);
+  private readonly themeService  = inject(ThemeService);
+
+  readonly currentTheme = this.themeService.themeMode;
 
   readonly steps = [
     { number: 1, label: 'Tu Perfil - Crea tu cuenta', completed: true,  active: false },
@@ -74,6 +78,10 @@ export class WellnessStep implements OnInit {
 
   back(): void {
     this.router.navigate(['/equipamiento']);
+  }
+
+  setTheme(mode: ThemeMode): void {
+    this.themeService.setTheme(mode);
   }
 
   ngOnInit(): void {
