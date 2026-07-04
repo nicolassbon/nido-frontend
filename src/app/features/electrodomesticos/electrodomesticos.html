@@ -105,6 +105,21 @@
 
               {{ item.tipo || 'Otro' }}
             </span>
+
+            <div class="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+              <button
+                class="w-8 h-8 rounded-full bg-white/85 backdrop-blur-sm flex items-center justify-center text-nido-brown shadow-[0_2px_8px_rgba(38,63,48,0.18)] transition hover:bg-white hover:text-nido-green-dark cursor-pointer"
+                (click)="abrirModalEditar(item); $event.stopPropagation()"
+                title="Editar">
+                <lucide-icon name="pencil" [size]="14" />
+              </button>
+              <button
+                class="w-8 h-8 rounded-full bg-white/85 backdrop-blur-sm flex items-center justify-center text-nido-brown shadow-[0_2px_8px_rgba(38,63,48,0.18)] transition hover:bg-red-50 hover:text-red-600 cursor-pointer"
+                (click)="eliminarElectrodomestico(item, $event)"
+                title="Eliminar">
+                <lucide-icon name="trash-2" [size]="14" />
+              </button>
+            </div>
           </div>
 
           <div class="px-4 py-4 flex min-h-[132px] flex-col gap-3">
@@ -276,6 +291,82 @@
             <button
               class="flex-1 py-3 rounded-[12px] border border-nido-border bg-[#fff] text-nido-brown font-semibold hover:bg-[#f7f3ef]"
               (click)="cerrarModal()">
+
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal editar -->
+  @if (showEditModal() && editTarget(); as target) {
+    <div
+      class="fixed inset-0 bg-[rgba(31,58,58,0.72)] backdrop-blur-[2px] flex items-center justify-center z-[100] p-4"
+      (click)="cerrarModalEditar()">
+
+      <div
+        class="relative z-[101] bg-[#fff] rounded-[14px] w-full max-w-[520px] overflow-hidden shadow-[0_18px_46px_rgba(31,58,58,0.28)]"
+        (click)="$event.stopPropagation()">
+
+        <div class="relative flex items-center justify-between overflow-hidden px-6 py-5 bg-nido-green-dark">
+          <div class="absolute inset-0 bg-[url('/images/banners/electrodomesticos.png')] bg-center bg-cover"></div>
+          <div class="absolute inset-0 bg-[rgba(31,58,58,0.56)]"></div>
+          <h2 class="relative z-10 text-base font-bold text-nido-cream truncate">
+            Editar {{ target.nombre }}
+          </h2>
+
+          <button
+            class="relative z-10 bg-transparent border-none text-nido-cream/70 cursor-pointer p-1 rounded hover:text-nido-cream"
+            (click)="cerrarModalEditar()">
+
+            <lucide-icon name="x" [size]="20" />
+          </button>
+        </div>
+
+        <div class="px-6 py-5 space-y-4 bg-[#fff]">
+
+          <label class="block text-[0.85rem] font-semibold text-nido-brown">
+            Tipo
+
+            <select
+              class="w-full mt-2 px-4 py-3 border-[1.5px] border-nido-border rounded-[12px] bg-[#fff] text-nido-green-dark outline-none focus:border-nido-green"
+              [ngModel]="editDraft().tipo"
+              (ngModelChange)="editDraft.update(d => ({ ...d, tipo: $event }))">
+
+              <option value="Cocina">Cocina</option>
+              <option value="Lavadero">Lavadero</option>
+              <option value="Living">Living</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </label>
+
+          <label class="block text-[0.85rem] font-semibold text-nido-brown">
+            Estado
+
+            <select
+              class="w-full mt-2 px-4 py-3 border-[1.5px] border-nido-border rounded-[12px] bg-[#fff] text-nido-green-dark outline-none focus:border-nido-green"
+              [ngModel]="editDraft().estado"
+              (ngModelChange)="editDraft.update(d => ({ ...d, estado: $event }))">
+
+              <option value="activo">Activo</option>
+              <option value="fuera de servicio">Fuera de servicio</option>
+            </select>
+          </label>
+
+          <div class="flex gap-3 flex-wrap pt-2">
+            <button
+              class="flex-1 py-3 rounded-[12px] bg-nido-green-dark text-nido-cream font-semibold transition hover:bg-nido-green disabled:opacity-50 disabled:cursor-not-allowed"
+              (click)="guardarEdicion()"
+              [disabled]="guardandoEdicion()">
+
+              {{ guardandoEdicion() ? 'Guardando...' : 'Guardar cambios' }}
+            </button>
+
+            <button
+              class="flex-1 py-3 rounded-[12px] border border-nido-border bg-[#fff] text-nido-brown font-semibold hover:bg-[#f7f3ef]"
+              (click)="cerrarModalEditar()">
 
               Cancelar
             </button>

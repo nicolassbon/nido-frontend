@@ -35,7 +35,7 @@
       } @else {
         <ul class="tarea-list tarea-list-preview">
           @for (tarea of tareasPreview(); track tarea.id) {
-            <li class="tarea-item" [class.vencida]="estaVencida(tarea)">
+            <li class="tarea-item" [class.vencida]="estaVencida(tarea)" [title]="tarea.descripcion || ''">
               <button class="tarea-check" (click)="completarTarea(tarea)" title="Marcar como completada">
                 <lucide-icon name="check" [img]="icons.Check" size="14"></lucide-icon>
               </button>
@@ -74,6 +74,9 @@
               @if (estaVencida(tarea)) {
                 <lucide-icon name="alert-circle" [img]="icons.AlertCircle" size="16" class="vencida-icon" title="Vencida"></lucide-icon>
               }
+              <button class="tarea-delete" (click)="eliminarTarea(tarea, $event)" title="Eliminar tarea">
+                <lucide-icon name="trash-2" [img]="icons.Trash2" size="14"></lucide-icon>
+              </button>
             </li>
           }
         </ul>
@@ -225,7 +228,7 @@
         } @else {
           <ul class="tarea-list">
             @for (tarea of misTareasConResaltada(); track tarea.id) {
-              <li class="tarea-item" [class.vencida]="estaVencida(tarea)" [class.highlighted]="tarea.id === highlightedTaskId()">
+              <li class="tarea-item" [class.vencida]="estaVencida(tarea)" [class.highlighted]="tarea.id === highlightedTaskId()" [title]="tarea.descripcion || ''">
                 <button class="tarea-check"
                   [class.completada]="tarea.estado === 'completada'"
                   [disabled]="tarea.estado === 'completada'"
@@ -254,6 +257,9 @@
                 @if (estaVencida(tarea)) {
                   <span class="vencida-chip">Vencida</span>
                 }
+                <button class="tarea-delete" (click)="eliminarTarea(tarea, $event)" title="Eliminar tarea">
+                  <lucide-icon name="trash-2" [img]="icons.Trash2" size="14"></lucide-icon>
+                </button>
               </li>
             }
           </ul>

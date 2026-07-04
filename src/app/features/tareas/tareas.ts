@@ -8,7 +8,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   LucideAngularModule, Plus, Check, X,
   Calendar, ChevronRight, ChevronDown, Clock, AlertCircle,
-  CheckSquare, ClipboardList, History,
+  CheckSquare, ClipboardList, History, Trash2,
 } from 'lucide-angular';
 import { TareasApiService, TareaResponse, DistribucionSemanalResponse } from './services/tareas-api.service';
 import { HogaresApiService, MiembroResponse } from '../household/hogares-api.service';
@@ -31,7 +31,7 @@ export class Tareas implements OnInit {
 
   protected readonly icons = {
     Plus, Check, X, Calendar, ChevronRight, ChevronDown, Clock, AlertCircle,
-    CheckSquare, ClipboardList, History,
+    CheckSquare, ClipboardList, History, Trash2,
   };
 
   // ── Estado principal ─────────────────────────────────────
@@ -222,13 +222,15 @@ export class Tareas implements OnInit {
       });
   }
 
-  protected eliminarTarea(id: string): void {
-    this.api.deleteTarea(id)
+  protected eliminarTarea(tarea: TareaResponse, event: MouseEvent): void {
+    event.stopPropagation();
+    if (!confirm(`¿Eliminar la tarea "${tarea.titulo}"? También se quitará del planificador si estaba agendada.`)) return;
+    this.api.deleteTarea(tarea.id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.todasTareas.update(ts => ts.filter(t => t.id !== id));
-          this.misTareas.update(ts => ts.filter(t => t.id !== id));
+          this.todasTareas.update(ts => ts.filter(t => t.id !== tarea.id));
+          this.misTareas.update(ts => ts.filter(t => t.id !== tarea.id));
         },
         error: () => {},
       });
