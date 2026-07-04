@@ -23,16 +23,19 @@ import { ListaCompras } from './lista-compras';
 import { ListaComprasService, RecipeShoppingList, ShoppingHistoryItem } from './lista-compras.service';
 import { CatalogoService } from '../../core/servicios/catalogo.service';
 import { AlacenaApiService } from '../alacena/alacena-api.service';
+import { ComparadorApiService } from './comparador-api.service';
 
 describe('ListaCompras', () => {
   let fixture: ComponentFixture<ListaCompras>;
   let component: ListaCompras;
   let listaService: FakeListaComprasService;
   let alacenaApi: FakeAlacenaApiService;
+  let comparadorApi: FakeComparadorApiService;
 
   beforeEach(async () => {
     listaService = new FakeListaComprasService();
     alacenaApi = new FakeAlacenaApiService();
+    comparadorApi = new FakeComparadorApiService();
 
     await TestBed.configureTestingModule({
       imports: [ListaCompras],
@@ -46,6 +49,7 @@ describe('ListaCompras', () => {
           },
         },
         { provide: AlacenaApiService, useValue: alacenaApi },
+        { provide: ComparadorApiService, useValue: comparadorApi },
         { provide: Router, useValue: { getCurrentNavigation: () => null, navigate: vi.fn() } },
         {
           provide: LUCIDE_ICONS,
@@ -281,6 +285,39 @@ describe('ListaCompras', () => {
   function getConfirmTelegramButton(): HTMLButtonElement {
     return fixture.nativeElement.querySelector('button[aria-label="telegram-confirm-send"]');
   }
+
+  describe('Comparador de precios', () => {
+    it('abre el modal y realiza la busqueda', () => {
+      expect((component as any).showCompareModal).toBe(false);
+
+      (component as any).openCompareModal('fideos');
+      expect((component as any).showCompareModal).toBe(true);
+      expect((component as any).compareQuery).toBe('fideos');
+
+      const mockResponse = {
+        products: [
+          { id: '1', name: 'Fideos 500g', price: 800, source: 'Dia', link: '', image: '', unit: '', unitPrice: 0 }
+        ],
+        failedScrapers: [],
+        timestamp: ''
+      };
+      comparadorApi.compararPrecios.mockReturnValue(of(mockResponse));
+
+      (component as any).searchPrices();
+      expect((component as any).compareLoading).toBe(false);
+      expect((component as any).compareSearched).toBe(true);
+      expect((component as any).compareResults.length).toBe(1);
+      expect((component as any).compareResults[0].name).toBe('Fideos 500g');
+    });
+
+    it('agrega un producto desde el comparador a la lista activa', () => {
+      (component as any).activeListId = 'lista-1';
+      (component as any).listas = [shoppingList('lista-1', 'Principal', [])];
+
+      (component as any).addComparedProduct('Fideos 500g');
+      expect(listaService.addItem).toHaveBeenCalledWith('lista-1', 'Fideos 500g', 1, 'unidad');
+    });
+  });
 });
 
 class FakeListaComprasService {
@@ -312,6 +349,10 @@ class FakeListaComprasService {
 class FakeAlacenaApiService {
   getStock = vi.fn(() => of([]));
   createStock = vi.fn(() => of({}));
+}
+
+class FakeComparadorApiService {
+  compararPrecios = vi.fn(() => of({ products: [], failedScrapers: [], timestamp: '' }));
 }
 
 function shoppingList(id: string, recetaNombre: string, items: RecipeShoppingList['items']): RecipeShoppingList {

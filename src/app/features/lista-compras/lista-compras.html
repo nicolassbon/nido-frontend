@@ -24,6 +24,14 @@
         <lucide-icon name="send" [size]="16" />
         {{ isSendingTelegram ? 'Enviando…' : 'Enviar a Telegram' }}
       </button>
+
+      <button
+        aria-label="compare-prices"
+        class="flex w-full items-center justify-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]"
+        (click)="openCompareModal()">
+        <lucide-icon name="search" [size]="16" />
+        Buscar precios
+      </button>
     </div>
   </section>
 
@@ -327,4 +335,149 @@
       </ul>
     }
   </section>
+
+  @if (showCompareModal) {
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(15,25,20,0.72)] backdrop-blur-[2px] px-4"
+      role="presentation"
+      (click)="closeCompareModal()">
+      <section
+        class="w-full max-w-[680px] rounded-[14px] bg-white p-5 shadow-[0_18px_45px_rgba(38,63,48,0.24)] sm:p-6 flex flex-col max-h-[85vh]"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="compare-prices-modal-title"
+        (click)="$event.stopPropagation()">
+        
+        <!-- Header -->
+        <div class="flex items-start justify-between gap-3 border-b border-nido-border pb-3">
+          <div>
+            <h2 id="compare-prices-modal-title" class="text-[1.1rem] font-bold text-nido-green-dark">Comparador de Precios</h2>
+            <p class="mt-1 text-[0.82rem] text-nido-brown">Buscá y compará precios entre los supermercados locales.</p>
+          </div>
+          <button
+            type="button"
+            class="shrink-0 p-1 bg-transparent border-none cursor-pointer text-nido-muted hover:text-nido-brown transition-colors duration-150"
+            (click)="closeCompareModal()">
+            <lucide-icon name="x" [size]="18" />
+          </button>
+        </div>
+
+        <!-- Buscador -->
+        <form (ngSubmit)="searchPrices()" class="mt-4 flex gap-2">
+          <div class="relative flex-1 flex items-center">
+            <span class="absolute inset-y-0 left-3 flex w-6 items-center justify-center text-nido-brown pointer-events-none">
+              <lucide-icon name="search" [size]="16" />
+            </span>
+            <input
+              type="text"
+              name="compareQuery"
+              [(ngModel)]="compareQuery"
+              placeholder="Ej: fideos marolio, leche entera..."
+              class="w-full border border-nido-border rounded-[10px] py-2 pl-10 pr-3 text-[0.875rem] text-nido-green-dark placeholder-nido-brown/50 focus:outline-none focus:border-nido-green-dark bg-white"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            class="rounded-[10px] bg-nido-green-dark px-5 py-2 text-[0.85rem] font-semibold text-nido-cream cursor-pointer transition-colors duration-150 hover:bg-nido-green disabled:opacity-50 disabled:cursor-not-allowed"
+            [disabled]="compareLoading || !compareQuery.trim()"
+          >
+            Buscar
+          </button>
+        </form>
+
+        <!-- Mensajes de éxito / error -->
+        @if (compareSuccessMessage) {
+          <div class="mt-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[0.82rem] py-2 px-3 rounded-[8px] flex items-center gap-2">
+            <lucide-icon name="check" [size]="16" class="text-emerald-600" />
+            <span>{{ compareSuccessMessage }}</span>
+          </div>
+        }
+        @if (compareError) {
+          <div class="mt-3 bg-rose-50 border border-rose-200 text-rose-800 text-[0.82rem] py-2 px-3 rounded-[8px] flex items-center gap-2">
+            <lucide-icon name="alert-circle" [size]="16" class="text-rose-600" />
+            <span>{{ compareError }}</span>
+          </div>
+        }
+
+        <!-- Contenido principal (con scroll) -->
+        <div class="flex-1 overflow-y-auto mt-4 pr-1 min-h-[250px]">
+          @if (compareLoading) {
+            <div class="flex flex-col items-center justify-center py-10 gap-3 text-nido-brown/60">
+              <lucide-icon name="loader" [size]="36" class="animate-spin text-nido-green" />
+              <span class="text-sm">Consultando supermercados en tiempo real...</span>
+            </div>
+          } @else if (compareResults.length > 0) {
+            <div class="flex flex-col gap-2.5">
+              @for (product of compareResults; track product.id) {
+                <div class="flex items-center gap-3 border border-nido-border rounded-[12px] p-3 hover:border-nido-green/40 transition-colors bg-white">
+                  <!-- Imagen -->
+                  <div class="h-14 w-14 rounded-[8px] bg-nido-cream/30 border border-nido-border/40 flex items-center justify-center p-1 overflow-hidden shrink-0">
+                    @if (product.image) {
+                      <img [src]="product.image" [alt]="product.name" class="h-full w-full object-contain" />
+                    } @else {
+                      <lucide-icon name="image-off" [size]="20" class="text-nido-brown/30" />
+                    }
+                  </div>
+
+                  <!-- Detalle -->
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                      <span class="inline-block text-[0.68rem] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-nido-green bg-nido-green/10">
+                        {{ product.source }}
+                      </span>
+                    </div>
+                    <h3 class="text-[0.84rem] font-semibold text-nido-green-dark truncate mt-1" [title]="product.name">
+                      {{ product.name }}
+                    </h3>
+                    @if (product.unitPrice > 0) {
+                      <span class="text-[0.7rem] text-nido-brown/50 block mt-0.5">
+                        Precio regular x {{ getUnitLabel(product.unit) }}: ${{ formatPrice(product.unitPrice) }}
+                      </span>
+                    }
+                  </div>
+
+                  <!-- Precio y Acciones -->
+                  <div class="text-right shrink-0 flex flex-col items-end gap-1.5 ml-2">
+                    <span class="text-[1.05rem] font-bold text-nido-green-dark">
+                      ${{ formatPrice(product.price) }}
+                    </span>
+                    <div class="flex gap-1.5">
+                      <a
+                        [href]="product.link"
+                        target="_blank"
+                        class="rounded-[15px] border border-nido-border bg-white p-1.5 text-nido-brown transition-colors duration-150 hover:bg-nido-cream flex items-center justify-center"
+                        title="Ver en tienda"
+                      >
+                        <lucide-icon name="eye" [size]="14" />
+                      </a>
+                      <button
+                        type="button"
+                        class="rounded-[15px] bg-nido-green-dark px-3 py-1 text-[0.75rem] font-semibold text-nido-cream cursor-pointer transition-colors duration-150 hover:bg-nido-green flex items-center gap-1"
+                        (click)="addComparedProduct(product.name)"
+                      >
+                        <lucide-icon name="plus" [size]="12" />
+                        Agregar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else if (compareSearched && !compareLoading && compareResults.length === 0) {
+            <div class="flex flex-col items-center justify-center py-10 gap-2 text-nido-brown/60">
+              <lucide-icon name="search-x" [size]="32" class="text-nido-brown/40" />
+              <span class="text-sm font-medium">No encontramos resultados para tu búsqueda.</span>
+              <span class="text-[0.75rem] text-center max-w-[280px]">Probá con palabras clave más generales (ej: "leche", "arroz").</span>
+            </div>
+          } @else {
+            <div class="flex flex-col items-center justify-center py-12 text-nido-brown/40">
+              <lucide-icon name="shopping-basket" [size]="40" class="opacity-60 mb-2" />
+              <span class="text-[0.8rem] text-center max-w-[280px]">Buscá tus productos favoritos para comparar precios al instante.</span>
+            </div>
+          }
+        </div>
+      </section>
+    </div>
+  }
 </div>
