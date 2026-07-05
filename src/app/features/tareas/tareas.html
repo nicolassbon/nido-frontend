@@ -120,7 +120,6 @@
         </div>
 
         <div class="xp-bar-container">
-          <div class="xp-total-text">{{ xp() }} XP total</div>
           <div class="xp-bar-outer">
             <div class="xp-bar-inner" [style.width.%]="porcentajeXp()"></div>
           </div>
@@ -135,11 +134,11 @@
             @if (!hasNextLevel()) {
               <span class="xp-bar-hint font-semibold">¡Pip ha alcanzado su máximo potencial! 👑</span>
             } @else {
-              <span class="xp-bar-hint font-semibold">@if (nivel() === 0) { Completá tu primera tarea para desbloquear a Pip } @else { Completá tareas para ganar XP }</span>
+              <span class="xp-bar-hint font-semibold">Faltan {{ xpRestanteParaSiguienteNivel() }} XP para nivel {{ nextLevel() ?? nivel() + 1 }}</span>
               @if (nivel() === 0) {
-                <span class="xp-bar-hint opacity-50">Al nivel 1 desbloqueás a tu compañero 🥚</span>
+                <span class="xp-bar-hint opacity-50">Completá tu primera tarea para desbloquear a Pip 🥚</span>
               } @else {
-                <span class="xp-bar-hint opacity-50">Al nivel {{ nivel() + 1 }} tu compañero evoluciona 🥚</span>
+                <span class="xp-bar-hint opacity-50">Tu compañero evoluciona en el próximo nivel 🥚</span>
               }
             }
           </div>

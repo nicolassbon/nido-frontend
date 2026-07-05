@@ -170,30 +170,35 @@ describe('Tareas Component - Behavior Tests', () => {
 
       component['completarTarea']({ id: 't-1', titulo: 'Test' } as any);
 
-      expect(component['nivel']()).toBe(3);
-      expect(component['xp']()).toBe(200);
+      expect(component['nivel']()).toBe(2);
+      expect(component['xp']()).toBe(120);
+      expect(component['imagenNivel']()).toBe(2);
       expect(component['evolucionando']()).toBe(true);
       expect(component['mostrarCelebracionLevelUp']()).toBe(false);
 
       vi.advanceTimersByTime(2000);
       expect(component['evolucionando']()).toBe(false);
+      expect(component['nivel']()).toBe(3);
+      expect(component['xp']()).toBe(200);
+      expect(component['imagenNivel']()).toBe(3);
       expect(component['nivelCelebrado']()).toBe(3);
       expect(component['mostrarCelebracionLevelUp']()).toBe(true);
     });
   });
 
   describe('DOM rendering of backend progress contract', () => {
-    it('renders total XP and backend next threshold', () => {
-      mockTareasApi.getProgreso.mockReturnValue(of(progress({ currentXp: 120, nextThresholdXp: 240, xpToNextLevel: 120 })));
+    it('renders backend progress without duplicating total XP above the bar', () => {
+      mockTareasApi.getProgreso.mockReturnValue(of(progress({ currentXp: 120, nextLevel: 3, nextThresholdXp: 240, xpToNextLevel: 120 })));
       component['cargarDatos']();
       fixture.detectChanges();
 
       const element: HTMLElement = fixture.nativeElement;
-      const totalXpText = element.querySelector('.xp-total-text')?.textContent?.trim();
       const progressText = element.querySelector('.xp-bar-text')?.textContent?.trim();
+      const normalizedText = element.textContent?.replace(/\s+/g, ' ') ?? '';
 
-      expect(totalXpText).toBe('120 XP total');
+      expect(element.querySelector('.xp-total-text')).toBeNull();
       expect(progressText).toBe('120 / 240 XP');
+      expect(normalizedText).toContain('Faltan 120 XP para nivel 3');
     });
 
     it('does not render invented XP for completed tasks without xpOtorgado', () => {

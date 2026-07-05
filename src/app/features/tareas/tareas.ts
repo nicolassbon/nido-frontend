@@ -46,6 +46,7 @@ export class Tareas implements OnInit {
   protected readonly imagenNivel = signal<number>(1);
   protected readonly floatingXPs = signal<{ id: number; value: string }[]>([]);
   protected readonly hasNextLevel = signal<boolean>(false);
+  protected readonly nextLevel = signal<number | null>(null);
   protected readonly nextThresholdXp = signal<number | null>(null);
   protected readonly xpToNextLevel = signal<number | null>(null);
 
@@ -64,6 +65,11 @@ export class Tareas implements OnInit {
   });
 
   protected readonly xpSiguienteNivelTotal = computed(() => this.xpNecesariaParaSiguienteNivel());
+
+  protected readonly xpRestanteParaSiguienteNivel = computed(() => {
+    if (!this.hasNextLevel()) return 0;
+    return Math.max(0, this.xpToNextLevel() ?? this.xpNecesariaParaSiguienteNivel() - this.xp());
+  });
   protected readonly mostrarCelebracionLevelUp = signal<boolean>(false);
   protected readonly nivelCelebrado = signal<number>(1);
   protected readonly userId = signal<string | null>(null);
@@ -136,6 +142,7 @@ export class Tareas implements OnInit {
     this.xp.set(progress.currentXp);
     this.imagenNivel.set(Math.min(5, Math.max(1, level)));
     this.hasNextLevel.set(progress.hasNextLevel);
+    this.nextLevel.set(progress.nextLevel);
     this.nextThresholdXp.set(progress.nextThresholdXp);
     this.xpToNextLevel.set(progress.xpToNextLevel);
   }
@@ -407,13 +414,12 @@ export class Tareas implements OnInit {
             const previousLevel = this.nivel();
             const nextLevel = this.clampLevel(p.currentLevel);
             if (nextLevel > previousLevel && previousLevel < 5) {
-              // Actualizar señales inmediatamente para prevenir carrera de timeouts
-              this.applyProgress(p);
               this.evolucionando.set(true);
               if (this.levelUpTimeoutId) {
                 clearTimeout(this.levelUpTimeoutId);
               }
               this.levelUpTimeoutId = setTimeout(() => {
+                this.applyProgress(p);
                 this.evolucionando.set(false);
                 this.nivelCelebrado.set(Math.min(5, Math.max(1, nextLevel)));
                 this.mostrarCelebracionLevelUp.set(true);
