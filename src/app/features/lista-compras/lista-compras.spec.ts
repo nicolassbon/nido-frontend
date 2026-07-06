@@ -3,15 +3,21 @@ import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import { expect, vi } from 'vitest';
 import { Router } from '@angular/router';
 import {
+  AlertCircle,
   Check,
+  Eye,
   History,
   ChevronDown,
+  ImageOff,
   ListCollapse,
+  Loader,
   LUCIDE_ICONS,
   LucideIconProvider,
   PackagePlus,
   Pencil,
   Plus,
+  Search,
+  SearchX,
   Send,
   ShoppingBasket,
   ShoppingCart,
@@ -55,13 +61,19 @@ describe('ListaCompras', () => {
           provide: LUCIDE_ICONS,
           multi: true,
           useValue: new LucideIconProvider({
+            AlertCircle,
             Check,
+            Eye,
             History,
             ChevronDown,
+            ImageOff,
             ListCollapse,
+            Loader,
             PackagePlus,
             Pencil,
             Plus,
+            Search,
+            SearchX,
             Send,
             ShoppingBasket,
             ShoppingCart,
@@ -310,6 +322,38 @@ describe('ListaCompras', () => {
       expect((component as any).compareResults[0].name).toBe('Fideos 500g');
     });
 
+    it('muestra el mensaje funcional del backend cuando el comparador esta caido', () => {
+      const backendMessage = 'No pudimos comparar precios en este momento. Intentá nuevamente en unos minutos.';
+      comparadorApi.compararPrecios.mockReturnValue(throwError(() => ({ error: { message: backendMessage } })));
+      (component as any).openCompareModal('leche');
+
+      (component as any).searchPrices();
+
+      expect((component as any).compareError).toBe(backendMessage);
+      expect((component as any).compareLoading).toBe(false);
+      expect((component as any).compareSearched).toBe(true);
+    });
+
+    it('no muestra estado de sin resultados cuando la busqueda fallo', () => {
+      comparadorApi.compararPrecios.mockReturnValue(throwError(() => ({ error: { message: 'Servicio no disponible' } })));
+      (component as any).openCompareModal('leche');
+
+      (component as any).searchPrices();
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.textContent).toContain('Servicio no disponible');
+      expect(fixture.nativeElement.textContent).not.toContain('No encontramos resultados para tu búsqueda.');
+    });
+
+    it('usa mensaje generico cuando el backend no envia mensaje funcional', () => {
+      comparadorApi.compararPrecios.mockReturnValue(throwError(() => ({ error: {} })));
+      (component as any).openCompareModal('leche');
+
+      (component as any).searchPrices();
+
+      expect((component as any).compareError).toBe('Ocurrió un error al buscar precios. Intentá de nuevo.');
+    });
+
     it('agrega un producto desde el comparador a la lista activa', () => {
       (component as any).activeListId = 'lista-1';
       (component as any).listas = [shoppingList('lista-1', 'Principal', [])];
@@ -352,7 +396,7 @@ class FakeAlacenaApiService {
 }
 
 class FakeComparadorApiService {
-  compararPrecios = vi.fn(() => of({ products: [], failedScrapers: [], timestamp: '' }));
+  compararPrecios = vi.fn((): any => of({ products: [], failedScrapers: [], timestamp: '' }));
 }
 
 function shoppingList(id: string, recetaNombre: string, items: RecipeShoppingList['items']): RecipeShoppingList {

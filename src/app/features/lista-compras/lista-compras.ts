@@ -600,13 +600,27 @@ export class ListaCompras implements OnInit, OnDestroy {
         this.compareSearched = true;
         this.cdr.markForCheck();
       },
-      error: () => {
-        this.compareError = 'Ocurrió un error al buscar precios. Intentá de nuevo.';
+      error: error => {
+        this.compareError = this.extractCompareErrorMessage(error);
         this.compareLoading = false;
         this.compareSearched = true;
         this.cdr.markForCheck();
       }
     });
+  }
+
+  private extractCompareErrorMessage(error: unknown): string {
+    if (typeof error === 'object' && error !== null && 'error' in error) {
+      const responseBody = (error as { error?: unknown }).error;
+      if (typeof responseBody === 'object' && responseBody !== null && 'message' in responseBody) {
+        const message = (responseBody as { message?: unknown }).message;
+        if (typeof message === 'string' && message.trim().length > 0) {
+          return message;
+        }
+      }
+    }
+
+    return 'Ocurrió un error al buscar precios. Intentá de nuevo.';
   }
 
   protected addComparedProduct(productName: string): void {

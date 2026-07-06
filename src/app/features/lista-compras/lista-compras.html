@@ -464,7 +464,7 @@
                 </div>
               }
             </div>
-          } @else if (compareSearched && !compareLoading && compareResults.length === 0) {
+          } @else if (compareSearched && !compareLoading && !compareError && compareResults.length === 0) {
             <div class="flex flex-col items-center justify-center py-10 gap-2 text-nido-brown/60">
               <lucide-icon name="search-x" [size]="32" class="text-nido-brown/40" />
               <span class="text-sm font-medium">No encontramos resultados para tu búsqueda.</span>
