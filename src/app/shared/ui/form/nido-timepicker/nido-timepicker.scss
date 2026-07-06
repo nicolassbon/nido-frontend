@@ -24,7 +24,7 @@
       border-color: var(--green-deep);
       box-shadow: 0 0 0 3px rgba(30, 63, 58, 0.08);
     }
-    
+
     &:disabled {
       opacity: 0.6;
       cursor: not-allowed;
@@ -102,7 +102,7 @@
         border-color: #B48B6A !important;
         box-shadow: 0 0 0 3px rgba(180, 139, 106, 0.15) !important;
       }
-      
+
       lucide-icon, svg, path {
         color: #EAE3D9 !important;
         stroke: #EAE3D9 !important;
@@ -125,7 +125,7 @@
 
     &__arrow {
       color: #a8b9b0 !important;
-      
+
       lucide-icon, svg, path {
         color: #a8b9b0 !important;
         stroke: #a8b9b0 !important;
@@ -134,7 +134,7 @@
       &:hover {
         background: rgba(247, 241, 230, 0.08) !important;
         color: #EAE3D9 !important;
-        
+
         lucide-icon, svg, path {
           color: #EAE3D9 !important;
           stroke: #EAE3D9 !important;
