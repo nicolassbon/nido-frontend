@@ -1,0 +1,145 @@
+.nido-tp {
+  position: relative;
+  display: inline-block;
+  width: 150px; // Mismo tamaño que .field-input--time
+
+  &__trigger {
+    width: 100%;
+    min-height: 40px;
+    padding: 0 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--green-ink);
+    font: inherit;
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+
+    &:focus {
+      border-color: var(--green-deep);
+      box-shadow: 0 0 0 3px rgba(30, 63, 58, 0.08);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &__popover {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 100;
+    min-width: 130px;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid rgba(216, 198, 178, 0.78);
+    border-radius: 8px;
+    box-shadow: 0 10px 24px rgba(31, 39, 34, 0.16);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  &__column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 36px;
+  }
+
+  &__arrow {
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    padding: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.15s, color 0.15s;
+
+    &:hover {
+      background: var(--paper-2);
+      color: var(--green-deep);
+    }
+  }
+
+  &__number {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--green-ink);
+    user-select: none;
+    margin: 4px 0;
+  }
+
+  &__colon {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--muted);
+    user-select: none;
+    padding-bottom: 2px;
+  }
+}
+
+/* Modo Oscuro para el Timepicker */
+:host-context(.dark) {
+  .nido-tp {
+    &__trigger {
+      background-color: rgba(18, 24, 22, 0.6) !important;
+      border-color: rgba(216, 198, 178, 0.2) !important;
+      color: #EAE3D9 !important;
+
+      &:focus {
+        border-color: #B48B6A !important;
+        box-shadow: 0 0 0 3px rgba(180, 139, 106, 0.15) !important;
+      }
+
+      lucide-icon, svg, path {
+        color: #EAE3D9 !important;
+        stroke: #EAE3D9 !important;
+      }
+    }
+
+    &__popover {
+      background: #1c2320 !important;
+      border-color: rgba(216, 198, 178, 0.12) !important;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    &__number {
+      color: #EAE3D9 !important;
+    }
+
+    &__colon {
+      color: #a8b9b0 !important;
+    }
+
+    &__arrow {
+      color: #a8b9b0 !important;
+
+      lucide-icon, svg, path {
+        color: #a8b9b0 !important;
+        stroke: #a8b9b0 !important;
+      }
+
+      &:hover {
+        background: rgba(247, 241, 230, 0.08) !important;
+        color: #EAE3D9 !important;
+
+        lucide-icon, svg, path {
+          color: #EAE3D9 !important;
+          stroke: #EAE3D9 !important;
+        }
+      }
+    }
+  }
+}

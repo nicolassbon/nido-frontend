@@ -24,6 +24,11 @@ export interface CrearElectrodomesticoRequest {
   imagenUrl?: string | null;
 }
 
+export interface ActualizarElectrodomesticoRequest {
+  tipo?: string | null;
+  estado?: string | null;
+}
+
 interface ApiElectrodomestico {
   id: string;
   hogarId: string;
@@ -85,4 +90,14 @@ export class ElectrodomesticosService {
     `${this.apiBaseUrl}/electrodomesticos/catalogo`
   );
 }
+
+  update(id: string, body: ActualizarElectrodomesticoRequest): Observable<Electrodomestico> {
+    return this.http
+      .patch<ApiElectrodomestico>(`${this.apiBaseUrl}/electrodomesticos/${id}`, body)
+      .pipe(map((item) => this.normalize(item)));
+  }
+
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiBaseUrl}/electrodomesticos/${id}`);
+  }
 }

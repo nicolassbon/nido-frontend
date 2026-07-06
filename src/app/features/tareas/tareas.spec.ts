@@ -1,11 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
-import { vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { appConfig } from '../../app.config';
 import { AuthService } from '../../core/auth/auth.service';
 import { HogaresApiService } from '../household/hogares-api.service';
-import { TareasApiService, type GamificacionProgresoResponse } from './services/tareas-api.service';
+import { TareasApiService, type GamificacionProgresoResponse, type TareaResponse } from './services/tareas-api.service';
 import { Tareas } from './tareas';
 
 const progress = (overrides: Partial<GamificacionProgresoResponse> = {}): GamificacionProgresoResponse => ({
@@ -21,36 +21,68 @@ const progress = (overrides: Partial<GamificacionProgresoResponse> = {}): Gamifi
   ...overrides,
 });
 
-describe('Tareas Component - Behavior Tests', () => {
+function makeTarea(overrides: Partial<TareaResponse> = {}): TareaResponse {
+  return {
+    id: overrides.id ?? 'tarea-default',
+    titulo: overrides.titulo ?? 'Tarea de prueba',
+    descripcion: overrides.descripcion ?? null,
+    estado: overrides.estado ?? 'pendiente',
+    fechaLimite: overrides.fechaLimite ?? null,
+    fechaCompletado: overrides.fechaCompletado ?? null,
+    creadoPor: overrides.creadoPor ?? 'usuario-1',
+    creadoPorNombre: overrides.creadoPorNombre ?? 'Leandro',
+    completadoPor: overrides.completadoPor ?? null,
+    completadoPorNombre: overrides.completadoPorNombre ?? null,
+    asignadoA: overrides.asignadoA ?? null,
+    vencida: overrides.vencida ?? false,
+    createdAt: overrides.createdAt ?? '2026-06-18T10:00:00Z',
+    xpOtorgado: overrides.xpOtorgado ?? null,
+  };
+}
+
+describe('Tareas', () => {
   let component: Tareas;
   let fixture: ComponentFixture<Tareas>;
-  let mockTareasApi: any;
-  let mockHogaresApi: any;
-  let mockAuthService: any;
-  let mockRouter: any;
+  let mockTareasApi: ReturnType<typeof createMockTareasApi>;
+  let mockHogaresApi: ReturnType<typeof createMockHogaresApi>;
+  let mockAuthService: ReturnType<typeof createMockAuthService>;
+  let mockRouter: ReturnType<typeof createMockRouter>;
 
-  beforeEach(async () => {
-    mockTareasApi = {
+  function createMockTareasApi() {
+    return {
       getMisTareas: vi.fn().mockReturnValue(of([])),
       getTareas: vi.fn().mockReturnValue(of([])),
       getDistribucionSemanal: vi.fn().mockReturnValue(of({ dias: [] })),
       getProgreso: vi.fn().mockReturnValue(of(progress())),
-      completarTarea: vi.fn().mockReturnValue(of({ id: 't-1', xpOtorgado: 30 })),
-      deleteTarea: vi.fn().mockReturnValue(of(undefined)),
-      asignarTarea: vi.fn().mockReturnValue(of({ id: 't-1' })),
+      completarTarea: vi.fn().mockReturnValue(of(makeTarea({ id: 't-1', estado: 'completada', xpOtorgado: 30 }))),
+      deleteTarea: vi.fn().mockReturnValue(of(void 0)),
+      asignarTarea: vi.fn().mockReturnValue(of(makeTarea({ id: 't-1' }))),
     };
+  }
 
-    mockHogaresApi = {
+  function createMockHogaresApi() {
+    return {
       getMiembros: vi.fn().mockReturnValue(of([])),
     };
+  }
 
-    mockAuthService = {
+  function createMockAuthService() {
+    return {
       getUserId: vi.fn().mockReturnValue('user-1'),
     };
+  }
 
-    mockRouter = {
+  function createMockRouter() {
+    return {
       navigate: vi.fn(),
     };
+  }
+
+  beforeEach(async () => {
+    mockTareasApi = createMockTareasApi();
+    mockHogaresApi = createMockHogaresApi();
+    mockAuthService = createMockAuthService();
+    mockRouter = createMockRouter();
 
     await TestBed.configureTestingModule({
       imports: [Tareas],
@@ -72,6 +104,10 @@ describe('Tareas Component - Behavior Tests', () => {
     fixture = TestBed.createComponent(Tareas);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it('should create', () => {
@@ -139,10 +175,10 @@ describe('Tareas Component - Behavior Tests', () => {
     });
 
     it('shows granted XP only when backend returns xpOtorgado', () => {
-      mockTareasApi.completarTarea.mockReturnValue(of({ id: 't-1', xpOtorgado: 30 }));
+      mockTareasApi.completarTarea.mockReturnValue(of(makeTarea({ id: 't-1', estado: 'completada', xpOtorgado: 30 })));
       mockTareasApi.getProgreso.mockReturnValue(of(progress({ currentXp: 150 })));
 
-      component['completarTarea']({ id: 't-1', titulo: 'Test' } as any);
+      component['completarTarea'](makeTarea({ id: 't-1', titulo: 'Test' }));
 
       expect(component['floatingXPs']()).toHaveLength(1);
       expect(component['floatingXPs']()[0].value).toBe('+30 XP');
@@ -152,10 +188,10 @@ describe('Tareas Component - Behavior Tests', () => {
     });
 
     it('does not invent a fallback XP animation when backend omits xpOtorgado', () => {
-      mockTareasApi.completarTarea.mockReturnValue(of({ id: 't-1' }));
+      mockTareasApi.completarTarea.mockReturnValue(of(makeTarea({ id: 't-1', estado: 'completada', xpOtorgado: null })));
       mockTareasApi.getProgreso.mockReturnValue(of(progress({ currentXp: 150 })));
 
-      component['completarTarea']({ id: 't-1', titulo: 'Test' } as any);
+      component['completarTarea'](makeTarea({ id: 't-1', titulo: 'Test' }));
 
       expect(component['floatingXPs']()).toHaveLength(0);
     });
@@ -165,10 +201,10 @@ describe('Tareas Component - Behavior Tests', () => {
       component['cargarDatos']();
       expect(component['nivel']()).toBe(2);
 
-      mockTareasApi.completarTarea.mockReturnValue(of({ id: 't-1', xpOtorgado: 80 }));
+      mockTareasApi.completarTarea.mockReturnValue(of(makeTarea({ id: 't-1', estado: 'completada', xpOtorgado: 80 })));
       mockTareasApi.getProgreso.mockReturnValue(of(progress({ currentXp: 200, currentLevel: 3 })));
 
-      component['completarTarea']({ id: 't-1', titulo: 'Test' } as any);
+      component['completarTarea'](makeTarea({ id: 't-1', titulo: 'Test' }));
 
       expect(component['nivel']()).toBe(2);
       expect(component['xp']()).toBe(120);
@@ -203,13 +239,13 @@ describe('Tareas Component - Behavior Tests', () => {
 
     it('does not render invented XP for completed tasks without xpOtorgado', () => {
       mockTareasApi.getTareas.mockReturnValue(of([
-        {
+        makeTarea({
           id: 't-1',
           titulo: 'Completed task',
           estado: 'completada',
           fechaCompletado: '2026-07-05T10:00:00.000Z',
           xpOtorgado: null,
-        },
+        }),
       ]));
       component['cargarDatos']();
       fixture.detectChanges();
@@ -237,6 +273,38 @@ describe('Tareas Component - Behavior Tests', () => {
     });
   });
 
+  describe('delete task flows', () => {
+    it('calls api.deleteTarea and removes the task from the lists when confirmed', () => {
+      const tarea = makeTarea({ id: 'tarea-1' });
+      mockTareasApi.deleteTarea.mockReturnValue(of(void 0));
+      component['todasTareas'].set([tarea]);
+      component['misTareas'].set([tarea]);
+      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const event = new MouseEvent('click');
+
+      component['eliminarTarea'](tarea, event);
+
+      expect(mockTareasApi.deleteTarea).toHaveBeenCalledWith('tarea-1');
+      expect(component['todasTareas']()).toEqual([]);
+      expect(component['misTareas']()).toEqual([]);
+    });
+
+    it('does not call api.deleteTarea when the user cancels the confirmation', () => {
+      const tarea = makeTarea({ id: 'tarea-1' });
+      mockTareasApi.deleteTarea.mockReturnValue(of(void 0));
+      component['todasTareas'].set([tarea]);
+      component['misTareas'].set([tarea]);
+      vi.spyOn(window, 'confirm').mockReturnValue(false);
+      const event = new MouseEvent('click');
+
+      component['eliminarTarea'](tarea, event);
+
+      expect(mockTareasApi.deleteTarea).not.toHaveBeenCalled();
+      expect(component['todasTareas']()).toEqual([tarea]);
+      expect(component['misTareas']()).toEqual([tarea]);
+    });
+  });
+
   describe('error handling and timers', () => {
     beforeEach(() => {
       vi.useFakeTimers();
@@ -250,7 +318,7 @@ describe('Tareas Component - Behavior Tests', () => {
       const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockTareasApi.completarTarea.mockReturnValue(throwError(() => new Error('API Error')));
 
-      component['completarTarea']({ id: 't-1', titulo: 'Test' } as any);
+      component['completarTarea'](makeTarea({ id: 't-1', titulo: 'Test' }));
 
       expect(errSpy).toHaveBeenCalled();
       expect(component['errorMsg']()).toBe('No pudimos registrar la tarea como completada.');
@@ -276,9 +344,9 @@ describe('Tareas Component - Behavior Tests', () => {
     it('clears all active timeouts when destroyed', () => {
       const spyClear = vi.spyOn(globalThis, 'clearTimeout');
 
-      mockTareasApi.completarTarea.mockReturnValue(of({ id: 't-1', xpOtorgado: 30 }));
+      mockTareasApi.completarTarea.mockReturnValue(of(makeTarea({ id: 't-1', estado: 'completada', xpOtorgado: 30 })));
       mockTareasApi.getProgreso.mockReturnValue(of(progress({ currentXp: 150 })));
-      component['completarTarea']({ id: 't-1', titulo: 'Test' } as any);
+      component['completarTarea'](makeTarea({ id: 't-1', titulo: 'Test' }));
 
       component['showError']('Test error');
 
