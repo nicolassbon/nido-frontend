@@ -23,6 +23,19 @@ export interface TareaResponse {
   asignadoA: AsignacionResponse | null;
   vencida: boolean;
   createdAt: string;
+  xpOtorgado?: number | null;
+}
+
+export interface GamificacionProgresoResponse {
+  usuarioId: string;
+  currentXp: number;
+  currentLevel: number;
+  currentLevelNombre: string | null;
+  nextLevel: number | null;
+  nextLevelNombre: string | null;
+  nextThresholdXp: number | null;
+  xpToNextLevel: number | null;
+  hasNextLevel: boolean;
 }
 
 export interface MiembroDistribucionResponse {
@@ -59,6 +72,10 @@ export interface UpdateTareaRequest {
 export class TareasApiService {
   private readonly http = inject(HttpClient);
   private readonly base = environment.apiBaseUrl;
+
+  getProgreso(): Observable<GamificacionProgresoResponse> {
+    return this.http.get<GamificacionProgresoResponse>(`${this.base}/gamificacion/progreso`);
+  }
 
   getTareas(): Observable<TareaResponse[]> {
     return this.http.get<TareaResponse[]>(`${this.base}/tareas`);

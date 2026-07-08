@@ -226,11 +226,11 @@ lucide-icon svg {
     background-color: rgba(18, 24, 22, 0.6) !important;
     border-color: rgba(216, 198, 178, 0.2) !important;
     color: #EAE3D9 !important;
-    
+
     &::placeholder {
       color: #5c6f66 !important;
     }
-    
+
     &:focus {
       border-color: #B48B6A !important;
       outline: none !important;
@@ -259,7 +259,7 @@ lucide-icon svg {
     background-color: rgba(18, 24, 22, 0.6) !important;
     border-color: rgba(216, 198, 178, 0.2) !important;
     color: #EAE3D9 !important;
-    
+
     &::placeholder {
       color: #5c6f66 !important;
     }
@@ -277,13 +277,13 @@ lucide-icon svg {
       background: rgba(18, 24, 22, 0.6) !important;
       border-color: rgba(216, 198, 178, 0.2) !important;
       color: #EAE3D9 !important;
-      
+
       &:focus {
         border-color: #B48B6A !important;
         box-shadow: 0 0 0 3px rgba(180, 139, 106, 0.15) !important;
       }
     }
-    
+
     &__value {
       color: #EAE3D9 !important;
       &.is-placeholder {
@@ -323,7 +323,7 @@ lucide-icon svg {
     &__input {
       background: transparent !important; /* El input debe ser transparente para heredar el fondo del trigger parent */
       color: #EAE3D9 !important;
-      
+
       &::placeholder {
         color: #5c6f66 !important;
       }
@@ -340,15 +340,15 @@ lucide-icon svg {
 
     &__day {
       color: #EAE3D9 !important;
-      
+
       &:hover:not(:disabled):not(.is-selected) {
         background: rgba(247, 241, 230, 0.08) !important;
       }
-      
+
       &.is-today:not(.is-selected) {
         color: #B48B6A !important;
       }
-      
+
       &.is-selected {
         background: #B48B6A !important;
         color: #121815 !important;
@@ -380,7 +380,7 @@ lucide-icon svg {
       background: rgba(28, 36, 32, 0.65) !important;
       border-color: rgba(216, 198, 178, 0.12) !important;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
-      
+
       .photo-empty {
         background: linear-gradient(135deg, rgba(28, 36, 32, 0.65), rgba(18, 24, 22, 0.65)) !important;
         color: #B48B6A !important;
@@ -403,11 +403,11 @@ lucide-icon svg {
     .info-row {
       border-color: rgba(216, 198, 178, 0.12) !important;
       color: #EAE3D9 !important;
-      
+
       .info-label {
         color: #a8b9b0 !important;
       }
-      
+
       .info-icon {
         background: rgba(247, 241, 230, 0.05) !important;
         color: #B48B6A !important;
@@ -418,7 +418,7 @@ lucide-icon svg {
       background: rgba(180, 139, 106, 0.15) !important;
       color: #B48B6A !important;
       border: 1px solid rgba(180, 139, 106, 0.3) !important;
-      
+
       &--abierto {
         background: rgba(62, 94, 74, 0.15) !important;
         color: #b4cfc2 !important;
@@ -430,17 +430,17 @@ lucide-icon svg {
       background: rgba(28, 36, 32, 0.65) !important;
       border-color: rgba(216, 198, 178, 0.12) !important;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
-      
+
       h2 {
         color: #EAE3D9 !important;
         border-color: rgba(216, 198, 178, 0.12) !important;
       }
-      
+
       .summary-icon {
         background: rgba(247, 241, 230, 0.05) !important;
         color: #B48B6A !important;
       }
-      
+
       .summary-copy {
         strong {
           color: #EAE3D9 !important;
@@ -449,7 +449,7 @@ lucide-icon svg {
           color: #a8b9b0 !important;
         }
       }
-      
+
       .nivel-header {
         strong {
           color: #EAE3D9 !important;
@@ -461,14 +461,14 @@ lucide-icon svg {
           color: #a8b9b0 !important;
         }
       }
-      
+
       .nivel-track {
         background: rgba(247, 241, 230, 0.08) !important;
       }
-      
+
       .nivel-fill {
         background: #3E5E4A !important;
-        
+
         &--low {
           background: var(--color-nido-red, #B44C3C) !important;
         }
@@ -481,7 +481,7 @@ lucide-icon svg {
     .nutrition-card {
       background: rgba(28, 36, 32, 0.65) !important;
       border-color: rgba(216, 198, 178, 0.12) !important;
-      
+
       .nutrition-header {
         h2 {
           color: #EAE3D9 !important;
@@ -490,16 +490,16 @@ lucide-icon svg {
           color: #a8b9b0 !important;
         }
       }
-      
+
       .nutrition-icon {
         background: rgba(247, 241, 230, 0.05) !important;
         color: #B48B6A !important;
       }
-      
+
       .nutrition-row {
         border-color: rgba(216, 198, 178, 0.08) !important;
         color: #EAE3D9 !important;
-        
+
         &--muted {
           color: #a8b9b0 !important;
         }
@@ -515,7 +515,7 @@ lucide-icon svg {
           background: #a17858 !important;
         }
       }
-      
+
       .secondary-action {
         background: rgba(28, 36, 32, 0.65) !important;
         border-color: rgba(216, 198, 178, 0.2) !important;
@@ -540,19 +540,19 @@ lucide-icon svg {
     .confirm-overlay {
       background: rgba(10, 14, 12, 0.85) !important;
     }
-    
+
     .confirm-dialog {
       background: #1c2320 !important;
       border-color: rgba(216, 198, 178, 0.2) !important;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
-      
+
       h2 {
         color: #EAE3D9 !important;
       }
       p {
         color: #a8b9b0 !important;
       }
-      
+
       .confirm-icon {
         background: rgba(247, 241, 230, 0.05) !important;
         color: #B48B6A !important;
@@ -564,18 +564,18 @@ lucide-icon svg {
         background: rgba(28, 36, 32, 0.65) !important;
         border-color: rgba(216, 198, 178, 0.12) !important;
         color: #EAE3D9 !important;
-        
+
         strong {
           color: #EAE3D9 !important;
         }
         small {
           color: #a8b9b0 !important;
         }
-        
+
         &:hover {
           background: rgba(247, 241, 230, 0.08) !important;
         }
-        
+
         &--active {
           border-color: #B48B6A !important;
           background: rgba(180, 139, 106, 0.15) !important;
@@ -583,7 +583,7 @@ lucide-icon svg {
         }
       }
     }
-    
+
     .confirm-cancel {
       background: transparent !important;
       color: #a8b9b0 !important;
@@ -690,7 +690,7 @@ lucide-icon svg {
     .nutrition-grid div {
       border-color: rgba(216, 198, 178, 0.08) !important;
       color: #a8b9b0 !important;
-      
+
       strong {
         color: #EAE3D9 !important;
       }
@@ -705,15 +705,15 @@ lucide-icon svg {
 
     .appliance-item {
       border-color: rgba(216, 198, 178, 0.08) !important;
-      
+
       .appliance-icon {
         color: #B48B6A !important;
       }
-      
+
       .appliance-name {
         color: #EAE3D9 !important;
       }
-      
+
       .appliance-status {
         color: #b4cfc2 !important;
         &--missing {
@@ -745,33 +745,33 @@ lucide-icon svg {
     /* Ajuste para el componente de reseñas/notas */
     app-recipe-resenas {
       display: block;
-      
+
       section {
         background: rgba(28, 36, 32, 0.65) !important;
         border-color: rgba(216, 198, 178, 0.12) !important;
       }
-      
+
       h2 {
         color: #EAE3D9 !important;
       }
-      
+
       /* Input textarea */
       textarea {
         background: rgba(18, 24, 22, 0.6) !important;
         border-color: rgba(216, 198, 178, 0.2) !important;
         color: #EAE3D9 !important;
       }
-      
+
       /* Notas como sticky notes */
       article {
         background: rgba(26, 33, 29, 0.8) !important;
         border-color: rgba(216, 198, 178, 0.12) !important;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-        
+
         span, p {
           color: #EAE3D9 !important;
         }
-        
+
         span.text-nido-brown {
           color: #a8b9b0 !important;
         }
@@ -786,7 +786,7 @@ lucide-icon svg {
   .hover\:text-red-500:hover {
     color: rgb(239, 68, 68) !important;
   }
-  
+
   .hover\:bg-emerald-50:hover {
     background-color: rgba(16, 185, 129, 0.15) !important;
   }
@@ -812,11 +812,11 @@ lucide-icon svg {
 
     .tarea-item {
       border-bottom-color: rgba(216, 198, 178, 0.12) !important;
-      
+
       &:hover {
         background: rgba(247, 241, 230, 0.08) !important;
       }
-      
+
       &.vencida {
         background: rgba(180, 76, 60, 0.15) !important;
       }
@@ -825,7 +825,7 @@ lucide-icon svg {
     .tarea-check {
       border-color: rgba(216, 198, 178, 0.2) !important;
       color: #5c6f66 !important;
-      
+
       &:hover {
         border-color: #B48B6A !important;
         color: #B48B6A !important;
@@ -846,7 +846,7 @@ lucide-icon svg {
     .ver-todas {
       border-top-color: rgba(216, 198, 178, 0.12) !important;
       color: #a8b9b0 !important;
-      
+
       &:hover {
         background: rgba(247, 241, 230, 0.08) !important;
         color: #EAE3D9 !important;
@@ -872,11 +872,11 @@ lucide-icon svg {
 
     .asignado-opt {
       color: #EAE3D9 !important;
-      
+
       &:hover {
         background: rgba(247, 241, 230, 0.08) !important;
       }
-      
+
       &.active {
         color: #B48B6A !important;
         background: rgba(247, 241, 230, 0.05) !important;
@@ -920,11 +920,11 @@ lucide-icon svg {
       background: rgba(18, 24, 22, 0.6) !important;
       border-color: rgba(216, 198, 178, 0.2) !important;
       color: #EAE3D9 !important;
-      
+
       &::placeholder {
         color: #5c6f66 !important;
       }
-      
+
       &:focus {
         border-color: #B48B6A !important;
         box-shadow: 0 0 0 3px rgba(180, 139, 106, 0.15) !important;
@@ -934,7 +934,7 @@ lucide-icon svg {
     .btn-cancel {
       border-color: rgba(216, 198, 178, 0.12) !important;
       color: #a8b9b0 !important;
-      
+
       &:hover {
         background: rgba(247, 241, 230, 0.08) !important;
         color: #EAE3D9 !important;
@@ -944,7 +944,7 @@ lucide-icon svg {
     .btn-guardar {
       background: #B48B6A !important;
       color: #121815 !important;
-      
+
       &:hover {
         background: #a17858 !important;
       }
@@ -981,24 +981,24 @@ lucide-icon svg {
       background-color: #7A5A45 !important;
       color: #EAE3D9 !important;
       border-color: #7A5A45 !important;
-      
+
       * {
         color: #EAE3D9 !important;
       }
-      
+
       /* Contenedor del icono en la tarjeta activa */
       .bg-white\/15,
       [class*="bg-white/15"] {
         background-color: rgba(255, 255, 255, 0.15) !important;
       }
-      
+
       lucide-icon,
       svg,
       path {
         color: #EAE3D9 !important;
         stroke: #EAE3D9 !important;
       }
-      
+
       &:hover {
         background-color: #654937 !important;
         border-color: #654937 !important;
@@ -1010,18 +1010,18 @@ lucide-icon svg {
       background-color: #B48B6A !important;
       border-color: #B48B6A !important;
       color: #121815 !important;
-      
+
       * {
         color: #121815 !important;
       }
-      
+
       lucide-icon,
       svg,
       path {
         color: #121815 !important;
         stroke: #121815 !important;
       }
-      
+
       &:hover {
         background-color: #a17858 !important;
         border-color: #a17858 !important;
@@ -1032,16 +1032,16 @@ lucide-icon svg {
     button.border-nido-cream {
       border-color: #EAE3D9 !important;
     }
-    
+
     /* Contenedor de iconos de tarjetas inactivas */
     .bg-nido-cream {
       background-color: rgba(234, 227, 217, 0.12) !important;
     }
-    
+
     /* Icono de tarjetas inactivas */
     .text-nido-green {
       color: #b4cfc2 !important;
-      
+
       lucide-icon,
       svg,
       path {
@@ -1049,7 +1049,7 @@ lucide-icon svg {
         stroke: #b4cfc2 !important;
       }
     }
-    
+
     /* Botones secundarios e inactivos (como Cancelar o selección inactiva) */
     .bg-\[\#fff\].text-nido-green-dark,
     .bg-\[\#fff\].text-nido-brown,
@@ -1058,7 +1058,7 @@ lucide-icon svg {
       background-color: rgba(247, 241, 230, 0.04) !important;
       color: #a8b9b0 !important;
       border-color: rgba(216, 198, 178, 0.2) !important;
-      
+
       &:hover {
         background-color: rgba(247, 241, 230, 0.08) !important;
         border-color: #7A5A45 !important;
@@ -1070,7 +1070,7 @@ lucide-icon svg {
     button:has(lucide-icon[name="pencil"]):hover {
       border-color: #7A5A45 !important;
       background-color: rgba(247, 241, 230, 0.08) !important;
-      
+
       lucide-icon,
       svg,
       path {
@@ -1078,12 +1078,12 @@ lucide-icon svg {
         stroke: #EAE3D9 !important;
       }
     }
-    
+
     /* Hover para el botón del tacho en la lista de compras */
     button:has(lucide-icon[name="trash-2"]):hover {
       border-color: #ef5350 !important;
       background-color: rgba(239, 83, 80, 0.15) !important;
-      
+
       lucide-icon,
       svg,
       path {
@@ -1351,7 +1351,7 @@ lucide-icon svg {
   app-stat-card {
     .bg-nido-green-dark {
       background-color: rgba(247, 241, 230, 0.12) !important;
-      
+
       lucide-icon,
       svg,
       path {
@@ -1367,7 +1367,7 @@ lucide-icon svg {
     div.bg-nido-green-dark {
       background-color: rgba(247, 241, 230, 0.12) !important;
       box-shadow: none !important;
-      
+
       lucide-icon,
       svg,
       path {
@@ -1389,13 +1389,13 @@ lucide-icon svg {
       background-color: rgba(38, 50, 44, 0.8) !important;
       border-color: rgba(180, 139, 106, 0.25) !important;
     }
-    
+
     /* Leídas (atenuadas) */
     article.opacity-85 {
       background-color: rgba(18, 24, 22, 0.4) !important;
       opacity: 0.55 !important;
       border-color: rgba(216, 198, 178, 0.08) !important;
-      
+
       h3, p, span {
         opacity: 0.7 !important;
       }
@@ -1407,14 +1407,14 @@ lucide-icon svg {
     background-color: rgba(216, 188, 158, 0.08) !important;
     border: 1.5px solid rgba(216, 188, 158, 0.2) !important;
     color: #EAE3D9 !important;
-    
+
     lucide-icon,
     svg,
     path {
       color: #EAE3D9 !important;
       stroke: #EAE3D9 !important;
     }
-    
+
     strong {
       color: #B48B6A !important;
     }
@@ -1429,116 +1429,116 @@ lucide-icon svg {
       border: 1px solid rgba(216, 198, 178, 0.12) !important;
       overflow: visible !important;
     }
-    
+
     .plan-modal__body {
       overflow: visible !important;
     }
-    
+
     .field-label {
       color: #EAE3D9 !important;
     }
-    
+
     /* Inputs y selects dentro del modal */
     .field-input,
     .recipe-search {
       background-color: rgba(18, 24, 22, 0.6) !important;
       border-color: rgba(216, 198, 178, 0.2) !important;
       color: #EAE3D9 !important;
-      
+
       &::placeholder {
         color: #5c6f66 !important;
       }
-      
+
       input {
         background-color: transparent !important;
         color: #EAE3D9 !important;
-        
+
         &::placeholder {
           color: #5c6f66 !important;
         }
       }
-      
+
       option {
         background-color: #1c2320 !important;
         color: #EAE3D9 !important;
       }
     }
-    
+
     /* Contenedor de búsqueda e input */
     .recipe-search {
       color: #5c6f66 !important;
-      
+
       lucide-icon, svg, path {
         color: #5c6f66 !important;
         stroke: #5c6f66 !important;
       }
     }
-    
+
     /* Opciones de receta (picker) */
     .recipe-option {
       background: rgba(18, 24, 22, 0.4) !important;
       border-color: rgba(216, 198, 178, 0.12) !important;
       color: #EAE3D9 !important;
-      
+
       strong {
         color: #EAE3D9 !important;
       }
-      
+
       small {
         color: #a8b9b0 !important;
       }
-      
+
       &:hover {
         background: rgba(28, 36, 32, 0.65) !important;
       }
-      
+
       &--selected {
         border-color: #B48B6A !important;
         background: rgba(180, 139, 106, 0.08) !important;
       }
     }
-    
+
     .recipe-option__empty {
       background: rgba(247, 241, 230, 0.05) !important;
       color: #B48B6A !important;
-      
+
       lucide-icon, svg, path {
         color: #B48B6A !important;
         stroke: #B48B6A !important;
       }
     }
-    
+
     /* Pie del modal */
     .plan-modal__footer,
     .task-detail-panel__footer {
       border-top-color: rgba(216, 198, 178, 0.12) !important;
     }
-    
+
     /* Botones de acción */
     .modal-secondary {
       background-color: rgba(247, 241, 230, 0.04) !important;
       color: #a8b9b0 !important;
       border-color: rgba(216, 198, 178, 0.2) !important;
-      
+
       &:hover {
         background-color: rgba(247, 241, 230, 0.08) !important;
         border-color: #7A5A45 !important;
         color: #EAE3D9 !important;
       }
     }
-    
+
     .modal-primary {
       background-color: #7A5A45 !important;
       border-color: #7A5A45 !important;
       color: #EAE3D9 !important;
-      
+
       lucide-icon,
       svg,
       path {
         color: #EAE3D9 !important;
         stroke: #EAE3D9 !important;
       }
-      
+
       &:hover {
         background-color: #654937 !important;
         border-color: #654937 !important;
@@ -1552,45 +1552,45 @@ lucide-icon svg {
       background: rgba(28, 36, 32, 0.65) !important;
       border-color: rgba(216, 198, 178, 0.12) !important;
     }
-    
+
     .plan-day-spacer {
       background: rgba(26, 33, 29, 0.8) !important;
       border: 1px solid rgba(216, 198, 178, 0.12) !important;
     }
-    
+
     .meal-label {
       color: #EAE3D9 !important;
-      
+
       lucide-icon, svg, path {
         color: #B48B6A !important;
         stroke: #B48B6A !important;
       }
-      
+
       &--tasks {
         background: #7A5A45 !important;
         color: #EAE3D9 !important;
-        
+
         lucide-icon {
           background: transparent !important;
         }
-        
+
         lucide-icon, svg, path {
           color: #EAE3D9 !important;
           stroke: #EAE3D9 !important;
         }
       }
     }
-    
+
     .day-header {
       strong {
         color: #EAE3D9 !important;
       }
-      
+
       span, em {
         color: #a8b9b0 !important;
       }
     }
-    
+
     /* Resaltar la columna del día de hoy */
     .day-column--today {
       .day-header {
@@ -1598,189 +1598,189 @@ lucide-icon svg {
         background: #B48B6A !important;
         border-color: #B48B6A !important;
         box-shadow: inset 0 0 0 1px #B48B6A !important;
-        
+
         strong {
           color: #121815 !important;
         }
-        
+
         span, em {
           color: rgba(18, 24, 22, 0.74) !important;
         }
       }
-      
+
       .plan-slot {
         border-color: rgba(180, 139, 106, 0.3) !important;
         box-shadow: inset 0 0 0 1px rgba(180, 139, 106, 0.1) !important;
       }
     }
-    
+
     /* Slots vacíos e interacciones de añadir */
     .plan-slot--tasks {
       background: rgba(247, 241, 230, 0.01) !important;
       border-color: rgba(216, 198, 178, 0.08) !important;
     }
-    
+
     .slot-add {
       color: #B48B6A !important;
-      
+
       lucide-icon, svg, path {
         color: #B48B6A !important;
         stroke: #B48B6A !important;
       }
-      
+
       &:hover {
         color: #EAE3D9 !important;
-        
+
         lucide-icon, svg, path {
           color: #EAE3D9 !important;
           stroke: #EAE3D9 !important;
         }
       }
     }
-    
+
     .slot-add--meal {
       border: 1px dashed rgba(180, 139, 106, 0.25) !important;
       background: rgba(247, 241, 230, 0.02) !important;
-      
+
       &:hover {
         border-color: #B48B6A !important;
         background: rgba(180, 139, 106, 0.08) !important;
       }
     }
-    
+
     /* Tarjetas de comidas y tareas en la cuadrícula */
     .plan-card {
       background: rgba(26, 33, 29, 0.8) !important;
       border-color: rgba(216, 198, 178, 0.12) !important;
-      
+
       .plan-card__body strong {
         color: #EAE3D9 !important;
       }
-      
+
       .plan-card__body small {
         color: #a8b9b0 !important;
       }
-      
+
       .plan-card__time {
         background: rgba(247, 241, 230, 0.05) !important;
         color: #B48B6A !important;
       }
-      
+
       &:not(.plan-card--task) .plan-card__time {
         background: rgba(18, 24, 22, 0.85) !important;
         color: #B48B6A !important;
       }
-      
+
       .plan-card__empty {
         background: rgba(247, 241, 230, 0.04) !important;
         color: #B48B6A !important;
-        
+
         lucide-icon, svg, path {
           color: #B48B6A !important;
           stroke: #B48B6A !important;
         }
       }
-      
+
       .card-menu {
         background: rgba(28, 36, 32, 0.85) !important;
         color: #EAE3D9 !important;
-        
+
         lucide-icon, svg, path {
           color: #EAE3D9 !important;
           stroke: #EAE3D9 !important;
         }
       }
     }
-    
+
     /* Tarjetas de tareas específicas */
     .plan-card--task {
       background: rgba(28, 36, 32, 0.65) !important;
       border-color: rgba(216, 198, 178, 0.12) !important;
       border-left: 3px solid #7A5A45 !important; /* Borde marrón lateral */
-      
+
       .plan-card__body strong {
         color: #a8b9b0 !important;
       }
-      
+
       .plan-card__assignee {
         color: #ffffff !important;
       }
     }
-    
+
     .plan-card--done {
       .plan-card__body strong {
         color: #5c6f66 !important;
       }
     }
-    
+
     /* Checkbox de tareas */
     .task-check {
       border-color: rgba(216, 198, 178, 0.2) !important;
       background: transparent !important;
       color: #EAE3D9 !important;
-      
+
       &:hover {
         border-color: #B48B6A !important;
         color: #B48B6A !important;
       }
-      
+
       &--done,
       &:disabled {
         background: #7A5A45 !important;
         border-color: #7A5A45 !important;
         color: #EAE3D9 !important;
-        
+
         lucide-icon, svg, path {
           color: #EAE3D9 !important;
           stroke: #EAE3D9 !important;
         }
       }
     }
-    
+
     /* Botón de más tareas "+X más" */
     .task-more {
       border-color: rgba(216, 198, 178, 0.12) !important;
       background: rgba(247, 241, 230, 0.04) !important;
       color: #B48B6A !important;
-      
+
       lucide-icon, svg, path {
         color: #B48B6A !important;
         stroke: #B48B6A !important;
       }
-      
+
       &:hover {
         border-color: #7A5A45 !important;
         background: rgba(247, 241, 230, 0.08) !important;
         color: #EAE3D9 !important;
-        
+
         lucide-icon, svg, path {
           color: #EAE3D9 !important;
           stroke: #EAE3D9 !important;
         }
       }
     }
-    
+
     /* Menú de opciones de cada tarjeta */
     .card-actions-menu {
       background: #1c2320 !important;
       border-color: rgba(216, 198, 178, 0.12) !important;
       box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3) !important;
-      
+
       button {
         color: #EAE3D9 !important;
-        
+
         lucide-icon, svg, path {
           color: #EAE3D9 !important;
           stroke: #EAE3D9 !important;
         }
-        
+
         &:hover {
           background: rgba(247, 241, 230, 0.08) !important;
         }
-        
+
         &.card-actions-menu__danger {
           color: #ef5350 !important;
-          
+
           lucide-icon, svg, path {
             color: #ef5350 !important;
             stroke: #ef5350 !important;

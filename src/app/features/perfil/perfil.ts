@@ -1,4 +1,5 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { StatCard } from '../../shared/ui/stat-card/stat-card';
 import { PreferenceCard } from '../../shared/ui/preference-card/preference-card';
 import { CommonModule } from '@angular/common';
@@ -9,6 +10,8 @@ import { HogaresApiService } from '../household/hogares-api.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { EditarPerfil } from '../editar-perfil/editar-perfil';
 import { Avatar } from '../../shared/ui/avatar/avatar';
+import { TareasApiService } from '../tareas/services/tareas-api.service';
+import { getCompanionInfo } from '../../shared/constants/companion-metadata';
 
 @Component({
   selector: 'app-perfil',
@@ -21,16 +24,21 @@ export class PerfilComponent implements OnInit {
   private readonly onboardingApi = inject(OnboardingApiService);
   private readonly hogaresApi = inject(HogaresApiService);
   private readonly authService = inject(AuthService);
+  private readonly tareasApi = inject(TareasApiService);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly usuario = signal<PerfilApiResponse | null>(null);
   protected readonly isLoading = signal(true);
   protected readonly apiError = signal<string | null>(null);
   protected readonly nombreHogar = signal<string | null>(null);
+  protected readonly nivelNido = signal<number>(0);
   protected readonly statCards = computed(() => {
     const profile = this.usuario();
+    const level = this.nivelNido();
     const tareasCompletadas = profile?.tareasCompletadas ?? 0;
     const productosEscaneados = profile?.productosEscaneados ?? 0;
     const logros = profile?.logros ?? 0;
+    const levelName = getCompanionInfo(level).name;
 
     return [
       {
@@ -54,7 +62,7 @@ export class PerfilComponent implements OnInit {
         value: logros,
         title: 'Logros',
         subtitle: logros > 0
-          ? 'Logros desbloqueados en tu cuenta.'
+          ? `Logros desbloqueados (Pip Nivel ${level}: ${levelName}).`
           : 'Todavia no hay logros desbloqueados.',
       },
     ];
@@ -104,19 +112,22 @@ export class PerfilComponent implements OnInit {
     if (!nombre) return;
 
     this.crearHogarState.set('loading');
-    this.hogaresApi.crearHogar(nombre).subscribe({
-      next: (res) => {
-        this.authService.setToken(res.accessToken);
-        this.crearHogarNombreCreado.set(res.hogarNombre);
-        this.nombreHogar.set(res.hogarNombre);
-        this.crearHogarState.set('success');
-        this.cargarPerfil();
-      },
-      error: (err) => {
-        this.crearHogarErrorMsg.set(err.error?.message ?? 'Error al crear el hogar.');
-        this.crearHogarState.set('error');
-      },
-    });
+    this.hogaresApi.crearHogar(nombre)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.authService.setToken(res.accessToken);
+          this.crearHogarNombreCreado.set(res.hogarNombre);
+          this.nombreHogar.set(res.hogarNombre);
+          this.crearHogarState.set('success');
+          this.cargarPerfil();
+        },
+        error: (err) => {
+          console.error('[PerfilComponent.submitCrearHogar Error]', err);
+          this.crearHogarErrorMsg.set(err.error?.message ?? 'Error al crear el hogar.');
+          this.crearHogarState.set('error');
+        },
+      });
   }
 
   // --- Invitar familiar ---
@@ -141,13 +152,16 @@ export class PerfilComponent implements OnInit {
     if (!email) return;
 
     this.inviteState.set('loading');
-    this.hogaresApi.invitar(email).subscribe({
-      next: () => this.inviteState.set('success'),
-      error: (err) => {
-        this.inviteErrorMsg.set(err.error?.message ?? 'Error al enviar la invitación.');
-        this.inviteState.set('error');
-      },
-    });
+    this.hogaresApi.invitar(email)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => this.inviteState.set('success'),
+        error: (err) => {
+          console.error('[PerfilComponent.submitInvite Error]', err);
+          this.inviteErrorMsg.set(err.error?.message ?? 'Error al enviar la invitación.');
+          this.inviteState.set('error');
+        },
+      });
   }
 
   // --- Buscador de Alergias ---
@@ -169,30 +183,59 @@ export class PerfilComponent implements OnInit {
   ngOnInit(): void {
     this.cargarPerfil();
 
-    this.hogaresApi.getHogar().subscribe({
-      next: hogar => this.nombreHogar.set(hogar.nombre),
-    });
+    this.tareasApi.getProgreso()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: p => {
+          this.nivelNido.set(Math.min(5, Math.max(0, p.currentLevel)));
+        },
+        error: err => {
+          console.error('[PerfilComponent.getProgreso Error]', err);
+        }
+      });
+
+    this.hogaresApi.getHogar()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: hogar => this.nombreHogar.set(hogar.nombre),
+        error: err => {
+          console.error('[PerfilComponent.getHogar Error]', err);
+        }
+      });
 
     // Precargar catálogos
-    this.onboardingApi.getPreferenciasAlimentarias().subscribe({
-      next: data => this.preferencias.set(data),
-    });
-    this.onboardingApi.getAlergias().subscribe({
-      next: data => this.allAlergias.set(data),
-    });
+    this.onboardingApi.getPreferenciasAlimentarias()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: data => this.preferencias.set(data),
+        error: err => {
+          console.error('[PerfilComponent.getPreferenciasAlimentarias Error]', err);
+        }
+      });
+    this.onboardingApi.getAlergias()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: data => this.allAlergias.set(data),
+        error: err => {
+          console.error('[PerfilComponent.getAlergias Error]', err);
+        }
+      });
   }
 
   private cargarPerfil(): void {
-    this.perfilApi.getProfile().subscribe({
-      next: (profile) => {
-        this.usuario.set(profile);
-        this.isLoading.set(false);
-      },
-      error: () => {
-        this.apiError.set('No se pudo cargar la información del perfil. Verificá la conexión.');
-        this.isLoading.set(false);
-      },
-    });
+    this.perfilApi.getProfile()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (profile) => {
+          this.usuario.set(profile);
+          this.isLoading.set(false);
+        },
+        error: err => {
+          console.error('[PerfilComponent.cargarPerfil Error]', err);
+          this.apiError.set('No se pudo cargar la información del perfil. Verificá la conexión.');
+          this.isLoading.set(false);
+        },
+      });
   }
 
   // --- Acciones de Alimentación ---
@@ -215,17 +258,20 @@ export class PerfilComponent implements OnInit {
     this.isSaving.set(true);
 
     const ids = Array.from(this.selectedPreferenciaIds());
-    this.perfilApi.updateRestricciones('restriccion_alimentaria', ids).subscribe({
-      next: () => {
-        this.isSaving.set(false);
-        this.isEditingAlimentacion.set(false);
-        this.cargarPerfil();
-      },
-      error: () => {
-        this.isSaving.set(false);
-        alert('Error al guardar las preferencias de alimentación.');
-      }
-    });
+    this.perfilApi.updateRestricciones('restriccion_alimentaria', ids)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.isSaving.set(false);
+          this.isEditingAlimentacion.set(false);
+          this.cargarPerfil();
+        },
+        error: (err) => {
+          console.error('[PerfilComponent.saveEditingAlimentacion Error]', err);
+          this.isSaving.set(false);
+          alert('Error al guardar las preferencias de alimentación.');
+        }
+      });
   }
 
   protected isPreferenciaSelected(id: string): boolean {
@@ -269,17 +315,20 @@ export class PerfilComponent implements OnInit {
     this.isSaving.set(true);
 
     const ids = this.selectedAlergias().map(a => a.id);
-    this.perfilApi.updateRestricciones('alergia', ids).subscribe({
-      next: () => {
-        this.isSaving.set(false);
-        this.isEditingAlergias.set(false);
-        this.cargarPerfil();
-      },
-      error: () => {
-        this.isSaving.set(false);
-        alert('Error al guardar las alergias.');
-      }
-    });
+    this.perfilApi.updateRestricciones('alergia', ids)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.isSaving.set(false);
+          this.isEditingAlergias.set(false);
+          this.cargarPerfil();
+        },
+        error: (err) => {
+          console.error('[PerfilComponent.saveEditingAlergias Error]', err);
+          this.isSaving.set(false);
+          alert('Error al guardar las alergias.');
+        }
+      });
   }
 
   protected addAlergia(alergia: RestriccionCatalogo): void {

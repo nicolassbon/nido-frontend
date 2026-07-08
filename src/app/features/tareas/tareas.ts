@@ -8,12 +8,16 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   LucideAngularModule, Plus, Check, X,
   Calendar, ChevronRight, ChevronDown, Clock, AlertCircle,
-  CheckSquare, ClipboardList, History,
+  CheckSquare, ClipboardList, History, Lock,
+  Trash2,
 } from 'lucide-angular';
-import { TareasApiService, TareaResponse, DistribucionSemanalResponse } from './services/tareas-api.service';
+import { TareasApiService, TareaResponse, DistribucionSemanalResponse, GamificacionProgresoResponse } from './services/tareas-api.service';
 import { HogaresApiService, MiembroResponse } from '../household/hogares-api.service';
 import { NidoDatepickerComponent } from '../../shared/ui/form/nido-datepicker/nido-datepicker';
 import { NidoSelectComponent, NidoSelectOption } from '../../shared/ui/form/nido-select/nido-select';
+import { AuthService } from '../../core/auth/auth.service';
+import { forkJoin, of, switchMap, catchError } from 'rxjs';
+import { getCompanionInfo } from '../../shared/constants/companion-metadata';
 
 @Component({
   selector: 'app-tareas',
@@ -28,14 +32,74 @@ export class Tareas implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
 
   protected readonly icons = {
     Plus, Check, X, Calendar, ChevronRight, ChevronDown, Clock, AlertCircle,
-    CheckSquare, ClipboardList, History,
+    CheckSquare, ClipboardList, History, Lock, Trash2,
   };
 
   // ── Estado principal ─────────────────────────────────────
   protected readonly misTareas = signal<TareaResponse[]>([]);
+  protected readonly xp = signal<number>(0); // XP acumulado total
+  protected readonly nivel = signal<number>(0); // Nivel inicial 0 (bloqueado)
+  protected readonly evolucionando = signal<boolean>(false);
+  protected readonly imagenNivel = signal<number>(1);
+  protected readonly floatingXPs = signal<{ id: number; value: string }[]>([]);
+  protected readonly hasNextLevel = signal<boolean>(false);
+  protected readonly nextLevel = signal<number | null>(null);
+  protected readonly nextThresholdXp = signal<number | null>(null);
+  protected readonly xpToNextLevel = signal<number | null>(null);
+
+  protected readonly porcentajeXp = computed(() => {
+    if (!this.hasNextLevel()) return 100;
+    const threshold = this.nextThresholdXp() ?? this.xp() + (this.xpToNextLevel() ?? 0);
+    if (threshold <= 0) return 0;
+    return Math.min(100, Math.max(0, (this.xp() / threshold) * 100));
+  });
+
+  protected readonly xpEnNivelActual = computed(() => this.xp());
+
+  protected readonly xpNecesariaParaSiguienteNivel = computed(() => {
+    if (!this.hasNextLevel()) return 0;
+    return this.nextThresholdXp() ?? this.xp() + (this.xpToNextLevel() ?? 0);
+  });
+
+  protected readonly xpSiguienteNivelTotal = computed(() => this.xpNecesariaParaSiguienteNivel());
+
+  protected readonly xpRestanteParaSiguienteNivel = computed(() => {
+    if (!this.hasNextLevel()) return 0;
+    return Math.max(0, this.xpToNextLevel() ?? this.xpNecesariaParaSiguienteNivel() - this.xp());
+  });
+  protected readonly mostrarCelebracionLevelUp = signal<boolean>(false);
+  protected readonly nivelCelebrado = signal<number>(1);
+  protected readonly userId = signal<string | null>(null);
+  private levelUpTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private errorTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private scrollTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private floatingXPTimers: ReturnType<typeof setTimeout>[] = [];
+  protected readonly errorMsg = signal<string | null>(null);
+
+  protected showError(message: string): void {
+    this.errorMsg.set(message);
+    if (this.errorTimeoutId) {
+      clearTimeout(this.errorTimeoutId);
+    }
+    this.errorTimeoutId = setTimeout(() => {
+      this.errorMsg.set(null);
+      this.errorTimeoutId = null;
+    }, 5000);
+  }
+
+  protected cerrarError(): void {
+    this.errorMsg.set(null);
+    if (this.errorTimeoutId) {
+      clearTimeout(this.errorTimeoutId);
+      this.errorTimeoutId = null;
+    }
+  }
+
+
   protected readonly todasTareas = signal<TareaResponse[]>([]);
   protected readonly misTareasConResaltada = computed(() => {
     const list = [...this.misTareas()];
@@ -53,7 +117,37 @@ export class Tareas implements OnInit {
   protected readonly loading = signal(false);
   protected readonly mostrarModal = signal(false);
   protected readonly mostrarModalMisTareas = signal(false);
+  protected readonly mostrarModalAvatar = signal<boolean>(false);
   protected readonly highlightedTaskId = signal<string | null>(null);
+
+  protected readonly companionInfo = computed(() => {
+    const lvl = this.nivel();
+    return getCompanionInfo(lvl);
+  });
+
+  protected getCompanionName(lvl: number): string {
+    return getCompanionInfo(lvl).name;
+  }
+
+  protected getCompanionDesc(lvl: number): string {
+    return getCompanionInfo(lvl).desc;
+  }
+
+  private clampLevel(level: number): number {
+    return Math.min(5, Math.max(0, level));
+  }
+
+  private applyProgress(progress: GamificacionProgresoResponse): void {
+    const level = this.clampLevel(progress.currentLevel);
+    this.nivel.set(level);
+    this.xp.set(progress.currentXp);
+    this.imagenNivel.set(Math.min(5, Math.max(1, level)));
+    this.hasNextLevel.set(progress.hasNextLevel);
+    this.nextLevel.set(progress.nextLevel);
+    this.nextThresholdXp.set(progress.nextThresholdXp);
+    this.xpToNextLevel.set(progress.xpToNextLevel);
+  }
+
   protected readonly reasignandoTareaId = signal<string | null>(null);
   protected readonly reasignandoPos = signal<{ top: number; left: number } | null>(null);
 
@@ -94,14 +188,14 @@ export class Tareas implements OnInit {
   // ── Chart: escala dinámica ───────────────────────────────
   protected readonly maxCompletadas = computed(() => {
     const d = this.distribucion();
-    if (!d) return 1;
+    if (!d) return 0;
     let max = 0;
     for (const dia of d.dias) {
       for (const m of dia.miembros) {
         if (m.completadas > max) max = m.completadas;
       }
     }
-    return Math.max(max, 1);
+    return max;
   });
 
   protected readonly coloresMiembros = [
@@ -109,6 +203,7 @@ export class Tareas implements OnInit {
   ];
 
   ngOnInit(): void {
+    this.userId.set(this.auth.getUserId());
     this.cargarDatos();
     this.route.queryParams
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -119,6 +214,20 @@ export class Tareas implements OnInit {
           this.abrirModalMisTareas();
         }
       });
+
+    this.destroyRef.onDestroy(() => {
+      if (this.levelUpTimeoutId) {
+        clearTimeout(this.levelUpTimeoutId);
+      }
+      if (this.errorTimeoutId) {
+        clearTimeout(this.errorTimeoutId);
+      }
+      if (this.scrollTimeoutId) {
+        clearTimeout(this.scrollTimeoutId);
+      }
+      this.floatingXPTimers.forEach(t => clearTimeout(t));
+      this.floatingXPTimers = [];
+    });
   }
 
   private cargarDatos(): void {
@@ -129,28 +238,64 @@ export class Tareas implements OnInit {
         next: t => {
           this.misTareas.set(t);
           if (this.mostrarModalMisTareas() && this.highlightedTaskId()) {
-            setTimeout(() => {
+            if (this.scrollTimeoutId) {
+              clearTimeout(this.scrollTimeoutId);
+            }
+            this.scrollTimeoutId = setTimeout(() => {
               const el = document.querySelector('.modal-mis-body .tarea-item.highlighted');
               if (el) {
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
               }
+              this.scrollTimeoutId = null;
             }, 100);
           }
         },
-        error: () => {}
+        error: err => {
+          console.error('[Tareas.cargarDatos.getMisTareas Error]', err);
+          this.showError('No pudimos cargar tus tareas. Probá refrescando la página.');
+        }
       });
 
     this.api.getTareas()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: t => { this.todasTareas.set(t); this.loading.set(false); }, error: () => this.loading.set(false) });
+      .subscribe({
+        next: t => { this.todasTareas.set(t); this.loading.set(false); },
+        error: err => {
+          console.error('[Tareas.cargarDatos.getTareas Error]', err);
+          this.loading.set(false);
+          this.showError('No pudimos actualizar las tareas del hogar.');
+        }
+      });
 
     this.api.getDistribucionSemanal()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: d => this.distribucion.set(d), error: () => {} });
+      .subscribe({
+        next: d => this.distribucion.set(d),
+        error: err => {
+          console.error('[Tareas.cargarDatos.getDistribucionSemanal Error]', err);
+          this.showError('No pudimos actualizar el gráfico semanal.');
+        }
+      });
 
     this.hogaresApi.getMiembros()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: m => this.miembros.set(m), error: () => {} });
+      .subscribe({
+        next: m => this.miembros.set(m),
+        error: err => {
+          console.error('[Tareas.cargarDatos.getMiembros Error]', err);
+          this.showError('No pudimos cargar los miembros del hogar.');
+        }
+      });
+
+    this.api.getProgreso().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: p => {
+        this.applyProgress(p);
+      },
+      error: err => {
+        console.error('[Tareas.cargarDatos.getProgreso Error]', err);
+        this.showError('No pudimos cargar tu progreso y nivel.');
+      }
+    });
   }
 
   protected abrirModal(): void {
@@ -165,14 +310,26 @@ export class Tareas implements OnInit {
     this.mostrarModal.set(false);
   }
 
+  protected abrirModalAvatar(): void {
+    this.mostrarModalAvatar.set(true);
+  }
+
+  protected cerrarModalAvatar(): void {
+    this.mostrarModalAvatar.set(false);
+  }
+
   protected abrirModalMisTareas(): void {
     this.mostrarModalMisTareas.set(true);
     if (this.misTareasConResaltada().length > 0 && this.highlightedTaskId()) {
-      setTimeout(() => {
+      if (this.scrollTimeoutId) {
+        clearTimeout(this.scrollTimeoutId);
+      }
+      this.scrollTimeoutId = setTimeout(() => {
         const el = document.querySelector('.modal-mis-body .tarea-item.highlighted');
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
+        this.scrollTimeoutId = null;
       }, 100);
     }
   }
@@ -203,34 +360,98 @@ export class Tareas implements OnInit {
           this.guardando = false;
           this.cargarDatos();
         },
-        error: () => { this.guardando = false; },
+        error: err => {
+          console.error('[Tareas.guardarTarea Error]', err);
+          this.guardando = false;
+          this.showError('No se pudo crear la tarea. Intentá de nuevo.');
+        },
       });
   }
 
   protected completarTarea(tarea: TareaResponse): void {
     this.api.completarTarea(tarea.id)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: updated => {
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        switchMap(updated => {
           this.misTareas.update(ts => ts.filter(t => t.id !== updated.id));
           this.todasTareas.update(ts => ts.map(t => t.id === updated.id ? updated : t));
-          this.api.getDistribucionSemanal()
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({ next: d => this.distribucion.set(d), error: () => {} });
+
+          // Gamificación
+          if (updated.xpOtorgado !== null && updated.xpOtorgado !== undefined) {
+            const floatingId = Date.now() + Math.random();
+            this.floatingXPs.update(list => [...list, { id: floatingId, value: `+${updated.xpOtorgado} XP` }]);
+            const timerId = setTimeout(() => {
+              this.floatingXPs.update(list => list.filter(item => item.id !== floatingId));
+              this.floatingXPTimers = this.floatingXPTimers.filter(t => t !== timerId);
+            }, 1500);
+            this.floatingXPTimers.push(timerId);
+          }
+
+          return forkJoin({
+            distribucion: this.api.getDistribucionSemanal().pipe(
+              catchError(err => {
+                console.error('[Tareas.completarTarea.getDistribucionSemanal Error]', err);
+                this.showError('No pudimos actualizar el gráfico semanal.');
+                return of(null);
+              })
+            ),
+            progreso: this.api.getProgreso().pipe(
+              catchError(err => {
+                console.error('[Tareas.completarTarea.getProgreso Error]', err);
+                this.showError('No pudimos sincronizar tu progreso y nivel.');
+                return of(null);
+              })
+            )
+          });
+        })
+      )
+      .subscribe({
+        next: ({ distribucion, progreso }) => {
+          if (distribucion) {
+            this.distribucion.set(distribucion);
+          }
+          if (progreso) {
+            const p = progreso;
+            const previousLevel = this.nivel();
+            const nextLevel = this.clampLevel(p.currentLevel);
+            if (nextLevel > previousLevel && previousLevel < 5) {
+              this.evolucionando.set(true);
+              if (this.levelUpTimeoutId) {
+                clearTimeout(this.levelUpTimeoutId);
+              }
+              this.levelUpTimeoutId = setTimeout(() => {
+                this.applyProgress(p);
+                this.evolucionando.set(false);
+                this.nivelCelebrado.set(Math.min(5, Math.max(1, nextLevel)));
+                this.mostrarCelebracionLevelUp.set(true);
+                this.levelUpTimeoutId = null;
+              }, 2000);
+            } else {
+              this.applyProgress(p);
+            }
+          }
         },
-        error: () => {},
+        error: err => {
+          console.error('[Tareas.completarTarea Error]', err);
+          this.showError('No pudimos registrar la tarea como completada.');
+        },
       });
   }
 
-  protected eliminarTarea(id: string): void {
-    this.api.deleteTarea(id)
+  protected eliminarTarea(tarea: TareaResponse, event: MouseEvent): void {
+    event.stopPropagation();
+    if (!confirm(`¿Eliminar la tarea "${tarea.titulo}"? También se quitará del planificador si estaba agendada.`)) return;
+    this.api.deleteTarea(tarea.id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.todasTareas.update(ts => ts.filter(t => t.id !== id));
-          this.misTareas.update(ts => ts.filter(t => t.id !== id));
+          this.todasTareas.update(ts => ts.filter(t => t.id !== tarea.id));
+          this.misTareas.update(ts => ts.filter(t => t.id !== tarea.id));
         },
-        error: () => {},
+        error: err => {
+          console.error('[Tareas.eliminarTarea Error]', err);
+          this.showError('No pudimos eliminar la tarea.');
+        },
       });
   }
 
@@ -261,13 +482,17 @@ export class Tareas implements OnInit {
           this.todasTareas.update(ts => ts.map(t => t.id === updated.id ? updated : t));
           this.misTareas.update(ts => ts.map(t => t.id === updated.id ? updated : t));
         },
-        error: () => {},
+        error: err => {
+          console.error('[Tareas.reasignarTarea Error]', err);
+          this.showError('No pudimos reasignar la tarea.');
+        },
       });
   }
 
   protected alturaBar(completadas: number): string {
-    if (completadas === 0) return '0px';
-    const pct = (completadas / this.maxCompletadas()) * 100;
+    const max = this.maxCompletadas();
+    if (completadas === 0 || max === 0) return '0px';
+    const pct = (completadas / max) * 100;
     return `${pct}%`;
   }
 
