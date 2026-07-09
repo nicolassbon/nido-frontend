@@ -153,6 +153,129 @@ export interface AssistantRecipeContext {
       width: 100%;
       height: 100%;
     }
+
+    :host-context(.dark) {
+      .bg-white {
+        background-color: #1c2320 !important;
+      }
+      
+      header {
+        background-color: #142424 !important;
+        border-bottom-color: rgba(216, 198, 178, 0.12) !important;
+        
+        /* Icon wrapper */
+        .bg-nido-cream {
+          background-color: rgba(234, 227, 217, 0.1) !important;
+          color: #EAE3D9 !important;
+        }
+        
+        h3 {
+          color: #EAE3D9 !important;
+        }
+        
+        p {
+          color: #a8b9b0 !important;
+        }
+      }
+      
+      /* Messages scroll area */
+      div[class*="bg-[#faf6f0]/30"] {
+        background-color: rgba(18, 24, 22, 0.4) !important;
+      }
+      
+      /* Empty state chef hat icon container */
+      .w-12.h-12.bg-nido-cream {
+        background-color: rgba(234, 227, 217, 0.08) !important;
+        color: #B48B6A !important;
+        
+        lucide-icon, svg, path {
+          color: #B48B6A !important;
+          stroke: #B48B6A !important;
+        }
+      }
+      
+      /* Empty state text and description */
+      p.text-nido-green-dark {
+        color: #EAE3D9 !important;
+      }
+      p.text-nido-brown {
+        color: #a8b9b0 !important;
+      }
+      
+      /* Quick actions suggestion buttons */
+      button.bg-white.text-nido-green-dark {
+        background-color: rgba(247, 241, 230, 0.04) !important;
+        border-color: rgba(216, 198, 178, 0.15) !important;
+        color: #EAE3D9 !important;
+        
+        &:hover {
+          background-color: rgba(247, 241, 230, 0.08) !important;
+          border-color: #B48B6A !important;
+        }
+      }
+      
+      /* User chat bubble */
+      .bg-nido-green-dark {
+        background-color: #7A5A45 !important;
+        color: #EAE3D9 !important;
+      }
+      
+      /* AI/Model chat bubble */
+      .bg-white.text-nido-green-dark {
+        background-color: rgba(28, 36, 32, 0.8) !important;
+        border-color: rgba(216, 198, 178, 0.12) !important;
+        color: #EAE3D9 !important;
+      }
+      
+      /* Loading bubble */
+      .self-start.bg-white {
+        background-color: rgba(28, 36, 32, 0.8) !important;
+        border-color: rgba(216, 198, 178, 0.12) !important;
+        
+        .bg-nido-green {
+          background-color: #B48B6A !important; /* Gold dots */
+        }
+        
+        .text-nido-brown {
+          color: #a8b9b0 !important;
+        }
+      }
+      
+      /* Input form bar at the bottom */
+      form.bg-white {
+        background-color: #142424 !important;
+        border-top-color: rgba(216, 198, 178, 0.12) !important;
+        
+        input.bg-white {
+          background-color: rgba(18, 24, 22, 0.6) !important;
+          border-color: rgba(216, 198, 178, 0.18) !important;
+          color: #EAE3D9 !important;
+          
+          &::placeholder {
+            color: #5c6f66 !important;
+          }
+          
+          &:focus {
+            border-color: #B48B6A !important;
+            box-shadow: 0 0 0 3px rgba(180, 139, 106, 0.15) !important;
+          }
+        }
+        
+        button[type="submit"] {
+          background-color: #7A5A45 !important;
+          color: #EAE3D9 !important;
+          
+          lucide-icon, svg, path {
+            color: #EAE3D9 !important;
+            stroke: #EAE3D9 !important;
+          }
+          
+          &:hover {
+            background-color: #654937 !important;
+          }
+        }
+      }
+    }
   `],
 })
 export class RecetaAsistenteComponent {
