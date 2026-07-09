@@ -46,14 +46,6 @@
       <nido-select
         [options]="nutritionalOptions()"
         [ngModel]="nutritionalObjective()"
-        (ngModelChange)="nutritionalObjective.set($event); onSearchSubmit(searchInput.value, $event)">
-        <option value="">Sin objetivo nutricional</option>
-        <option value="alta-proteina">Alta proteina</option>
-        <option value="bajo-calorias">Bajo en calorias</option>
-      </select>
-      <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-nido-brown pointer-events-none">
-        <lucide-icon [img]="icons.ChevronDown" [size]="16" />
-      </span>
         (ngModelChange)="nutritionalObjective.set($event); onSearchSubmit(searchInput.value, $event)"
         placeholder="Sin objetivo nutricional" />
     </div>
