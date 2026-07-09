@@ -662,7 +662,7 @@ protected reloadProducts(): void { this.loadProducts(); }
     return {
       id:               item.id,
       name:             item.nombre,
-      image:            item.iconoSvg ? `/assets/icons/categorias/${item.iconoSvg}` : (resolveImageUrl(item.imagen) || fallbackProductImage(item.nombre)),
+      image:            resolveImageUrl(item.imagen) || fallbackProductImage(item.nombre),
       location:         item.ubicacion as Exclude<StorageLocation, 'Todos'>,
       expiryDate:       item.fechaVencimiento ?? '',
       quantity:         item.cantidad ?? 0,
@@ -685,7 +685,7 @@ protected reloadProducts(): void { this.loadProducts(); }
   return {
     id: item.stockHogarId,
     name: item.nombre,
-    image: item.iconoSvg ? `/assets/icons/categorias/${item.iconoSvg}` : (resolveImageUrl(item.imagenUrl) || fallbackProductImage(item.nombre)),
+    image: resolveImageUrl(item.imagenUrl) || fallbackProductImage(item.nombre),
     location: item.ubicacion as Exclude<StorageLocation, 'Todos'>,
     expiryDate: item.fechaVencimiento ?? '',
     quantity: item.cantidad ?? 0,
@@ -695,6 +695,7 @@ protected reloadProducts(): void { this.loadProducts(); }
     remainingPercent: 100 - item.porcentajeConsumido,
     barcode: item.codigoBarras ?? undefined,
     iconoSvg: item.iconoSvg ?? undefined,
+    icono: item.icono ?? undefined,
     packagesCount: item.cantidadEnvases ?? 1,
   };
 }
