@@ -19,6 +19,7 @@ import {
   ShoppingBasket,
   Shuffle,
   SlidersHorizontal,
+  Sparkles, // <-- AGREGADO: Importamos el ícono de chispas para la IA
   Star,
   X,
   Zap,
@@ -31,6 +32,7 @@ import { StarRatingComponent } from '../../../shared/ui/star-rating/star-rating'
 import { ProductService } from '../../../core/servicios/agregar-producto.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { PerfilApiService } from '../../perfil/perfil-api.service';
+import { AssistantRecipeContext, RecetaAsistenteComponent } from './receta-asistente.component';
 import { NidoSelectComponent, NidoSelectOption } from '../../../shared/ui/form/nido-select/nido-select';
 import { Avatar } from '../../../shared/ui/avatar/avatar';
 
@@ -90,6 +92,7 @@ interface HouseholdMember {
   name: string;
   initials: string;
   color: string;
+  restrictions: string[];
   allergens: string[];
   fotoUrl?: string | null;
 }
@@ -123,6 +126,27 @@ const RESTRICTION_TO_ALLERGENS: Record<string, string[]> = {
   'vegan': ['Carne', 'Pescado', 'Mariscos', 'Lactosa', 'Huevo'],
   'vegetariano': ['Carne', 'Pescado', 'Mariscos'],
   'vegetariana': ['Carne', 'Pescado', 'Mariscos'],
+};
+
+const RESTRICTION_DISPLAY_LABELS: Record<string, string> = {
+  'sin tacc': 'Sin TACC',
+  'sin gluten': 'Sin TACC',
+  'celiaquia': 'Sin TACC',
+  'celiaco': 'Sin TACC',
+  'celiaca': 'Sin TACC',
+  'vegetariano': 'Vegetariano',
+  'vegetariana': 'Vegetariano',
+  'vegano': 'Vegano',
+  'vegan': 'Vegano',
+  'sin lactosa': 'Sin lactosa',
+  'libre de lactosa': 'Sin lactosa',
+  'intolerancia a la lactosa': 'Sin lactosa',
+};
+
+const ALLERGEN_DISPLAY_LABELS: Record<string, string> = {
+  'gluten': 'Sin TACC',
+  'lactosa': 'Sin lactosa',
+  'carne': 'Vegetariano',
 };
 
 const APPLIANCE_ALIASES: Record<string, string[]> = {
@@ -171,6 +195,7 @@ export class Recipes implements OnInit {
     ShoppingBasket,
     Shuffle,
     SlidersHorizontal,
+    Sparkles,
     Star,
     X,
     Zap,
@@ -184,6 +209,7 @@ export class Recipes implements OnInit {
   protected readonly showRoulettePopup        = signal(false);
   protected readonly rouletteRecipe           = signal<RecipeWithAvailability | null>(null);
   protected readonly excludeAllergens         = signal(false);
+  protected readonly respectActiveRestrictions = signal(true);
   protected readonly excludeMissingAppliances = signal(false);
   protected readonly filterByIngredients      = signal(false);
   protected readonly isLoadingIa              = signal(false);
@@ -201,19 +227,33 @@ export class Recipes implements OnInit {
 
   protected readonly householdMembers = signal<HouseholdMember[]>([]);
   protected readonly eatingToday = signal<Set<string>>(new Set());
+  protected readonly asistenteAbierto         = signal<boolean>(false);
+  protected readonly recetaSeleccionadaAsistente = signal<AssistantRecipeContext | null>(null);
   private readonly profileAllergies = signal<string[]>([]);
 
-  private readonly activeAllergens = computed(() => {
+  private readonly activeRestrictionValues = computed(() => {
     const eating = this.householdMembers().filter(member => this.eatingToday().has(member.id));
-    const memberAllergens = this.expandRestrictions(eating.flatMap(member => member.allergens));
-    if (memberAllergens.length > 0) {
-      return memberAllergens;
+    const memberRestrictions = eating.flatMap(member => member.restrictions);
+    if (memberRestrictions.length > 0) {
+      return memberRestrictions;
     }
 
     const userId = this.authService.getUserId();
     const currentUserIsEating = !!userId && this.eatingToday().has(userId);
-    return currentUserIsEating ? this.expandRestrictions(this.profileAllergies()) : [];
+    return currentUserIsEating ? this.profileAllergies() : [];
   });
+
+  private readonly activeAllergens = computed(() =>
+    this.expandRestrictions(this.activeRestrictionValues())
+  );
+
+  protected readonly activeRestrictionLabels = computed(() =>
+    this.toRestrictionLabels(this.activeRestrictionValues())
+  );
+
+  protected readonly restrictionsFilterEnabled = computed(() =>
+    this.excludeAllergens() || (this.respectActiveRestrictions() && this.activeRestrictionLabels().length > 0)
+  );
 
   protected readonly pantryIngredients = signal<PantryIngredient[]>([]);
   private readonly allRecipes          = signal<Recipe[]>([]);
@@ -364,7 +404,7 @@ export class Recipes implements OnInit {
       result = result.filter(recipe => recipe.name.toLowerCase().includes(query));
     }
 
-    if (this.excludeAllergens()) {
+    if (this.restrictionsFilterEnabled()) {
       result = result.filter(recipe => !recipe.hasAllergen);
     }
 
@@ -407,6 +447,11 @@ export class Recipes implements OnInit {
   }
 
   protected toggleAllergens(): void {
+    if (this.activeRestrictionLabels().length > 0) {
+      this.respectActiveRestrictions.update(value => !value);
+      return;
+    }
+
     this.excludeAllergens.update(value => !value);
   }
 
@@ -476,6 +521,31 @@ export class Recipes implements OnInit {
       .map(ingredient => ingredient.name);
   }
 
+  protected abrirAsistenteConReceta(recipe: RecipeWithAvailability, event: Event): void {
+    event.stopPropagation();
+
+    this.recetaSeleccionadaAsistente.set({
+      id: recipe.id,
+      nombre: recipe.name,
+      ingredientes: recipe.ingredients.map(ingredient => ingredient.name),
+      faltantes: this.missingIngredientNames(recipe),
+    });
+    this.asistenteAbierto.set(true);
+  }
+
+  protected toggleAsistenteGeneral(): void {
+    const nextOpenState = !this.asistenteAbierto();
+    if (nextOpenState) {
+      this.recetaSeleccionadaAsistente.set(null);
+    }
+
+    this.asistenteAbierto.set(nextOpenState);
+  }
+
+  protected readonly alacenaDisponibleAsistente = computed(() =>
+    this.pantryIngredients().map(item => item.name)
+  );
+
   protected get selectedIngredients(): PantryIngredient[] {
     return this.pantryIngredients().filter(item => item.selected);
   }
@@ -509,7 +579,7 @@ export class Recipes implements OnInit {
 
   protected allergenChipClass(): string {
     const base = 'px-4 py-[0.4rem] rounded-[20px] border-[1.5px] border-solid font-medium text-[0.8125rem] cursor-pointer transition-all duration-150 inline-flex items-center gap-1.5';
-    return this.excludeAllergens()
+    return this.restrictionsFilterEnabled()
       ? `${base} bg-nido-red border-nido-red text-white`
       : `${base} bg-white border-nido-border text-nido-brown hover:border-nido-green hover:text-nido-green`;
   }
@@ -558,7 +628,7 @@ export class Recipes implements OnInit {
     }
 
     this.isLoadingIa.set(true);
-    this.recipesApi.recomendarPorIa(textoUsuario, objetivo)
+    this.recipesApi.recomendarPorIa(textoUsuario, objetivo, this.activeRestrictionLabels())
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: recetas => {
@@ -647,13 +717,17 @@ export class Recipes implements OnInit {
   }
 
   private toHouseholdMember(member: MiembroResponse, index: number): HouseholdMember {
+    const restrictions = [
+      ...(member.alergias ?? []),
+      ...(member.alimentacion ?? []),
+    ];
     return {
       id: member.usuarioId,
       name: member.nombre,
       initials: this.getInitials(member.nombre),
       color: MEMBER_COLORS[index % MEMBER_COLORS.length],
-      allergens: this.expandRestrictions(member.alergias ?? []),
-      fotoUrl: member.fotoUrl,
+      restrictions,
+      allergens: this.expandRestrictions(restrictions),
     };
   }
 
@@ -701,6 +775,17 @@ export class Recipes implements OnInit {
     });
 
     return [...new Set(expanded)];
+  }
+
+  private toRestrictionLabels(restrictions: string[]): string[] {
+    const labels = restrictions
+      .map(restriction => {
+        const normalized = this.normalizeText(restriction);
+        return RESTRICTION_DISPLAY_LABELS[normalized] ?? ALLERGEN_DISPLAY_LABELS[normalized] ?? restriction;
+      })
+      .filter(label => !!label.trim());
+
+    return [...new Set(labels)];
   }
 
   private normalizeText(value: string): string {
