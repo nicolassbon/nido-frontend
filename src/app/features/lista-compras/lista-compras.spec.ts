@@ -9,7 +9,6 @@ import {
   ListCollapse,
   LUCIDE_ICONS,
   LucideIconProvider,
-  PackagePlus,
   Pencil,
   Plus,
   Send,
@@ -55,7 +54,6 @@ describe('ListaCompras', () => {
             History,
             ChevronDown,
             ListCollapse,
-            PackagePlus,
             Pencil,
             Plus,
             Send,
@@ -74,11 +72,16 @@ describe('ListaCompras', () => {
     fixture.detectChanges();
   });
 
-  it('pasa un item del historial a la alacena', () => {
-    const item = historyItem({ nombre: 'Harina', cantidad: 500, unidad: 'g', categoriaNombre: 'Harinas' });
+  it('al tildar un item de la lista, lo marca comprado y lo pasa directo a la alacena', () => {
+    listaService.emitLists([
+      shoppingList('lista-1', 'Receta A', [
+        { id: 'item-1', productoId: null, nombre: 'Harina', cantidad: 500, unidad: 'g', checked: false, categoriaNombre: 'Harinas' },
+      ]),
+    ]);
 
-    (component as any).sendHistoryItemToPantry(item);
+    (component as any).togglePurchased('lista-1', (component as any).listas[0].items[0]);
 
+    expect(listaService.markPurchased).toHaveBeenCalledWith('lista-1', 'item-1', true);
     expect(alacenaApi.createStock).toHaveBeenCalledWith(expect.objectContaining({
       nombre: 'Harina',
       cantidad: 500,
@@ -87,24 +90,57 @@ describe('ListaCompras', () => {
       origenCarga: 'manual',
       ubicacion: 'Alacena',
     }));
-    expect(listaService.markAddedToInventory).toHaveBeenCalledWith('hist-item');
+    expect(listaService.markAddedToInventory).toHaveBeenCalledWith('item-1');
   });
 
-  it('marca el item como agregado a inventario despues de subirlo a alacena', () => {
-    const item = historyItem({ id: 'hist-1' });
-
-    (component as any).sendHistoryItemToPantry(item);
-
-    expect(listaService.markAddedToInventory).toHaveBeenCalledWith('hist-1');
+  it('no muestra la unidad si no se especifico cantidad o la cantidad es 0', () => {
+    expect((component as any).formatAmount(null, 'g')).toBe('');
+    expect((component as any).formatAmount(0, 'kg')).toBe('');
+    expect((component as any).formatAmount(500, 'g')).toBe('500 g');
+    expect((component as any).formatAmount(2, null)).toBe('2');
   });
 
-  it('no reenvia un item del historial que ya fue agregado', () => {
-    const item = historyItem({ id: 'hist-1', agregadoAlInventario: true });
+  it('pasa el item a la alacena con cantidad 1 cuando no se especifico cantidad', () => {
+    listaService.emitLists([
+      shoppingList('lista-1', 'Receta A', [
+        { id: 'item-1', productoId: null, nombre: 'Sal', cantidad: null, unidad: null, checked: false },
+      ]),
+    ]);
 
-    (component as any).sendHistoryItemToPantry(item);
+    (component as any).togglePurchased('lista-1', (component as any).listas[0].items[0]);
 
+    expect(alacenaApi.createStock).toHaveBeenCalledWith(expect.objectContaining({
+      nombre: 'Sal',
+      cantidad: 1,
+    }));
+  });
+
+  it('pasa el item a la alacena con cantidad 1 cuando la cantidad especificada es 0', () => {
+    listaService.emitLists([
+      shoppingList('lista-1', 'Receta A', [
+        { id: 'item-1', productoId: null, nombre: 'Sal', cantidad: 0, unidad: null, checked: false },
+      ]),
+    ]);
+
+    (component as any).togglePurchased('lista-1', (component as any).listas[0].items[0]);
+
+    expect(alacenaApi.createStock).toHaveBeenCalledWith(expect.objectContaining({
+      nombre: 'Sal',
+      cantidad: 1,
+    }));
+  });
+
+  it('al destildar un item no lo pasa a la alacena', () => {
+    listaService.emitLists([
+      shoppingList('lista-1', 'Receta A', [
+        { id: 'item-1', productoId: null, nombre: 'Harina', cantidad: 500, unidad: 'g', checked: true },
+      ]),
+    ]);
+
+    (component as any).togglePurchased('lista-1', (component as any).listas[0].items[0]);
+
+    expect(listaService.markPurchased).toHaveBeenCalledWith('lista-1', 'item-1', false);
     expect(alacenaApi.createStock).not.toHaveBeenCalled();
-    expect(listaService.markAddedToInventory).not.toHaveBeenCalled();
   });
 
   it('muestra Ver Todo como una lista virtual sin borrar la separacion original', () => {
@@ -320,20 +356,5 @@ function shoppingList(id: string, recetaNombre: string, items: RecipeShoppingLis
     recetaNombre,
     grupoNombre: recetaNombre,
     items,
-  };
-}
-
-function historyItem(overrides: Partial<ShoppingHistoryItem> = {}): ShoppingHistoryItem {
-  return {
-    id: 'hist-item',
-    productoId: null,
-    nombre: 'Producto',
-    cantidad: null,
-    unidad: null,
-    grupoNombre: 'Principal',
-    compradoEn: '2026-06-19T10:00:00',
-    compradoPor: null,
-    agregadoAlInventario: false,
-    ...overrides,
   };
 }

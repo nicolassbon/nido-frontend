@@ -313,15 +313,6 @@
                 }
               </span>
             </div>
-            <button
-              class="inline-flex shrink-0 items-center gap-1.5 rounded-[18px] border border-nido-border bg-white px-3 py-1.5 text-[0.75rem] font-semibold text-nido-green-dark cursor-pointer transition-colors duration-150 hover:border-nido-green hover:bg-nido-cream"
-              type="button"
-              [class.opacity-60]="item.agregadoAlInventario"
-              [disabled]="uploadingHistoryId === item.id || item.agregadoAlInventario"
-              (click)="sendHistoryItemToPantry(item)">
-              <lucide-icon [name]="item.agregadoAlInventario ? 'check' : 'package-plus'" [size]="13" />
-              {{ item.agregadoAlInventario ? 'Agregado' : 'Pasar a la alacena' }}
-            </button>
           </li>
         }
       </ul>
