@@ -26,6 +26,47 @@
       </div>
 
       <!-- ── 3-card grid ───────────────────────────────────── -->
+      <section class="w-full max-w-[620px] rounded-2xl border border-nido-border bg-nido-bg px-4 py-4 sm:px-5">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-nido-gold/10 flex items-center justify-center shrink-0">
+              <lucide-icon name="palette" [size]="18" class="text-nido-gold" />
+            </div>
+            <div>
+              <h2 class="text-[1rem] font-bold text-nido-green-dark m-0 leading-snug">Apariencia</h2>
+              <p class="text-[0.8125rem] text-nido-muted m-0">Elegí cómo querés ver Nido.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 sm:w-[280px]">
+            <button
+              type="button"
+              (click)="setTheme('light')"
+              [class]="currentTheme() === 'light' ? 'bg-nido-green-dark text-nido-cream border-transparent font-bold' : 'bg-white/[0.51] text-nido-brown border-nido-border hover:border-nido-green'"
+              class="flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-[0.75rem] font-medium transition-all duration-150 cursor-pointer">
+              <lucide-icon name="sun" [size]="15" />
+              Claro
+            </button>
+            <button
+              type="button"
+              (click)="setTheme('dark')"
+              [class]="currentTheme() === 'dark' ? 'bg-nido-green-dark text-nido-cream border-transparent font-bold' : 'bg-white/[0.51] text-nido-brown border-nido-border hover:border-nido-green'"
+              class="flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-[0.75rem] font-medium transition-all duration-150 cursor-pointer">
+              <lucide-icon name="moon" [size]="15" />
+              Oscuro
+            </button>
+            <button
+              type="button"
+              (click)="setTheme('system')"
+              [class]="currentTheme() === 'system' ? 'bg-nido-green-dark text-nido-cream border-transparent font-bold' : 'bg-white/[0.51] text-nido-brown border-nido-border hover:border-nido-green'"
+              class="flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-[0.75rem] font-medium transition-all duration-150 cursor-pointer">
+              <lucide-icon name="monitor" [size]="15" />
+              Sistema
+            </button>
+          </div>
+        </div>
+      </section>
+
       <div class="grid grid-cols-1 md:grid-cols-3 gap-5 w-full">
 
         <!-- ── Card 1: Alimentación ───────────────────────── -->

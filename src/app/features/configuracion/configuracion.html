@@ -20,9 +20,12 @@
       </div>
 
       <div class="flex items-center gap-4 py-3 border-b border-nido-border/40">
-        <div class="w-12 h-12 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0 shadow-sm border border-white/20">
-          <span class="text-nido-cream text-[1rem] font-bold">{{ memberInitial(userName()) }}</span>
-        </div>
+        <app-avatar
+          [nombre]="userName()"
+          [fotoUrl]="fotoUrl()"
+          sizeClass="w-12 h-12"
+          fontSizeClass="text-base"
+        />
         <div class="flex flex-col gap-0.5 min-w-0">
           <span class="text-[0.9375rem] font-semibold text-nido-green-dark break-words">{{ userName() }}</span>
           <span class="text-[0.8125rem] text-nido-brown break-all opacity-90">{{ email() }}</span>
@@ -35,6 +38,44 @@
         <lucide-icon name="log-out" [size]="16" />
         Cerrar sesión
       </button>
+    </section>
+
+    <section class="min-w-0 bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col">
+      <div class="flex items-center gap-2.5 mb-5 border-b border-nido-border/40 pb-3">
+        <lucide-icon name="palette" [size]="20" class="text-nido-green" />
+        <h2 class="text-base font-bold text-nido-green-dark">Apariencia</h2>
+      </div>
+
+      <p class="text-xs text-nido-brown opacity-95 leading-relaxed mb-4">
+        Elegí el estilo visual de Nido para adaptarlo a tu momento del día.
+      </p>
+
+      <div class="flex gap-2 w-full">
+        <button
+          type="button"
+          (click)="setTheme('light')"
+          [class]="currentTheme() === 'light' ? 'bg-nido-green-dark text-nido-cream border-transparent font-bold' : 'bg-transparent text-nido-brown border-nido-border hover:bg-nido-cream font-medium'"
+          class="flex-1 flex flex-col items-center justify-center gap-2 py-3 rounded-xl border text-[0.8125rem] cursor-pointer transition-all duration-150 active:scale-[0.98]">
+          <lucide-icon name="sun" [size]="18" />
+          Claro
+        </button>
+        <button
+          type="button"
+          (click)="setTheme('dark')"
+          [class]="currentTheme() === 'dark' ? 'bg-nido-green-dark text-nido-cream border-transparent font-bold' : 'bg-transparent text-nido-brown border-nido-border hover:bg-nido-cream font-medium'"
+          class="flex-1 flex flex-col items-center justify-center gap-2 py-3 rounded-xl border text-[0.8125rem] cursor-pointer transition-all duration-150 active:scale-[0.98]">
+          <lucide-icon name="moon" [size]="18" />
+          Oscuro
+        </button>
+        <button
+          type="button"
+          (click)="setTheme('system')"
+          [class]="currentTheme() === 'system' ? 'bg-nido-green-dark text-nido-cream border-transparent font-bold' : 'bg-transparent text-nido-brown border-nido-border hover:bg-nido-cream font-medium'"
+          class="flex-1 flex flex-col items-center justify-center gap-2 py-3 rounded-xl border text-[0.8125rem] cursor-pointer transition-all duration-150 active:scale-[0.98]">
+          <lucide-icon name="monitor" [size]="18" />
+          Sistema
+        </button>
+      </div>
     </section>
 
     <section class="min-w-0 bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)] border border-nido-border/60 flex flex-col gap-6">

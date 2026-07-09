@@ -43,8 +43,8 @@
     </div>
 
     <div class="relative min-w-[210px] max-sm:w-full">
-      <select
-        class="w-full h-full py-3 px-4 pr-10 border-[1.5px] border-solid border-nido-brown rounded-[10px] bg-white/[0.51] text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-brown appearance-none cursor-pointer font-medium"
+      <nido-select
+        [options]="nutritionalOptions()"
         [ngModel]="nutritionalObjective()"
         (ngModelChange)="nutritionalObjective.set($event); onSearchSubmit(searchInput.value, $event)">
         <option value="">Sin objetivo nutricional</option>
@@ -54,6 +54,8 @@
       <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-nido-brown pointer-events-none">
         <lucide-icon [img]="icons.ChevronDown" [size]="16" />
       </span>
+        (ngModelChange)="nutritionalObjective.set($event); onSearchSubmit(searchInput.value, $event)"
+        placeholder="Sin objetivo nutricional" />
     </div>
   </div>
 
@@ -96,7 +98,7 @@
     </div>
 
     <!-- Sort -->
-    <div class="relative">
+    <div class="relative sort-dropdown-container">
       <button
         class="flex items-center gap-1.5 px-3.5 py-[0.4rem] rounded-[20px] border-[1.5px] border-solid border-nido-border bg-white text-nido-brown text-[0.8125rem] font-medium cursor-pointer whitespace-nowrap hover:border-nido-green hover:text-nido-green"
         (click)="showSortDropdown.set(!showSortDropdown())">
@@ -298,18 +300,22 @@
             <button
               [class]="memberToggleClass(member.id)"
               [style.border-color]="isEatingToday(member.id) ? member.color : null"
+              [style.background-color]="isEatingToday(member.id) ? member.color + '26' : null"
               (click)="toggleEatingToday(member.id)"
               [attr.aria-pressed]="isEatingToday(member.id)"
               [title]="member.name + (member.allergens.length ? ' - Alergico a: ' + member.allergens.join(', ') : ' - Sin alergenos')">
-              <div
-                class="w-7 h-7 rounded-full text-[0.65rem] font-bold flex items-center justify-center shrink-0 transition-[background] duration-150"
-                [style.background]="isEatingToday(member.id) ? member.color : '#e5ddd0'"
-                [style.color]="isEatingToday(member.id) ? '#fff' : '#927357'">
-                {{ member.initials }}
-              </div>
+              <app-avatar
+                [fotoUrl]="member.fotoUrl"
+                [nombre]="member.name"
+                sizeClass="w-7 h-7"
+                fontSizeClass="text-[0.65rem]"
+                class="shrink-0 transition-opacity duration-150"
+                [class.opacity-60]="!isEatingToday(member.id)"
+              />
               <span
                 class="min-w-0 flex-1 truncate text-[0.8rem] font-medium text-left transition-[color] duration-150"
-                [style.color]="isEatingToday(member.id) ? '#263F30' : '#927357'">
+                [class.text-nido-green-dark]="isEatingToday(member.id)"
+                [class.text-nido-brown]="!isEatingToday(member.id)">
                 {{ member.name }}
               </span>
               @if (member.allergens.length) {
@@ -351,7 +357,7 @@
           </button>
         } @else {
           <button
-            class="w-full flex items-center justify-center gap-2 mt-3.5 py-2.5 bg-nido-green-dark text-nido-cream border-none rounded-lg text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 hover:bg-nido-green"
+            class="w-full flex items-center justify-center gap-2 mt-3.5 py-2.5 bg-nido-gold text-nido-green-dark border-none rounded-lg text-[0.8375rem] font-bold cursor-pointer transition-[background,opacity] duration-150 hover:opacity-90"
             (click)="buscarPorIngredientes()">
             <lucide-icon [img]="icons.Search" [size]="15" />
             Buscar receta

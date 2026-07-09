@@ -34,6 +34,8 @@ describe('WellnessStep', () => {
   ];
 
   beforeEach(async () => {
+    localStorage.clear();
+
     mockApi = {
       getPreferenciasAlimentarias: vi.fn().mockReturnValue(of(mockPreferencias)),
       getAlergias: vi.fn().mockReturnValue(of(mockAlergias)),

@@ -1,5 +1,15 @@
 <div class="w-full p-4 sm:p-6 flex flex-col gap-5">
 
+  @if (errorMsg()) {
+    <div class="error-banner flex items-center justify-between p-3.5 rounded-[12px] bg-[#fdf2f2] border border-[#f8b4b4] text-[#9b1c1c]">
+      <div class="flex items-center gap-2">
+        <lucide-icon name="alert-circle" [img]="icons.AlertCircle" size="18"></lucide-icon>
+        <span class="text-sm font-medium">{{ errorMsg() }}</span>
+      </div>
+      <button (click)="cerrarError()" class="text-[#9b1c1c] hover:text-[#771515] font-bold ml-4 p-1 cursor-pointer">✕</button>
+    </div>
+  }
+
   <!-- ── Banner ──────────────────────────────────────────── -->
   <section class="relative overflow-hidden rounded-[14px] px-8 py-7 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
     <div class="absolute inset-0 bg-[url('/images/banners/tareas.png')] bg-center bg-cover"></div>
@@ -35,7 +45,7 @@
       } @else {
         <ul class="tarea-list tarea-list-preview">
           @for (tarea of tareasPreview(); track tarea.id) {
-            <li class="tarea-item" [class.vencida]="estaVencida(tarea)">
+            <li class="tarea-item" [class.vencida]="estaVencida(tarea)" [title]="tarea.descripcion || ''">
               <button class="tarea-check" (click)="completarTarea(tarea)" title="Marcar como completada">
                 <lucide-icon name="check" [img]="icons.Check" size="14"></lucide-icon>
               </button>
@@ -74,6 +84,9 @@
               @if (estaVencida(tarea)) {
                 <lucide-icon name="alert-circle" [img]="icons.AlertCircle" size="16" class="vencida-icon" title="Vencida"></lucide-icon>
               }
+              <button class="tarea-delete" (click)="eliminarTarea(tarea, $event)" title="Eliminar tarea">
+                <lucide-icon name="trash-2" [img]="icons.Trash2" size="14"></lucide-icon>
+              </button>
             </li>
           }
         </ul>
@@ -85,72 +98,123 @@
       }
     </div>
 
-    <!-- ── Distribución semanal ────────────────────────────── -->
-    <div class="card">
+    <!-- ── Gamificación ────────────────────────────── -->
+    <div class="card gamificacion-card">
       <div class="card-header">
-        <h2 class="card-title">Distribución semanal</h2>
-        <span class="semana-badge">Esta semana</span>
+        <h2 class="card-title">Pip - Tu Compañero</h2>
+        <span class="semana-badge">@if (nivel() === 0) { Bloqueado } @else { Nivel {{ nivel() }} }</span>
       </div>
-
-      @if (distribucion()) {
-        <div class="chart-wrap">
-          <p class="chart-subtitle">Tareas completadas por persona</p>
-          <div class="chart-legend">
-            @for (m of distribucion()!.dias[0].miembros; track m.usuarioId; let i = $index) {
-              <span class="legend-item">
-                <span class="legend-dot" [style.background-color]="colorMiembro(i)"></span>
-                {{ m.nombre.split(' ')[0] }}
-              </span>
-            }
-          </div>
-          <div class="chart-container">
-            <div class="chart-y-axis">
-              @if (maxCompletadas() > 0) {
-                <span>{{ maxCompletadas() }}</span>
-                <span>{{ (maxCompletadas() * 0.75 | number:'1.0-0') }}</span>
-                <span>{{ (maxCompletadas() * 0.5 | number:'1.0-0') }}</span>
-                <span>{{ (maxCompletadas() * 0.25 | number:'1.0-0') }}</span>
-              } @else {
-                <span>0</span>
-                <span></span>
-                <span></span>
-                <span></span>
-              }
-              <span>0</span>
+      <div class="gamificacion-body">
+        <div class="avatar-container cursor-pointer hover:scale-105 transition-transform duration-200" (click)="abrirModalAvatar()" title="Ver detalles de Pip">
+          <img
+            [src]="'/personajes/nido-nivel-' + imagenNivel() + '.png'"
+            class="avatar-img"
+            [class.evolucionando]="evolucionando()"
+            [class.avatar-locked]="nivel() === 0"
+            alt="Pip Compañero" />
+          @if (nivel() === 0) {
+            <div class="absolute inset-0 flex items-center justify-center">
+              <lucide-icon name="lock" [img]="icons.Lock" size="24" class="text-nido-brown opacity-80"></lucide-icon>
             </div>
-            <div class="chart-bars-area">
-              @for (dia of distribucion()!.dias; track dia.dia) {
-                <div class="chart-day">
-                  <div class="chart-bars">
-                    @for (m of dia.miembros; track m.usuarioId; let i = $index) {
-                      @if (m.completadas > 0) {
-                        <div
-                          class="chart-bar"
-                          [style.height]="alturaBar(m.completadas)"
-                          [style.background-color]="colorMiembro(i)"
-                          [title]="m.nombre + ': ' + m.completadas + ' tareas'">
-                        </div>
-                      } @else {
-                        <div class="chart-bar-empty"></div>
-                      }
-                    }
-                  </div>
-                  <span class="chart-day-label">{{ dia.dia }}</span>
-                </div>
-              }
-            </div>
-          </div>
-          @if (maxCompletadas() === 0) {
-            <p class="chart-no-data">Sin tareas completadas esta semana</p>
+          }
+          @for (item of floatingXPs(); track item.id) {
+            <span class="floating-xp">{{ item.value }}</span>
           }
         </div>
-      } @else {
-        <div class="empty-state">
-          <p>Sin datos esta semana</p>
+
+        <div class="xp-bar-container">
+          <div class="xp-bar-outer">
+            <div class="xp-bar-inner" [style.width.%]="porcentajeXp()"></div>
+          </div>
+          <span class="xp-bar-text">
+            @if (!hasNextLevel()) {
+              Nivel Máximo Alcanzado
+            } @else {
+              {{ xpEnNivelActual() }} / {{ xpNecesariaParaSiguienteNivel() }} XP
+            }
+          </span>
+          <div class="xp-bar-hints">
+            @if (!hasNextLevel()) {
+              <span class="xp-bar-hint font-semibold">¡Pip ha alcanzado su máximo potencial! 👑</span>
+            } @else {
+              <span class="xp-bar-hint font-semibold">Faltan {{ xpRestanteParaSiguienteNivel() }} XP para nivel {{ nextLevel() ?? nivel() + 1 }}</span>
+              @if (nivel() === 0) {
+                <span class="xp-bar-hint opacity-50">Completá tu primera tarea para desbloquear a Pip 🥚</span>
+              } @else {
+                <span class="xp-bar-hint opacity-50">Tu compañero evoluciona en el próximo nivel 🥚</span>
+              }
+            }
+          </div>
         </div>
-      }
+      </div>
     </div>
 
+  </div>
+
+  <!-- ── Distribución semanal ────────────────────────────── -->
+  <div class="card distribucion-full-width mt-5">
+    <div class="card-header">
+      <h2 class="card-title">Distribución semanal</h2>
+      <span class="semana-badge">Esta semana</span>
+    </div>
+
+    @if (distribucion()) {
+      <div class="chart-wrap">
+        <p class="chart-subtitle">Tareas completadas por persona</p>
+        <div class="chart-legend">
+          @for (m of distribucion()?.dias?.[0]?.miembros; track m.usuarioId; let i = $index) {
+            <span class="legend-item">
+              <span class="legend-dot" [style.background-color]="colorMiembro(i)"></span>
+              {{ m.nombre.split(' ')[0] }}
+            </span>
+          }
+        </div>
+        <div class="chart-container">
+          <div class="chart-y-axis">
+            @if (maxCompletadas() > 0) {
+              <span>{{ maxCompletadas() }}</span>
+              <span>{{ (maxCompletadas() * 0.75 | number:'1.0-0') }}</span>
+              <span>{{ (maxCompletadas() * 0.5 | number:'1.0-0') }}</span>
+              <span>{{ (maxCompletadas() * 0.25 | number:'1.0-0') }}</span>
+            } @else {
+              <span>0</span>
+              <span></span>
+              <span></span>
+              <span></span>
+            }
+            <span>0</span>
+          </div>
+          <div class="chart-bars-area">
+            @for (dia of distribucion()!.dias; track dia.dia) {
+              <div class="chart-day">
+                <div class="chart-bars">
+                  @for (m of dia.miembros; track m.usuarioId; let i = $index) {
+                    @if (m.completadas > 0) {
+                      <div
+                        class="chart-bar"
+                        [style.height]="alturaBar(m.completadas)"
+                        [style.background-color]="colorMiembro(i)"
+                        [title]="m.nombre + ': ' + m.completadas + ' tareas'">
+                      </div>
+                    } @else {
+                      <div class="chart-bar-empty"></div>
+                    }
+                  }
+                </div>
+                <span class="chart-day-label">{{ dia.dia }}</span>
+              </div>
+            }
+          </div>
+        </div>
+        @if (maxCompletadas() === 0) {
+          <p class="chart-no-data">Sin tareas completadas esta semana</p>
+        }
+      </div>
+    } @else {
+      <div class="empty-state">
+        <p>Sin datos esta semana</p>
+      </div>
+    }
   </div>
 
   <!-- ── Historial de tareas completadas ──────────────────── -->
@@ -167,7 +231,12 @@
         @for (tarea of historialTareas(); track tarea.id) {
           <li class="flex flex-col gap-1 px-4 py-3 border-b border-nido-border/40 last:border-b-0 sm:px-5">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <span class="text-[0.875rem] font-medium text-nido-green-dark line-through">{{ tarea.titulo }}</span>
+              <div class="flex items-center flex-wrap gap-1">
+                <span class="text-[0.875rem] font-medium text-nido-green-dark line-through">{{ tarea.titulo }}</span>
+                @if (tarea.xpOtorgado !== null && tarea.xpOtorgado !== undefined) {
+                    <span class="text-[0.7rem] font-bold text-nido-gold bg-[#f7f1e6] border border-nido-gold/30 px-1.5 py-0.5 rounded ml-2 shrink-0">+{{ tarea.xpOtorgado }} XP</span>
+                  }
+              </div>
               <span class="text-[0.775rem] text-nido-brown shrink-0">{{ formatFechaHora(tarea.fechaCompletado) }}</span>
             </div>
             @if (tarea.descripcion) {
@@ -225,7 +294,7 @@
         } @else {
           <ul class="tarea-list">
             @for (tarea of misTareasConResaltada(); track tarea.id) {
-              <li class="tarea-item" [class.vencida]="estaVencida(tarea)" [class.highlighted]="tarea.id === highlightedTaskId()">
+              <li class="tarea-item" [class.vencida]="estaVencida(tarea)" [class.highlighted]="tarea.id === highlightedTaskId()" [title]="tarea.descripcion || ''">
                 <button class="tarea-check"
                   [class.completada]="tarea.estado === 'completada'"
                   [disabled]="tarea.estado === 'completada'"
@@ -254,6 +323,9 @@
                 @if (estaVencida(tarea)) {
                   <span class="vencida-chip">Vencida</span>
                 }
+                <button class="tarea-delete" (click)="eliminarTarea(tarea, $event)" title="Eliminar tarea">
+                  <lucide-icon name="trash-2" [img]="icons.Trash2" size="14"></lucide-icon>
+                </button>
               </li>
             }
           </ul>
@@ -343,6 +415,79 @@
           {{ guardando ? 'Guardando...' : 'Crear tarea' }}
         </button>
       </div>
+    </div>
+  </div>
+}
+
+
+@if (mostrarModalAvatar()) {
+  <div class="modal-overlay" (click)="cerrarModalAvatar()">
+    <div class="modal modal-avatar-detail" (click)="$event.stopPropagation()">
+      <div class="modal-banner banner-avatar-detail">
+        <div class="modal-banner-bg"></div>
+        <div class="modal-banner-overlay"></div>
+        <div class="modal-banner-content">
+          <div>
+            <h3 class="modal-banner-title">{{ companionInfo().name }}</h3>
+            <p class="modal-banner-sub">@if (nivel() === 0) { Bloqueado } @else { Nivel {{ nivel() }} }</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" (click)="cerrarModalAvatar()">
+          <lucide-icon name="x" [img]="icons.X" size="20"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="modal-avatar-body flex flex-col items-center gap-5 p-6 text-center">
+        <div class="large-avatar-frame relative">
+          <img [src]="'/personajes/nido-nivel-' + imagenNivel() + '.png'" alt="Avatar detallado" class="large-avatar-img" [class.avatar-locked]="nivel() === 0" />
+          @if (nivel() === 0) {
+            <div class="absolute inset-0 flex items-center justify-center">
+              <lucide-icon name="lock" [img]="icons.Lock" size="32" class="text-nido-brown opacity-80"></lucide-icon>
+            </div>
+          }
+        </div>
+        <div class="flex flex-col gap-2">
+          <h4 class="text-base font-bold text-nido-green-dark m-0">{{ companionInfo().name }}</h4>
+          <p class="text-xs text-nido-brown max-w-[280px] m-0 leading-relaxed">{{ companionInfo().desc }}</p>
+        </div>
+        <!-- Barra de experiencia de detalle -->
+        <div class="xp-bar-container w-full max-w-[240px] mt-1">
+          <div class="xp-bar-outer">
+            <div class="xp-bar-inner" [style.width.%]="porcentajeXp()"></div>
+          </div>
+          <div class="xp-bar-text mt-1 text-[0.7rem] font-semibold text-nido-brown">
+            @if (!hasNextLevel()) {
+              <span>Nivel Máximo Alcanzado</span>
+            } @else {
+              <span>{{ xp() }} / {{ xpSiguienteNivelTotal() }} XP para el siguiente nivel</span>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+@if (mostrarCelebracionLevelUp()) {
+  <div class="celebration-overlay" (click)="mostrarCelebracionLevelUp.set(false)">
+    <div class="celebration-card" (click)="$event.stopPropagation()">
+      <div class="confetti-placeholder"></div>
+
+      <h2 class="celebration-title">¡Pip subió de Nivel!</h2>
+
+      <div class="celebration-avatar-wrap">
+        <img [src]="'/personajes/nido-nivel-' + nivelCelebrado() + '.png'" alt="Evolución de Pip" class="celebration-avatar animate-glow" />
+      </div>
+
+      <div class="celebration-stats">
+        <div class="celebration-badge">Pip Nivel {{ nivelCelebrado() }}</div>
+        <h3 class="celebration-companion-name">{{ getCompanionName(nivelCelebrado()) }}</h3>
+        <p class="celebration-companion-desc">{{ getCompanionDesc(nivelCelebrado()) }}</p>
+      </div>
+
+      <button class="celebration-btn" (click)="mostrarCelebracionLevelUp.set(false)">
+        ¡Buenísimo!
+      </button>
     </div>
   </div>
 }

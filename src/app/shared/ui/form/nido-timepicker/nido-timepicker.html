@@ -1,0 +1,36 @@
+<div class="nido-tp" [class.is-disabled]="isDisabled()" [class.has-error]="hasError">
+  <button
+    type="button"
+    class="nido-tp__trigger"
+    (click)="toggle()"
+    [disabled]="isDisabled()">
+    <span>{{ value() ? value() : placeholder }}</span>
+    <lucide-icon name="clock" [size]="16"></lucide-icon>
+  </button>
+
+  @if (isOpen()) {
+    <div class="nido-tp__popover">
+      <div class="nido-tp__column">
+        <button type="button" class="nido-tp__arrow" (click)="incrementHour()">
+          <lucide-icon name="chevron-up" [size]="16"></lucide-icon>
+        </button>
+        <span class="nido-tp__number">{{ formattedHour() }}</span>
+        <button type="button" class="nido-tp__arrow" (click)="decrementHour()">
+          <lucide-icon name="chevron-down" [size]="16"></lucide-icon>
+        </button>
+      </div>
+
+      <div class="nido-tp__colon">:</div>
+
+      <div class="nido-tp__column">
+        <button type="button" class="nido-tp__arrow" (click)="incrementMinute()">
+          <lucide-icon name="chevron-up" [size]="16"></lucide-icon>
+        </button>
+        <span class="nido-tp__number">{{ formattedMinute() }}</span>
+        <button type="button" class="nido-tp__arrow" (click)="decrementMinute()">
+          <lucide-icon name="chevron-down" [size]="16"></lucide-icon>
+        </button>
+      </div>
+    </div>
+  }
+</div>

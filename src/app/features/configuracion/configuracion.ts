@@ -12,6 +12,7 @@ import { Avatar } from '../../shared/ui/avatar/avatar';
 import { SwPush } from '@angular/service-worker';
 import { NotificacionesApiService } from '../notificaciones/services/notificaciones-api.service';
 import { TelegramApiService } from '../telegram/telegram-api';
+import { ThemeService, ThemeMode } from '../../core/theme/theme.service';
 
 export function passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
   const password = control.get('newPassword')?.value;
@@ -81,6 +82,13 @@ export class Configuracion {
   private readonly notifApi = inject(NotificacionesApiService);
   private readonly telegramApi = inject(TelegramApiService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly themeService = inject(ThemeService);
+
+  readonly currentTheme = this.themeService.themeMode;
+
+  setTheme(mode: ThemeMode): void {
+    this.themeService.setTheme(mode);
+  }
 
   private telegramUnlinkSuccessTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private telegramStatusRequestSeq = 0;
@@ -94,6 +102,7 @@ export class Configuracion {
   readonly userName = signal(this.auth.getNombre() ?? '');
   readonly email = signal(this.auth.getEmail() ?? '');
   readonly userId = signal(this.auth.getUserId() ?? '');
+  readonly fotoUrl = signal<string | null>(null);
 
   // ── Notificaciones (Giulianna) ───────────────────────────
   readonly diasAlerta = signal(7);
@@ -206,6 +215,9 @@ export class Configuracion {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (profile) => {
+          this.userName.set(profile.nombre ?? '');
+          this.email.set(profile.email ?? '');
+          this.fotoUrl.set(profile.fotoUrl ?? null);
           this.hasPassword.set(!!profile.hasPassword);
           this.hasGoogleLinked.set(!!profile.hasGoogleLinked);
           this.loadingProfile.set(false);

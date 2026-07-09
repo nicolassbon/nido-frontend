@@ -27,6 +27,7 @@ import {
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { HogaresApiService, MiembroResponse } from '../../household/hogares-api.service';
+import { Avatar } from '../../../shared/ui/avatar/avatar';
 import {
   FinanzasApiService,
   GastoResponse,
@@ -40,6 +41,7 @@ import {
   AlacenaOportunidadesResponse,
   PresupuestoResponse,
 } from '../finanzas-api.service';
+import { NidoDatepickerComponent } from '../../../shared/ui/form/nido-datepicker/nido-datepicker';
 
 Chart.register(
   LineController, LineElement, PointElement, LinearScale, CategoryScale, Filler,
@@ -115,7 +117,7 @@ function emptyFacturaForm(): NuevaFacturaForm {
 
 @Component({
   selector: 'app-finanzas',
-  imports: [LucideAngularModule, FormsModule],
+  imports: [LucideAngularModule, FormsModule, NidoDatepickerComponent, Avatar],
   templateUrl: './finanzas.html',
 })
 export class Finanzas {

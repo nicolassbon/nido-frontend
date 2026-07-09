@@ -56,3 +56,7 @@ openspec/
 # Dev server logs
 ng-serve.err.log
 ng-serve.out.log
+
+# CodeGraph local index
+.codegraph/
+.codegraph-*/

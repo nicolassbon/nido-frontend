@@ -7,6 +7,7 @@ import { ListaComprasService, RecipeShoppingList, ShoppingHistoryItem, ShoppingI
 import { CatalogoService } from '../../core/servicios/catalogo.service';
 import { NidoSelectComponent, NidoSelectOption } from '../../shared/ui/form/nido-select/nido-select';
 import { AlacenaApiService, CreateStockItemRequest } from '../alacena/alacena-api.service';
+import { ComparadorApiService, ComparedProduct } from './comparador-api.service';
 
 const VIEW_ALL_LIST_ID = '__all__';
 const TELEGRAM_ALL_PENDING_OPTION = '__telegram_all_pending__';
@@ -24,6 +25,7 @@ export class ListaCompras implements OnInit, OnDestroy {
   private readonly catalogoService = inject(CatalogoService);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly comparadorApi = inject(ComparadorApiService);
 
   protected listas: RecipeShoppingList[] = [];
   protected historial: ShoppingHistoryItem[] = [];
@@ -38,7 +40,7 @@ export class ListaCompras implements OnInit, OnDestroy {
   protected showAllLists = false;
   protected itemNombre = '';
   protected itemCantidad: number | null = null;
-  protected itemUnidad = '';
+  protected itemUnidad = 'unidad';
   protected editingItem: { listaId: string; itemId: string } | null = null;
   protected uploadingHistoryId: string | null = null;
   protected isSaving = false;
@@ -48,6 +50,15 @@ export class ListaCompras implements OnInit, OnDestroy {
   protected telegramSendState: 'idle' | 'sending' | 'sent' | 'empty' | 'no_telegram_link' | 'error' = 'idle';
   protected telegramSendMessage: string | null = null;
   protected unidadesOpts: NidoSelectOption[] = [];
+
+  protected showCompareModal = false;
+  protected compareQuery = '';
+  protected compareLoading = false;
+  protected compareResults: ComparedProduct[] = [];
+  protected compareFailedScrapers: string[] = [];
+  protected compareError: string | null = null;
+  protected compareSuccessMessage: string | null = null;
+  protected compareSearched = false;
 
   private sub = new Subscription();
   private readonly categoriaIdByName = new Map<string, string>();
@@ -96,6 +107,7 @@ export class ListaCompras implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.sub.unsubscribe();
+    this.setScrollLock(false);
   }
 
   protected openCreateList(): void {
@@ -204,14 +216,14 @@ export class ListaCompras implements OnInit, OnDestroy {
     this.editingItem = { listaId, itemId: item.id };
     this.itemNombre = item.nombre;
     this.itemCantidad = item.cantidad;
-    this.itemUnidad = item.unidad ?? '';
+    this.itemUnidad = item.unidad ?? 'unidad';
   }
 
   protected cancelItemEdit(): void {
     this.editingItem = null;
     this.itemNombre = '';
     this.itemCantidad = null;
-    this.itemUnidad = '';
+    this.itemUnidad = 'unidad';
   }
 
   protected togglePurchased(listaId: string, item: ShoppingItem): void {
@@ -529,6 +541,131 @@ export class ListaCompras implements OnInit, OnDestroy {
   private categoryIdFor(categoryName: string | null | undefined): string | null {
     if (!categoryName) return null;
     return this.categoriaIdByName.get(this.normalizeLookup(categoryName)) ?? null;
+  }
+
+  protected openCompareModal(prefillQuery?: string): void {
+    this.showCompareModal = true;
+    this.compareQuery = prefillQuery || '';
+    this.compareResults = [];
+    this.compareFailedScrapers = [];
+    this.compareError = null;
+    this.compareSuccessMessage = null;
+    this.compareSearched = false;
+    this.setScrollLock(true);
+    this.cdr.markForCheck();
+  }
+
+  protected closeCompareModal(): void {
+    this.showCompareModal = false;
+    this.compareQuery = '';
+    this.compareResults = [];
+    this.compareFailedScrapers = [];
+    this.compareError = null;
+    this.compareSuccessMessage = null;
+    this.compareSearched = false;
+    this.setScrollLock(false);
+    this.cdr.markForCheck();
+  }
+
+  private setScrollLock(locked: boolean): void {
+    const mainEl = document.querySelector('main');
+    if (locked) {
+      document.body.classList.add('overflow-hidden');
+      if (mainEl) {
+        mainEl.classList.add('overflow-hidden');
+      }
+    } else {
+      document.body.classList.remove('overflow-hidden');
+      if (mainEl) {
+        mainEl.classList.remove('overflow-hidden');
+      }
+    }
+  }
+
+  protected searchPrices(): void {
+    const query = this.compareQuery.trim();
+    if (!query) return;
+
+    this.compareLoading = true;
+    this.compareError = null;
+    this.compareResults = [];
+    this.compareFailedScrapers = [];
+    this.cdr.markForCheck();
+
+    this.comparadorApi.compararPrecios(query).subscribe({
+      next: res => {
+        this.compareResults = (res.products || []).sort((a, b) => a.price - b.price);
+        this.compareFailedScrapers = res.failedScrapers || [];
+        this.compareLoading = false;
+        this.compareSearched = true;
+        this.cdr.markForCheck();
+      },
+      error: error => {
+        this.compareError = this.extractCompareErrorMessage(error);
+        this.compareLoading = false;
+        this.compareSearched = true;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private extractCompareErrorMessage(error: unknown): string {
+    if (typeof error === 'object' && error !== null && 'error' in error) {
+      const responseBody = (error as { error?: unknown }).error;
+      if (typeof responseBody === 'object' && responseBody !== null && 'message' in responseBody) {
+        const message = (responseBody as { message?: unknown }).message;
+        if (typeof message === 'string' && message.trim().length > 0) {
+          return message;
+        }
+      }
+    }
+
+    return 'Ocurrió un error al buscar precios. Intentá de nuevo.';
+  }
+
+  protected addComparedProduct(productName: string): void {
+    let targetListId = this.activeListId;
+    if (!targetListId || targetListId === VIEW_ALL_LIST_ID) {
+      const firstList = this.listas[0];
+      if (!firstList) {
+        this.compareError = 'No tenés ninguna lista de compras creada.';
+        this.cdr.markForCheck();
+        return;
+      }
+      targetListId = firstList.id;
+    }
+
+    this.service.addItem(targetListId, productName, 1, 'unidad').subscribe({
+      next: () => {
+        this.compareSuccessMessage = `"${productName}" agregado con éxito a la lista.`;
+        this.cdr.markForCheck();
+        setTimeout(() => {
+          this.compareSuccessMessage = null;
+          this.cdr.markForCheck();
+        }, 3000);
+      },
+      error: () => {
+        this.compareError = 'No se pudo agregar el producto a la lista.';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  protected formatPrice(value: number): string {
+    return new Intl.NumberFormat('es-AR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  }
+
+  protected getUnitLabel(unit: string | null | undefined): string {
+    if (!unit) return 'unidad';
+    const u = unit.toUpperCase();
+    if (u === 'KG') return 'kg';
+    if (u === 'LT') return 'lt';
+    if (u === 'UN') return 'unidad';
+    if (u === 'MT') return 'metro';
+    return u.toLowerCase();
   }
 
   private normalizeLookup(value: string): string {

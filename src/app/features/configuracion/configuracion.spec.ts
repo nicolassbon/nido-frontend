@@ -27,6 +27,8 @@ describe('Configuracion', () => {
   let windowOpenSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(async () => {
+    localStorage.clear();
+
     mockAuthService = {
       changePassword: vi.fn(),
       addPassword: vi.fn(),
@@ -48,8 +50,9 @@ describe('Configuracion', () => {
     };
 
     mockPreferenciasApiService = {
-      getPreferences: vi.fn().mockReturnValue(of({ diasAlerta: 7 })),
-      updatePreferences: vi.fn().mockReturnValue(of({ diasAlerta: 7 })),
+      getPreferences: vi.fn().mockReturnValue(of({ diasAlerta: 7, temaPreferido: 'system' })),
+      updatePreferences: vi.fn().mockReturnValue(of({ diasAlerta: 7, temaPreferido: 'system' })),
+      updateTheme: vi.fn().mockReturnValue(of({ diasAlerta: 7, temaPreferido: 'system' })),
     };
 
     mockHogaresApiService = {

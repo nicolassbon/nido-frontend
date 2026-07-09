@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
+  ActualizarElectrodomesticoRequest,
   CrearElectrodomesticoRequest,
   Electrodomestico,
   ElectrodomesticoCatalogo,
@@ -32,6 +33,11 @@ export class Electrodomesticos {
 
   protected readonly showAddModal = signal(false);
   protected readonly selectedCatalogoValue = signal('');
+
+  protected readonly showEditModal = signal(false);
+  protected readonly editTarget = signal<Electrodomestico | null>(null);
+  protected readonly editDraft = signal<ActualizarElectrodomesticoRequest>({ tipo: 'Cocina', estado: 'activo' });
+  protected readonly guardandoEdicion = signal(false);
 
 
 
@@ -141,6 +147,57 @@ export class Electrodomesticos {
         error: (error) => {
           console.error('Error al guardar electrodoméstico:', error);
           this.errorMessage.set('No se pudo guardar el electrodoméstico.');
+        },
+      });
+  }
+
+  protected abrirModalEditar(item: Electrodomestico): void {
+    this.editTarget.set(item);
+    this.editDraft.set({ tipo: item.tipo ?? 'Otro', estado: item.estado ?? 'activo' });
+    this.showEditModal.set(true);
+  }
+
+  protected cerrarModalEditar(): void {
+    this.showEditModal.set(false);
+    this.editTarget.set(null);
+  }
+
+  protected guardarEdicion(): void {
+    const target = this.editTarget();
+    if (!target || this.guardandoEdicion()) return;
+
+    this.guardandoEdicion.set(true);
+    this.electrodomesticosService.update(target.id, this.editDraft())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (actualizado) => {
+          this.electrodomesticos.update((items) =>
+            items.map((item) => (item.id === actualizado.id ? actualizado : item))
+          );
+          this.guardandoEdicion.set(false);
+          this.cerrarModalEditar();
+        },
+        error: (error) => {
+          console.error('Error al actualizar electrodoméstico:', error);
+          this.errorMessage.set('No se pudo actualizar el electrodoméstico.');
+          this.guardandoEdicion.set(false);
+        },
+      });
+  }
+
+  protected eliminarElectrodomestico(item: Electrodomestico, event: MouseEvent): void {
+    event.stopPropagation();
+    if (!confirm(`¿Eliminar "${item.nombre}"?`)) return;
+
+    this.electrodomesticosService.delete(item.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.electrodomesticos.update((items) => items.filter((e) => e.id !== item.id));
+        },
+        error: (error) => {
+          console.error('Error al eliminar electrodoméstico:', error);
+          this.errorMessage.set('No se pudo eliminar el electrodoméstico.');
         },
       });
   }
