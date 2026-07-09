@@ -23,6 +23,7 @@ import {
   ShoppingBasket,
   Shuffle,
   SlidersHorizontal,
+  Sparkles,
   Star,
   X,
   Zap,
@@ -139,6 +140,7 @@ describe('Recipes', () => {
             ShoppingBasket,
             Shuffle,
             SlidersHorizontal,
+            Sparkles,
             Star,
             X,
             Zap,
@@ -272,6 +274,35 @@ describe('Recipes', () => {
     expect(component['showRoulettePopup']()).toBe(false);
   });
 
+  it('deberia abrir el asistente con contexto de receta y frenar la navegacion de la card', async () => {
+    await setup([mockRecetaArroz], [arrozPantry]);
+    const stopPropagation = vi.fn();
+    const recipe = component['filteredRecipes']()[0];
+
+    component['abrirAsistenteConReceta'](recipe, { stopPropagation } as unknown as Event);
+
+    expect(stopPropagation).toHaveBeenCalled();
+    expect(component['asistenteAbierto']()).toBe(true);
+    expect(component['recetaSeleccionadaAsistente']()).toEqual({
+      id: 'r1',
+      nombre: 'Arroz con leche',
+      ingredientes: ['Arroz', 'Leche'],
+      faltantes: ['Leche'],
+    });
+  });
+
+  it('deberia abrir la burbuja del asistente en modo general sin receta seleccionada', async () => {
+    await setup([mockRecetaArroz], [arrozPantry]);
+    const recipe = component['filteredRecipes']()[0];
+
+    component['abrirAsistenteConReceta'](recipe, { stopPropagation: vi.fn() } as unknown as Event);
+    component['toggleAsistenteGeneral']();
+    component['toggleAsistenteGeneral']();
+
+    expect(component['asistenteAbierto']()).toBe(true);
+    expect(component['recetaSeleccionadaAsistente']()).toBeNull();
+  });
+
   it('debería ocultar recetas sin coincidencias cuando el filtro está activo', async () => {
     await setup([mockRecetaArroz, mockRecetaPasta], [arrozPantry]);
     expect(component['filteredRecipes']()).toHaveLength(2);
@@ -312,8 +343,6 @@ describe('Recipes', () => {
 
     await setup([recetaConGluten, recetaSinGluten], [], HOGAR_ID, miembros);
 
-    component['toggleAllergens']();
-
     expect(component['filteredRecipes']().map(recipe => recipe.name)).toEqual(['Ensalada']);
   });
 
@@ -326,12 +355,30 @@ describe('Recipes', () => {
     ];
 
     await setup([recetaConGluten], [], HOGAR_ID, miembros);
-    component['toggleAllergens']();
     expect(component['filteredRecipes']()).toHaveLength(0);
 
     component['toggleEatingToday']('u1');
 
     expect(component['filteredRecipes']()).toHaveLength(1);
+  });
+
+  it('deberia permitir desactivar temporalmente las restricciones de quienes comen hoy', async () => {
+    const recetaConCarne = makeReceta('r1', 'Milanesa', [
+      { id: 'i1', productoId: 'p1', nombre: 'Carne', productoNombre: 'Carne', cantidad: 1, unidad: 'unidad', enStock: true },
+    ]);
+    const recetaVegetariana = makeReceta('r2', 'Tarta de queso', [
+      { id: 'i2', productoId: 'p2', nombre: 'Queso', productoNombre: 'Queso', cantidad: 100, unidad: 'g', enStock: true },
+    ]);
+    const miembros = [
+      { usuarioId: 'u1', nombre: 'Marco', email: 'm@test.com', rol: 'owner', fotoUrl: null, alergias: [], alimentacion: ['Vegetariano'] },
+    ];
+
+    await setup([recetaConCarne, recetaVegetariana], [], HOGAR_ID, miembros);
+    expect(component['filteredRecipes']().map(recipe => recipe.name)).toEqual(['Tarta de queso']);
+
+    component['toggleAllergens']();
+
+    expect(component['filteredRecipes']().map(recipe => recipe.name)).toEqual(['Milanesa', 'Tarta de queso']);
   });
 
   it('deberia ocultar recetas que requieren electrodomesticos faltantes', async () => {
@@ -364,8 +411,6 @@ describe('Recipes', () => {
 
     await setup([recetaConFideos], [], HOGAR_ID, miembros);
 
-    component['toggleAllergens']();
-
     expect(component['filteredRecipes']()).toHaveLength(0);
   });
 
@@ -378,8 +423,6 @@ describe('Recipes', () => {
     ];
 
     await setup([recetaConFideos], [], HOGAR_ID, miembros, [], ['Gluten']);
-
-    component['toggleAllergens']();
 
     expect(component['filteredRecipes']()).toHaveLength(0);
   });
@@ -394,8 +437,6 @@ describe('Recipes', () => {
 
     await setup([recetaConLeche], [], HOGAR_ID, miembros);
 
-    component['toggleAllergens']();
-
     expect(component['filteredRecipes']()).toHaveLength(0);
   });
 
@@ -408,8 +449,6 @@ describe('Recipes', () => {
     ];
 
     await setup([recetaConLeche], [], HOGAR_ID, miembros, [], [], ['Sin lactosa']);
-
-    component['toggleAllergens']();
 
     expect(component['filteredRecipes']()).toHaveLength(0);
   });
@@ -430,8 +469,6 @@ describe('Recipes', () => {
 
     await setup([recetaConPollo, recetaConHuevo, recetaVegana], [], HOGAR_ID, miembros);
 
-    component['toggleAllergens']();
-
     expect(component['filteredRecipes']().map(recipe => recipe.name)).toEqual(['Ensalada de tomate']);
   });
 
@@ -448,8 +485,6 @@ describe('Recipes', () => {
 
     await setup([recetaConPescado, recetaConQueso], [], HOGAR_ID, miembros);
 
-    component['toggleAllergens']();
-
     expect(component['filteredRecipes']().map(recipe => recipe.name)).toEqual(['Tarta de queso']);
   });
 
@@ -462,8 +497,6 @@ describe('Recipes', () => {
     ];
 
     await setup([recetaConLeche], [], HOGAR_ID, miembros);
-
-    component['toggleAllergens']();
 
     expect(component['filteredRecipes']()).toHaveLength(0);
   });
