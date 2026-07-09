@@ -16,6 +16,8 @@ export interface GastoResponse {
   pagadoPorNombre: string;
   createdAt: string;
   facturaId: string | null;
+  esCompartido: boolean;
+  participantesIds: string[];
 }
 
 export interface GastosListResponse {
@@ -32,9 +34,21 @@ export interface BalanceMiembroResponse {
   balance: number;
 }
 
+export interface DeudaResponse {
+  deudorId: string;
+  deudorNombre: string;
+  deudorFotoUrl: string | null;
+  acreedorId: string;
+  acreedorNombre: string;
+  acreedorFotoUrl: string | null;
+  monto: number;
+}
+
 export interface BalanceResponse {
   miembros: BalanceMiembroResponse[];
   totalPeriodo: number;
+  totalPersonal: number;
+  deudas: DeudaResponse[];
 }
 
 export interface ModoAhorroResponse {
@@ -130,6 +144,8 @@ export interface CreateGastoRequest {
   categoria: string | null;
   fecha: string;
   pagadoPorId: string | null;
+  esCompartido: boolean;
+  participantesIds: string[] | null;
 }
 
 export interface UpdateGastoRequest {
@@ -138,6 +154,8 @@ export interface UpdateGastoRequest {
   categoria: string | null;
   fecha: string;
   pagadoPorId: string | null;
+  esCompartido: boolean;
+  participantesIds: string[] | null;
 }
 
 export interface DeleteGastoResponse {

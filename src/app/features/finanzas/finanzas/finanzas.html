@@ -77,34 +77,95 @@
       </div>
     </div>
 
-    <!-- Balance compartido -->
-    <div class="bg-white/[0.51] rounded-[18px] border border-nido-border/50 p-5 flex items-start gap-4">
-      <div class="w-11 h-11 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0">
-        <lucide-icon name="users" [size]="18" class="text-nido-cream"></lucide-icon>
+    <!-- Cuentas del hogar -->
+    <div class="bg-white/[0.51] rounded-[18px] border border-nido-border/50 p-5 flex flex-col gap-3">
+
+      <!-- Header -->
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0">
+          <lucide-icon name="users" [size]="18" class="text-nido-cream"></lucide-icon>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-xs text-nido-muted font-medium">Cuentas del hogar</p>
+
+          @switch (balanceEstado()) {
+            @case ('vacio') {
+              <p class="text-sm font-semibold text-nido-green-dark mt-0.5">Sin gastos compartidos</p>
+            }
+            @case ('equilibrado') {
+              <div class="flex items-center gap-1.5 mt-0.5">
+                <lucide-icon name="check-circle" [size]="14" class="text-emerald-500 shrink-0"></lucide-icon>
+                <p class="text-sm font-semibold text-emerald-600">Todo al día</p>
+              </div>
+            }
+            @case ('deudas') {
+              <div class="flex items-center gap-1.5 mt-0.5">
+                <lucide-icon name="clock" [size]="14" class="text-amber-500 shrink-0"></lucide-icon>
+                <p class="text-sm font-semibold text-amber-600">
+                  {{ deudas().length === 1 ? 'Hay un ajuste pendiente' : 'Hay ajustes pendientes' }}
+                </p>
+              </div>
+            }
+          }
+        </div>
       </div>
-      <div class="flex-1 min-w-0">
-        <p class="text-xs text-nido-muted font-medium">Balance compartido</p>
-        @if (balanceMiembros().length === 0) {
-          <p class="text-sm text-nido-muted mt-1.5">Sin datos aún</p>
-        } @else {
-          <div class="mt-1.5 flex flex-col gap-1.5">
+
+      <!-- Estado: vacío -->
+      @if (balanceEstado() === 'vacio') {
+        <p class="text-xs text-nido-muted">Registrá el primer gasto del hogar para ver quién aportó qué.</p>
+      }
+
+      <!-- Estado: equilibrado -->
+      @if (balanceEstado() === 'equilibrado') {
+        <div class="flex flex-col gap-1 pt-0.5">
+          <p class="text-xs text-nido-muted">
+            {{ formatMoney(balance()?.totalPeriodo ?? 0) }} gastados entre todos este mes
+          </p>
+          <div class="flex flex-col gap-1.5 pt-1">
             @for (m of balanceMiembros(); track m.usuarioId) {
               <div class="flex items-center gap-2">
-                <app-avatar
-                  [fotoUrl]="m.fotoUrl"
-                  [nombre]="m.nombre"
-                  sizeClass="w-5 h-5"
-                  fontSizeClass="text-[9px]"
-                />
+                <app-avatar [fotoUrl]="m.fotoUrl" [nombre]="m.nombre" sizeClass="w-5 h-5" fontSizeClass="text-[9px]" />
                 <span class="text-xs text-nido-green-dark font-medium truncate">{{ m.nombre }}</span>
-                <span class="text-xs font-semibold ml-auto shrink-0" [class]="balanceColor(m.balance)">
-                  {{ balanceLabel(m.balance) }}
-                </span>
+                <span class="text-xs text-nido-muted ml-auto shrink-0">aportó {{ formatMoney(m.montoAportado) }}</span>
               </div>
             }
           </div>
-        }
-      </div>
+        </div>
+      }
+
+      <!-- Estado: deudas -->
+      @if (balanceEstado() === 'deudas') {
+        <div class="flex flex-col gap-2">
+          @for (d of deudas(); track d.deudorId + d.acreedorId) {
+            <div class="rounded-xl border px-3 py-2.5 flex items-center gap-2.5"
+                 [class]="esMiDeuda(d)
+                   ? 'bg-amber-50/70 border-amber-200/60'
+                   : esMiAcreencia(d)
+                     ? 'bg-emerald-50/70 border-emerald-200/60'
+                     : 'bg-nido-cream/50 border-nido-border/40'">
+              <app-avatar [fotoUrl]="d.deudorFotoUrl" [nombre]="d.deudorNombre" sizeClass="w-6 h-6" fontSizeClass="text-[9px]" />
+              <lucide-icon name="arrow-right" [size]="13" class="text-nido-muted shrink-0"></lucide-icon>
+              <app-avatar [fotoUrl]="d.acreedorFotoUrl" [nombre]="d.acreedorNombre" sizeClass="w-6 h-6" fontSizeClass="text-[9px]" />
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-medium text-nido-green-dark truncate">
+                  @if (esMiDeuda(d)) {
+                    Tenés que pasarle a {{ d.acreedorNombre.split(' ')[0] }}
+                  } @else if (esMiAcreencia(d)) {
+                    {{ d.deudorNombre.split(' ')[0] }} te tiene que pasar
+                  } @else {
+                    {{ d.deudorNombre.split(' ')[0] }} → {{ d.acreedorNombre.split(' ')[0] }}
+                  }
+                </p>
+              </div>
+              <span class="text-xs font-bold shrink-0"
+                    [class]="esMiDeuda(d) ? 'text-amber-600' : esMiAcreencia(d) ? 'text-emerald-600' : 'text-nido-green-dark'">
+                {{ formatMoney(d.monto) }}
+              </span>
+            </div>
+          }
+        </div>
+      }
+
     </div>
   </div>
 
@@ -572,16 +633,54 @@
           </div>
         </div>
 
-        @if (otrosMiembros().length > 0) {
-          <div class="flex flex-col gap-1.5">
-            <label class="text-[0.8125rem] font-semibold text-nido-green-dark">¿Quién pagó?</label>
-            <select [(ngModel)]="gastoForm.pagadoPorId"
-                    class="py-[0.65rem] px-[0.875rem] border-[1.5px] border-nido-border rounded-lg text-[0.875rem] text-nido-green-dark bg-white outline-none focus:border-nido-green transition-[border-color] duration-150">
-              <option value="">Yo</option>
-              @for (m of otrosMiembros(); track m.usuarioId) {
-                <option [value]="m.usuarioId">{{ m.nombre }}</option>
+        <!-- ¿Del hogar o personal? -->
+        <div class="flex flex-col gap-2">
+          <label class="text-[0.8125rem] font-semibold text-nido-green-dark">¿Es del hogar?</label>
+          <div class="flex gap-2">
+            <button type="button"
+                    (click)="gastoForm.esCompartido = true"
+                    class="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border-[1.5px] text-[0.8125rem] font-medium transition-all duration-150 cursor-pointer"
+                    [class]="gastoForm.esCompartido
+                      ? 'bg-nido-green-dark text-nido-cream border-nido-green-dark'
+                      : 'bg-white border-nido-border text-nido-muted hover:border-nido-brown'">
+              <lucide-icon name="users" [size]="14"></lucide-icon>
+              Del hogar
+            </button>
+            <button type="button"
+                    (click)="gastoForm.esCompartido = false; gastoForm.participantesIds = []"
+                    class="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border-[1.5px] text-[0.8125rem] font-medium transition-all duration-150 cursor-pointer"
+                    [class]="!gastoForm.esCompartido
+                      ? 'bg-nido-green-dark text-nido-cream border-nido-green-dark'
+                      : 'bg-white border-nido-border text-nido-muted hover:border-nido-brown'">
+              <lucide-icon name="user" [size]="14"></lucide-icon>
+              Solo mío
+            </button>
+          </div>
+          @if (!gastoForm.esCompartido) {
+            <p class="text-[0.775rem] text-nido-muted">No afecta el balance del hogar.</p>
+          }
+        </div>
+
+        <!-- ¿Quiénes participan? (solo si compartido y hay otros miembros) -->
+        @if (gastoForm.esCompartido && todosMiembros().length > 1) {
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center justify-between">
+              <label class="text-[0.8125rem] font-semibold text-nido-green-dark">¿Quiénes participan?</label>
+              <span class="text-[0.75rem] text-nido-muted">{{ participantesLabel }}</span>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              @for (m of todosMiembros(); track m.usuarioId) {
+                <button type="button"
+                        (click)="toggleParticipante(m.usuarioId)"
+                        class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full border-[1.5px] text-[0.8rem] font-medium transition-all duration-150 cursor-pointer"
+                        [class]="isParticipante(m.usuarioId)
+                          ? 'bg-nido-green-dark text-nido-cream border-nido-green-dark'
+                          : 'bg-white text-nido-muted border-nido-border hover:border-nido-brown'">
+                  <app-avatar [fotoUrl]="m.fotoUrl ?? null" [nombre]="m.nombre" sizeClass="w-4 h-4" fontSizeClass="text-[7px]" />
+                  {{ m.nombre.split(' ')[0] }}
+                </button>
               }
-            </select>
+            </div>
           </div>
         }
 

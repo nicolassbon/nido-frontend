@@ -83,19 +83,19 @@ describe('Finanzas', () => {
   // ── gastoFormValid ────────────────────────────────────────────────────────
 
   it('gastoFormValid es false cuando el monto es null', () => {
-    component['gastoForm'] = { monto: null, descripcion: '', categoria: '', fecha: '2026-01-15', pagadoPorId: '' };
+    component['gastoForm'] = { monto: null, descripcion: '', categoria: '', fecha: '2026-01-15', pagadoPorId: '', esCompartido: true, participantesIds: [] };
 
     expect(component['gastoFormValid']()).toBe(false);
   });
 
   it('gastoFormValid es false cuando el monto es cero', () => {
-    component['gastoForm'] = { monto: 0, descripcion: '', categoria: '', fecha: '2026-01-15', pagadoPorId: '' };
+    component['gastoForm'] = { monto: 0, descripcion: '', categoria: '', fecha: '2026-01-15', pagadoPorId: '', esCompartido: true, participantesIds: [] };
 
     expect(component['gastoFormValid']()).toBe(false);
   });
 
   it('gastoFormValid es true cuando el monto es mayor a cero y hay fecha', () => {
-    component['gastoForm'] = { monto: 100, descripcion: '', categoria: '', fecha: '2026-01-15', pagadoPorId: '' };
+    component['gastoForm'] = { monto: 100, descripcion: '', categoria: '', fecha: '2026-01-15', pagadoPorId: '', esCompartido: true, participantesIds: [] };
 
     expect(component['gastoFormValid']()).toBe(true);
   });
@@ -315,6 +315,8 @@ function makeGasto(monto: number, categoria: string | null): GastoResponse {
     pagadoPorNombre: 'Ana',
     createdAt: '',
     facturaId: null,
+    esCompartido: true,
+    participantesIds: [],
   };
 }
 

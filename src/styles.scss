@@ -1382,6 +1382,31 @@ lucide-icon svg {
     background-color: #7A5A45 !important;
   }
 
+  /* Filas de deuda en Finanzas: los fondos pastel (ámbar/esmeralda) no quedan
+     cubiertos por los overrides genéricos de bg-white/bg-nido-cream, así que
+     el ícono de flecha y el texto (forzados a colores claros) pierden contraste. */
+  app-finanzas {
+    .bg-amber-50\/70,
+    [class*="bg-amber-50\/"] {
+      background-color: rgba(180, 139, 106, 0.12) !important;
+    }
+
+    .border-amber-200\/60,
+    [class*="border-amber-200\/"] {
+      border-color: rgba(180, 139, 106, 0.3) !important;
+    }
+
+    .bg-emerald-50\/70,
+    [class*="bg-emerald-50\/"] {
+      background-color: rgba(58, 138, 74, 0.14) !important;
+    }
+
+    .border-emerald-200\/60,
+    [class*="border-emerald-200\/"] {
+      border-color: rgba(58, 138, 74, 0.32) !important;
+    }
+  }
+
   /* Diferenciación de notificaciones leídas vs no leídas */
   app-notificaciones {
     /* No leídas (activas/destacadas) */
