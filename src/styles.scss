@@ -82,6 +82,42 @@ html.landing-no-scrollbar body::-webkit-scrollbar {
   display: none !important;                /* Chrome / Safari / Edge */
 }
 
+/* Ocultar barra de scroll por defecto en las tarjetas de insights, mostrando una barra minimalista y transparente al hacer hover */
+.max-h-\[170px\] {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  &:hover {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(154, 128, 108, 0.4) transparent;
+    
+    &::-webkit-scrollbar {
+      display: block;
+      width: 5px;
+      height: 5px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: transparent !important;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: rgba(154, 128, 108, 0.4) !important;
+      border-radius: 10px !important;
+    }
+    
+    &::-webkit-scrollbar-thumb:hover {
+      background: rgba(154, 128, 108, 0.6) !important;
+    }
+  }
+}
+
 lucide-icon {
   display: inline-block;
   vertical-align: middle;
@@ -972,7 +1008,8 @@ lucide-icon svg {
   app-finanzas,
   app-tareas,
   app-agregar-producto,
-  app-notificaciones {
+  app-notificaciones,
+  app-configuracion {
     /* Botón primario y botones de selección activos (Marrón con texto crema) */
     .bg-nido-green-dark.text-nido-cream,
     .bg-nido-green-dark.border-nido-green-dark,
@@ -1031,6 +1068,10 @@ lucide-icon svg {
     /* El botón de edición de la foto de perfil conserva su borde crema */
     button.border-nido-cream {
       border-color: #EAE3D9 !important;
+
+      &:hover {
+        border-color: #EAE3D9 !important;
+      }
     }
 
     /* Contenedor de iconos de tarjetas inactivas */
@@ -1067,7 +1108,7 @@ lucide-icon svg {
     }
 
     /* Hover para el botón del lápiz en la lista de compras */
-    button:has(lucide-icon[name="pencil"]):hover {
+    button:has(lucide-icon[name="pencil"]):not(.bg-nido-green-dark):hover {
       border-color: #7A5A45 !important;
       background-color: rgba(247, 241, 230, 0.08) !important;
 
@@ -1811,6 +1852,144 @@ lucide-icon svg {
             stroke: #ef5350 !important;
           }
         }
+      }
+    }
+  }
+
+  /* ==========================================================================
+     Ajustes para el Asistente Chef Nido (IA) en modo oscuro
+     ========================================================================== */
+  /* Ventana del chat asistente wrapper */
+  .fixed .w-\[340px\].md\:w-\[380px\].bg-white {
+    background-color: #1c2320 !important;
+    border-color: rgba(216, 198, 178, 0.2) !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) !important;
+  }
+
+
+
+  /* ==========================================================================
+     Ajustes para la pantalla de Aceptar Invitación (app-accept-invitation)
+     ========================================================================== */
+  app-accept-invitation {
+    display: block;
+    min-height: 100vh;
+    background-color: #121815 !important;
+    color: #EAE3D9 !important;
+    
+    .min-h-screen {
+      background-color: #121815 !important;
+    }
+
+    .bg-white {
+      background-color: #1c2320 !important;
+      border: 1px solid rgba(216, 198, 178, 0.12) !important;
+    }
+
+    h1, h2 {
+      color: #EAE3D9 !important;
+    }
+
+    p.text-nido-brown {
+      color: #a8b9b0 !important;
+    }
+
+    .bg-\[rgba\(62\,94\,74\,0\.08\)\] {
+      background-color: rgba(247, 241, 230, 0.05) !important;
+      
+      lucide-icon, svg, path {
+        color: #B48B6A !important;
+        stroke: #B48B6A !important;
+      }
+    }
+
+    /* Botón principal (Aceptar / Iniciar sesión) */
+    button.bg-nido-green-dark {
+      background-color: #7A5A45 !important;
+      color: #EAE3D9 !important;
+      border: none !important;
+      
+      &:hover {
+        background-color: #654937 !important;
+      }
+    }
+
+    /* Botón secundario (Crear cuenta) */
+    button.bg-transparent {
+      background-color: rgba(247, 241, 230, 0.04) !important;
+      border: 2px solid rgba(216, 198, 178, 0.2) !important;
+      color: #EAE3D9 !important;
+      
+      &:hover {
+        background-color: rgba(247, 241, 230, 0.08) !important;
+        border-color: #7A5A45 !important;
+        color: #EAE3D9 !important;
+      }
+    }
+  }
+
+  /* Barra de progreso de recetas sugeridas en Finanzas en modo oscuro */
+  app-finanzas .bg-nido-green.rounded-full {
+    background-color: #7A5A45 !important;
+  }
+
+  /* Iconos y sus envoltorios en Finanzas (unificados al diseño crema/marrón/dorado de Inicio) */
+  app-finanzas {
+    /* 1. Envoltorios de iconos circulares de las 3 tarjetas del resumen superior */
+    div.bg-nido-green-dark {
+      background-color: rgba(247, 241, 230, 0.12) !important;
+      box-shadow: none !important;
+
+      lucide-icon,
+      svg,
+      path {
+        color: #EAE3D9 !important;
+        stroke: #EAE3D9 !important;
+      }
+    }
+
+    /* 2. Envoltorio del icono de tendencia del modo ahorro (trending-down) */
+    div.bg-nido-green\/10,
+    [class*="bg-nido-green/"] {
+      background-color: rgba(247, 241, 230, 0.12) !important;
+    }
+
+    /* 3. Iconos verdes en general en Finanzas (trending-down, chef-hat, etc.) */
+    .text-nido-green,
+    lucide-icon.text-nido-green,
+    lucide-icon[name="trending-down"],
+    lucide-icon[name="chef-hat"] {
+      color: #B48B6A !important;
+      stroke: #B48B6A !important;
+      
+      svg, path {
+        color: #B48B6A !important;
+        stroke: #B48B6A !important;
+      }
+    }
+  }
+
+  /* Botones flotantes de Editar/Eliminar en Electrodomésticos en modo oscuro */
+  app-electrodomesticos {
+    button:has(lucide-icon[name="pencil"]):hover {
+      background-color: #7A5A45 !important;
+      border: 1px solid #7A5A45 !important;
+      color: #EAE3D9 !important;
+      
+      lucide-icon, svg, path {
+        color: #EAE3D9 !important;
+        stroke: #EAE3D9 !important;
+      }
+    }
+
+    button:has(lucide-icon[name="trash-2"]):hover {
+      background-color: #ef5350 !important;
+      border: 1px solid #ef5350 !important;
+      color: #EAE3D9 !important;
+      
+      lucide-icon, svg, path {
+        color: #EAE3D9 !important;
+        stroke: #EAE3D9 !important;
       }
     }
   }
