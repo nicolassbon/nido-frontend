@@ -10,6 +10,7 @@
 
     <div class="relative z-10 flex w-full flex-col gap-2 sm:w-auto">
       <button
+        data-tour="shopping-new-list"
         class="flex w-full items-center justify-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]"
         (click)="openCreateList()">
         <lucide-icon name="plus" [size]="16" />
@@ -18,6 +19,7 @@
 
       <button
         aria-label="telegram-send"
+        data-tour="shopping-telegram"
         class="flex w-full items-center justify-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)] disabled:cursor-not-allowed disabled:opacity-50"
         [disabled]="listas.length === 0 || isSendingTelegram"
         (click)="sendActiveListToTelegram()">
@@ -27,6 +29,7 @@
 
       <button
         aria-label="compare-prices"
+        data-tour="shopping-price-search"
         class="flex w-full items-center justify-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]"
         (click)="openCompareModal()">
         <lucide-icon name="search" [size]="16" />
@@ -208,7 +211,7 @@
   }
 
   @for (lista of visibleLists(); track lista.id) {
-    <section class="bg-white/[0.51] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] overflow-visible">
+    <section class="bg-white/[0.51] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] overflow-visible" data-tour="shopping-list">
       <div class="flex flex-col gap-3 px-4 py-3.5 border-b border-nido-border/40 bg-nido-cream/30 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div class="flex min-w-0 flex-wrap items-center gap-2.5">
           <lucide-icon name="shopping-basket" [size]="16" class="text-nido-green-dark shrink-0" />
@@ -260,6 +263,7 @@
         @for (item of lista.items; track item.id) {
           <li class="flex items-center gap-3 px-4 py-3.5 border-b border-nido-border/40 transition-colors duration-150 last:border-b-0 hover:bg-nido-cream/40 sm:px-5">
             <button
+              data-tour="shopping-check"
               class="shrink-0 w-5 h-5 rounded-[5px] border-[1.5px] flex items-center justify-center cursor-pointer transition-colors duration-150"
               [class.bg-nido-green-dark]="item.checked"
               [class.border-nido-green-dark]="item.checked"

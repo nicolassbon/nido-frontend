@@ -14,18 +14,21 @@
     </div>
     <div class="relative z-10 flex gap-2.5 flex-wrap max-sm:w-full">
       <button
+        data-tour="alacena-barcode"
         class="flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]"
         (click)="openScanner()">
         <lucide-icon name="qr-code" [size]="15" />
         Escanear código
       </button>
       <a
+        data-tour="alacena-ticket"
         routerLink="/alacena/escanear-ticket"
         class="flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)] no-underline">
         <lucide-icon name="scan-line" [size]="15" />
         Escanear ticket
       </a>
       <button
+        data-tour="alacena-add"
         class="flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]"
         (click)="showManualForm.set(true)">
         <lucide-icon name="plus" [size]="15" />

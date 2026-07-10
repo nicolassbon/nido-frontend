@@ -86,7 +86,7 @@
           </div>
         </div>
 
-        <section class="summary-card">
+        <section class="summary-card" data-tour="product-summary">
           <h2>Resumen del producto</h2>
 
           <div class="summary-row summary-row--full">
@@ -139,7 +139,7 @@
         </section>
 
         @if (p.informacionNutricional) {
-          <section class="nutrition-card">
+          <section class="nutrition-card" data-tour="product-nutrition-info">
             <header class="nutrition-header">
               <div>
                 <h2>Información nutricional</h2>
@@ -175,14 +175,14 @@
           </section>
         }
 
-        <div class="actions">
+        <div class="actions" data-tour="product-actions">
           <button type="button" class="primary-action" (click)="addToShoppingList()">
             <span class="action-symbol">+</span>
             <span class="action-label">Agregar a la lista</span>
           </button>
 
           @if (!p.informacionNutricional) {
-            <button type="button" class="secondary-action nutrition-action" (click)="loadNutritionInfo()">
+            <button type="button" class="secondary-action nutrition-action" data-tour="product-nutrition-scan" (click)="loadNutritionInfo()">
               <lucide-icon name="scan-line" [size]="16" />
               <span class="action-label">Cargar información nutricional</span>
             </button>
