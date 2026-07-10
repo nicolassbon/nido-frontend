@@ -121,7 +121,7 @@ export class Notificaciones implements OnInit {
   protected getCategoriaTitle(tipo: string | null, mensaje: string | null): string {
     if (tipo === 'asignacion_tarea') return 'Tarea Familiar';
     if (tipo === 'tarea_vencida' || tipo === 'producto_vencido' || tipo === 'producto_por_vencer') return 'Vencimiento';
-    if (tipo === 'stock_bajo') return 'Alerta de Stock';
+    if (tipo === 'stock_bajo' || tipo === 'producto_por_agotarse') return 'Alerta de Stock';
     if (mensaje?.toLowerCase().includes('mantenimiento')) return 'Mantenimiento';
     if (mensaje?.toLowerCase().includes('stock') || mensaje?.toLowerCase().includes('inventario') || mensaje?.toLowerCase().includes('agotarse')) return 'Alerta de Stock';
     return 'Notificación';
