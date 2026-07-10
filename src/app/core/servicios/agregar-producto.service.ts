@@ -38,6 +38,7 @@ export interface ProductManualResponse {
   cantidadEnvases: number;
   origenCarga?: 'manual' | 'codigo_barras' | 'ticket_compra';
   iconoSvg?: string | null;
+  icono?: string | null;
   cantidadCompraEstandar?: number | null;
   unidadCompraEstandar?: string | null;
 }

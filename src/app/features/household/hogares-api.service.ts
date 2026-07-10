@@ -10,6 +10,7 @@ export interface MiembroResponse {
   rol:       string;
   fotoUrl:   string | null;
   alergias:  string[];
+  alimentacion?: string[];
 }
 
 export interface AceptarInvitacionResponse {

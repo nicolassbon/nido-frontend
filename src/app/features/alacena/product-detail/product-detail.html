@@ -24,11 +24,10 @@
     <div class="product-layout">
       <section class="photo-panel">
         @if (imageUrl()) {
-          <img [src]="imageUrl()" [alt]="p.nombre" (error)="onImageError($event, p.nombre)" />
+          <img [src]="imageUrl()" [alt]="p.categoriaNombre || p.nombre" (error)="onImageError($event)" />
         } @else {
           <div class="photo-empty">
-            <lucide-icon name="package" [size]="58" />
-            <span>{{ p.nombre }}</span>
+            <lucide-icon name="package" [size]="36" />
           </div>
         }
       </section>
@@ -86,7 +85,7 @@
           </div>
         </div>
 
-        <section class="summary-card">
+        <section class="summary-card" data-tour="product-summary">
           <h2>Resumen del producto</h2>
 
           <div class="summary-row summary-row--full">
@@ -139,7 +138,7 @@
         </section>
 
         @if (p.informacionNutricional) {
-          <section class="nutrition-card">
+          <section class="nutrition-card" data-tour="product-nutrition-info">
             <header class="nutrition-header">
               <div>
                 <h2>Información nutricional</h2>
@@ -175,21 +174,21 @@
           </section>
         }
 
-        <div class="actions">
+        <div class="actions" data-tour="product-actions">
           <button type="button" class="primary-action" (click)="addToShoppingList()">
-            <span class="action-symbol">+</span>
+            <lucide-icon name="shopping-cart" [size]="17" />
             <span class="action-label">Agregar a la lista</span>
           </button>
 
           @if (!p.informacionNutricional) {
-            <button type="button" class="secondary-action nutrition-action" (click)="loadNutritionInfo()">
+            <button type="button" class="secondary-action nutrition-action" data-tour="product-nutrition-scan" (click)="loadNutritionInfo()">
               <lucide-icon name="scan-line" [size]="16" />
               <span class="action-label">Cargar información nutricional</span>
             </button>
           }
 
           <button type="button" class="secondary-action" (click)="showEditModal.set(true)">
-            <span class="action-symbol">/</span>
+            <lucide-icon name="pencil" [size]="15" />
             <span class="action-label">Editar</span>
           </button>
 
@@ -201,7 +200,7 @@
           }
 
           <button type="button" class="secondary-action finish-action" [disabled]="finishing()" (click)="finishProduct()">
-            <lucide-icon name="check-circle" [size]="16" />
+            <lucide-icon name="x" [size]="16" />
             <span class="action-label">Marcar como consumido</span>
           </button>
         </div>

@@ -1,4 +1,4 @@
-<div class="w-full p-4 sm:p-6 flex flex-col gap-5">
+<div class="w-full p-4 sm:p-6 flex flex-col gap-5 relative min-h-screen">
 
   <!-- Banner -->
   <section class="relative overflow-hidden rounded-[14px] px-8 py-7 flex items-center justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4 [background:linear-gradient(135deg,#263F30_0%,#3E5E4A_50%,#927357_100%)]">
@@ -14,6 +14,7 @@
     </div>
     <button
       type="button"
+      data-tour="recipes-roulette"
       class="relative z-10 flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]"
       (click)="openRoulettePopup()">
       <lucide-icon [img]="icons.Shuffle" [size]="16" />
@@ -22,7 +23,7 @@
   </section>
 
   <!-- Buscador -->
-  <div class="flex flex-col sm:flex-row gap-3 items-stretch w-full">
+  <div class="flex flex-col sm:flex-row gap-3 items-stretch w-full" data-tour="recipes-search">
     <div class="relative flex-1 flex items-center">
       <span class="absolute inset-y-0 left-3.5 flex w-6 items-center justify-center text-nido-brown pointer-events-none">
         <lucide-icon [img]="icons.Search" [size]="18" />
@@ -30,7 +31,7 @@
       <input
         class="w-full py-3 pl-11 pr-10 border-[1.5px] border-solid border-nido-brown rounded-[10px] bg-white/[0.51] text-[0.875rem] text-nido-green-dark outline-none transition-[border-color] duration-150 focus:border-nido-brown placeholder:text-nido-muted"
         type="text"
-        placeholder="Buscar receta o preguntale a Nido (ej: 'Tengo fideos y pescado')..."
+        placeholder="Preguntale a Nido (ej: 'Tengo fideos y pescado, ¿Qué puedo cocinar?')..."
         #searchInput
         [value]="searchQuery()"
         (keydown.enter)="searchQuery.set(searchInput.value); onSearchSubmit(searchInput.value, nutritionalObjective())"
@@ -52,7 +53,7 @@
   </div>
 
   <!-- Filtros -->
-  <div class="flex items-center justify-between gap-3 flex-wrap">
+  <div class="flex items-center justify-between gap-3 flex-wrap" data-tour="recipes-filters">
     <div class="flex gap-2 flex-wrap">
       <button [class]="filterChipClass('Guardadas')" (click)="setFilter('Guardadas')">
         <lucide-icon [img]="icons.Bookmark" [size]="13" />
@@ -65,11 +66,21 @@
       }
       <button [class]="allergenChipClass()" (click)="toggleAllergens()">
         <lucide-icon [img]="icons.Shield" [size]="13" />
-        Sin alergenos
-        @if (excludeAllergens()) {
+        @if (activeRestrictionLabels().length > 0) {
+          Respetar restricciones
+        } @else {
+          Evitar restricciones
+        }
+        @if (restrictionsFilterEnabled()) {
           <lucide-icon [img]="icons.Check" [size]="12" />
         }
       </button>
+      @for (restriction of activeRestrictionLabels(); track restriction) {
+        <span class="px-3.5 py-[0.4rem] rounded-[20px] border-[1.5px] border-solid border-nido-green-dark bg-nido-green-dark text-nido-cream font-medium text-[0.8125rem] inline-flex items-center gap-1.5">
+          <lucide-icon [img]="icons.Shield" [size]="13" />
+          {{ restriction }}
+        </span>
+      }
       <button [class]="applianceChipClass()" (click)="toggleMissingAppliances()">
         <lucide-icon [img]="icons.Zap" [size]="13" />
         Con mis electrodomesticos
@@ -103,7 +114,7 @@
   <div class="grid grid-cols-1 md:grid-cols-[1fr_290px] gap-6 items-start">
 
     <!-- Grid de recetas -->
-    <div class="order-2 md:order-1">
+    <div class="order-2 md:order-1" data-tour="recipes-list">
       @if (isLoadingIa()) {
         <div class="flex flex-col items-center justify-center gap-3 py-16 px-8 text-nido-brown text-center">
           <div class="h-9 w-9 animate-spin rounded-full border-4 border-nido-brown border-t-transparent"></div>
@@ -180,30 +191,30 @@
                   </span>
                 </div>
 
-              <div class="flex flex-col gap-1 mt-1.5">
-                <span class="text-[0.68rem] font-bold tracking-wider text-nido-green-dark/60 uppercase mb-1">
-                  Información Nutricional <span class="lowercase font-normal text-nido-brown">(por 100g)</span>
-                </span>
-
-                <div class="flex flex-wrap items-center gap-1.5">
-                  <span class="flex items-center gap-1 text-[0.72rem] text-nido-brown bg-nido-brown/5 px-1.5 py-0.5 rounded-[4px] font-medium">
-                    <lucide-icon name="flame" [size]="12" />
-                    {{ recipe.calories }} kcal
+                <div class="flex flex-col gap-1 mt-1.5">
+                  <span class="text-[0.68rem] font-bold tracking-wider text-nido-green-dark/60 uppercase mb-1">
+                    Información Nutricional <span class="lowercase font-normal text-nido-brown">(por 100g)</span>
                   </span>
 
-                  <span class="text-[0.72rem] text-nido-green-dark bg-nido-green/10 border border-nido-green/20 px-1.5 py-0.5 rounded-[4px] font-semibold">
-                    💪 {{ recipe.proteinas }} Prot
-                  </span>
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="flex items-center gap-1 text-[0.72rem] text-nido-brown bg-nido-brown/5 px-1.5 py-0.5 rounded-[4px] font-medium">
+                      <lucide-icon name="flame" [size]="12" />
+                      {{ recipe.calories }} kcal
+                    </span>
 
-                  <span class="text-[0.72rem] text-nido-brown bg-nido-border/40 px-1.5 py-0.5 rounded-[4px]">
-                    🌾 {{ recipe.carbohidratos }} Carb
-                  </span>
+                    <span class="text-[0.72rem] text-nido-green-dark bg-nido-green/10 border border-nido-green/20 px-1.5 py-0.5 rounded-[4px] font-semibold">
+                      💪 {{ recipe.proteinas }} Prot
+                    </span>
 
-                  <span class="text-[0.72rem] text-nido-brown bg-nido-border/40 px-1.5 py-0.5 rounded-[4px]">
-                    🥑 {{ recipe.grasas }} Gras
-                  </span>
+                    <span class="text-[0.72rem] text-nido-brown bg-nido-border/40 px-1.5 py-0.5 rounded-[4px]">
+                      🌾 {{ recipe.carbohidratos }} Carb
+                    </span>
+
+                    <span class="text-[0.72rem] text-nido-brown bg-nido-border/40 px-1.5 py-0.5 rounded-[4px]">
+                      🥑 {{ recipe.grasas }} Gras
+                    </span>
+                  </div>
                 </div>
-              </div>
 
                 <div class="mt-0.5 flex min-h-[1.15rem] items-center gap-1">
                   @if (recipe.vecesCocinada > 0) {
@@ -233,23 +244,35 @@
                 <!-- Advertencia: falta electrodomestico -->
                 <div class="mt-1.5 flex min-h-[2.35rem] items-start">
                   @if (recipe.hasMissingAppliance) {
-                  <div class="flex w-full items-center gap-1.5 px-2.5 py-1.5 rounded-[8px] bg-[rgba(180,76,60,0.07)] border border-[rgba(180,76,60,0.2)]">
-                    <lucide-icon [img]="icons.Zap" [size]="12" class="text-nido-red shrink-0" />
-                    <span class="text-[0.7rem] font-medium text-nido-red leading-snug">
-                      Requiere electrodomestico no disponible
-                    </span>
-                  </div>
+                    <div class="flex w-full items-center gap-1.5 px-2.5 py-1.5 rounded-[8px] bg-[rgba(180,76,60,0.07)] border border-[rgba(180,76,60,0.2)]">
+                      <lucide-icon [img]="icons.Zap" [size]="12" class="text-nido-red shrink-0" />
+                      <span class="text-[0.7rem] font-medium text-nido-red leading-snug">
+                        Requiere electrodomestico no disponible
+                      </span>
+                    </div>
                   }
                 </div>
 
-                <!-- Ver Detalle Button -->
-                <a
-                  [routerLink]="['/recetas', recipe.id]"
-                  (click)="$event.stopPropagation()"
-                  class="mt-auto inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 bg-nido-green-dark text-nido-cream rounded-[8px] text-[0.8rem] font-medium cursor-pointer transition-[background] duration-150 hover:bg-nido-green">
-                  <lucide-icon [img]="icons.Eye" [size]="14" />
-                  Ver detalle
-                </a>
+                <!-- Botones de Acción (Grid de 2 columnas) -->
+                <div class="mt-auto grid grid-cols-2 gap-2">
+                  <a
+                    [routerLink]="['/recetas', recipe.id]"
+                    (click)="$event.stopPropagation()"
+                    class="inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-nido-green-dark text-nido-cream rounded-[8px] text-[0.8rem] font-medium cursor-pointer transition-[background] duration-150 hover:bg-nido-green">
+                    <lucide-icon [img]="icons.Eye" [size]="14" />
+                    Ver detalle
+                  </a>
+                  
+                  <!-- BOTÓN DE CONSULTA IA (Dispara el chat interactivo) -->
+                  <button
+                    type="button"
+                    (click)="abrirAsistenteConReceta(recipe, $event)"
+                    class="inline-flex items-center justify-center gap-1.5 py-2 px-3 border border-nido-border bg-white text-nido-green-dark rounded-[8px] text-[0.8rem] font-semibold cursor-pointer transition-colors duration-150 hover:bg-nido-cream">
+                    <lucide-icon name="sparkles" [size]="13" class="text-nido-gold animate-pulse" />
+                    Preguntar IA
+                  </button>
+                </div>
+
               </div>
 
             </article>
@@ -264,7 +287,7 @@
       <!-- ¿Quién come hoy? -->
       <div class="bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
         <h3 class="text-[0.9375rem] font-semibold text-nido-green-dark mb-1">¿Quién come hoy?</h3>
-        <p class="text-[0.775rem] text-nido-brown mb-3.5">Las recetas se filtran segun sus alergenos</p>
+        <p class="text-[0.775rem] text-nido-brown mb-3.5">Las recetas se filtran segun sus alergenos y preferencias</p>
         <div class="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-1 xl:grid-cols-2 gap-2 mb-2">
           @for (member of householdMembers(); track member.id) {
             <button
@@ -296,10 +319,10 @@
             </button>
           }
         </div>
-        @if (excludeAllergens()) {
+        @if (restrictionsFilterEnabled()) {
           <p class="flex items-center gap-1.5 text-[0.75rem] text-nido-green bg-[rgba(62,94,74,0.08)] px-2.5 py-[0.4rem] rounded-md mt-1">
             <lucide-icon [img]="icons.Shield" [size]="13" />
-            Excluyendo recetas con alergenos de los presentes
+            Excluyendo recetas incompatibles con quienes comen hoy
           </p>
         }
       </div>
@@ -360,6 +383,7 @@
     </aside>
   </div>
 
+  <!-- Popups de Ruleta -->
   @if (showRoulettePopup()) {
     <div
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
@@ -433,5 +457,42 @@
       </div>
     </div>
   }
+
+  <!-- ── NUEVO: CHAT FLOTANTE DEL ASISTENTE DE IA ──────────────── -->
+  <!-- 
+    Se ubica en la esquina inferior derecha. Al presionar en 'Preguntar IA' en una tarjeta,
+    se despliega este mini panel interactivo manteniendo al usuario en la misma página.
+  -->
+  <div class="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3 pointer-events-none" data-tour="recipes-assistant">
+    
+    <!-- Ventana del chat asistente -->
+    @if (asistenteAbierto()) {
+      <div class="w-[340px] md:w-[380px] h-[450px] rounded-[16px] bg-white border border-nido-border shadow-[0_12px_40px_rgba(38,63,48,0.18)] flex flex-col pointer-events-auto overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
+        <!-- Renderiza el componente con contexto opcional de receta y alacena -->
+        <app-receta-asistente
+          [recetaContexto]="recetaSeleccionadaAsistente()"
+          [alacena]="alacenaDisponibleAsistente()" />
+      </div>
+    }
+
+    <!-- Botón / Burbuja flotante principal (Para abrir/cerrar manualmente) -->
+    <button
+      type="button"
+      (click)="toggleAsistenteGeneral()"
+      class="pointer-events-auto h-12 w-12 rounded-full bg-nido-green-dark hover:bg-nido-green text-nido-cream flex items-center justify-center shadow-[0_4px_16px_rgba(38,63,48,0.22)] cursor-pointer transition-transform duration-150 hover:scale-105 border-0">
+      @if (asistenteAbierto()) {
+        <lucide-icon [img]="icons.X" [size]="20" />
+      } @else {
+        <div class="relative">
+          <lucide-icon name="sparkles" [size]="20" class="text-nido-cream animate-pulse" />
+          <span class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-nido-gold opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-nido-gold"></span>
+          </span>
+        </div>
+      }
+    </button>
+    
+  </div>
 
 </div>

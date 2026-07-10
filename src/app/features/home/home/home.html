@@ -55,7 +55,7 @@
       </div>
     </section>
 
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4" data-tour="home-main-actions">
 
       <!-- Alacena -->
       <section class="bg-white/[0.51] rounded-[14px] px-5 py-4 shadow-[0_4px_18px_rgba(38,63,48,0.08)] flex h-full flex-col">
@@ -64,7 +64,7 @@
             <lucide-icon name="shopping-basket" [size]="21" />
           </div>
           <h2 class="text-[1.15rem] font-semibold text-nido-green-dark">Alacena</h2>
-          <a routerLink="/alacena" class="ml-auto text-[0.78rem] text-nido-brown no-underline hover:text-nido-green transition-colors">Ver Todo -></a>
+          <a routerLink="/alacena" class="ml-auto text-[0.78rem] text-nido-brown no-underline hover:text-nido-green transition-colors">Ver Todo</a>
         </header>
 
         <div class="grid grid-cols-2 gap-3 mb-3">
@@ -103,7 +103,7 @@
           </div>
         </div>
 
-        <a routerLink="/agregar-producto" class="mt-auto flex h-11 items-center justify-center gap-2.5 rounded-[8px] bg-nido-green-dark text-nido-cream no-underline text-[0.9rem] font-medium hover:bg-nido-green transition-colors">
+        <a routerLink="/agregar-producto" data-tour="home-add-product" class="mt-auto flex h-11 items-center justify-center gap-2.5 rounded-[8px] bg-nido-green-dark text-nido-cream no-underline text-[0.9rem] font-medium hover:bg-nido-green transition-colors">
           <lucide-icon name="plus" [size]="18" />
           Agregar A La Alacena
         </a>
@@ -116,7 +116,7 @@
             <lucide-icon name="chef-hat" [size]="21" />
           </div>
           <h2 class="text-[1.15rem] font-semibold text-nido-green-dark">Recetas</h2>
-          <a routerLink="/recetas" class="ml-auto text-[0.78rem] text-nido-brown no-underline hover:text-nido-green transition-colors">Ver Todas -></a>
+          <a routerLink="/recetas" class="ml-auto text-[0.78rem] text-nido-brown no-underline hover:text-nido-green transition-colors">Ver Todas</a>
         </header>
 
         <div class="grid grid-cols-2 gap-3 mb-4">
@@ -154,7 +154,7 @@
           }
         </div>
 
-        <a routerLink="/recetas" class="mt-auto flex h-11 items-center justify-center gap-2.5 rounded-[8px] bg-nido-green-dark text-nido-cream no-underline text-[0.9rem] font-medium hover:bg-nido-green transition-colors">
+        <a routerLink="/recetas" data-tour="home-find-recipe" class="mt-auto flex h-11 items-center justify-center gap-2.5 rounded-[8px] bg-nido-green-dark text-nido-cream no-underline text-[0.9rem] font-medium hover:bg-nido-green transition-colors">
           <lucide-icon name="search" [size]="18" />
           Explorar Recetas
         </a>

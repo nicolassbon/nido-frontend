@@ -124,10 +124,11 @@ export class RecipesApiService {
     return this.http.post<CocinarRecetaResponse>(`${this.base}/recetas/${id}/cocinar`, {});
   }
 
-  recomendarPorIa(busqueda: string, objetivo: string): Observable<ApiReceta[]> {
+  recomendarPorIa(busqueda: string, objetivo: string, restricciones: string[] = []): Observable<ApiReceta[]> {
     const params = new HttpParams()
       .set('busqueda', busqueda)
-      .set('objetivo', objetivo);
+      .set('objetivo', objetivo)
+      .set('restricciones', restricciones.join(','));
 
     return this.http.get<ApiReceta[]>(`${this.base}/recetas/ia/recomendar`, { params });
   }

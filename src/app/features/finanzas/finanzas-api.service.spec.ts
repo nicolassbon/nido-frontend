@@ -54,7 +54,7 @@ describe('FinanzasApiService', () => {
   // ── createGasto ────────────────────────────────────────────────────────────
 
   it('createGasto() hace POST a /finanzas/gastos con el cuerpo correcto', () => {
-    const cuerpo = { monto: 500, descripcion: 'Super', categoria: 'Comida', fecha: '2026-01-15', pagadoPorId: null };
+    const cuerpo = { monto: 500, descripcion: 'Super', categoria: 'Comida', fecha: '2026-01-15', pagadoPorId: null, esCompartido: true, participantesIds: null };
     service.createGasto(cuerpo).subscribe();
 
     const req = http.expectOne(`${base}/finanzas/gastos`);
@@ -181,7 +181,7 @@ describe('FinanzasApiService', () => {
   // ── updateGasto ────────────────────────────────────────────────────────────
 
   it('updateGasto() hace PATCH a /finanzas/gastos/:id con el cuerpo correcto', () => {
-    const cuerpo = { monto: 800, descripcion: 'Editado', categoria: 'Comida', fecha: '2026-06-15', pagadoPorId: null };
+    const cuerpo = { monto: 800, descripcion: 'Editado', categoria: 'Comida', fecha: '2026-06-15', pagadoPorId: null, esCompartido: true, participantesIds: null };
     service.updateGasto('gasto-1', cuerpo).subscribe();
 
     const req = http.expectOne(`${base}/finanzas/gastos/gasto-1`);

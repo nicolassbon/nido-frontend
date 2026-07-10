@@ -24,6 +24,7 @@
             <lucide-icon name="house-plus" [size]="15"></lucide-icon> Nuevo hogar
           </button>
           <button
+            data-tour="profile-invite-member"
             (click)="openInviteModal()"
             class="flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]">
             <lucide-icon name="user-plus" [size]="15"></lucide-icon> Invitar integrante
@@ -32,7 +33,7 @@
       </div>
     </div>
 
-    <div class="flex flex-col md:flex-row items-start md:items-end gap-6 px-2 sm:px-8 mt-8 relative z-20">
+    <div class="flex flex-col md:flex-row items-start md:items-end gap-6 px-2 sm:px-8 mt-8 relative z-20" data-tour="profile-personal-data">
 
       <div class="relative shrink-0 inline-block">
 
@@ -54,8 +55,9 @@
 
         <div
           class="inline-flex max-w-full items-center gap-2 bg-white px-5 py-2.5 rounded-full text-[0.9rem] text-nido-green-dark shadow-[0_1px_3px_rgba(0,0,0,0.05)] border border-[#e5ddd0] w-fit mb-5">
-          <lucide-icon name="award" class="w-5 h-5"></lucide-icon> Nivel Nido <span class="font-bold">{{
-            usuario()?.nivel }}</span>
+          <lucide-icon name="award" class="w-5 h-5"></lucide-icon> Nivel Nido <span class="font-bold">
+            @if (nivelNido() === 0) { Bloqueado } @else { {{ nivelNido() }} }
+          </span>
         </div>
 
         <hr class="border-[#e5ddd0] border-t-[1.5px] mb-4 w-full max-w-2xl">
@@ -84,7 +86,7 @@
       [subtitle]="statCards()[2].subtitle"></app-stat-card>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5" data-tour="profile-food-restrictions">
     @if (!isEditingAlergias()) {
       <app-preference-card title="Alergias" icon="wheat-off"
         [tag]="usuario()?.alergias?.length ? usuario()!.alergias! : ['No hay alergias cargadas']"
