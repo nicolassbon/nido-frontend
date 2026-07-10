@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnIni
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { forkJoin, Subscription } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { LucideAngularModule } from 'lucide-angular';
 import { ListaComprasService, RecipeShoppingList, ShoppingHistoryItem, ShoppingItem } from './lista-compras.service';
 import { CatalogoService } from '../../core/servicios/catalogo.service';
@@ -46,7 +47,6 @@ export class ListaCompras implements OnInit, OnDestroy {
   protected itemCantidad: number | null = null;
   protected itemUnidad = 'unidad';
   protected editingItem: { listaId: string; itemId: string } | null = null;
-  protected uploadingHistoryId: string | null = null;
   protected isSaving = false;
   protected isSendingTelegram = false;
   protected showTelegramModal = false;
@@ -63,6 +63,9 @@ export class ListaCompras implements OnInit, OnDestroy {
   protected compareError: string | null = null;
   protected compareSuccessMessage: string | null = null;
   protected compareSearched = false;
+  protected showAddToListModal = false;
+  protected selectedComparedProduct: string | null = null;
+  protected selectedAddToListTargetId: string | null = null;
 
   private sub = new Subscription();
   private readonly categoriaIdByName = new Map<string, string>();
@@ -234,8 +237,18 @@ export class ListaCompras implements OnInit, OnDestroy {
     const refs = item.sourceItems?.length
       ? item.sourceItems
       : [{ listaId, itemId: item.id }];
+    const marking = !item.checked;
+    const sources = refs.map(ref => ({ ref, data: this.resolveSourceItem(ref) ?? item }));
 
-    forkJoin(refs.map(ref => this.service.markPurchased(ref.listaId, ref.itemId, !item.checked))).subscribe({
+    forkJoin(refs.map(ref => this.service.markPurchased(ref.listaId, ref.itemId, marking))).subscribe({
+      next: () => {
+        if (!marking) return;
+        for (const { ref, data } of sources) {
+          this.sendItemToPantry(ref.itemId, data).subscribe({
+            error: () => this.fail('Se marcó como comprado, pero no se pudo pasar a la alacena.'),
+          });
+        }
+      },
       error: () => this.fail('No se pudo actualizar el producto.'),
     });
   }
@@ -244,48 +257,6 @@ export class ListaCompras implements OnInit, OnDestroy {
     event.stopPropagation();
     this.service.removeItem(listaId, itemId).subscribe({
       error: () => this.fail('No se pudo quitar el producto.'),
-    });
-  }
-
-  protected sendHistoryItemToPantry(item: ShoppingHistoryItem): void {
-    if (this.uploadingHistoryId || item.agregadoAlInventario) return;
-
-    this.uploadingHistoryId = item.id;
-    this.errorMessage = null;
-    this.cdr.markForCheck();
-
-    const amount = item.cantidad && item.cantidad > 0 ? item.cantidad : 1;
-    const payload: CreateStockItemRequest = {
-      nombre: item.nombre,
-      categoriaId: this.categoryIdFor(item.categoriaNombre),
-      codigoBarras: null,
-      imagen: null,
-      ubicacion: 'Alacena',
-      cantidad: amount,
-      unidadMedida: this.stockUnitValue(item.unidad),
-      fechaVencimiento: null,
-      estaAbierto: false,
-      porcentajeConsumido: 0,
-      origenCarga: 'manual',
-    };
-
-    this.alacenaApi.createStock(payload).subscribe({
-      next: () => {
-        this.service.markAddedToInventory(item.id).subscribe({
-          next: () => {
-            this.uploadingHistoryId = null;
-            this.cdr.markForCheck();
-          },
-          error: () => {
-            this.uploadingHistoryId = null;
-            this.fail('Se subió a la alacena, pero no se pudo actualizar el historial.');
-          },
-        });
-      },
-      error: () => {
-        this.uploadingHistoryId = null;
-        this.fail('No se pudo pasar el producto a la alacena.');
-      },
     });
   }
 
@@ -384,8 +355,7 @@ export class ListaCompras implements OnInit, OnDestroy {
   }
 
   protected formatAmount(cantidad: number | null, unidad: string | null): string {
-    if (!cantidad && !unidad) return '';
-    if (!cantidad) return unidad ?? '';
+    if (!cantidad) return '';
     const suffix = unidad ? ` ${unidad}` : '';
     return `${new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(cantidad)}${suffix}`;
   }
@@ -418,9 +388,36 @@ export class ListaCompras implements OnInit, OnDestroy {
 
   private fail(message: string): void {
     this.errorMessage = message;
-    this.uploadingHistoryId = null;
     this.isSaving = false;
     this.cdr.markForCheck();
+  }
+
+  private resolveSourceItem(ref: { listaId: string; itemId: string }): ShoppingItem | undefined {
+    return this.listas.find(lista => lista.id === ref.listaId)?.items.find(i => i.id === ref.itemId);
+  }
+
+  private sendItemToPantry(
+    itemId: string,
+    data: { nombre: string; cantidad: number | null; unidad: string | null; categoriaNombre?: string | null },
+  ) {
+    const amount = data.cantidad && data.cantidad > 0 ? data.cantidad : 1;
+    const payload: CreateStockItemRequest = {
+      nombre: data.nombre,
+      categoriaId: this.categoryIdFor(data.categoriaNombre),
+      codigoBarras: null,
+      imagen: null,
+      ubicacion: 'Alacena',
+      cantidad: amount,
+      unidadMedida: this.stockUnitValue(data.unidad),
+      fechaVencimiento: null,
+      estaAbierto: false,
+      porcentajeConsumido: 0,
+      origenCarga: 'manual',
+    };
+
+    return this.alacenaApi.createStock(payload).pipe(
+      switchMap(() => this.service.markAddedToInventory(itemId)),
+    );
   }
 
   private defaultTelegramTargetId(): string {
@@ -632,20 +629,34 @@ export class ListaCompras implements OnInit, OnDestroy {
   }
 
   protected addComparedProduct(productName: string): void {
-    let targetListId = this.activeListId;
-    if (!targetListId || targetListId === VIEW_ALL_LIST_ID) {
-      const firstList = this.listas[0];
-      if (!firstList) {
-        this.compareError = 'No tenés ninguna lista de compras creada.';
-        this.cdr.markForCheck();
-        return;
-      }
-      targetListId = firstList.id;
+    if (this.listas.length === 0) {
+      this.compareError = 'No tenés ninguna lista de compras creada.';
+      this.cdr.markForCheck();
+      return;
     }
 
-    this.service.addItem(targetListId, productName, 1, 'unidad').subscribe({
+    this.selectedComparedProduct = productName;
+    this.selectedAddToListTargetId = (this.activeListId && this.activeListId !== VIEW_ALL_LIST_ID)
+      ? this.activeListId
+      : this.listas[0].id;
+    this.showCompareModal = false;
+    this.showAddToListModal = true;
+    this.cdr.markForCheck();
+  }
+
+  protected confirmAddComparedProduct(): void {
+    if (!this.selectedAddToListTargetId || !this.selectedComparedProduct) {
+      return;
+    }
+
+    const prodName = this.selectedComparedProduct;
+    this.service.addItem(this.selectedAddToListTargetId, prodName, 1, 'unidad').subscribe({
       next: () => {
-        this.compareSuccessMessage = `"${productName}" agregado con éxito a la lista.`;
+        this.compareSuccessMessage = `"${prodName}" agregado con éxito a la lista.`;
+        this.showAddToListModal = false;
+        this.showCompareModal = true;
+        this.selectedComparedProduct = null;
+        this.selectedAddToListTargetId = null;
         this.cdr.markForCheck();
         setTimeout(() => {
           this.compareSuccessMessage = null;
@@ -654,9 +665,21 @@ export class ListaCompras implements OnInit, OnDestroy {
       },
       error: () => {
         this.compareError = 'No se pudo agregar el producto a la lista.';
+        this.showAddToListModal = false;
+        this.showCompareModal = true;
+        this.selectedComparedProduct = null;
+        this.selectedAddToListTargetId = null;
         this.cdr.markForCheck();
       }
     });
+  }
+
+  protected closeAddToListModal(): void {
+    this.showAddToListModal = false;
+    this.showCompareModal = true;
+    this.selectedComparedProduct = null;
+    this.selectedAddToListTargetId = null;
+    this.cdr.markForCheck();
   }
 
   protected formatPrice(value: number): string {

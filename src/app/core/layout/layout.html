@@ -46,6 +46,17 @@
       <router-outlet />
     </main>
 
+    @if (tutorial.hasCurrentTutorial()) {
+      <button
+        type="button"
+        class="fixed right-4 top-[calc(max(0.625rem,env(safe-area-inset-top))+0.25rem)] z-[80] flex h-10 w-10 items-center justify-center rounded-full border border-nido-border/70 bg-white/90 text-nido-green-dark shadow-[0_8px_24px_rgba(31,58,58,0.16)] transition hover:-translate-y-0.5 hover:border-nido-gold hover:text-nido-gold dark:bg-[#1c2320] dark:text-nido-cream md:right-5 md:top-5"
+        aria-label="Ver tutorial de esta pantalla"
+        title="Ayuda"
+        (click)="startHelp()">
+        <lucide-icon name="circle-help" [size]="19" />
+      </button>
+    }
+
   </div>
 
   <app-paywall-modal />

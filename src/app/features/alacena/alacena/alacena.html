@@ -14,18 +14,21 @@
     </div>
     <div class="relative z-10 flex gap-2.5 flex-wrap max-sm:w-full">
       <button
+        data-tour="alacena-barcode"
         class="flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]"
         (click)="openScanner()">
         <lucide-icon name="qr-code" [size]="15" />
         Escanear código
       </button>
       <a
+        data-tour="alacena-ticket"
         routerLink="/alacena/escanear-ticket"
         class="flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)] no-underline">
         <lucide-icon name="scan-line" [size]="15" />
         Escanear ticket
       </a>
       <button
+        data-tour="alacena-add"
         class="flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]"
         (click)="showManualForm.set(true)">
         <lucide-icon name="plus" [size]="15" />
@@ -229,11 +232,12 @@
           [class]="productCardClass(product)">
 
           <div class="relative h-40 overflow-hidden bg-gradient-to-br from-nido-cream via-white/80 to-[#f3e8d9]">
-            @if (product.iconoSvg) {
-              <div class="w-full h-full flex flex-col items-center justify-center p-6 sm:p-8">
-                <img [src]="'/assets/icons/categorias/' + product.iconoSvg" [alt]="product.name" loading="lazy"
-                     class="w-full h-full object-contain opacity-90 transition-transform duration-300 group-hover:scale-105" />
+            @if (product.icono) {
+              <div class="absolute inset-0 p-3 sm:p-4">
+                <img [src]="product.icono" [alt]="product.name" loading="lazy" (error)="onImgError($event)"
+                     class="w-full h-full object-contain transition-transform duration-300 group-hover:scale-[1.03] drop-shadow-[0_6px_14px_rgba(43,30,27,0.12)]" />
               </div>
+              <div class="absolute inset-0 bg-gradient-to-b from-white/18 via-transparent to-black/5 pointer-events-none"></div>
             } @else if (product.image) {
               <div class="absolute inset-0 p-3 sm:p-4">
                 <img [src]="product.image" [alt]="product.name" loading="lazy" (error)="onImgError($event)"

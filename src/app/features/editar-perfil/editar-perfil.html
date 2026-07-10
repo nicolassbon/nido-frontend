@@ -3,7 +3,7 @@
   (click)="onCancel()"
 >
   <div
-    class="relative z-[101] bg-[#fff] rounded-[14px] w-full max-w-[560px] max-h-[calc(100vh-2rem)] overflow-hidden shadow-[0_18px_46px_rgba(31,58,58,0.28)]"
+    class="relative z-[101] bg-[#fff] rounded-[14px] w-full max-w-[450px] max-h-[calc(100vh-2rem)] overflow-hidden shadow-[0_18px_46px_rgba(31,58,58,0.28)]"
     (click)="$event.stopPropagation()"
   >
     <div class="relative min-h-[110px] overflow-hidden bg-nido-green-dark">
@@ -15,12 +15,6 @@
       <div class="absolute inset-0 bg-[rgba(31,58,58,0.58)]"></div>
 
       <div class="relative z-10 flex h-full min-h-[110px] items-end justify-between gap-4 px-6 pb-4 pt-10">
-        <div class="text-nido-cream">
-          <h1 class="text-[1.35rem] font-bold leading-tight">Editar perfil</h1>
-          <p class="text-[0.8rem] text-nido-cream/82 mt-0.5">Actualiza tu informacion personal y foto.</p>
-      <div
-        class="relative z-10 flex h-full min-h-[132px] items-end justify-between gap-4 px-6 pb-5 pt-12"
-      >
         <div class="text-nido-cream">
           <h1 class="text-2xl font-bold leading-tight">Editar perfil</h1>
           <p class="text-[0.85rem] text-nido-cream/82 mt-1">
@@ -52,12 +46,12 @@
 
       <form [formGroup]="form" class="grid gap-4" *ngIf="!isLoading()">
         <div class="flex flex-col items-center gap-2">
-          <div class="relative w-28 h-28 group cursor-pointer" (click)="fileInput.click()">
+          <div class="relative w-36 h-36 group cursor-pointer" (click)="fileInput.click()">
             <app-avatar
               [nombre]="form.value.nombre"
               [fotoUrl]="photoPreview() || fotoUrl()"
               sizeClass="w-full h-full border-[5px] border-nido-cream shadow-[0_6px_20px_rgba(38,63,48,0.16)] transition duration-300 group-hover:brightness-90 group-hover:scale-[1.02]"
-              fontSizeClass="text-3xl"
+              fontSizeClass="text-4xl md:text-5xl"
             />
 
             <div

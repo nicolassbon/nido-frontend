@@ -38,6 +38,7 @@
             <lucide-icon name="house-plus" [size]="15"></lucide-icon> Nuevo hogar
           </button>
           <button
+            data-tour="profile-invite-member"
             (click)="openInviteModal()"
             class="flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]">
             <lucide-icon name="user-plus" [size]="15"></lucide-icon> Invitar integrante
@@ -46,7 +47,7 @@
       </div>
     </div>
 
-    <div class="flex flex-col md:flex-row items-start md:items-end gap-6 px-2 sm:px-8 mt-8 relative z-20">
+    <div class="flex flex-col md:flex-row items-start md:items-end gap-6 px-2 sm:px-8 mt-8 relative z-20" data-tour="profile-personal-data">
 
       <div class="relative shrink-0 inline-block">
 
@@ -137,7 +138,7 @@
       [subtitle]="statCards()[2].subtitle"></app-stat-card>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5" data-tour="profile-food-restrictions">
     @if (!isEditingAlergias()) {
       <app-preference-card title="Alergias" icon="wheat-off"
         [tag]="usuario()?.alergias?.length ? usuario()!.alergias! : ['No hay alergias cargadas']"

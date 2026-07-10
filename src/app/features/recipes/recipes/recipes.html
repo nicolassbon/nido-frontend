@@ -14,6 +14,7 @@
     </div>
     <button
       type="button"
+      data-tour="recipes-roulette"
       class="relative z-10 flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]"
       (click)="openRoulettePopup()">
       <lucide-icon [img]="icons.Shuffle" [size]="16" />
@@ -22,7 +23,7 @@
   </section>
 
   <!-- Buscador -->
-  <div class="flex flex-col sm:flex-row gap-3 items-stretch w-full">
+  <div class="flex flex-col sm:flex-row gap-3 items-stretch w-full" data-tour="recipes-search">
     <div class="relative flex-1 flex items-center">
       <span class="absolute inset-y-0 left-3.5 flex w-6 items-center justify-center text-nido-brown pointer-events-none">
         <lucide-icon [img]="icons.Search" [size]="18" />
@@ -52,7 +53,7 @@
   </div>
 
   <!-- Filtros -->
-  <div class="flex items-center justify-between gap-3 flex-wrap">
+  <div class="flex items-center justify-between gap-3 flex-wrap" data-tour="recipes-filters">
     <div class="flex gap-2 flex-wrap">
       <button [class]="filterChipClass('Guardadas')" (click)="setFilter('Guardadas')">
         <lucide-icon [img]="icons.Bookmark" [size]="13" />
@@ -113,7 +114,7 @@
   <div class="grid grid-cols-1 md:grid-cols-[1fr_290px] gap-6 items-start">
 
     <!-- Grid de recetas -->
-    <div class="order-2 md:order-1">
+    <div class="order-2 md:order-1" data-tour="recipes-list">
       @if (isLoadingIa()) {
         <div class="flex flex-col items-center justify-center gap-3 py-16 px-8 text-nido-brown text-center">
           <div class="h-9 w-9 animate-spin rounded-full border-4 border-nido-brown border-t-transparent"></div>
@@ -462,7 +463,7 @@
     Se ubica en la esquina inferior derecha. Al presionar en 'Preguntar IA' en una tarjeta,
     se despliega este mini panel interactivo manteniendo al usuario en la misma página.
   -->
-  <div class="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3 pointer-events-none">
+  <div class="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3 pointer-events-none" data-tour="recipes-assistant">
     
     <!-- Ventana del chat asistente -->
     @if (asistenteAbierto()) {

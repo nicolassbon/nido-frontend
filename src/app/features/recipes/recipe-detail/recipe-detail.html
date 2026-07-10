@@ -76,7 +76,7 @@
                 <lucide-icon name="play" [size]="16" />
                 Cocinar receta
               </button>
-              <button type="button" class="secondary-action" [disabled]="savingRecipe()" (click)="toggleSaved()">
+              <button type="button" class="secondary-action" data-tour="recipe-save" [disabled]="savingRecipe()" (click)="toggleSaved()">
                 <lucide-icon [img]="r.guardada ? bookmarkCheckIcon : bookmarkIcon" [size]="16" />
                 {{ r.guardada ? 'Guardada' : 'Guardar receta' }}
               </button>
@@ -91,7 +91,7 @@
           </div>
         </section>
 
-        <section class="content-card steps-card">
+        <section class="content-card steps-card" data-tour="recipe-steps">
           <header class="section-heading">
             <span class="heading-icon"><lucide-icon name="list" [size]="22" /></span>
             <h2>Pasos de preparacion</h2>
@@ -113,7 +113,7 @@
       </main>
 
       <aside class="recipe-sidebar">
-        <section class="content-card ingredients-card">
+        <section class="content-card ingredients-card" data-tour="recipe-ingredients">
           <header class="section-heading section-heading--between">
             <span class="title-wrap">
               <span class="heading-icon"><lucide-icon name="package" [size]="21" /></span>
@@ -144,6 +144,7 @@
 
           @if (missingIngredients().length > 0) {
             <button
+              data-tour="recipe-add-shopping"
               class="w-full mt-4 flex items-center justify-center gap-2 py-2.5 bg-nido-green-dark text-nido-cream border-none rounded-lg text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 hover:bg-nido-green"
               (click)="agregarFaltantesALista()">
               <lucide-icon name="shopping-cart" [size]="15" />
@@ -239,7 +240,7 @@
       </section>
 
       <!-- Reseñas -->
-      <div class="mt-4">
+      <div class="recipe-notes" data-tour="recipe-reviews">
         <app-recipe-resenas [recetaId]="r.id" />
       </div>
     </div>

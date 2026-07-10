@@ -90,19 +90,21 @@
           @if (ins.comprarPronto.length === 0) {
             <p class="text-[0.8rem] text-nido-brown py-2">Nada por reponer todavía.</p>
           } @else {
-            <ul class="flex flex-col divide-y divide-nido-border/40">
-              @for (item of ins.comprarPronto.slice(0, 4); track item.productoNombre) {
-                <li class="py-1.5 flex items-start justify-between gap-1.5">
-                  <div class="min-w-0">
-                    <p class="text-[0.82rem] font-medium text-nido-green-dark truncate m-0">{{ item.productoNombre }}</p>
-                    <p class="text-[0.68rem] text-nido-brown mt-0.5">cada {{ item.frecuenciaCompraDias }}d</p>
-                  </div>
-                  <span class="shrink-0 text-[0.75rem] font-bold text-nido-gold whitespace-nowrap">
-                    {{ etiquetaAgotar(item.diasParaAgotar) }}
-                  </span>
-                </li>
-              }
-            </ul>
+            <div class="max-h-[170px] overflow-y-auto pr-1 flex-1">
+              <ul class="flex flex-col divide-y divide-nido-border/40">
+                @for (item of ins.comprarPronto; track item.productoNombre) {
+                  <li class="py-1.5 flex items-start justify-between gap-1.5">
+                    <div class="min-w-0">
+                      <p class="text-[0.82rem] font-medium text-nido-green-dark truncate m-0">{{ item.productoNombre }}</p>
+                      <p class="text-[0.68rem] text-nido-brown mt-0.5">cada {{ item.frecuenciaCompraDias }}d</p>
+                    </div>
+                    <span class="shrink-0 text-[0.75rem] font-bold text-nido-gold whitespace-nowrap">
+                      {{ etiquetaAgotar(item.diasParaAgotar) }}
+                    </span>
+                  </li>
+                }
+              </ul>
+            </div>
           }
         </div>
       </article>
@@ -125,18 +127,20 @@
           @if (ins.porVencer.length === 0) {
             <p class="text-[0.8rem] text-nido-brown py-2">Sin vencimientos cercanos.</p>
           } @else {
-            <ul class="flex flex-col divide-y divide-nido-border/40">
-              @for (item of ins.porVencer.slice(0, 4); track item.stockHogarId) {
-                <li class="py-1.5 flex items-center justify-between gap-2">
-                  <p class="text-[0.82rem] font-medium text-nido-green-dark truncate m-0">{{ item.productoNombre }}</p>
-                  <span class="shrink-0 text-[0.72rem] font-bold whitespace-nowrap"
-                        [class.text-nido-red]="item.diasParaVencer <= 2"
-                        [class.text-nido-gold]="item.diasParaVencer > 2">
-                    {{ etiquetaVence(item.diasParaVencer) }}
-                  </span>
-                </li>
-              }
-            </ul>
+            <div class="max-h-[170px] overflow-y-auto pr-1 flex-1">
+              <ul class="flex flex-col divide-y divide-nido-border/40">
+                @for (item of ins.porVencer; track item.stockHogarId) {
+                  <li class="py-1.5 flex items-center justify-between gap-2">
+                    <p class="text-[0.82rem] font-medium text-nido-green-dark truncate m-0">{{ item.productoNombre }}</p>
+                    <span class="shrink-0 text-[0.72rem] font-bold whitespace-nowrap"
+                          [class.text-nido-red]="item.diasParaVencer <= 2"
+                          [class.text-nido-gold]="item.diasParaVencer > 2">
+                      {{ etiquetaVence(item.diasParaVencer) }}
+                    </span>
+                  </li>
+                }
+              </ul>
+            </div>
           }
         </div>
       </article>
@@ -154,17 +158,19 @@
           @if (ins.desperdicios.length === 0) {
             <p class="text-[0.8rem] text-nido-brown py-2">No detectamos patrones. ¡Bien hecho!</p>
           } @else {
-            <ul class="flex flex-col gap-2.5">
-              @for (item of ins.desperdicios.slice(0, 3); track item.productoNombre) {
-                <li class="flex flex-col">
-                  <div class="flex items-center justify-between gap-1.5">
-                    <p class="text-[0.82rem] font-medium text-nido-green-dark m-0 truncate">{{ item.productoNombre }}</p>
-                    <span class="shrink-0 text-[0.7rem] font-bold text-nido-red">{{ item.tasaDesperdicioPorc }}%</span>
-                  </div>
-                  <p class="text-[0.68rem] text-nido-brown mt-0.5 leading-snug line-clamp-2">{{ item.sugerencia }}</p>
-                </li>
-              }
-            </ul>
+            <div class="max-h-[170px] overflow-y-auto pr-1 flex-1">
+              <ul class="flex flex-col gap-2.5">
+                @for (item of ins.desperdicios; track item.productoNombre) {
+                  <li class="flex flex-col py-1">
+                    <div class="flex items-center justify-between gap-1.5">
+                      <p class="text-[0.82rem] font-medium text-nido-green-dark m-0 truncate">{{ item.productoNombre }}</p>
+                      <span class="shrink-0 text-[0.7rem] font-bold text-nido-red">{{ item.tasaDesperdicioPorc }}%</span>
+                    </div>
+                    <p class="text-[0.68rem] text-nido-brown mt-0.5 leading-snug line-clamp-2">{{ item.sugerencia }}</p>
+                  </li>
+                }
+              </ul>
+            </div>
           }
         </div>
       </article>
@@ -187,17 +193,21 @@
           @if (ins.envasesZombies.length === 0) {
             <p class="text-[0.8rem] text-nido-brown py-2">No hay envases abiertos hace mucho.</p>
           } @else {
-            <ul class="flex flex-col gap-2">
-              @for (item of ins.envasesZombies.slice(0, 4); track item.stockHogarId) {
-                <li class="flex items-center justify-between gap-2">
-                  <a [routerLink]="['/alacena']" class="min-w-0 no-underline text-nido-green-dark hover:text-nido-green">
-                    <p class="text-[0.82rem] font-medium truncate m-0">{{ item.productoNombre }}</p>
-                    <p class="text-[0.68rem] text-nido-brown mt-0.5">abierto hace {{ item.diasAbierto }} días</p>
-                  </a>
-                  <lucide-icon name="chevron-down" [size]="13" class="text-nido-brown -rotate-90 shrink-0" />
-                </li>
-              }
-            </ul>
+            <div class="max-h-[170px] overflow-y-auto pr-1 flex-1">
+              <ul class="flex flex-col gap-2">
+                @for (item of ins.envasesZombies; track item.stockHogarId) {
+                  <li class="w-full py-0.5">
+                    <a [routerLink]="['/alacena']" class="group flex items-center justify-between gap-2 no-underline text-nido-green-dark hover:text-nido-green dark:hover:text-[#B48B6A] hover:bg-nido-cream/40 dark:hover:bg-white/5 rounded-lg px-2 py-1.5 transition-all duration-150">
+                      <div class="min-w-0">
+                        <p class="text-[0.82rem] font-semibold truncate m-0">{{ item.productoNombre }}</p>
+                        <p class="text-[0.68rem] text-nido-brown mt-0.5">abierto hace {{ item.diasAbierto }} días</p>
+                      </div>
+                      <lucide-icon name="chevron-right" [size]="13" class="text-nido-brown shrink-0 transition-transform group-hover:translate-x-0.5" />
+                    </a>
+                  </li>
+                }
+              </ul>
+            </div>
           }
         </div>
       </article>
@@ -252,7 +262,7 @@
           <h4 class="text-[0.88rem] font-semibold text-nido-green-dark">Top recetas</h4>
           @if (ins.patrones.diaQueMasCocinan) {
             <span class="text-[0.68rem] text-nido-brown bg-nido-cream/70 rounded-full px-2 py-0.5 border border-nido-border/40 whitespace-nowrap">
-              🍳 más activos los {{ ins.patrones.diaQueMasCocinan }}s
+              🍳 Más activos los {{ ins.patrones.diaQueMasCocinan.endsWith('s') ? ins.patrones.diaQueMasCocinan : ins.patrones.diaQueMasCocinan + 's' }}
             </span>
           }
         </div>

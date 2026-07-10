@@ -18,6 +18,7 @@
       <p class="text-nido-cream/70 text-sm mt-0.5">Organizá las tareas con tu familia</p>
     </div>
     <button
+      data-tour="tasks-new"
       class="relative z-10 flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]"
       (click)="abrirModal()">
       <lucide-icon name="plus" [img]="icons.Plus" size="14"></lucide-icon>
@@ -26,7 +27,7 @@
   </section>
 
   <!-- ── Grid ─────────────────────────────────────────────── -->
-  <div class="lista-grid">
+  <div class="lista-grid" data-tour="tasks-status">
 
     <!-- ── Tareas ──────────────────────────────────────────── -->
     <div class="card">

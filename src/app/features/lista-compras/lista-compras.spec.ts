@@ -16,7 +16,6 @@ import {
   Loader,
   LUCIDE_ICONS,
   LucideIconProvider,
-  PackagePlus,
   Pencil,
   Plus,
   Search,
@@ -88,7 +87,6 @@ describe('ListaCompras', () => {
             ImageOff,
             ListCollapse,
             Loader,
-            PackagePlus,
             Pencil,
             Plus,
             Search,
@@ -111,11 +109,16 @@ describe('ListaCompras', () => {
     fixture.detectChanges();
   });
 
-  it('pasa un item del historial a la alacena', () => {
-    const item = historyItem({ nombre: 'Harina', cantidad: 500, unidad: 'g', categoriaNombre: 'Harinas' });
+  it('al tildar un item de la lista, lo marca comprado y lo pasa directo a la alacena', () => {
+    listaService.emitLists([
+      shoppingList('lista-1', 'Receta A', [
+        { id: 'item-1', productoId: null, nombre: 'Harina', cantidad: 500, unidad: 'g', checked: false, categoriaNombre: 'Harinas' },
+      ]),
+    ]);
 
-    (component as any).sendHistoryItemToPantry(item);
+    (component as any).togglePurchased('lista-1', (component as any).listas[0].items[0]);
 
+    expect(listaService.markPurchased).toHaveBeenCalledWith('lista-1', 'item-1', true);
     expect(alacenaApi.createStock).toHaveBeenCalledWith(expect.objectContaining({
       nombre: 'Harina',
       cantidad: 500,
@@ -124,24 +127,57 @@ describe('ListaCompras', () => {
       origenCarga: 'manual',
       ubicacion: 'Alacena',
     }));
-    expect(listaService.markAddedToInventory).toHaveBeenCalledWith('hist-item');
+    expect(listaService.markAddedToInventory).toHaveBeenCalledWith('item-1');
   });
 
-  it('marca el item como agregado a inventario despues de subirlo a alacena', () => {
-    const item = historyItem({ id: 'hist-1' });
-
-    (component as any).sendHistoryItemToPantry(item);
-
-    expect(listaService.markAddedToInventory).toHaveBeenCalledWith('hist-1');
+  it('no muestra la unidad si no se especifico cantidad o la cantidad es 0', () => {
+    expect((component as any).formatAmount(null, 'g')).toBe('');
+    expect((component as any).formatAmount(0, 'kg')).toBe('');
+    expect((component as any).formatAmount(500, 'g')).toBe('500 g');
+    expect((component as any).formatAmount(2, null)).toBe('2');
   });
 
-  it('no reenvia un item del historial que ya fue agregado', () => {
-    const item = historyItem({ id: 'hist-1', agregadoAlInventario: true });
+  it('pasa el item a la alacena con cantidad 1 cuando no se especifico cantidad', () => {
+    listaService.emitLists([
+      shoppingList('lista-1', 'Receta A', [
+        { id: 'item-1', productoId: null, nombre: 'Sal', cantidad: null, unidad: null, checked: false },
+      ]),
+    ]);
 
-    (component as any).sendHistoryItemToPantry(item);
+    (component as any).togglePurchased('lista-1', (component as any).listas[0].items[0]);
 
+    expect(alacenaApi.createStock).toHaveBeenCalledWith(expect.objectContaining({
+      nombre: 'Sal',
+      cantidad: 1,
+    }));
+  });
+
+  it('pasa el item a la alacena con cantidad 1 cuando la cantidad especificada es 0', () => {
+    listaService.emitLists([
+      shoppingList('lista-1', 'Receta A', [
+        { id: 'item-1', productoId: null, nombre: 'Sal', cantidad: 0, unidad: null, checked: false },
+      ]),
+    ]);
+
+    (component as any).togglePurchased('lista-1', (component as any).listas[0].items[0]);
+
+    expect(alacenaApi.createStock).toHaveBeenCalledWith(expect.objectContaining({
+      nombre: 'Sal',
+      cantidad: 1,
+    }));
+  });
+
+  it('al destildar un item no lo pasa a la alacena', () => {
+    listaService.emitLists([
+      shoppingList('lista-1', 'Receta A', [
+        { id: 'item-1', productoId: null, nombre: 'Harina', cantidad: 500, unidad: 'g', checked: true },
+      ]),
+    ]);
+
+    (component as any).togglePurchased('lista-1', (component as any).listas[0].items[0]);
+
+    expect(listaService.markPurchased).toHaveBeenCalledWith('lista-1', 'item-1', false);
     expect(alacenaApi.createStock).not.toHaveBeenCalled();
-    expect(listaService.markAddedToInventory).not.toHaveBeenCalled();
   });
 
   it('muestra Ver Todo como una lista virtual sin borrar la separacion original', () => {
@@ -379,12 +415,50 @@ describe('ListaCompras', () => {
       expect((component as any).compareError).toBe('Ocurrió un error al buscar precios. Intentá de nuevo.');
     });
 
-    it('agrega un producto desde el comparador a la lista activa', () => {
+    it('abre el modal de seleccion de lista al intentar agregar desde el comparador', () => {
       (component as any).activeListId = 'lista-1';
       (component as any).listas = [shoppingList('lista-1', 'Principal', [])];
+      (component as any).showCompareModal = true;
 
       (component as any).addComparedProduct('Fideos 500g');
-      expect(listaService.addItem).toHaveBeenCalledWith('lista-1', 'Fideos 500g', 1, 'unidad');
+      expect((component as any).showAddToListModal).toBe(true);
+      expect((component as any).showCompareModal).toBe(false);
+      expect((component as any).selectedComparedProduct).toBe('Fideos 500g');
+      expect((component as any).selectedAddToListTargetId).toBe('lista-1');
+      expect(listaService.addItem).not.toHaveBeenCalled();
+    });
+
+    it('agrega el producto a la lista seleccionada tras confirmar en el modal', () => {
+      (component as any).activeListId = 'lista-1';
+      (component as any).listas = [
+        shoppingList('lista-1', 'Principal', []),
+        shoppingList('lista-2', 'Secundaria', [])
+      ];
+      (component as any).showCompareModal = true;
+
+      (component as any).addComparedProduct('Fideos 500g');
+      (component as any).selectedAddToListTargetId = 'lista-2';
+
+      (component as any).confirmAddComparedProduct();
+      expect(listaService.addItem).toHaveBeenCalledWith('lista-2', 'Fideos 500g', 1, 'unidad');
+      expect((component as any).showAddToListModal).toBe(false);
+      expect((component as any).showCompareModal).toBe(true);
+      expect((component as any).selectedComparedProduct).toBeNull();
+    });
+
+    it('cierra el modal de seleccion de lista al cancelar', () => {
+      (component as any).activeListId = 'lista-1';
+      (component as any).listas = [shoppingList('lista-1', 'Principal', [])];
+      (component as any).showCompareModal = true;
+
+      (component as any).addComparedProduct('Fideos 500g');
+      expect((component as any).showAddToListModal).toBe(true);
+      expect((component as any).showCompareModal).toBe(false);
+
+      (component as any).closeAddToListModal();
+      expect((component as any).showAddToListModal).toBe(false);
+      expect((component as any).showCompareModal).toBe(true);
+      expect((component as any).selectedComparedProduct).toBeNull();
     });
 
     it('no abre el modal y llama a paywall.open() si el usuario no es premium', () => {
@@ -439,20 +513,5 @@ function shoppingList(id: string, recetaNombre: string, items: RecipeShoppingLis
     recetaNombre,
     grupoNombre: recetaNombre,
     items,
-  };
-}
-
-function historyItem(overrides: Partial<ShoppingHistoryItem> = {}): ShoppingHistoryItem {
-  return {
-    id: 'hist-item',
-    productoId: null,
-    nombre: 'Producto',
-    cantidad: null,
-    unidad: null,
-    grupoNombre: 'Principal',
-    compradoEn: '2026-06-19T10:00:00',
-    compradoPor: null,
-    agregadoAlInventario: false,
-    ...overrides,
   };
 }
