@@ -28,7 +28,7 @@
         } @else {
           <a
             [routerLink]="item.route"
-            routerLinkActive="!text-nido-cream !bg-nido-green/20 font-medium"
+            routerLinkActive="nav-link-active font-semibold shadow-[0_1px_4px_rgba(0,0,0,0.2)]"
             class="flex items-center gap-3 px-3 py-3 rounded-lg text-nido-cream/70 no-underline text-[0.875rem] transition-colors duration-150 hover:bg-nido-green/10 hover:text-nido-cream">
             <lucide-icon [img]="icons[item.icon]" [size]="18" class="shrink-0" />
             <span>{{ item.label }}</span>
@@ -49,7 +49,7 @@
       <li>
         <a
           [routerLink]="item.route"
-          routerLinkActive="!text-nido-cream !bg-nido-green/20 font-medium"
+          routerLinkActive="nav-link-active font-semibold shadow-[0_1px_4px_rgba(0,0,0,0.2)]"
           class="flex items-center gap-3 px-3 py-3 rounded-lg text-nido-cream/70 no-underline text-[0.875rem] transition-colors duration-150 hover:bg-nido-green/10 hover:text-nido-cream">
           <lucide-icon [img]="icons[item.icon]" [size]="18" class="shrink-0" />
           <span>{{ item.label }}</span>

@@ -1,20 +1,21 @@
 @import url("https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap");
+@import "driver.js/dist/driver.css";
 @import "tailwindcss";
 
 @variant dark (&:where(.dark, .dark *));
 
 /* ── Design tokens ─────────────────────────────────────── */
 @theme {
-  --color-nido-green-dark:  #1F3A3A;
-  --color-nido-green:       #2B4A47;
-  --color-nido-gold:        #B48B6A;
-  --color-nido-brown:       #7A5A45;
-  --color-nido-red:         #b44c3c;
-  --color-nido-cream:       #EADCC9;
-  --color-nido-bg:          #EADCC9;
-  --color-nido-border:      #d8c6b2;
-  --color-nido-muted:       #9a806c;
-  --color-nido-text:        #2D1E16;
+  --color-nido-green-dark: #1F3A3A;
+  --color-nido-green: #2B4A47;
+  --color-nido-gold: #B48B6A;
+  --color-nido-brown: #7A5A45;
+  --color-nido-red: #b44c3c;
+  --color-nido-cream: #EADCC9;
+  --color-nido-bg: #EADCC9;
+  --color-nido-border: #d8c6b2;
+  --color-nido-muted: #9a806c;
+  --color-nido-text: #2D1E16;
 
   --font-family-sans: "Roboto", system-ui, -apple-system, sans-serif;
   --font-family-title: "Comfortaa", system-ui, -apple-system, sans-serif;
@@ -22,16 +23,26 @@
 
 /* ── Custom keyframes ─────────────────────────────────── */
 @keyframes scan {
-  0%, 100% { top: 0; }
-  50%       { top: calc(100% - 2px); }
+
+  0%,
+  100% {
+    top: 0;
+  }
+
+  50% {
+    top: calc(100% - 2px);
+  }
 }
 
 /* ── Base ─────────────────────────────────────────────── */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   font-family: var(--font-family-sans);
   background-color: var(--color-nido-bg);
@@ -71,15 +82,27 @@ select {
    queda asociado a uno u otro. */
 html.landing-no-scrollbar,
 html.landing-no-scrollbar body {
-  scrollbar-width: none !important;        /* Firefox */
-  -ms-overflow-style: none !important;     /* IE / Edge antiguo */
+  scrollbar-width: none !important;
+  /* Firefox */
+  -ms-overflow-style: none !important;
+  /* IE / Edge antiguo */
 }
 
 html.landing-no-scrollbar::-webkit-scrollbar,
 html.landing-no-scrollbar body::-webkit-scrollbar {
   width: 0 !important;
   height: 0 !important;
-  display: none !important;                /* Chrome / Safari / Edge */
+  display: none !important;
+  /* Chrome / Safari / Edge */
+}
+
+html.nido-tutorial-scroll-locked,
+html.nido-tutorial-scroll-locked body {
+  overscroll-behavior: none;
+}
+
+html.nido-tutorial-scroll-locked main {
+  overscroll-behavior: none;
 }
 
 /* Ocultar barra de scroll por defecto en las tarjetas de insights, mostrando una barra minimalista y transparente al hacer hover */
@@ -136,17 +159,145 @@ lucide-icon svg {
   display: block;
 }
 
+/* Resalta la seccion activa del nav lateral */
+.nav-link-active {
+  background-color: #EADCC9 !important;
+  color: #1F3A3A !important;
+}
+
+.driver-popover.nido-driver-popover {
+  position: fixed;
+  max-width: min(360px, calc(100vw - 32px));
+  border-radius: 10px;
+  border: 1px solid var(--color-nido-border);
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--color-nido-text);
+  box-shadow: 0 18px 50px rgba(31, 58, 58, 0.22);
+  padding: 18px;
+}
+
+.driver-popover.nido-driver-popover .driver-popover-title {
+  font-family: var(--font-family-title);
+  font-size: 1rem;
+  line-height: 1.25;
+  color: var(--color-nido-green-dark);
+  padding-right: 2rem;
+}
+
+.driver-popover.nido-driver-popover .driver-popover-description {
+  color: var(--color-nido-brown);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.driver-popover.nido-driver-popover .driver-popover-progress-text {
+  color: var(--color-nido-muted);
+  font-size: 0.75rem;
+}
+
+.driver-popover.nido-driver-popover button {
+  border-radius: 8px;
+  border: 1px solid var(--color-nido-border);
+  padding: 0.55rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-shadow: none;
+}
+
+.driver-popover.nido-driver-popover .driver-popover-next-btn {
+  background: var(--color-nido-green-dark);
+  color: var(--color-nido-cream);
+  border-color: var(--color-nido-green-dark);
+}
+
+.driver-popover.nido-driver-popover .driver-popover-prev-btn,
+.driver-popover.nido-driver-popover .driver-popover-close-btn {
+  background: transparent;
+  color: var(--color-nido-brown);
+}
+
+.driver-popover.nido-driver-popover .driver-popover-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.driver-popover.nido-driver-popover .driver-popover-next-btn:hover {
+  background: var(--color-nido-green);
+}
+
+.driver-popover.nido-driver-popover .driver-popover-prev-btn:hover,
+.driver-popover.nido-driver-popover .driver-popover-close-btn:hover {
+  color: var(--color-nido-green-dark);
+  border-color: var(--color-nido-gold);
+}
+
+.driver-popover.nido-driver-popover .driver-popover-close-btn:hover {
+  background: rgba(62, 94, 74, 0.08);
+  border-color: transparent;
+}
+
+.dark .driver-popover.nido-driver-popover {
+  background: #1c2320;
+  border-color: rgba(216, 198, 178, 0.18);
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.45);
+}
+
+.dark .driver-popover.nido-driver-popover .driver-popover-title {
+  color: #EAE3D9;
+}
+
+.dark .driver-popover.nido-driver-popover .driver-popover-description {
+  color: #a8b9b0;
+}
+
+.dark .driver-popover.nido-driver-popover .driver-popover-progress-text {
+  color: #83958c;
+}
+
+.dark .driver-popover.nido-driver-popover .driver-popover-next-btn {
+  background: #7A5A45;
+  border-color: #7A5A45;
+  color: #EAE3D9;
+}
+
+.dark .driver-popover.nido-driver-popover .driver-popover-prev-btn,
+.dark .driver-popover.nido-driver-popover .driver-popover-close-btn {
+  color: #a8b9b0;
+  border-color: rgba(216, 198, 178, 0.2);
+}
+
+.dark .driver-popover.nido-driver-popover .driver-popover-close-btn:hover {
+  background: rgba(234, 227, 217, 0.08);
+  color: #EAE3D9;
+}
+
 /* ── Dark Mode styling ─────────────────────────────────── */
 .dark {
-  --color-nido-green-dark:  #142424;
-  --color-nido-green:       #1c3636;
-  --color-nido-gold:        #B48B6A;
-  --color-nido-brown:       #a8b9b0;
-  --color-nido-cream:       #EAE3D9;
-  --color-nido-bg:          #121815; /* Fondo oscuro cálido */
-  --color-nido-border:      rgba(216, 198, 178, 0.12); /* Bordes sutiles oscuros */
-  --color-nido-muted:       #83958c; /* Texto secundario grisáceo verde */
-  --color-nido-text:        #EAE3D9; /* Texto crema claro suave */
+  --color-nido-green-dark: #142424;
+  --color-nido-green: #1c3636;
+  --color-nido-gold: #B48B6A;
+  --color-nido-brown: #a8b9b0;
+  --color-nido-cream: #EAE3D9;
+  --color-nido-bg: #121815;
+  /* Fondo oscuro cálido */
+  --color-nido-border: rgba(216, 198, 178, 0.12);
+  /* Bordes sutiles oscuros */
+  --color-nido-muted: #83958c;
+  /* Texto secundario grisáceo verde */
+  --color-nido-text: #EAE3D9;
+  /* Texto crema claro suave */
 
   /* Forzar tarjetas y elementos claros a ser oscuros y translúcidos */
   .bg-white,
@@ -173,14 +324,18 @@ lucide-icon svg {
   .absolute .bg-\[\#fff\],
   .fixed [class*="bg-\[\#fff\]"],
   .absolute [class*="bg-\[\#fff\]"] {
+
     .bg-white,
     [class*="bg-white"],
     .bg-\[\#fff\],
     [class*="bg-\[\#fff\]"],
     form.bg-white {
-      background-color: #1c2320 !important; /* Totalmente opaco */
+      background-color: #1c2320 !important;
+      /* Totalmente opaco */
     }
-    background-color: #1c2320 !important; /* Totalmente opaco */
+
+    background-color: #1c2320 !important;
+    /* Totalmente opaco */
     border-color: rgba(216, 198, 178, 0.2) !important;
   }
 
@@ -283,6 +438,7 @@ lucide-icon svg {
   a.text-nido-brown,
   a.text-nido-muted {
     color: #B48B6A !important;
+
     &:hover {
       color: #EAE3D9 !important;
     }
@@ -304,7 +460,8 @@ lucide-icon svg {
   /* Ajuste para lucide icons claros */
   lucide-icon.text-nido-green,
   lucide-icon.text-nido-green-dark {
-    color: #B48B6A !important; /* Convertir iconos principales verdes a dorados para mejor contraste */
+    color: #B48B6A !important;
+    /* Convertir iconos principales verdes a dorados para mejor contraste */
   }
 
   /* Ajustar selectores nido-select en modo oscuro */
@@ -322,21 +479,25 @@ lucide-icon svg {
 
     &__value {
       color: #EAE3D9 !important;
+
       &.is-placeholder {
         color: #5c6f66 !important;
       }
     }
 
     &__dropdown {
-      background: #1c2320 !important; /* Fondo opaco oscuro */
+      background: #1c2320 !important;
+      /* Fondo opaco oscuro */
       border-color: rgba(216, 198, 178, 0.2) !important;
     }
 
     &__option {
       color: #EAE3D9 !important;
+
       &:hover {
         background: rgba(247, 241, 230, 0.08) !important;
       }
+
       &.is-selected {
         background: rgba(247, 241, 230, 0.05) !important;
         color: #B48B6A !important;
@@ -357,7 +518,8 @@ lucide-icon svg {
     }
 
     &__input {
-      background: transparent !important; /* El input debe ser transparente para heredar el fondo del trigger parent */
+      background: transparent !important;
+      /* El input debe ser transparente para heredar el fondo del trigger parent */
       color: #EAE3D9 !important;
 
       &::placeholder {
@@ -370,7 +532,8 @@ lucide-icon svg {
     }
 
     &__panel {
-      background: #1c2320 !important; /* Fondo opaco oscuro */
+      background: #1c2320 !important;
+      /* Fondo opaco oscuro */
       border-color: rgba(216, 198, 178, 0.2) !important;
     }
 
@@ -407,6 +570,7 @@ lucide-icon svg {
 
     .back-button {
       color: #B48B6A !important;
+
       &:hover {
         color: #EAE3D9 !important;
       }
@@ -427,7 +591,9 @@ lucide-icon svg {
       h1 {
         color: #EAE3D9 !important;
       }
-      p, strong {
+
+      p,
+      strong {
         color: #a8b9b0 !important;
       }
     }
@@ -481,6 +647,7 @@ lucide-icon svg {
         strong {
           color: #EAE3D9 !important;
         }
+
         small {
           color: #a8b9b0 !important;
         }
@@ -490,9 +657,11 @@ lucide-icon svg {
         strong {
           color: #EAE3D9 !important;
         }
+
         .nivel-restante {
           color: #B48B6A !important;
         }
+
         .nivel-consumido {
           color: #a8b9b0 !important;
         }
@@ -508,6 +677,7 @@ lucide-icon svg {
         &--low {
           background: var(--color-nido-red, #B44C3C) !important;
         }
+
         &--mid {
           background: var(--color-nido-gold, #B48B6A) !important;
         }
@@ -522,6 +692,7 @@ lucide-icon svg {
         h2 {
           color: #EAE3D9 !important;
         }
+
         p {
           color: #a8b9b0 !important;
         }
@@ -547,6 +718,7 @@ lucide-icon svg {
       .primary-action {
         background: #B48B6A !important;
         color: #121815 !important;
+
         &:hover {
           background: #a17858 !important;
         }
@@ -556,6 +728,7 @@ lucide-icon svg {
         background: rgba(28, 36, 32, 0.65) !important;
         border-color: rgba(216, 198, 178, 0.2) !important;
         color: #EAE3D9 !important;
+
         &:hover {
           background: rgba(247, 241, 230, 0.08) !important;
           border-color: rgba(216, 198, 178, 0.4) !important;
@@ -566,6 +739,7 @@ lucide-icon svg {
         background: rgba(180, 76, 60, 0.15) !important;
         border-color: rgba(180, 76, 60, 0.3) !important;
         color: #e57373 !important;
+
         &:hover {
           background: rgba(180, 76, 60, 0.25) !important;
         }
@@ -585,6 +759,7 @@ lucide-icon svg {
       h2 {
         color: #EAE3D9 !important;
       }
+
       p {
         color: #a8b9b0 !important;
       }
@@ -604,6 +779,7 @@ lucide-icon svg {
         strong {
           color: #EAE3D9 !important;
         }
+
         small {
           color: #a8b9b0 !important;
         }
@@ -623,6 +799,7 @@ lucide-icon svg {
     .confirm-cancel {
       background: transparent !important;
       color: #a8b9b0 !important;
+
       &:hover {
         color: #EAE3D9 !important;
       }
@@ -644,6 +821,7 @@ lucide-icon svg {
 
     .back-button {
       color: #B48B6A !important;
+
       &:hover {
         color: #EAE3D9 !important;
       }
@@ -667,7 +845,8 @@ lucide-icon svg {
       color: #B48B6A !important;
     }
 
-    h1, h2 {
+    h1,
+    h2 {
       color: #EAE3D9 !important;
     }
 
@@ -686,12 +865,15 @@ lucide-icon svg {
       small {
         color: #a8b9b0 !important;
       }
+
       strong {
         color: #EAE3D9 !important;
       }
+
       em {
         color: #a8b9b0 !important;
       }
+
       .nutrition-source {
         color: #B48B6A !important;
       }
@@ -718,6 +900,7 @@ lucide-icon svg {
 
     .ingredient-status {
       color: #b4cfc2 !important;
+
       &--missing {
         color: #e57373 !important;
       }
@@ -730,6 +913,7 @@ lucide-icon svg {
       strong {
         color: #EAE3D9 !important;
       }
+
       small {
         color: #a8b9b0 !important;
       }
@@ -752,6 +936,7 @@ lucide-icon svg {
 
       .appliance-status {
         color: #b4cfc2 !important;
+
         &--missing {
           color: #e57373 !important;
         }
@@ -763,6 +948,7 @@ lucide-icon svg {
       background: #B48B6A !important;
       border-color: #B48B6A !important;
       color: #121815 !important;
+
       &:hover {
         background: #a17858 !important;
         border-color: #a17858 !important;
@@ -773,6 +959,7 @@ lucide-icon svg {
       background: transparent !important;
       border-color: #B48B6A !important;
       color: #B48B6A !important;
+
       &:hover {
         background: rgba(180, 139, 106, 0.08) !important;
       }
@@ -804,7 +991,8 @@ lucide-icon svg {
         border-color: rgba(216, 198, 178, 0.12) !important;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 
-        span, p {
+        span,
+        p {
           color: #EAE3D9 !important;
         }
 
@@ -819,6 +1007,7 @@ lucide-icon svg {
   .hover\:bg-red-50:hover {
     background-color: rgba(239, 68, 68, 0.15) !important;
   }
+
   .hover\:text-red-500:hover {
     color: rgb(239, 68, 68) !important;
   }
@@ -826,6 +1015,7 @@ lucide-icon svg {
   .hover\:bg-emerald-50:hover {
     background-color: rgba(16, 185, 129, 0.15) !important;
   }
+
   .hover\:text-emerald-600:hover {
     color: rgb(16, 185, 129) !important;
   }
@@ -929,10 +1119,12 @@ lucide-icon svg {
         background: rgba(180, 139, 106, 0.15) !important;
         color: #B48B6A !important;
       }
+
       &[data-estado='en_progreso'] {
         background: rgba(74, 111, 165, 0.15) !important;
         color: #7da5df !important;
       }
+
       &[data-estado='completada'] {
         background: rgba(58, 138, 74, 0.15) !important;
         color: #5cb36e !important;
@@ -1010,6 +1202,7 @@ lucide-icon svg {
   app-agregar-producto,
   app-notificaciones,
   app-configuracion {
+
     /* Botón primario y botones de selección activos (Marrón con texto crema) */
     .bg-nido-green-dark.text-nido-cream,
     .bg-nido-green-dark.border-nido-green-dark,
@@ -1158,17 +1351,17 @@ lucide-icon svg {
     }
 
     form.bg-white,
-    main > .bg-white,
-    main > div.bg-white,
-    .fixed > .bg-white,
-    .fixed > div.bg-white {
+    main>.bg-white,
+    main>div.bg-white,
+    .fixed>.bg-white,
+    .fixed>div.bg-white {
       background-color: rgba(28, 36, 32, 0.65) !important;
       border: 1px solid rgba(216, 198, 178, 0.12) !important;
       box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28) !important;
     }
 
-    .fixed > .bg-white,
-    .fixed > div.bg-white,
+    .fixed>.bg-white,
+    .fixed>div.bg-white,
     .absolute.bg-white,
     .absolute[class*="bg-white"] {
       background-color: #1c2320 !important;
@@ -1248,7 +1441,7 @@ lucide-icon svg {
 
     .border-nido-border,
     [class*="border-nido-border/"],
-    .divide-nido-border\/70 > :not([hidden]) ~ :not([hidden]) {
+    .divide-nido-border\/70> :not([hidden])~ :not([hidden]) {
       border-color: rgba(216, 198, 178, 0.12) !important;
     }
 
@@ -1362,6 +1555,7 @@ lucide-icon svg {
   app-create-household app-progress-steps,
   app-equipment-step app-progress-steps,
   app-wellness-step app-progress-steps {
+
     .bg-nido-green,
     .bg-nido-green-dark {
       background-color: #7A5A45 !important;
@@ -1404,6 +1598,7 @@ lucide-icon svg {
 
   /* Ajustes para iconos del dashboard (app-home) */
   app-home {
+
     span.bg-nido-green-dark,
     div.bg-nido-green-dark {
       background-color: rgba(247, 241, 230, 0.12) !important;
@@ -1427,6 +1622,7 @@ lucide-icon svg {
      cubiertos por los overrides genéricos de bg-white/bg-nido-cream, así que
      el ícono de flecha y el texto (forzados a colores claros) pierden contraste. */
   app-finanzas {
+
     .bg-amber-50\/70,
     [class*="bg-amber-50\/"] {
       background-color: rgba(180, 139, 106, 0.12) !important;
@@ -1450,6 +1646,7 @@ lucide-icon svg {
 
   /* Diferenciación de notificaciones leídas vs no leídas */
   app-notificaciones {
+
     /* No leídas (activas/destacadas) */
     article:not(.opacity-85) {
       background-color: rgba(38, 50, 44, 0.8) !important;
@@ -1462,7 +1659,9 @@ lucide-icon svg {
       opacity: 0.55 !important;
       border-color: rgba(216, 198, 178, 0.08) !important;
 
-      h3, p, span {
+      h3,
+      p,
+      span {
         opacity: 0.7 !important;
       }
     }
@@ -1488,6 +1687,7 @@ lucide-icon svg {
 
   /* Ajustes para modales del planificador en modo oscuro */
   app-planificador {
+
     .plan-modal,
     .task-detail-panel {
       background-color: #1c2320 !important;
@@ -1534,7 +1734,9 @@ lucide-icon svg {
     .recipe-search {
       color: #5c6f66 !important;
 
-      lucide-icon, svg, path {
+      lucide-icon,
+      svg,
+      path {
         color: #5c6f66 !important;
         stroke: #5c6f66 !important;
       }
@@ -1568,7 +1770,9 @@ lucide-icon svg {
       background: rgba(247, 241, 230, 0.05) !important;
       color: #B48B6A !important;
 
-      lucide-icon, svg, path {
+      lucide-icon,
+      svg,
+      path {
         color: #B48B6A !important;
         stroke: #B48B6A !important;
       }
@@ -1627,7 +1831,9 @@ lucide-icon svg {
     .meal-label {
       color: #EAE3D9 !important;
 
-      lucide-icon, svg, path {
+      lucide-icon,
+      svg,
+      path {
         color: #B48B6A !important;
         stroke: #B48B6A !important;
       }
@@ -1640,7 +1846,9 @@ lucide-icon svg {
           background: transparent !important;
         }
 
-        lucide-icon, svg, path {
+        lucide-icon,
+        svg,
+        path {
           color: #EAE3D9 !important;
           stroke: #EAE3D9 !important;
         }
@@ -1652,7 +1860,8 @@ lucide-icon svg {
         color: #EAE3D9 !important;
       }
 
-      span, em {
+      span,
+      em {
         color: #a8b9b0 !important;
       }
     }
@@ -1669,7 +1878,8 @@ lucide-icon svg {
           color: #121815 !important;
         }
 
-        span, em {
+        span,
+        em {
           color: rgba(18, 24, 22, 0.74) !important;
         }
       }
@@ -1689,7 +1899,9 @@ lucide-icon svg {
     .slot-add {
       color: #B48B6A !important;
 
-      lucide-icon, svg, path {
+      lucide-icon,
+      svg,
+      path {
         color: #B48B6A !important;
         stroke: #B48B6A !important;
       }
@@ -1697,7 +1909,9 @@ lucide-icon svg {
       &:hover {
         color: #EAE3D9 !important;
 
-        lucide-icon, svg, path {
+        lucide-icon,
+        svg,
+        path {
           color: #EAE3D9 !important;
           stroke: #EAE3D9 !important;
         }
@@ -1741,7 +1955,9 @@ lucide-icon svg {
         background: rgba(247, 241, 230, 0.04) !important;
         color: #B48B6A !important;
 
-        lucide-icon, svg, path {
+        lucide-icon,
+        svg,
+        path {
           color: #B48B6A !important;
           stroke: #B48B6A !important;
         }
@@ -1751,7 +1967,9 @@ lucide-icon svg {
         background: rgba(28, 36, 32, 0.85) !important;
         color: #EAE3D9 !important;
 
-        lucide-icon, svg, path {
+        lucide-icon,
+        svg,
+        path {
           color: #EAE3D9 !important;
           stroke: #EAE3D9 !important;
         }
@@ -1762,7 +1980,8 @@ lucide-icon svg {
     .plan-card--task {
       background: rgba(28, 36, 32, 0.65) !important;
       border-color: rgba(216, 198, 178, 0.12) !important;
-      border-left: 3px solid #7A5A45 !important; /* Borde marrón lateral */
+      border-left: 3px solid #7A5A45 !important;
+      /* Borde marrón lateral */
 
       .plan-card__body strong {
         color: #a8b9b0 !important;
@@ -1796,7 +2015,9 @@ lucide-icon svg {
         border-color: #7A5A45 !important;
         color: #EAE3D9 !important;
 
-        lucide-icon, svg, path {
+        lucide-icon,
+        svg,
+        path {
           color: #EAE3D9 !important;
           stroke: #EAE3D9 !important;
         }
@@ -1809,7 +2030,9 @@ lucide-icon svg {
       background: rgba(247, 241, 230, 0.04) !important;
       color: #B48B6A !important;
 
-      lucide-icon, svg, path {
+      lucide-icon,
+      svg,
+      path {
         color: #B48B6A !important;
         stroke: #B48B6A !important;
       }
@@ -1819,7 +2042,9 @@ lucide-icon svg {
         background: rgba(247, 241, 230, 0.08) !important;
         color: #EAE3D9 !important;
 
-        lucide-icon, svg, path {
+        lucide-icon,
+        svg,
+        path {
           color: #EAE3D9 !important;
           stroke: #EAE3D9 !important;
         }
@@ -1835,7 +2060,9 @@ lucide-icon svg {
       button {
         color: #EAE3D9 !important;
 
-        lucide-icon, svg, path {
+        lucide-icon,
+        svg,
+        path {
           color: #EAE3D9 !important;
           stroke: #EAE3D9 !important;
         }
@@ -1847,7 +2074,9 @@ lucide-icon svg {
         &.card-actions-menu__danger {
           color: #ef5350 !important;
 
-          lucide-icon, svg, path {
+          lucide-icon,
+          svg,
+          path {
             color: #ef5350 !important;
             stroke: #ef5350 !important;
           }
@@ -1898,7 +2127,8 @@ lucide-icon svg {
       border: 1px solid rgba(216, 198, 178, 0.12) !important;
     }
 
-    h1, h2 {
+    h1,
+    h2 {
       color: #EAE3D9 !important;
     }
 
@@ -1909,7 +2139,9 @@ lucide-icon svg {
     .bg-\[rgba\(62\,94\,74\,0\.08\)\] {
       background-color: rgba(247, 241, 230, 0.05) !important;
 
-      lucide-icon, svg, path {
+      lucide-icon,
+      svg,
+      path {
         color: #B48B6A !important;
         stroke: #B48B6A !important;
       }
@@ -1947,6 +2179,7 @@ lucide-icon svg {
 
   /* Iconos y sus envoltorios en Finanzas (unificados al diseño crema/marrón/dorado de Inicio) */
   app-finanzas {
+
     /* 1. Envoltorios de iconos circulares de las 3 tarjetas del resumen superior */
     div.bg-nido-green-dark {
       background-color: rgba(247, 241, 230, 0.12) !important;
@@ -1988,7 +2221,9 @@ lucide-icon svg {
       border: 1px solid #7A5A45 !important;
       color: #EAE3D9 !important;
 
-      lucide-icon, svg, path {
+      lucide-icon,
+      svg,
+      path {
         color: #EAE3D9 !important;
         stroke: #EAE3D9 !important;
       }
@@ -1999,11 +2234,12 @@ lucide-icon svg {
       border: 1px solid #ef5350 !important;
       color: #EAE3D9 !important;
 
-      lucide-icon, svg, path {
+      lucide-icon,
+      svg,
+      path {
         color: #EAE3D9 !important;
         stroke: #EAE3D9 !important;
       }
     }
   }
 }
-

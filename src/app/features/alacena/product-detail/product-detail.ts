@@ -5,7 +5,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { forkJoin } from 'rxjs';
-import { environment } from '../../../../environments/environment';
 import { ProductManualResponse, ProductService } from '../../../core/servicios/agregar-producto.service';
 import { AlacenaApiService, DeleteStockMotivo, NutritionInfoItemResponse, StockItemResponse } from '../alacena-api.service';
 import { EstimatedDateNoticeComponent } from '../../../shared/ui/estimated-date-notice/estimated-date-notice';
@@ -47,67 +46,6 @@ const DELETE_MOTIVO_OPTIONS: Record<DeleteStockMotivo, DeleteMotivoOption> = {
   },
 };
 
-function resolveImageUrl(imageUrl: string | null | undefined): string {
-  if (!imageUrl) return '';
-  if (/^(https?:|data:|blob:)/i.test(imageUrl)) return imageUrl;
-  if (imageUrl.startsWith('/productos/')) return imageUrl;
-
-  const baseUrl = environment.apiBaseUrl.replace(/\/api\/?$/, '').replace(/\/$/, '');
-  const normalizedPath = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
-  return `${baseUrl}${normalizedPath}`;
-}
-
-function normalizeProductName(name: string | null | undefined): string {
-  return (name ?? '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim();
-}
-
-function fallbackProductImage(name: string | null | undefined): string {
-  const normalized = normalizeProductName(name);
-  const catalog: Record<string, string> = {
-    'aceite de oliva': '/productos/aceite-oliva.png',
-    'ajo en polvo': '/productos/ajo-polvo.png',
-    arroz: '/productos/arroz.png',
-    arvejas: '/productos/arvejas.png',
-    'cebolla en polvo': '/productos/cebolla-polvo.png',
-    cebolla: '/productos/cebolla.png',
-    harina: '/productos/harina.png',
-    leche: '/productos/leche.png',
-    manteca: '/productos/manteca.png',
-    'muslo de pollo': '/productos/muslo-pollo.png',
-    'oregano seco': '/productos/oregano-seco.png',
-    'pasas de uva': '/productos/pasas-uva.png',
-    'pimenton dulce': '/productos/pimenton-dulce.png',
-    yogur: '/productos/yogur.png',
-    queso: '/productos/queso.png',
-    agua: '/productos/agua.png',
-    fideos: '/productos/fideos.png',
-    sal: '/productos/sal.png',
-    salchicha: '/productos/salchicha.png',
-    salmon: '/productos/salmon.png',
-  };
-
-  const aliases: Record<string, string> = {
-    aceite: 'aceite de oliva',
-    'aceite vegetal': 'aceite de oliva',
-    'aji molido': 'pimenton dulce',
-    'cebolla amarilla': 'cebolla',
-    'cebolla grande': 'cebolla',
-    'cebolla morada': 'cebolla',
-    'harina comun': 'harina',
-    oregano: 'oregano seco',
-    pasas: 'pasas de uva',
-    pimenton: 'pimenton dulce',
-    'sal fina': 'sal',
-    'sal gruesa': 'sal',
-  };
-
-  return catalog[normalized] ?? catalog[aliases[normalized]] ?? '';
-}
-
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
@@ -146,7 +84,7 @@ export class ProductDetail {
     if (p.iconoSvg) {
       return `/assets/icons/categorias/${p.iconoSvg}`;
     }
-    return resolveImageUrl(p.imagen) || fallbackProductImage(p.nombre);
+    return '';
   });
 
   protected readonly remainingPercent = computed(() =>
@@ -306,16 +244,7 @@ export class ProductDetail {
     if (id) this.loadProduct(id);
   }
 
-  protected onImageError(event: Event, productName: string): void {
-    const image = event.target as HTMLImageElement;
-    const fallback = fallbackProductImage(productName);
-    const fallbackUrl = fallback ? new URL(fallback, window.location.origin).href : '';
-
-    if (fallback && image.src !== fallbackUrl) {
-      image.src = fallback;
-      return;
-    }
-
+  protected onImageError(_event: Event): void {
     this.imageFailed.set(true);
   }
 

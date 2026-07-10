@@ -2,18 +2,22 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import { expect, vi } from 'vitest';
 import { Router } from '@angular/router';
+import { signal } from '@angular/core';
+import { AuthService } from '../../core/auth/auth.service';
+import { PaywallService } from '../../core/servicios/paywall';
 import {
   AlertCircle,
   Check,
+  ChevronRight,
   Eye,
   History,
   ChevronDown,
   ImageOff,
+  Lightbulb,
   ListCollapse,
   Loader,
   LUCIDE_ICONS,
   LucideIconProvider,
-  PackagePlus,
   Pencil,
   Plus,
   Search,
@@ -26,7 +30,7 @@ import {
   X,
 } from 'lucide-angular';
 import { ListaCompras } from './lista-compras';
-import { ListaComprasService, RecipeShoppingList, ShoppingHistoryItem } from './lista-compras.service';
+import { ListaComprasService, RecipeShoppingList, ShoppingHistoryItem, SugerenciaNido } from './lista-compras.service';
 import { CatalogoService } from '../../core/servicios/catalogo.service';
 import { AlacenaApiService } from '../alacena/alacena-api.service';
 import { ComparadorApiService } from './comparador-api.service';
@@ -37,6 +41,8 @@ describe('ListaCompras', () => {
   let listaService: FakeListaComprasService;
   let alacenaApi: FakeAlacenaApiService;
   let comparadorApi: FakeComparadorApiService;
+  let authService: any;
+  let paywallService: any;
 
   beforeEach(async () => {
     listaService = new FakeListaComprasService();
@@ -58,18 +64,33 @@ describe('ListaCompras', () => {
         { provide: ComparadorApiService, useValue: comparadorApi },
         { provide: Router, useValue: { getCurrentNavigation: () => null, navigate: vi.fn() } },
         {
+          provide: AuthService,
+          useValue: {
+            isPremium: vi.fn(() => true),
+          },
+        },
+        {
+          provide: PaywallService,
+          useValue: {
+            open: vi.fn(),
+            close: vi.fn(),
+            isOpen: signal(false),
+          },
+        },
+        {
           provide: LUCIDE_ICONS,
           multi: true,
           useValue: new LucideIconProvider({
             AlertCircle,
             Check,
+            ChevronRight,
             Eye,
             History,
             ChevronDown,
             ImageOff,
+            Lightbulb,
             ListCollapse,
             Loader,
-            PackagePlus,
             Pencil,
             Plus,
             Search,
@@ -87,14 +108,21 @@ describe('ListaCompras', () => {
 
     fixture = TestBed.createComponent(ListaCompras);
     component = fixture.componentInstance;
+    authService = TestBed.inject(AuthService);
+    paywallService = TestBed.inject(PaywallService);
     fixture.detectChanges();
   });
 
-  it('pasa un item del historial a la alacena', () => {
-    const item = historyItem({ nombre: 'Harina', cantidad: 500, unidad: 'g', categoriaNombre: 'Harinas' });
+  it('al tildar un item de la lista, lo marca comprado y lo pasa directo a la alacena', () => {
+    listaService.emitLists([
+      shoppingList('lista-1', 'Receta A', [
+        { id: 'item-1', productoId: null, nombre: 'Harina', cantidad: 500, unidad: 'g', checked: false, categoriaNombre: 'Harinas' },
+      ]),
+    ]);
 
-    (component as any).sendHistoryItemToPantry(item);
+    (component as any).togglePurchased('lista-1', (component as any).listas[0].items[0]);
 
+    expect(listaService.markPurchased).toHaveBeenCalledWith('lista-1', 'item-1', true);
     expect(alacenaApi.createStock).toHaveBeenCalledWith(expect.objectContaining({
       nombre: 'Harina',
       cantidad: 500,
@@ -103,24 +131,57 @@ describe('ListaCompras', () => {
       origenCarga: 'manual',
       ubicacion: 'Alacena',
     }));
-    expect(listaService.markAddedToInventory).toHaveBeenCalledWith('hist-item');
+    expect(listaService.markAddedToInventory).toHaveBeenCalledWith('item-1');
   });
 
-  it('marca el item como agregado a inventario despues de subirlo a alacena', () => {
-    const item = historyItem({ id: 'hist-1' });
-
-    (component as any).sendHistoryItemToPantry(item);
-
-    expect(listaService.markAddedToInventory).toHaveBeenCalledWith('hist-1');
+  it('no muestra la unidad si no se especifico cantidad o la cantidad es 0', () => {
+    expect((component as any).formatAmount(null, 'g')).toBe('');
+    expect((component as any).formatAmount(0, 'kg')).toBe('');
+    expect((component as any).formatAmount(500, 'g')).toBe('500 g');
+    expect((component as any).formatAmount(2, null)).toBe('2');
   });
 
-  it('no reenvia un item del historial que ya fue agregado', () => {
-    const item = historyItem({ id: 'hist-1', agregadoAlInventario: true });
+  it('pasa el item a la alacena con cantidad 1 cuando no se especifico cantidad', () => {
+    listaService.emitLists([
+      shoppingList('lista-1', 'Receta A', [
+        { id: 'item-1', productoId: null, nombre: 'Sal', cantidad: null, unidad: null, checked: false },
+      ]),
+    ]);
 
-    (component as any).sendHistoryItemToPantry(item);
+    (component as any).togglePurchased('lista-1', (component as any).listas[0].items[0]);
 
+    expect(alacenaApi.createStock).toHaveBeenCalledWith(expect.objectContaining({
+      nombre: 'Sal',
+      cantidad: 1,
+    }));
+  });
+
+  it('pasa el item a la alacena con cantidad 1 cuando la cantidad especificada es 0', () => {
+    listaService.emitLists([
+      shoppingList('lista-1', 'Receta A', [
+        { id: 'item-1', productoId: null, nombre: 'Sal', cantidad: 0, unidad: null, checked: false },
+      ]),
+    ]);
+
+    (component as any).togglePurchased('lista-1', (component as any).listas[0].items[0]);
+
+    expect(alacenaApi.createStock).toHaveBeenCalledWith(expect.objectContaining({
+      nombre: 'Sal',
+      cantidad: 1,
+    }));
+  });
+
+  it('al destildar un item no lo pasa a la alacena', () => {
+    listaService.emitLists([
+      shoppingList('lista-1', 'Receta A', [
+        { id: 'item-1', productoId: null, nombre: 'Harina', cantidad: 500, unidad: 'g', checked: true },
+      ]),
+    ]);
+
+    (component as any).togglePurchased('lista-1', (component as any).listas[0].items[0]);
+
+    expect(listaService.markPurchased).toHaveBeenCalledWith('lista-1', 'item-1', false);
     expect(alacenaApi.createStock).not.toHaveBeenCalled();
-    expect(listaService.markAddedToInventory).not.toHaveBeenCalled();
   });
 
   it('muestra Ver Todo como una lista virtual sin borrar la separacion original', () => {
@@ -300,6 +361,7 @@ describe('ListaCompras', () => {
 
   describe('Comparador de precios', () => {
     it('abre el modal y realiza la busqueda', () => {
+      authService.isPremium.mockReturnValue(true);
       expect((component as any).showCompareModal).toBe(false);
 
       (component as any).openCompareModal('fideos');
@@ -323,6 +385,7 @@ describe('ListaCompras', () => {
     });
 
     it('muestra el mensaje funcional del backend cuando el comparador esta caido', () => {
+      authService.isPremium.mockReturnValue(true);
       const backendMessage = 'No pudimos comparar precios en este momento. Intentá nuevamente en unos minutos.';
       comparadorApi.compararPrecios.mockReturnValue(throwError(() => ({ error: { message: backendMessage } })));
       (component as any).openCompareModal('leche');
@@ -335,6 +398,7 @@ describe('ListaCompras', () => {
     });
 
     it('no muestra estado de sin resultados cuando la busqueda fallo', () => {
+      authService.isPremium.mockReturnValue(true);
       comparadorApi.compararPrecios.mockReturnValue(throwError(() => ({ error: { message: 'Servicio no disponible' } })));
       (component as any).openCompareModal('leche');
 
@@ -346,6 +410,7 @@ describe('ListaCompras', () => {
     });
 
     it('usa mensaje generico cuando el backend no envia mensaje funcional', () => {
+      authService.isPremium.mockReturnValue(true);
       comparadorApi.compararPrecios.mockReturnValue(throwError(() => ({ error: {} })));
       (component as any).openCompareModal('leche');
 
@@ -399,19 +464,31 @@ describe('ListaCompras', () => {
       expect((component as any).showCompareModal).toBe(true);
       expect((component as any).selectedComparedProduct).toBeNull();
     });
+
+    it('no abre el modal y llama a paywall.open() si el usuario no es premium', () => {
+      authService.isPremium.mockReturnValue(false);
+      expect((component as any).showCompareModal).toBe(false);
+
+      (component as any).openCompareModal('fideos');
+      expect((component as any).showCompareModal).toBe(false);
+      expect(paywallService.open).toHaveBeenCalled();
+    });
   });
 });
 
 class FakeListaComprasService {
   private readonly listas = new BehaviorSubject<RecipeShoppingList[]>([]);
   private readonly historial = new BehaviorSubject<ShoppingHistoryItem[]>([]);
+  private readonly sugerencias = new BehaviorSubject<SugerenciaNido[]>([]);
 
   readonly listas$ = this.listas.asObservable();
   readonly historial$ = this.historial.asObservable();
+  readonly sugerencias$ = this.sugerencias.asObservable();
   readonly totalPendiente$ = of(0);
 
   refresh = vi.fn(() => of([]));
   refreshHistory = vi.fn(() => of([]));
+  refreshSugerencias = vi.fn(() => of([]));
   addToLista = vi.fn();
   createList = vi.fn(() => of([]));
   updateList = vi.fn(() => of([]));
@@ -422,9 +499,14 @@ class FakeListaComprasService {
   removeItem = vi.fn(() => of([]));
   markAddedToInventory = vi.fn(() => of([]));
   sendToTelegram = vi.fn(() => of({ status: 'enqueued', itemCount: 1, chatId: 1, listaId: null }));
+  addManualItem = vi.fn(() => of([]));
 
   emitLists(listas: RecipeShoppingList[]): void {
     this.listas.next(listas);
+  }
+
+  emitSugerencias(sugerencias: SugerenciaNido[]): void {
+    this.sugerencias.next(sugerencias);
   }
 }
 
@@ -443,20 +525,5 @@ function shoppingList(id: string, recetaNombre: string, items: RecipeShoppingLis
     recetaNombre,
     grupoNombre: recetaNombre,
     items,
-  };
-}
-
-function historyItem(overrides: Partial<ShoppingHistoryItem> = {}): ShoppingHistoryItem {
-  return {
-    id: 'hist-item',
-    productoId: null,
-    nombre: 'Producto',
-    cantidad: null,
-    unidad: null,
-    grupoNombre: 'Principal',
-    compradoEn: '2026-06-19T10:00:00',
-    compradoPor: null,
-    agregadoAlInventario: false,
-    ...overrides,
   };
 }

@@ -8,12 +8,12 @@
       <p class="text-nido-cream/70 text-sm mt-0.5">Tu resumen financiero del mes</p>
     </div>
     <div class="relative z-10 flex gap-2.5 flex-wrap max-sm:w-full">
-      <button (click)="openGastoModal()"
+      <button data-tour="finance-add-expense" (click)="openGastoModal()"
               class="flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]">
         <lucide-icon name="plus" [size]="15"></lucide-icon>
         Registrar gasto
       </button>
-      <button (click)="toggleModoAhorro()"
+      <button data-tour="finance-saving-mode" (click)="toggleModoAhorro()"
               class="flex items-center gap-2 px-4 py-2 rounded-[20px] border text-[0.8375rem] font-medium cursor-pointer transition-all duration-150 whitespace-nowrap"
               [class]="modoAhorro()
                 ? 'bg-nido-gold/30 border-nido-gold text-nido-cream hover:bg-nido-gold/45'
@@ -32,7 +32,7 @@
   } @else {
 
   <!-- ══ SUMMARY CARDS ══════════════════════════════════════════════════════════ -->
-  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" data-tour="finance-summary-cards">
 
     <!-- Gasto total del mes -->
     <div class="bg-white/[0.51] rounded-[18px] border border-nido-border/50 p-5 flex items-start gap-4">
@@ -213,7 +213,7 @@
     <div class="flex items-center justify-between px-5 py-4 border-b border-nido-border/40">
       <p class="text-sm font-semibold text-nido-green-dark">Transacciones recientes</p>
       <div class="flex items-center gap-2">
-        <button (click)="navegarAEscanear()"
+        <button data-tour="finance-scan-ticket" (click)="navegarAEscanear()"
                 class="flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] border border-nido-border text-xs font-medium text-nido-brown hover:border-nido-green hover:text-nido-green transition-colors duration-150 cursor-pointer">
           <lucide-icon name="scan-line" [size]="13"></lucide-icon>
           Escanear

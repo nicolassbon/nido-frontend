@@ -1,0 +1,102 @@
+@if (isOpen()) {
+  <div class="paywall-overlay" role="dialog" aria-modal="true" aria-labelledby="paywall-title">
+    <div class="paywall-modal">
+      <div class="paywall-header">
+        <div class="paywall-header-glow" aria-hidden="true"></div>
+
+        <div class="paywall-header-content">
+          <span class="paywall-header-icon" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </span>
+
+          <div class="paywall-header-text">
+            <h2 id="paywall-title" class="paywall-title">Subí al Plan Hogar 🚀</h2>
+            <p class="paywall-subtitle">Desbloqueá funciones inteligentes para tu hogar.</p>
+          </div>
+        </div>
+
+        <button type="button" (click)="close()" class="paywall-close" aria-label="Cerrar modal premium">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="paywall-body">
+        <div class="paywall-badge-wrap">
+          <span class="paywall-badge">Plan Premium</span>
+        </div>
+
+        <p class="paywall-description">
+        Desbloqueá todas las funciones inteligentes para gestionar tu hogar sin límites.
+        </p>
+
+        <div class="paywall-benefits">
+          <div class="benefit-item">
+            <div class="benefit-icon">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <h4>Escaneo inteligente de tickets</h4>
+              <p>Escaneá tickets de compra y cargá productos de forma automatizada.</p>
+            </div>
+          </div>
+
+          <div class="benefit-item">
+            <div class="benefit-icon">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <h4>Planificador nutricional inteligente</h4>
+              <p>Recetas optimizadas según los ingredientes reales de tu alacena.</p>
+            </div>
+          </div>
+
+          <div class="benefit-item">
+            <div class="benefit-icon">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <h4>Comparador de precios inteligente</h4>
+              <p>Encontrá las mejores ofertas en supermercados cercanos.</p>
+            </div>
+          </div>
+
+          <div class="benefit-item">
+            <div class="benefit-icon">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <h4>Modo Ahorro automatizado</h4>
+              <p>Optimizá tus gastos de finanzas de manera inteligente.</p>
+            </div>
+          </div>
+        </div>
+
+        @if (checkoutError()) {
+          <p class="paywall-checkout-error" role="alert">{{ checkoutError() }}</p>
+        }
+
+        <div class="paywall-actions">
+          <button type="button" (click)="close()" class="btn-later">
+            Quizás más tarde
+          </button>
+
+          <button type="button" (click)="subscribe()" class="btn-subscribe" [disabled]="isCreatingCheckout()">
+            {{ isCreatingCheckout() ? 'Abriendo checkout...' : checkoutError() ? 'Reintentar suscripción' : 'Suscribirse al Plan Hogar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

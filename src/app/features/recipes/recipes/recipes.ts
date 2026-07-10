@@ -273,8 +273,20 @@ export class Recipes implements OnInit {
   );
 
   protected readonly pantryIngredients = signal<PantryIngredient[]>([]);
+  protected readonly pantryListExpanded = signal(false);
+  protected readonly pantryPreviewCount = 5;
   private readonly allRecipes          = signal<Recipe[]>([]);
   private readonly userApplianceNames  = signal<string[]>([]);
+
+  protected readonly visiblePantryIngredients = computed(() =>
+    this.pantryListExpanded()
+      ? this.pantryIngredients()
+      : this.pantryIngredients().slice(0, this.pantryPreviewCount)
+  );
+
+  protected togglePantryList(): void {
+    this.pantryListExpanded.update(expanded => !expanded);
+  }
 
   ngOnInit(): void {
     this.loadProfileAllergies();

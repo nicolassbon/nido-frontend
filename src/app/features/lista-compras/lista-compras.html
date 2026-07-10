@@ -10,6 +10,7 @@
 
     <div class="relative z-10 flex w-full flex-col gap-2 sm:w-auto">
       <button
+        data-tour="shopping-new-list"
         class="flex w-full items-center justify-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]"
         (click)="openCreateList()">
         <lucide-icon name="plus" [size]="16" />
@@ -18,6 +19,7 @@
 
       <button
         aria-label="telegram-send"
+        data-tour="shopping-telegram"
         class="flex w-full items-center justify-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)] disabled:cursor-not-allowed disabled:opacity-50"
         [disabled]="listas.length === 0 || isSendingTelegram"
         (click)="sendActiveListToTelegram()">
@@ -27,6 +29,7 @@
 
       <button
         aria-label="compare-prices"
+        data-tour="shopping-price-search"
         class="flex w-full items-center justify-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition-[background] duration-150 whitespace-nowrap hover:bg-[rgba(247,241,230,0.25)]"
         (click)="openCompareModal()">
         <lucide-icon name="search" [size]="16" />
@@ -236,6 +239,8 @@
     </div>
   }
 
+  <div class="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+  <div class="flex flex-col gap-5 min-w-0">
   @if (listas.length === 0) {
     <section class="bg-white/[0.51] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] flex flex-col items-center justify-center gap-4 px-5 py-12 text-center sm:px-8 sm:py-16">
       <lucide-icon name="shopping-cart" [size]="48" class="text-nido-brown/30" />
@@ -281,7 +286,7 @@
   }
 
   @for (lista of visibleLists(); track lista.id) {
-    <section class="bg-white/[0.51] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] overflow-visible">
+    <section class="bg-white/[0.51] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] overflow-visible" data-tour="shopping-list">
       <div class="flex flex-col gap-3 px-4 py-3.5 border-b border-nido-border/40 bg-nido-cream/30 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <div class="flex min-w-0 flex-wrap items-center gap-2.5">
           <lucide-icon name="shopping-basket" [size]="16" class="text-nido-green-dark shrink-0" />
@@ -331,9 +336,10 @@
 
       <ul class="list-none m-0 p-0">
         @for (item of lista.items; track item.id) {
-          <li class="flex items-center gap-3 px-4 py-3.5 border-b border-nido-border/40 transition-colors duration-150 last:border-b-0 hover:bg-nido-cream/40 sm:px-5">
+          <li class="flex items-center gap-2.5 px-4 py-2 border-b border-nido-border/40 transition-colors duration-150 last:border-b-0 hover:bg-nido-cream/40 sm:px-5">
             <button
-              class="shrink-0 w-5 h-5 rounded-[5px] border-[1.5px] flex items-center justify-center cursor-pointer transition-colors duration-150"
+              data-tour="shopping-check"
+              class="shrink-0 w-[18px] h-[18px] rounded-[5px] border-[1.5px] flex items-center justify-center cursor-pointer transition-colors duration-150"
               [class.bg-nido-green-dark]="item.checked"
               [class.border-nido-green-dark]="item.checked"
               [class.bg-white]="!item.checked"
@@ -341,29 +347,29 @@
               (click)="togglePurchased(lista.id, item)"
               title="Marcar comprado">
               @if (item.checked) {
-                <lucide-icon name="check" [size]="12" class="text-nido-cream" />
+                <lucide-icon name="check" [size]="11" class="text-nido-cream" />
               }
             </button>
 
             @if (item.icono) {
-              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] bg-nido-green-dark/10 text-nido-green-dark">
-                <lucide-icon [name]="item.icono" [size]="18" />
+              <div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-[7px] bg-nido-green-dark/10 text-nido-green-dark">
+                <lucide-icon [name]="item.icono" [size]="15" />
               </div>
             }
 
             <div class="min-w-0 flex-1">
-              <p class="truncate text-[0.875rem]" [class.line-through]="item.checked" [class.text-nido-brown]="item.checked" [class.text-nido-green-dark]="!item.checked" [class.font-medium]="!item.checked">{{ item.nombre }}</p>
+              <p class="truncate text-[0.825rem]" [class.line-through]="item.checked" [class.text-nido-brown]="item.checked" [class.text-nido-green-dark]="!item.checked" [class.font-medium]="!item.checked">{{ item.nombre }}</p>
               @if (formatAmount(item.cantidad, item.unidad)) {
-                <p class="text-[0.775rem] text-nido-brown">{{ formatAmount(item.cantidad, item.unidad) }}</p>
+                <p class="text-[0.7rem] text-nido-brown">{{ formatAmount(item.cantidad, item.unidad) }}</p>
               }
             </div>
 
             @if (!isAllList(lista)) {
-              <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown cursor-pointer transition-colors duration-150 hover:border-nido-green-dark hover:text-nido-green-dark hover:bg-nido-cream/50" (click)="editItem(lista.id, item, $event)" title="Editar producto">
-                <lucide-icon name="pencil" [size]="15" />
+              <button class="h-7 w-7 shrink-0 rounded-[7px] border border-nido-border bg-white text-nido-brown cursor-pointer transition-colors duration-150 hover:border-nido-green-dark hover:text-nido-green-dark hover:bg-nido-cream/50" (click)="editItem(lista.id, item, $event)" title="Editar producto">
+                <lucide-icon name="pencil" [size]="13" />
               </button>
-              <button class="h-8 w-8 rounded-[8px] border border-nido-border bg-white text-nido-brown cursor-pointer transition-colors duration-150 hover:border-nido-red hover:text-nido-red hover:bg-nido-red/5" (click)="removeItem(lista.id, item.id, $event)" title="Quitar producto">
-                <lucide-icon name="trash-2" [size]="15" />
+              <button class="h-7 w-7 shrink-0 rounded-[7px] border border-nido-border bg-white text-nido-brown cursor-pointer transition-colors duration-150 hover:border-nido-red hover:text-nido-red hover:bg-nido-red/5" (click)="removeItem(lista.id, item.id, $event)" title="Quitar producto">
+                <lucide-icon name="trash-2" [size]="13" />
               </button>
             }
           </li>
@@ -373,41 +379,75 @@
   }
 
   <section class="bg-white/[0.51] rounded-[14px] shadow-[0_1px_4px_rgba(38,63,48,0.07)] overflow-hidden">
-    <div class="flex items-center gap-2 px-4 py-3.5 border-b border-nido-border/40 bg-nido-cream/30 sm:px-5">
-      <lucide-icon name="history" [size]="16" class="text-nido-green-dark" />
-      <h2 class="text-[0.9rem] font-semibold text-nido-green-dark">Historial de compras</h2>
+    <div class="flex items-center gap-2 px-4 py-2.5 border-b border-nido-border/40 bg-nido-cream/30 sm:px-5">
+      <lucide-icon name="history" [size]="15" class="text-nido-green-dark" />
+      <h2 class="text-[0.85rem] font-semibold text-nido-green-dark">Historial de compras</h2>
     </div>
 
     @if (historial.length === 0) {
-      <p class="px-4 py-5 text-[0.875rem] text-nido-brown sm:px-5">Todavia no marcaste productos como comprados.</p>
+      <p class="px-4 py-4 text-[0.825rem] text-nido-brown sm:px-5">Todavia no marcaste productos como comprados.</p>
     } @else {
       <ul class="list-none m-0 p-0">
         @for (item of historial; track item.id) {
-          <li class="flex items-center justify-between gap-3 px-4 py-3 border-b border-nido-border/40 last:border-b-0 sm:px-5">
-            <div class="min-w-0 flex flex-col gap-1">
-              <span class="text-[0.875rem] font-medium text-nido-green-dark">{{ item.nombre }}</span>
-              <span class="text-[0.775rem] text-nido-brown">{{ formatHistoryDate(item.compradoEn) }}</span>
-              <span class="text-[0.775rem] text-nido-brown">
-                {{ item.grupoNombre }}
-                @if (formatAmount(item.cantidad, item.unidad)) {
-                  - {{ formatAmount(item.cantidad, item.unidad) }}
-                }
-              </span>
+          <li class="flex items-center justify-between gap-3 px-4 py-2 border-b border-nido-border/40 last:border-b-0 sm:px-5">
+            <div class="min-w-0 flex-1">
+              <span class="block truncate text-[0.8rem] font-medium text-nido-green-dark">{{ item.nombre }}</span>
+              @if (formatAmount(item.cantidad, item.unidad)) {
+                <span class="block text-[0.7rem] text-nido-brown">{{ formatAmount(item.cantidad, item.unidad) }}</span>
+              }
+              <span class="text-[0.72rem] text-nido-brown/80">{{ formatHistoryDate(item.compradoEn) }} · {{ item.grupoNombre }}</span>
             </div>
-            <button
-              class="inline-flex shrink-0 items-center gap-1.5 rounded-[18px] border border-nido-border bg-white px-3 py-1.5 text-[0.75rem] font-semibold text-nido-green-dark cursor-pointer transition-colors duration-150 hover:border-nido-green hover:bg-nido-cream"
-              type="button"
-              [class.opacity-60]="item.agregadoAlInventario"
-              [disabled]="uploadingHistoryId === item.id || item.agregadoAlInventario"
-              (click)="sendHistoryItemToPantry(item)">
-              <lucide-icon [name]="item.agregadoAlInventario ? 'check' : 'package-plus'" [size]="13" />
-              {{ item.agregadoAlInventario ? 'Agregado' : 'Pasar a la alacena' }}
-            </button>
           </li>
         }
       </ul>
     }
   </section>
+  </div>
+
+  <aside class="bg-white/[0.51] rounded-[14px] border border-nido-border shadow-[0_1px_4px_rgba(38,63,48,0.07)] px-4 py-4 sm:px-5 flex flex-col gap-3 lg:sticky lg:top-4">
+    <div class="flex items-center gap-2">
+      <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-nido-gold/30 bg-nido-gold/15 text-nido-gold">
+        <lucide-icon name="lightbulb" [size]="16" />
+      </div>
+      <h2 class="text-[0.95rem] font-bold text-nido-green-dark">Sugerencias de Nido</h2>
+    </div>
+    <p class="-mt-1.5 text-[0.8rem] text-nido-brown">Productos bajos en inventario que podrías necesitar pronto.</p>
+
+    @if (sugerencias.length === 0) {
+      <p class="py-2 text-[0.8rem] text-nido-brown">No hay sugerencias por ahora.</p>
+    } @else {
+      <ul class="list-none m-0 p-0 flex flex-col gap-2">
+        @for (sug of sugerencias; track sug.stockHogarId) {
+          <li class="flex items-center gap-3 rounded-[10px] border border-nido-border/60 bg-nido-cream/50 px-3 py-2.5">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] border border-nido-gold/30 bg-nido-gold/15 text-nido-gold">
+              <lucide-icon [name]="sug.icono" [size]="16" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-[0.825rem] font-semibold text-nido-green-dark">{{ sug.productoNombre }}</p>
+              <p class="text-[0.75rem] text-nido-brown">{{ formatRemaining(sug) }}</p>
+            </div>
+            <button
+              type="button"
+              class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-nido-green-dark text-nido-cream cursor-pointer transition-colors duration-150 hover:bg-nido-green disabled:cursor-default disabled:opacity-60"
+              [disabled]="addedSugerenciaIds.has(sug.stockHogarId)"
+              (click)="addSugerencia(sug)"
+              title="Agregar a la lista">
+              <lucide-icon [name]="addedSugerenciaIds.has(sug.stockHogarId) ? 'check' : 'plus'" [size]="14" />
+            </button>
+          </li>
+        }
+      </ul>
+    }
+
+    <button
+      type="button"
+      class="mt-1 flex items-center justify-center gap-1.5 rounded-[20px] border border-nido-green-dark/30 bg-transparent px-4 py-2 text-[0.8rem] font-semibold text-nido-green-dark cursor-pointer transition-colors duration-150 hover:bg-nido-green-dark/10"
+      (click)="goToAlacena()">
+      Ver inventario completo
+      <lucide-icon name="chevron-right" [size]="14" />
+    </button>
+  </aside>
+  </div>
 
   @if (showCompareModal) {
     <div

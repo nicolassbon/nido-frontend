@@ -6,7 +6,7 @@
 
 .product-page {
   min-height: 100%;
-  padding: clamp(16px, 2.6vw, 28px);
+  padding: clamp(20px, 2.4vw, 32px);
   color: #2b1e1b;
   overflow-x: hidden;
 }
@@ -27,23 +27,25 @@
 
 .product-layout {
   display: grid;
-  grid-template-columns: minmax(320px, min(42vw, 560px)) minmax(360px, 1fr);
-  gap: clamp(20px, 3vw, 34px);
+  grid-template-columns: 116px minmax(0, 1fr);
+  gap: 26px 30px;
   align-items: start;
-  width: min(100%, 1280px);
-  max-width: none;
+  width: min(100%, 984px);
   margin: 0 auto;
 }
 
 .photo-panel {
   position: relative;
-  height: clamp(420px, calc(100dvh - 150px), 680px);
-  min-height: 420px;
+  grid-column: 1;
+  width: 90px;
+  height: 90px;
+  align-self: start;
+  margin-left: 10px;
   overflow: hidden;
-  border-radius: 16px;
-  background: rgba(248, 240, 230, 0.51);
-  border: 1px solid rgba(146, 115, 87, 0.17);
-  box-shadow: 0 3px 5px rgba(57, 44, 31, 0.22);
+  border-radius: 14px;
+  background: rgba(248, 240, 230, 0.64);
+  border: 1px solid rgba(146, 115, 87, 0.18);
+  box-shadow: 0 4px 9px rgba(57, 44, 31, 0.18);
 }
 
 .photo-panel img,
@@ -57,11 +59,11 @@
   display: block;
   position: absolute;
   inset: 0;
-  padding: clamp(18px, 2vw, 28px);
+  padding: 14px;
   box-sizing: border-box;
   object-fit: contain;
   object-position: center;
-  filter: drop-shadow(0 12px 24px rgba(57, 44, 31, 0.16));
+  filter: drop-shadow(0 6px 13px rgba(57, 44, 31, 0.14));
 }
 
 .photo-empty {
@@ -71,10 +73,10 @@
   place-items: center;
   align-content: center;
   gap: 12px;
-  padding: 28px;
+  padding: 18px;
   color: #7a5a45;
   text-align: center;
-  background: linear-gradient(135deg, rgba(248, 240, 230, 0.51), rgba(218, 203, 184, 0.51));
+  background: rgba(248, 240, 230, 0.64);
 }
 
 .photo-empty span {
@@ -85,11 +87,7 @@
 }
 
 .detail-panel {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(16px, 2vw, 22px);
-  min-width: 0;
-  width: 100%;
+  display: contents;
 }
 
 .product-heading h1,
@@ -99,6 +97,16 @@
 .summary-row small,
 .feedback {
   margin: 0;
+}
+
+.product-heading {
+  grid-column: 2;
+  min-width: 0;
+  padding-top: 1px;
+}
+
+.detail-panel > :not(.product-heading) {
+  grid-column: 1 / -1;
 }
 
 .product-heading h1 {
@@ -129,8 +137,8 @@
 
 .info-list {
   display: grid;
-  gap: 22px;
-  padding: 1px 0;
+  gap: 0;
+  padding: 0;
 }
 
 .info-row {
@@ -138,6 +146,9 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 18px;
   align-items: center;
+  min-height: 66px;
+  padding: 15px 0;
+  border-bottom: 1px solid rgba(122, 90, 69, 0.24);
   color: #1c1c1c;
   font-size: 16px;
 }
@@ -174,16 +185,18 @@
 
 .summary-card {
   display: grid;
-  gap: 15px;
-  padding: 16px 18px 18px;
+  gap: 12px;
+  padding: 13px 18px 17px;
   border: 1px solid rgba(146, 115, 87, 0.16);
-  border-radius: 16px;
+  border-radius: 14px;
   background: rgba(248, 240, 230, 0.51);
   box-shadow: 0 3px 5px rgba(57, 44, 31, 0.22);
   width: 100%;
 }
 
 .summary-card h2 {
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(43, 30, 27, 0.22);
   color: #2d201b;
   font-size: 17px;
   font-weight: 500;
@@ -191,16 +204,18 @@
 
 .nutrition-card {
   display: grid;
-  gap: 10px;
-  padding: 16px 18px 18px;
+  gap: 12px;
+  padding: 13px 18px 17px;
   border: 1px solid rgba(146, 115, 87, 0.16);
-  border-radius: 16px;
+  border-radius: 14px;
   background: rgba(248, 240, 230, 0.51);
   box-shadow: 0 3px 5px rgba(57, 44, 31, 0.22);
   width: 100%;
 }
 
 .nutrition-card h2 {
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(43, 30, 27, 0.22);
   margin: 0;
   color: #2d201b;
   font-size: 17px;
@@ -419,12 +434,12 @@
 
 .nutrition-card {
   display: grid;
-  gap: 14px;
-  padding: 18px 20px;
+  gap: 12px;
+  padding: 13px 18px 17px;
   border: 1px solid rgba(146, 115, 87, 0.16);
-  border-radius: 16px;
-  background: rgba(248, 240, 230, 0.62);
-  box-shadow: 0 3px 5px rgba(57, 44, 31, 0.18);
+  border-radius: 14px;
+  background: rgba(248, 240, 230, 0.51);
+  box-shadow: 0 3px 5px rgba(57, 44, 31, 0.22);
 }
 
 .nutrition-header {
@@ -432,8 +447,10 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 14px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(43, 30, 27, 0.3);
+
+  > div {
+    width: 100%;
+  }
 
   h2,
   p {
@@ -441,8 +458,10 @@
   }
 
   h2 {
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(43, 30, 27, 0.22);
     color: #2d201b;
-    font-size: 20px;
+    font-size: 17px;
     font-weight: 500;
   }
 
@@ -791,8 +810,15 @@
 }
 
 .nivel-restante {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #3a241f;
   font-weight: 700;
-  color: #2b4a47;
+  color: #fff8ef;
 }
 
 .nivel-consumido {
@@ -858,15 +884,14 @@
 
 @media (max-width: 1100px) {
   .product-layout {
-    grid-template-columns: minmax(280px, min(40vw, 460px)) minmax(320px, 1fr);
-    gap: 20px;
+    grid-template-columns: 106px minmax(0, 1fr);
+    gap: 22px 26px;
   }
 
-  .photo-panel,
-  .photo-panel img,
-  .photo-empty {
-    height: clamp(380px, calc(100dvh - 170px), 620px);
-    min-height: 380px;
+  .photo-panel {
+    width: 86px;
+    height: 86px;
+    min-height: 0;
   }
 
   .summary-row--progress {
@@ -884,15 +909,16 @@
   }
 
   .product-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: 94px minmax(0, 1fr);
     width: min(100%, 720px);
+    gap: 20px 18px;
   }
 
-  .photo-panel,
-  .photo-panel img,
-  .photo-empty {
-    height: clamp(320px, 56vw, 460px);
-    min-height: 320px;
+  .photo-panel {
+    width: 78px;
+    height: 78px;
+    min-height: 0;
+    margin-left: 0;
   }
 
   .product-heading h1 {
@@ -909,11 +935,19 @@
     margin-bottom: 16px;
   }
 
-  .photo-panel,
-  .photo-panel img,
-  .photo-empty {
-    height: clamp(260px, 72vw, 380px);
-    min-height: 260px;
+  .product-layout {
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: 16px 14px;
+  }
+
+  .photo-panel {
+    width: 64px;
+    height: 64px;
+    min-height: 0;
+  }
+
+  .photo-panel img {
+    padding: 10px;
   }
 
   .info-row {
