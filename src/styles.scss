@@ -100,6 +100,12 @@ lucide-icon svg {
   display: block;
 }
 
+/* Resalta la seccion activa del nav lateral */
+.nav-link-active {
+  background-color: #EADCC9 !important;
+  color: #1F3A3A !important;
+}
+
 /* ── Dark Mode styling ─────────────────────────────────── */
 .dark {
   --color-nido-green-dark:  #142424;
@@ -1780,13 +1786,25 @@ lucide-icon svg {
         
         &.card-actions-menu__danger {
           color: #ef5350 !important;
-          
+
           lucide-icon, svg, path {
             color: #ef5350 !important;
             stroke: #ef5350 !important;
           }
         }
       }
+    }
+  }
+
+  .nav-link-active {
+    background-color: #2D1E16 !important;
+    color: #EAE3D9 !important;
+
+    lucide-icon,
+    svg,
+    path {
+      color: #EAE3D9 !important;
+      stroke: #EAE3D9 !important;
     }
   }
 }
