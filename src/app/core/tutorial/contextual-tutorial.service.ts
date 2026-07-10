@@ -20,6 +20,18 @@ interface TutorialDefinition {
   steps: TutorialStep[];
 }
 
+const TUTORIAL_SCROLL_LOCK_CLASS = 'nido-tutorial-scroll-locked';
+const TUTORIAL_SCROLL_KEYS = new Set([
+  ' ',
+  'ArrowDown',
+  'ArrowUp',
+  'End',
+  'Home',
+  'PageDown',
+  'PageUp',
+  'Spacebar',
+]);
+
 const COMPLETED_FIELD: Record<TutorialModule, keyof TutorialUsuarioState> = {
   home: 'homeCompletado',
   alacena: 'alacenaCompletado',
@@ -167,6 +179,10 @@ export class ContextualTutorialService {
   private readonly currentDefinition = signal<TutorialDefinition | null>(null);
   private readonly autoStarted = new Set<TutorialModule>();
   private readonly pendingRetries = new Map<TutorialModule, number>();
+  private scrollLocked = false;
+  private readonly preventWheelScroll = (event: WheelEvent) => this.preventTutorialScroll(event);
+  private readonly preventTouchScroll = (event: TouchEvent) => this.preventTutorialScroll(event);
+  private readonly preventKeyboardScroll = (event: KeyboardEvent) => this.preventTutorialKeyboardScroll(event);
 
   readonly hasCurrentTutorial = computed(() => this.currentDefinition() !== null);
   readonly isRunning = computed(() => this.activeDriver()?.isActive() ?? false);
@@ -224,11 +240,12 @@ export class ContextualTutorialService {
       animate: true,
       smoothScroll: true,
       allowClose: true,
-      allowScroll: true,
+      allowScroll: false,
       overlayColor: document.documentElement.classList.contains('dark') ? '#050806' : '#1f2a24',
       overlayOpacity: 0.68,
-      stagePadding: 8,
+      stagePadding: 4,
       stageRadius: 10,
+      popoverOffset: 4,
       popoverClass: 'nido-driver-popover',
       showProgress: true,
       progressText: '{{current}} de {{total}}',
@@ -249,10 +266,14 @@ export class ContextualTutorialService {
         markCompleted();
         opts.driver.destroy();
       },
-      onDestroyed: () => this.activeDriver.set(null),
+      onDestroyed: () => {
+        this.unlockTutorialScroll();
+        this.activeDriver.set(null);
+      },
     });
 
     this.activeDriver.set(instance);
+    this.lockTutorialScroll();
     instance.drive();
     return true;
   }
@@ -311,5 +332,40 @@ export class ContextualTutorialService {
     }
 
     return TUTORIALS.find((tutorial) => tutorial.paths.includes(path)) ?? null;
+  }
+
+  private lockTutorialScroll(): void {
+    if (this.scrollLocked) return;
+
+    this.scrollLocked = true;
+    document.documentElement.classList.add(TUTORIAL_SCROLL_LOCK_CLASS);
+    document.addEventListener('wheel', this.preventWheelScroll, { passive: false, capture: true });
+    document.addEventListener('touchmove', this.preventTouchScroll, { passive: false, capture: true });
+    document.addEventListener('keydown', this.preventKeyboardScroll, { capture: true });
+  }
+
+  private unlockTutorialScroll(): void {
+    if (!this.scrollLocked) return;
+
+    this.scrollLocked = false;
+    document.documentElement.classList.remove(TUTORIAL_SCROLL_LOCK_CLASS);
+    document.removeEventListener('wheel', this.preventWheelScroll, { capture: true });
+    document.removeEventListener('touchmove', this.preventTouchScroll, { capture: true });
+    document.removeEventListener('keydown', this.preventKeyboardScroll, { capture: true });
+  }
+
+  private preventTutorialScroll(event: WheelEvent | TouchEvent): void {
+    event.preventDefault();
+  }
+
+  private preventTutorialKeyboardScroll(event: KeyboardEvent): void {
+    if (!TUTORIAL_SCROLL_KEYS.has(event.key)) return;
+    if (this.isInsideDriverPopover(event.target)) return;
+
+    event.preventDefault();
+  }
+
+  private isInsideDriverPopover(target: EventTarget | null): boolean {
+    return target instanceof Element && target.closest('.driver-popover') !== null;
   }
 }

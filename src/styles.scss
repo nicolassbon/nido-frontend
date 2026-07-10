@@ -96,6 +96,15 @@ html.landing-no-scrollbar body::-webkit-scrollbar {
   /* Chrome / Safari / Edge */
 }
 
+html.nido-tutorial-scroll-locked,
+html.nido-tutorial-scroll-locked body {
+  overscroll-behavior: none;
+}
+
+html.nido-tutorial-scroll-locked main {
+  overscroll-behavior: none;
+}
+
 /* Ocultar barra de scroll por defecto en las tarjetas de insights, mostrando una barra minimalista y transparente al hacer hover */
 .max-h-\[170px\] {
   scrollbar-width: none;
@@ -151,7 +160,7 @@ lucide-icon svg {
 }
 
 .driver-popover.nido-driver-popover {
-  position: relative;
+  position: fixed;
   max-width: min(360px, calc(100vw - 32px));
   border-radius: 10px;
   border: 1px solid var(--color-nido-border);
