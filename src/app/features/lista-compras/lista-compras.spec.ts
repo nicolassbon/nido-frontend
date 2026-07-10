@@ -354,12 +354,50 @@ describe('ListaCompras', () => {
       expect((component as any).compareError).toBe('Ocurrió un error al buscar precios. Intentá de nuevo.');
     });
 
-    it('agrega un producto desde el comparador a la lista activa', () => {
+    it('abre el modal de seleccion de lista al intentar agregar desde el comparador', () => {
       (component as any).activeListId = 'lista-1';
       (component as any).listas = [shoppingList('lista-1', 'Principal', [])];
+      (component as any).showCompareModal = true;
 
       (component as any).addComparedProduct('Fideos 500g');
-      expect(listaService.addItem).toHaveBeenCalledWith('lista-1', 'Fideos 500g', 1, 'unidad');
+      expect((component as any).showAddToListModal).toBe(true);
+      expect((component as any).showCompareModal).toBe(false);
+      expect((component as any).selectedComparedProduct).toBe('Fideos 500g');
+      expect((component as any).selectedAddToListTargetId).toBe('lista-1');
+      expect(listaService.addItem).not.toHaveBeenCalled();
+    });
+
+    it('agrega el producto a la lista seleccionada tras confirmar en el modal', () => {
+      (component as any).activeListId = 'lista-1';
+      (component as any).listas = [
+        shoppingList('lista-1', 'Principal', []),
+        shoppingList('lista-2', 'Secundaria', [])
+      ];
+      (component as any).showCompareModal = true;
+
+      (component as any).addComparedProduct('Fideos 500g');
+      (component as any).selectedAddToListTargetId = 'lista-2';
+
+      (component as any).confirmAddComparedProduct();
+      expect(listaService.addItem).toHaveBeenCalledWith('lista-2', 'Fideos 500g', 1, 'unidad');
+      expect((component as any).showAddToListModal).toBe(false);
+      expect((component as any).showCompareModal).toBe(true);
+      expect((component as any).selectedComparedProduct).toBeNull();
+    });
+
+    it('cierra el modal de seleccion de lista al cancelar', () => {
+      (component as any).activeListId = 'lista-1';
+      (component as any).listas = [shoppingList('lista-1', 'Principal', [])];
+      (component as any).showCompareModal = true;
+
+      (component as any).addComparedProduct('Fideos 500g');
+      expect((component as any).showAddToListModal).toBe(true);
+      expect((component as any).showCompareModal).toBe(false);
+
+      (component as any).closeAddToListModal();
+      expect((component as any).showAddToListModal).toBe(false);
+      expect((component as any).showCompareModal).toBe(true);
+      expect((component as any).selectedComparedProduct).toBeNull();
     });
   });
 });
