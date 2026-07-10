@@ -1,5 +1,8 @@
 import { Component, inject, OnInit, signal, computed, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
+import { timer, EMPTY, concat, of, Subscription } from 'rxjs';
+import { concatMap, take, takeWhile, catchError, timeout } from 'rxjs/operators';
 import { StatCard } from '../../shared/ui/stat-card/stat-card';
 import { PreferenceCard } from '../../shared/ui/preference-card/preference-card';
 import { CommonModule } from '@angular/common';
@@ -12,6 +15,32 @@ import { EditarPerfil } from '../editar-perfil/editar-perfil';
 import { Avatar } from '../../shared/ui/avatar/avatar';
 import { TareasApiService } from '../tareas/services/tareas-api.service';
 import { getCompanionInfo } from '../../shared/constants/companion-metadata';
+import { PaywallService } from '../../core/servicios/paywall';
+
+const PAYMENT_NOTICE_KIND = {
+  INFO: 'info',
+  SUCCESS: 'success',
+  WARNING: 'warning',
+  ERROR: 'error',
+} as const;
+
+const PAYMENT_NOTICE_ACTION = {
+  RETRY: 'retry',
+  UPGRADE: 'upgrade',
+} as const;
+
+type PaymentNoticeKind = (typeof PAYMENT_NOTICE_KIND)[keyof typeof PAYMENT_NOTICE_KIND];
+type PaymentNoticeAction = (typeof PAYMENT_NOTICE_ACTION)[keyof typeof PAYMENT_NOTICE_ACTION];
+
+interface PaymentNotice {
+  kind: PaymentNoticeKind;
+  message: string;
+  action?: PaymentNoticeAction;
+}
+
+const AUTH_REFRESH_TIMEOUT_MS = 4_000;
+const PAYMENT_REFRESH_ATTEMPTS = 6;
+const PAYMENT_REFRESH_INTERVAL_MS = 1_500;
 
 @Component({
   selector: 'app-perfil',
@@ -26,12 +55,47 @@ export class PerfilComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly tareasApi = inject(TareasApiService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly paywall = inject(PaywallService);
 
   protected readonly usuario = signal<PerfilApiResponse | null>(null);
   protected readonly isLoading = signal(true);
   protected readonly apiError = signal<string | null>(null);
   protected readonly nombreHogar = signal<string | null>(null);
   protected readonly nivelNido = signal<number>(0);
+  protected readonly paymentNotice = signal<PaymentNotice | null>(null);
+  protected readonly isReconcilingPayment = signal(false);
+  protected readonly paymentActionLabel = computed(() => {
+    const action = this.paymentNotice()?.action;
+    if (action === PAYMENT_NOTICE_ACTION.UPGRADE) return 'Elegir Plan Hogar';
+    if (action === PAYMENT_NOTICE_ACTION.RETRY) return 'Reintentar verificación';
+    return null;
+  });
+  protected readonly isPremium = this.authService.isPremium;
+  private handledPaymentStatus: string | null = null;
+  private paymentRefreshSubscription: Subscription | null = null;
+  private paymentRefreshSequence = 0;
+
+  protected readonly premiumExpirationText = computed(() => {
+    const subscriptionEndsAt = this.authService.getSubscriptionEndsAt();
+    const trialEndsAt = this.authService.getTrialEndsAt();
+    const date = subscriptionEndsAt ?? trialEndsAt;
+    if (!date) return null;
+
+    try {
+      const formatted = new Date(date).toLocaleDateString('es-AR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+      return subscriptionEndsAt
+        ? `Tu suscripción está activa hasta el ${formatted}.`
+        : `Tu período de prueba está activo hasta el ${formatted}.`;
+    } catch {
+      return null;
+    }
+  });
   protected readonly statCards = computed(() => {
     const profile = this.usuario();
     const level = this.nivelNido();
@@ -183,6 +247,22 @@ export class PerfilComponent implements OnInit {
   ngOnInit(): void {
     this.cargarPerfil();
 
+    // On manual F5 / direct navigation the JWT in localStorage may be stale
+    // (e.g. the DB was upgraded to Premium by the Mercado Pago webhook before
+    // the user returned). Refresh auth state eagerly so isPremium reflects the
+    // current household plan.
+    if (this.authService.isAuthenticated()) {
+      this.authService.refresh().pipe(
+        timeout(AUTH_REFRESH_TIMEOUT_MS),
+        catchError(() => EMPTY),
+        takeUntilDestroyed(this.destroyRef),
+      ).subscribe();
+    }
+
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
+      this.handlePaymentStatus(params['status']);
+    });
+
     this.tareasApi.getProgreso()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -236,6 +316,135 @@ export class PerfilComponent implements OnInit {
           this.isLoading.set(false);
         },
       });
+  }
+
+  protected retryPaymentStatus(): void {
+    const action = this.paymentNotice()?.action;
+    if (action === PAYMENT_NOTICE_ACTION.UPGRADE) {
+      this.paywall.open();
+      return;
+    }
+
+    if (action === PAYMENT_NOTICE_ACTION.RETRY) {
+      this.reconcilePaymentStatus();
+    }
+  }
+
+  protected paymentNoticeClass(kind: PaymentNoticeKind): string {
+    switch (kind) {
+      case PAYMENT_NOTICE_KIND.SUCCESS:
+        return 'bg-emerald-50 border border-emerald-200 text-emerald-800';
+      case PAYMENT_NOTICE_KIND.WARNING:
+        return 'bg-amber-50 border border-amber-200 text-amber-900';
+      case PAYMENT_NOTICE_KIND.ERROR:
+        return 'bg-red-50 border border-red-200 text-red-800';
+      default:
+        return 'bg-sky-50 border border-sky-200 text-sky-900';
+    }
+  }
+
+  private handlePaymentStatus(status: unknown): void {
+    if (typeof status !== 'string') return;
+
+    const normalizedStatus = status.trim().toLowerCase();
+    if (!normalizedStatus || normalizedStatus === this.handledPaymentStatus) return;
+
+    this.handledPaymentStatus = normalizedStatus;
+    this.consumePaymentStatusQuery();
+
+    switch (normalizedStatus) {
+      case 'success':
+        this.reconcilePaymentStatus();
+        return;
+      case 'pending':
+        this.paymentNotice.set({
+          kind: PAYMENT_NOTICE_KIND.INFO,
+          message: 'Todavía no confirmamos el pago. Esperá unos minutos y volvé a verificar el estado antes de usar las funciones premium.',
+          action: PAYMENT_NOTICE_ACTION.RETRY,
+        });
+        return;
+      case 'failure':
+      case 'cancelled':
+        this.paymentNotice.set({
+          kind: PAYMENT_NOTICE_KIND.ERROR,
+          message: 'El pago no se completó. No se aplicaron cambios a tu plan. Podés intentarlo nuevamente cuando quieras.',
+          action: PAYMENT_NOTICE_ACTION.UPGRADE,
+        });
+        return;
+      default:
+        this.paymentNotice.set({
+          kind: PAYMENT_NOTICE_KIND.WARNING,
+          message: 'No pudimos confirmar el estado del pago. Verificá tu plan antes de usar las funciones premium.',
+          action: PAYMENT_NOTICE_ACTION.RETRY,
+        });
+    }
+  }
+
+  private consumePaymentStatusQuery(): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { status: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  private reconcilePaymentStatus(): void {
+    this.paymentRefreshSubscription?.unsubscribe();
+    const refreshSequence = ++this.paymentRefreshSequence;
+    this.isReconcilingPayment.set(true);
+    this.paymentNotice.set({
+      kind: PAYMENT_NOTICE_KIND.INFO,
+      message: 'Recibimos tu pago. Estamos activando tu Plan Hogar; esto puede demorar unos minutos.',
+    });
+
+    if (this.authService.isPremium()) {
+      this.finishPaymentReconciliation(refreshSequence);
+      return;
+    }
+
+    const immediateRefresh$ = this.refreshPremiumState();
+    const delayedRefreshes$ = timer(PAYMENT_REFRESH_INTERVAL_MS, PAYMENT_REFRESH_INTERVAL_MS).pipe(
+      take(PAYMENT_REFRESH_ATTEMPTS - 1),
+      concatMap(() => this.refreshPremiumState()),
+    );
+
+    const subscription = concat(immediateRefresh$, delayedRefreshes$).pipe(
+      takeWhile(() => !this.authService.isPremium(), true),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe({
+      complete: () => this.finishPaymentReconciliation(refreshSequence),
+    });
+
+    this.paymentRefreshSubscription = subscription.closed ? null : subscription;
+  }
+
+  private refreshPremiumState() {
+    return this.authService.refresh().pipe(
+      timeout(AUTH_REFRESH_TIMEOUT_MS),
+      catchError(() => of(null)),
+    );
+  }
+
+  private finishPaymentReconciliation(refreshSequence: number): void {
+    if (refreshSequence !== this.paymentRefreshSequence) return;
+
+    this.paymentRefreshSubscription = null;
+    this.isReconcilingPayment.set(false);
+
+    if (this.authService.isPremium()) {
+      this.paymentNotice.set({
+        kind: PAYMENT_NOTICE_KIND.SUCCESS,
+        message: 'Tu suscripción ya está activa. Ya podés disfrutar de todas las funcionalidades premium.',
+      });
+      return;
+    }
+
+    this.paymentNotice.set({
+      kind: PAYMENT_NOTICE_KIND.WARNING,
+      message: 'El pago fue recibido, pero todavía no pudimos confirmar la activación. Esperá unos minutos y volvé a verificar el estado.',
+      action: PAYMENT_NOTICE_ACTION.RETRY,
+    });
   }
 
   // --- Acciones de Alimentación ---
@@ -342,6 +551,10 @@ export class PerfilComponent implements OnInit {
 
   protected onAlergiaBlur(): void {
     setTimeout(() => this.alergiaInputFocused.set(false), 150);
+  }
+
+  protected upgradeToPremium(): void {
+    this.paywall.open();
   }
 
   // --- Clases Auxiliares de Estilos ---

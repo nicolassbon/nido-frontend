@@ -242,5 +242,138 @@ describe('AuthService', () => {
 
       expect(service.getNombre()).toBe('Nicolás Bon');
     });
+
+    describe('subscription state and premium checks', () => {
+      it('should parse plan, subscriptionStatus, trialEndsAt, and subscriptionEndsAt from JWT payload', () => {
+        const payload = {
+          exp: Math.floor(Date.now() / 1000) + 60,
+          plan: 'Hogar',
+          subscriptionStatus: 'active',
+          trialEndsAt: '2026-07-20T23:59:59.000Z',
+          subscriptionEndsAt: '2026-08-01T23:59:59.000Z',
+        };
+        service.setToken(createToken(payload));
+
+        expect(service.getPlan()).toBe('Hogar');
+        expect(service.getSubscriptionStatus()).toBe('active');
+        expect(service.getTrialEndsAt()).toBe('2026-07-20T23:59:59.000Z');
+        expect(service.getSubscriptionEndsAt()).toBe('2026-08-01T23:59:59.000Z');
+      });
+
+      it('should return null for subscription fields when not present in payload', () => {
+        service.setToken(createToken({ exp: Math.floor(Date.now() / 1000) + 60 }));
+
+        expect(service.getPlan()).toBeNull();
+        expect(service.getSubscriptionStatus()).toBeNull();
+        expect(service.getTrialEndsAt()).toBeNull();
+        expect(service.getSubscriptionEndsAt()).toBeNull();
+      });
+
+      it('should compute isPremium as true when plan is Hogar and subscription is active in future', () => {
+        const futureDate = new Date(Date.now() + 86400000).toISOString(); // +1 day
+        service.setToken(createToken({
+          exp: Math.floor(Date.now() / 1000) + 60,
+          plan: 'Hogar',
+          subscriptionEndsAt: futureDate,
+        }));
+
+        expect(service.isPremium()).toBe(true);
+      });
+
+      it('should compute isPremium as true when plan is Hogar and trial is active in future', () => {
+        const futureDate = new Date(Date.now() + 86400000).toISOString(); // +1 day
+        service.setToken(createToken({
+          exp: Math.floor(Date.now() / 1000) + 60,
+          plan: 'Hogar',
+          trialEndsAt: futureDate,
+        }));
+
+        expect(service.isPremium()).toBe(true);
+      });
+
+      it('should compute isPremium as false when plan is Basico', () => {
+        service.setToken(createToken({
+          exp: Math.floor(Date.now() / 1000) + 60,
+          plan: 'Básico',
+        }));
+
+        expect(service.isPremium()).toBe(false);
+      });
+
+      it('should compute isPremium as false when both subscription and trial have expired', () => {
+        const pastDate = new Date(Date.now() - 86400000).toISOString(); // -1 day
+        service.setToken(createToken({
+          exp: Math.floor(Date.now() / 1000) + 60,
+          plan: 'Hogar',
+          subscriptionEndsAt: pastDate,
+          trialEndsAt: pastDate,
+        }));
+
+        expect(service.isPremium()).toBe(false);
+      });
+
+      it('should compute isPremium as false when user is not authenticated', () => {
+        service.clearToken();
+        expect(service.isPremium()).toBe(false);
+      });
+
+      it('reactively expires premium access and exposes the centralized expired state', () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-07-10T12:00:00.000Z'));
+
+        const expiresAt = new Date(Date.now() + 5_000).toISOString();
+        service.setToken(createToken({
+          exp: Math.floor((Date.now() + 60_000) / 1000),
+          plan: 'Hogar',
+          subscriptionEndsAt: expiresAt,
+        }));
+
+        const authWithEntitlements = service as unknown as {
+          hasExpiredPremium: () => boolean;
+        };
+
+        expect(service.isPremium()).toBe(true);
+        expect(authWithEntitlements.hasExpiredPremium()).toBe(false);
+
+        vi.advanceTimersByTime(5_000);
+
+        expect(service.isPremium()).toBe(false);
+        expect(authWithEntitlements.hasExpiredPremium()).toBe(true);
+        vi.useRealTimers();
+      });
+    });
+  });
+
+  describe('refresh serialization', () => {
+    it('keeps a newer premium token when a delayed refresh returns an older entitlement', () => {
+      const oldFreeToken = createToken({
+        exp: Math.floor(Date.now() / 1000) + 60,
+        plan: 'Básico',
+      });
+      const newerPremiumToken = createToken({
+        exp: Math.floor(Date.now() / 1000) + 60,
+        plan: 'Hogar',
+        subscriptionEndsAt: new Date(Date.now() + 86_400_000).toISOString(),
+      });
+
+      service.refresh().subscribe();
+      const request = httpMock.expectOne(`${environment.apiBaseUrl}/auth/refresh`);
+
+      service.setToken(newerPremiumToken);
+      request.flush({ accessToken: oldFreeToken });
+
+      expect(service.getToken()).toBe(newerPremiumToken);
+      expect(service.isPremium()).toBe(true);
+    });
+
+    it('shares concurrent refresh callers instead of creating competing requests', () => {
+      service.refresh().subscribe();
+      service.refresh().subscribe();
+
+      const requests = httpMock.match(`${environment.apiBaseUrl}/auth/refresh`);
+      expect(requests).toHaveLength(1);
+
+      requests[0].flush({ accessToken: createToken({ exp: Math.floor(Date.now() / 1000) + 60 }) });
+    });
   });
 });

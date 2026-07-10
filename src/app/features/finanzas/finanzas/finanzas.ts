@@ -27,6 +27,7 @@ import {
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { HogaresApiService, MiembroResponse } from '../../household/hogares-api.service';
+import { PaywallService } from '../../../core/servicios/paywall';
 import { Avatar } from '../../../shared/ui/avatar/avatar';
 import {
   FinanzasApiService,
@@ -126,6 +127,7 @@ export class Finanzas {
   private readonly finanzasApi = inject(FinanzasApiService);
   private readonly destroyRef  = inject(DestroyRef);
   private readonly router      = inject(Router);
+  private readonly paywall     = inject(PaywallService);
 
   // ── Canvas refs ───────────────────────────────────────
   private readonly lineCanvasRef  = viewChild<ElementRef<HTMLCanvasElement>>('lineCanvas');
@@ -358,6 +360,10 @@ export class Finanzas {
   // ── Modo ahorro ───────────────────────────────────────
 
   protected toggleModoAhorro(): void {
+    if (!this.authService.isPremium()) {
+      this.paywall.open();
+      return;
+    }
     const nuevo = !this.modoAhorro();
     this.finanzasApi.setModoAhorro(nuevo)
       .pipe(takeUntilDestroyed(this.destroyRef))

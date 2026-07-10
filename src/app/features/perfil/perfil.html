@@ -1,5 +1,19 @@
 <div class="w-full p-4 sm:p-6 flex flex-col gap-6">
 
+  @if (paymentNotice(); as notice) {
+    <div [class]="'payment-status-alert rounded-2xl p-4 flex items-center gap-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)] ' + paymentNoticeClass(notice.kind)" [class.alert-success]="notice.kind === 'success'" role="status" aria-live="polite">
+      <lucide-icon [name]="notice.kind === 'success' ? 'check-circle' : 'info'" class="w-5 h-5 shrink-0"></lucide-icon>
+      <div class="flex-1 text-[0.875rem] font-medium">
+        {{ notice.message }}
+      </div>
+      @if (paymentActionLabel()) {
+        <button type="button" (click)="retryPaymentStatus()" [disabled]="isReconcilingPayment()" class="shrink-0 rounded-full border border-current bg-transparent px-3 py-1.5 text-[0.75rem] font-semibold cursor-pointer disabled:opacity-60">
+          {{ paymentActionLabel() }}
+        </button>
+      }
+    </div>
+  }
+
   <div class="flex flex-col">
 
     <div
@@ -72,6 +86,44 @@
       </div>
 
     </div>
+  </div>
+
+  <!-- Tarjeta de Suscripción Premium / Básico -->
+  <div class="w-full">
+    @if (isPremium()) {
+      <div class="card-premium bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-[14px] p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
+        <div class="flex items-start gap-3.5">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
+            <lucide-icon name="sparkles" class="text-amber-600 w-5 h-5"></lucide-icon>
+          </div>
+          <div>
+            <h3 class="text-gray-900 font-bold text-[1.05rem] m-0">Plan Premium Activo</h3>
+            <p class="text-nido-brown text-[0.825rem] m-0 mt-0.5">Tenés acceso ilimitado al comparador de listas, escáner de tickets e información nutricional.</p>
+            @if (premiumExpirationText()) {
+              <p class="text-amber-700 text-[0.8rem] m-0 mt-1 font-medium">{{ premiumExpirationText() }}</p>
+            }
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-[0.75rem] font-bold self-start sm:self-auto animate-pulse">
+          Premium
+        </div>
+      </div>
+    } @else {
+      <div class="card-upgrade bg-white/[0.51] border border-nido-border rounded-[14px] p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
+        <div class="flex items-start gap-3.5">
+          <div class="w-10 h-10 rounded-xl bg-nido-green-dark/10 flex items-center justify-center shrink-0">
+            <lucide-icon name="lock" class="text-nido-green-dark w-5 h-5"></lucide-icon>
+          </div>
+          <div>
+            <h3 class="text-gray-900 font-bold text-[1.05rem] m-0">Nido Plan Gratuito</h3>
+            <p class="text-nido-brown text-[0.825rem] m-0 mt-0.5">Pasate a Premium para comparar precios de supermercados en tiempo real y escanear tickets sin límites.</p>
+          </div>
+        </div>
+        <button (click)="upgradeToPremium()" class="bg-nido-green-dark border-none text-nido-cream rounded-full px-5 py-2 text-[0.875rem] font-semibold hover:bg-nido-green transition cursor-pointer self-start sm:self-auto whitespace-nowrap">
+          Subir a Plan Premium
+        </button>
+      </div>
+    }
   </div>
 
   <hr class="border-nido-border border-t-[1.5px] opacity-70 my-0">
