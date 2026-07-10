@@ -86,7 +86,7 @@ html.landing-no-scrollbar body::-webkit-scrollbar {
 .max-h-\[170px\] {
   scrollbar-width: none;
   -ms-overflow-style: none;
-  
+
   &::-webkit-scrollbar {
     display: none;
     width: 0;
@@ -96,22 +96,22 @@ html.landing-no-scrollbar body::-webkit-scrollbar {
   &:hover {
     scrollbar-width: thin;
     scrollbar-color: rgba(154, 128, 108, 0.4) transparent;
-    
+
     &::-webkit-scrollbar {
       display: block;
       width: 5px;
       height: 5px;
     }
-    
+
     &::-webkit-scrollbar-track {
       background: transparent !important;
     }
-    
+
     &::-webkit-scrollbar-thumb {
       background: rgba(154, 128, 108, 0.4) !important;
       border-radius: 10px !important;
     }
-    
+
     &::-webkit-scrollbar-thumb:hover {
       background: rgba(154, 128, 108, 0.6) !important;
     }
@@ -1856,6 +1856,18 @@ lucide-icon svg {
     }
   }
 
+  .nav-link-active {
+    background-color: #7A5A45 !important;
+    color: #EAE3D9 !important;
+
+    lucide-icon,
+    svg,
+    path {
+      color: #EAE3D9 !important;
+      stroke: #EAE3D9 !important;
+    }
+  }
+
   /* ==========================================================================
      Ajustes para el Asistente Chef Nido (IA) en modo oscuro
      ========================================================================== */
@@ -1876,7 +1888,7 @@ lucide-icon svg {
     min-height: 100vh;
     background-color: #121815 !important;
     color: #EAE3D9 !important;
-    
+
     .min-h-screen {
       background-color: #121815 !important;
     }
@@ -1896,7 +1908,7 @@ lucide-icon svg {
 
     .bg-\[rgba\(62\,94\,74\,0\.08\)\] {
       background-color: rgba(247, 241, 230, 0.05) !important;
-      
+
       lucide-icon, svg, path {
         color: #B48B6A !important;
         stroke: #B48B6A !important;
@@ -1908,7 +1920,7 @@ lucide-icon svg {
       background-color: #7A5A45 !important;
       color: #EAE3D9 !important;
       border: none !important;
-      
+
       &:hover {
         background-color: #654937 !important;
       }
@@ -1919,7 +1931,7 @@ lucide-icon svg {
       background-color: rgba(247, 241, 230, 0.04) !important;
       border: 2px solid rgba(216, 198, 178, 0.2) !important;
       color: #EAE3D9 !important;
-      
+
       &:hover {
         background-color: rgba(247, 241, 230, 0.08) !important;
         border-color: #7A5A45 !important;
@@ -1961,7 +1973,7 @@ lucide-icon svg {
     lucide-icon[name="chef-hat"] {
       color: #B48B6A !important;
       stroke: #B48B6A !important;
-      
+
       svg, path {
         color: #B48B6A !important;
         stroke: #B48B6A !important;
@@ -1975,7 +1987,7 @@ lucide-icon svg {
       background-color: #7A5A45 !important;
       border: 1px solid #7A5A45 !important;
       color: #EAE3D9 !important;
-      
+
       lucide-icon, svg, path {
         color: #EAE3D9 !important;
         stroke: #EAE3D9 !important;
@@ -1986,7 +1998,7 @@ lucide-icon svg {
       background-color: #ef5350 !important;
       border: 1px solid #ef5350 !important;
       color: #EAE3D9 !important;
-      
+
       lucide-icon, svg, path {
         color: #EAE3D9 !important;
         stroke: #EAE3D9 !important;
