@@ -4,7 +4,7 @@ import { Router, RouterModule } from '@angular/router';
 import { forkJoin, Subscription } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { LucideAngularModule } from 'lucide-angular';
-import { ListaComprasService, RecipeShoppingList, ShoppingHistoryItem, ShoppingItem } from './lista-compras.service';
+import { ListaComprasService, RecipeShoppingList, ShoppingHistoryItem, ShoppingItem, SugerenciaNido } from './lista-compras.service';
 import { CatalogoService } from '../../core/servicios/catalogo.service';
 import { NidoSelectComponent, NidoSelectOption } from '../../shared/ui/form/nido-select/nido-select';
 import { AlacenaApiService, CreateStockItemRequest } from '../alacena/alacena-api.service';
@@ -30,6 +30,8 @@ export class ListaCompras implements OnInit, OnDestroy {
 
   protected listas: RecipeShoppingList[] = [];
   protected historial: ShoppingHistoryItem[] = [];
+  protected sugerencias: SugerenciaNido[] = [];
+  protected addedSugerenciaIds = new Set<string>();
   protected totalPendiente = 0;
   protected errorMessage: string | null = null;
 
@@ -77,6 +79,7 @@ export class ListaCompras implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.service.refresh().subscribe();
     this.service.refreshHistory().subscribe();
+    this.service.refreshSugerencias().subscribe();
     this.sub.add(this.catalogoService.getUnidadesMedida().subscribe(unidades => {
       this.unidadesOpts = CatalogoService.toUnidadesOpts(unidades);
       this.cdr.markForCheck();
@@ -104,6 +107,11 @@ export class ListaCompras implements OnInit, OnDestroy {
 
     this.sub.add(this.service.historial$.subscribe(historial => {
       this.historial = historial;
+      this.cdr.markForCheck();
+    }));
+
+    this.sub.add(this.service.sugerencias$.subscribe(sugerencias => {
+      this.sugerencias = sugerencias;
       this.cdr.markForCheck();
     }));
   }
@@ -344,6 +352,33 @@ export class ListaCompras implements OnInit, OnDestroy {
 
   protected goToConfiguracion(): void {
     this.router.navigate(['/configuracion']);
+  }
+
+  protected goToAlacena(): void {
+    this.router.navigate(['/alacena']);
+  }
+
+  protected addSugerencia(sugerencia: SugerenciaNido): void {
+    if (this.addedSugerenciaIds.has(sugerencia.stockHogarId)) return;
+
+    this.addedSugerenciaIds.add(sugerencia.stockHogarId);
+    this.cdr.markForCheck();
+
+    this.service.addManualItem(sugerencia.productoNombre, 1, sugerencia.unidadMedida).subscribe({
+      error: () => {
+        this.addedSugerenciaIds.delete(sugerencia.stockHogarId);
+        this.fail('No se pudo agregar la sugerencia a la lista.');
+      },
+    });
+  }
+
+  protected formatRemaining(sugerencia: SugerenciaNido): string {
+    const cantidad = sugerencia.stockActual;
+    const verbo = cantidad === 1 ? 'Queda' : 'Quedan';
+    const unidad = sugerencia.unidadMedida ?? 'unidad';
+    const unidadLabel = unidad === 'unidad' && cantidad !== 1 ? 'unidades' : unidad;
+    const numero = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 }).format(cantidad);
+    return `${verbo} ${numero} ${unidadLabel}`;
   }
 
   protected pendientesDe(lista: RecipeShoppingList): number {
