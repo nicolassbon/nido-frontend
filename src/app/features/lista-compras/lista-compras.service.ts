@@ -41,6 +41,15 @@ export interface ShoppingHistoryItem {
   icono?: string | null;
 }
 
+export interface SugerenciaNido {
+  stockHogarId: string;
+  productoId: string;
+  productoNombre: string;
+  stockActual: number;
+  unidadMedida: string | null;
+  icono: string;
+}
+
 export interface SendToTelegramResponse {
   status: 'enqueued' | 'empty' | 'no_telegram_link';
   itemCount: number;
@@ -62,9 +71,11 @@ export class ListaComprasService {
 
   private readonly _listas$ = new BehaviorSubject<RecipeShoppingList[]>([]);
   private readonly _historial$ = new BehaviorSubject<ShoppingHistoryItem[]>([]);
+  private readonly _sugerencias$ = new BehaviorSubject<SugerenciaNido[]>([]);
 
   readonly listas$ = this._listas$.asObservable();
   readonly historial$ = this._historial$.asObservable();
+  readonly sugerencias$ = this._sugerencias$.asObservable();
   readonly totalPendiente$ = this._listas$.pipe(
     map(listas => listas.reduce((acc, l) => acc + l.items.filter(i => !i.checked).length, 0)),
   );
@@ -72,6 +83,7 @@ export class ListaComprasService {
   constructor() {
     this.refresh().subscribe();
     this.refreshHistory().subscribe();
+    this.refreshSugerencias().subscribe();
   }
 
   get snapshot(): RecipeShoppingList[] {
@@ -95,6 +107,17 @@ export class ListaComprasService {
       tap(items => this._historial$.next(items)),
       catchError(() => {
         this._historial$.next([]);
+        return of([]);
+      }),
+    );
+  }
+
+  refreshSugerencias() {
+    return this.http.get<ApiSugerenciaNido[]>(`${this.legacyBaseUrl}/sugerencias`).pipe(
+      map(sugerencias => sugerencias.map(toSugerenciaNido)),
+      tap(sugerencias => this._sugerencias$.next(sugerencias)),
+      catchError(() => {
+        this._sugerencias$.next([]);
         return of([]);
       }),
     );
@@ -279,6 +302,26 @@ interface ApiHistoryItem {
   categoriaNombre?: string | null;
   iconoSvg?: string | null;
   icono?: string | null;
+}
+
+interface ApiSugerenciaNido {
+  stockHogarId: string;
+  productoId: string;
+  productoNombre: string;
+  stockActual: number;
+  unidadMedida: string | null;
+  icono: string;
+}
+
+function toSugerenciaNido(item: ApiSugerenciaNido): SugerenciaNido {
+  return {
+    stockHogarId: item.stockHogarId,
+    productoId: item.productoId,
+    productoNombre: item.productoNombre,
+    stockActual: item.stockActual,
+    unidadMedida: item.unidadMedida,
+    icono: item.icono,
+  };
 }
 
 function toShoppingList(list: ApiShoppingList): RecipeShoppingList {
