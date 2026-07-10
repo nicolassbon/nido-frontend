@@ -111,10 +111,10 @@
   </div>
 
   <!-- Cuerpo -->
-  <div class="grid grid-cols-1 md:grid-cols-[1fr_290px] gap-6 items-start">
+  <div class="grid grid-cols-1 lg:grid-cols-[1fr_290px] gap-6 items-start">
 
     <!-- Grid de recetas -->
-    <div class="order-2 md:order-1" data-tour="recipes-list">
+    <div class="order-2 lg:order-1" data-tour="recipes-list">
       @if (isLoadingIa()) {
         <div class="flex flex-col items-center justify-center gap-3 py-16 px-8 text-nido-brown text-center">
           <div class="h-9 w-9 animate-spin rounded-full border-4 border-nido-brown border-t-transparent"></div>
@@ -131,7 +131,7 @@
           </button>
         </div>
       } @else {
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
           @for (recipe of filteredRecipes(); track recipe.id) {
             <article
               (click)="navigateToRecipe(recipe.id)"
@@ -242,7 +242,7 @@
                 </div>
 
                 <!-- Advertencia: falta electrodomestico -->
-                <div class="mt-1.5 flex min-h-[2.35rem] items-start">
+                <div [class]="recipe.hasMissingAppliance ? 'flex items-start mt-1.5' : 'flex items-start'">
                   @if (recipe.hasMissingAppliance) {
                     <div class="flex w-full items-center gap-1.5 px-2.5 py-1.5 rounded-[8px] bg-[rgba(180,76,60,0.07)] border border-[rgba(180,76,60,0.2)]">
                       <lucide-icon [img]="icons.Zap" [size]="12" class="text-nido-red shrink-0" />
@@ -253,21 +253,21 @@
                   }
                 </div>
 
-                <!-- Botones de Acción (Grid de 2 columnas) -->
-                <div class="mt-auto grid grid-cols-2 gap-2">
+                <!-- Botones de Acción -->
+                <div class="mt-auto flex flex-wrap gap-2">
                   <a
                     [routerLink]="['/recetas', recipe.id]"
                     (click)="$event.stopPropagation()"
-                    class="inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-nido-green-dark text-nido-cream rounded-[8px] text-[0.8rem] font-medium cursor-pointer transition-[background] duration-150 hover:bg-nido-green">
+                    class="inline-flex flex-1 basis-[120px] items-center justify-center gap-1.5 py-2 px-3 bg-nido-green-dark text-nido-cream rounded-[8px] text-[0.8rem] font-medium whitespace-nowrap cursor-pointer transition-[background] duration-150 hover:bg-nido-green">
                     <lucide-icon [img]="icons.Eye" [size]="14" />
                     Ver detalle
                   </a>
-                  
+
                   <!-- BOTÓN DE CONSULTA IA (Dispara el chat interactivo) -->
                   <button
                     type="button"
                     (click)="abrirAsistenteConReceta(recipe, $event)"
-                    class="inline-flex items-center justify-center gap-1.5 py-2 px-3 border border-nido-border bg-white text-nido-green-dark rounded-[8px] text-[0.8rem] font-semibold cursor-pointer transition-colors duration-150 hover:bg-nido-cream">
+                    class="inline-flex flex-1 basis-[120px] items-center justify-center gap-1.5 py-2 px-3 border border-nido-border bg-white text-nido-green-dark rounded-[8px] text-[0.8rem] font-semibold whitespace-nowrap cursor-pointer transition-colors duration-150 hover:bg-nido-cream">
                     <lucide-icon name="sparkles" [size]="13" class="text-nido-gold animate-pulse" />
                     Preguntar IA
                   </button>
@@ -282,7 +282,7 @@
     </div>
 
     <!-- Panel lateral -->
-    <aside class="order-1 md:order-2 flex flex-col gap-4">
+    <aside class="order-1 lg:order-2 flex flex-col gap-4">
 
       <!-- ¿Quién come hoy? -->
       <div class="bg-white/[0.51] rounded-[14px] p-5 shadow-[0_1px_4px_rgba(38,63,48,0.07)]">
@@ -365,7 +365,7 @@
         </div>
         @if (pantryIngredients().length > 0) {
           <ul class="list-none flex flex-col gap-2">
-            @for (item of pantryIngredients(); track item.name) {
+            @for (item of visiblePantryIngredients(); track item.name) {
               <li class="flex items-center gap-2 text-[0.8125rem]">
                 <lucide-icon [img]="icons.ShoppingBasket" [size]="14" class="text-nido-green shrink-0" />
                 <span class="flex-1 text-nido-green-dark truncate">{{ item.name }}</span>
@@ -373,6 +373,17 @@
               </li>
             }
           </ul>
+          @if (pantryIngredients().length > pantryPreviewCount) {
+            <button
+              type="button"
+              (click)="togglePantryList()"
+              class="flex items-center gap-1 mt-3 text-[0.775rem] font-semibold text-nido-green-dark bg-transparent border-none cursor-pointer p-0 hover:underline">
+              {{ pantryListExpanded() ? 'Ver menos' : 'Ver todos (' + pantryIngredients().length + ')' }}
+              <lucide-icon [img]="icons.ChevronDown" [size]="14"
+                [class.rotate-180]="pantryListExpanded()"
+                class="transition-transform duration-150" />
+            </button>
+          }
         } @else {
           <p class="text-[0.8125rem] leading-snug text-nido-brown">
             Todavia no hay productos disponibles en tu alacena.
