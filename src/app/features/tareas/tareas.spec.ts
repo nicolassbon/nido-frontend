@@ -2,7 +2,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { appConfig } from '../../app.config';
 import { AuthService } from '../../core/auth/auth.service';
 import { HogaresApiService } from '../household/hogares-api.service';
 import { TareasApiService, type GamificacionProgresoResponse, type TareaResponse } from './services/tareas-api.service';
@@ -87,7 +86,6 @@ describe('Tareas', () => {
     await TestBed.configureTestingModule({
       imports: [Tareas],
       providers: [
-        ...appConfig.providers,
         { provide: TareasApiService, useValue: mockTareasApi },
         { provide: HogaresApiService, useValue: mockHogaresApi },
         { provide: AuthService, useValue: mockAuthService },

@@ -9,6 +9,8 @@ import { CatalogoService } from '../../core/servicios/catalogo.service';
 import { NidoSelectComponent, NidoSelectOption } from '../../shared/ui/form/nido-select/nido-select';
 import { AlacenaApiService, CreateStockItemRequest } from '../alacena/alacena-api.service';
 import { ComparadorApiService, ComparedProduct } from './comparador-api.service';
+import { AuthService } from '../../core/auth/auth.service';
+import { PaywallService } from '../../core/servicios/paywall';
 
 const VIEW_ALL_LIST_ID = '__all__';
 const TELEGRAM_ALL_PENDING_OPTION = '__telegram_all_pending__';
@@ -27,6 +29,8 @@ export class ListaCompras implements OnInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly comparadorApi = inject(ComparadorApiService);
+  private readonly auth = inject(AuthService);
+  private readonly paywall = inject(PaywallService);
 
   protected listas: RecipeShoppingList[] = [];
   protected historial: ShoppingHistoryItem[] = [];
@@ -541,6 +545,10 @@ export class ListaCompras implements OnInit, OnDestroy {
   }
 
   protected openCompareModal(prefillQuery?: string): void {
+    if (!this.auth.isPremium()) {
+      this.paywall.open();
+      return;
+    }
     this.showCompareModal = true;
     this.compareQuery = prefillQuery || '';
     this.compareResults = [];

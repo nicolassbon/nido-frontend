@@ -2,6 +2,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BehaviorSubject, Subject, of, throwError } from 'rxjs';
 import { expect, vi } from 'vitest';
 import { Router } from '@angular/router';
+import { signal } from '@angular/core';
+import { AuthService } from '../../core/auth/auth.service';
+import { PaywallService } from '../../core/servicios/paywall';
 import {
   AlertCircle,
   Check,
@@ -36,6 +39,8 @@ describe('ListaCompras', () => {
   let listaService: FakeListaComprasService;
   let alacenaApi: FakeAlacenaApiService;
   let comparadorApi: FakeComparadorApiService;
+  let authService: any;
+  let paywallService: any;
 
   beforeEach(async () => {
     listaService = new FakeListaComprasService();
@@ -56,6 +61,20 @@ describe('ListaCompras', () => {
         { provide: AlacenaApiService, useValue: alacenaApi },
         { provide: ComparadorApiService, useValue: comparadorApi },
         { provide: Router, useValue: { getCurrentNavigation: () => null, navigate: vi.fn() } },
+        {
+          provide: AuthService,
+          useValue: {
+            isPremium: vi.fn(() => true),
+          },
+        },
+        {
+          provide: PaywallService,
+          useValue: {
+            open: vi.fn(),
+            close: vi.fn(),
+            isOpen: signal(false),
+          },
+        },
         {
           provide: LUCIDE_ICONS,
           multi: true,
@@ -85,6 +104,8 @@ describe('ListaCompras', () => {
 
     fixture = TestBed.createComponent(ListaCompras);
     component = fixture.componentInstance;
+    authService = TestBed.inject(AuthService);
+    paywallService = TestBed.inject(PaywallService);
     fixture.detectChanges();
   });
 
@@ -336,6 +357,7 @@ describe('ListaCompras', () => {
 
   describe('Comparador de precios', () => {
     it('abre el modal y realiza la busqueda', () => {
+      authService.isPremium.mockReturnValue(true);
       expect((component as any).showCompareModal).toBe(false);
 
       (component as any).openCompareModal('fideos');
@@ -359,6 +381,7 @@ describe('ListaCompras', () => {
     });
 
     it('muestra el mensaje funcional del backend cuando el comparador esta caido', () => {
+      authService.isPremium.mockReturnValue(true);
       const backendMessage = 'No pudimos comparar precios en este momento. Intentá nuevamente en unos minutos.';
       comparadorApi.compararPrecios.mockReturnValue(throwError(() => ({ error: { message: backendMessage } })));
       (component as any).openCompareModal('leche');
@@ -371,6 +394,7 @@ describe('ListaCompras', () => {
     });
 
     it('no muestra estado de sin resultados cuando la busqueda fallo', () => {
+      authService.isPremium.mockReturnValue(true);
       comparadorApi.compararPrecios.mockReturnValue(throwError(() => ({ error: { message: 'Servicio no disponible' } })));
       (component as any).openCompareModal('leche');
 
@@ -382,6 +406,7 @@ describe('ListaCompras', () => {
     });
 
     it('usa mensaje generico cuando el backend no envia mensaje funcional', () => {
+      authService.isPremium.mockReturnValue(true);
       comparadorApi.compararPrecios.mockReturnValue(throwError(() => ({ error: {} })));
       (component as any).openCompareModal('leche');
 
@@ -434,6 +459,15 @@ describe('ListaCompras', () => {
       expect((component as any).showAddToListModal).toBe(false);
       expect((component as any).showCompareModal).toBe(true);
       expect((component as any).selectedComparedProduct).toBeNull();
+    });
+
+    it('no abre el modal y llama a paywall.open() si el usuario no es premium', () => {
+      authService.isPremium.mockReturnValue(false);
+      expect((component as any).showCompareModal).toBe(false);
+
+      (component as any).openCompareModal('fideos');
+      expect((component as any).showCompareModal).toBe(false);
+      expect(paywallService.open).toHaveBeenCalled();
     });
   });
 });
