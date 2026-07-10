@@ -26,6 +26,7 @@
 
     <div class="relative z-10">
       <button
+        data-tour="appliances-add"
         class="flex items-center gap-2 bg-[rgba(247,241,230,0.15)] border border-[rgba(247,241,230,0.3)] text-nido-cream px-4 py-2 rounded-[20px] text-[0.8375rem] font-medium cursor-pointer transition hover:bg-[rgba(247,241,230,0.25)]"
         (click)="abrirModalAgregar()">
 
@@ -51,7 +52,7 @@
 
   <!-- Lista vacía -->
   @if (!loading() && electrodomesticos().length === 0) {
-    <div class="flex flex-col items-center justify-center gap-2 py-16 px-8 text-nido-brown text-center">
+    <div class="flex flex-col items-center justify-center gap-2 py-16 px-8 text-nido-brown text-center" data-tour="appliances-list">
       @if (electrodomesticos().length === 0) {
         <lucide-icon name="plug" [size]="48" />
         <p class="text-[0.9rem] font-medium">
@@ -71,7 +72,7 @@
 
   <!-- Cards -->
   @if (!loading() && electrodomesticos().length > 0) {
-    <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-4">
+    <div class="grid grid-cols-[repeat(auto-fill,minmax(min(100%,240px),1fr))] gap-4" data-tour="appliances-list">
 
       @for (item of electrodomesticos(); track item.id) {
         <article
@@ -136,6 +137,7 @@
               </div>
 
               <span
+                data-tour="appliances-status"
                 class="shrink-0 text-[0.72rem] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap"
                 [class]="getEstadoClass(item.estado)">
                 {{ formatEstado(item.estado) }}

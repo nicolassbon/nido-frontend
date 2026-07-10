@@ -45,6 +45,35 @@ export interface SaveEquipmentRequest {
   }[];
 }
 
+export type TutorialModule =
+  | 'home'
+  | 'alacena'
+  | 'recetas'
+  | 'lista-compras'
+  | 'electrodomesticos'
+  | 'finanzas'
+  | 'planificador'
+  | 'tareas'
+  | 'notificaciones'
+  | 'perfil'
+  | 'configuracion';
+
+export interface TutorialUsuarioState {
+  id: string;
+  usuarioId: string;
+  homeCompletado: boolean;
+  alacenaCompletado: boolean;
+  recetasCompletado: boolean;
+  listaComprasCompletado: boolean;
+  electrodomesticosCompletado: boolean;
+  finanzasCompletado: boolean;
+  planificadorCompletado: boolean;
+  tareasCompletado: boolean;
+  notificacionesCompletado: boolean;
+  perfilCompletado: boolean;
+  configuracionCompletado: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class OnboardingApiService {
   private readonly http = inject(HttpClient);
@@ -77,5 +106,13 @@ export class OnboardingApiService {
 
   getWellness(): Observable<{ restriccionIds: string[]; metaIds: string[] }> {
     return this.http.get<{ restriccionIds: string[]; metaIds: string[] }>(`${this.base}/onboarding/wellness`);
+  }
+
+  getTutorialState(): Observable<TutorialUsuarioState> {
+    return this.http.get<TutorialUsuarioState>(`${this.base}/onboarding/tutorial`);
+  }
+
+  completeTutorial(module: TutorialModule): Observable<TutorialUsuarioState> {
+    return this.http.patch<TutorialUsuarioState>(`${this.base}/onboarding/tutorial/${module}`, {});
   }
 }

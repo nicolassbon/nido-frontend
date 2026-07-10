@@ -153,6 +153,8 @@ export class TicketScan implements OnInit {
             categoria: 'Comida',
             fecha: today,
             pagadoPorId: null,
+            esCompartido: true,
+            participantesIds: null,
           });
         }),
         takeUntilDestroyed(this.destroyRef),

@@ -3,17 +3,32 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { Nav } from '../../shared/ui/nav/nav';
+import { PaywallModalComponent } from '../../shared/ui/paywall-modal/paywall-modal';
+import { AuthService } from '../auth/auth.service';
+import { PaywallService } from '../servicios/paywall';
+import { CommonModule } from '@angular/common';
+import { ContextualTutorialService } from '../tutorial/contextual-tutorial.service';
+import { LucideAngularModule } from 'lucide-angular';
 
 @Component({
   selector: 'app-layout',
-  imports: [RouterOutlet, Nav],
+  imports: [RouterOutlet, Nav, PaywallModalComponent, CommonModule, LucideAngularModule],
   templateUrl: './layout.html',
   styleUrl: './layout.scss',
 })
 export class Layout {
   private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
+  private readonly paywall = inject(PaywallService);
+  protected readonly tutorial = inject(ContextualTutorialService);
 
   protected readonly isMenuOpen = signal(false);
+
+  protected readonly isExpired = this.authService.hasExpiredPremium;
+
+  protected openPaywall(): void {
+    this.paywall.open();
+  }
 
   constructor() {
     // En mobile el menú se desliza por encima del contenido: al navegar
@@ -24,6 +39,15 @@ export class Layout {
         takeUntilDestroyed(),
       )
       .subscribe(() => this.closeMenu());
+
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
+      .subscribe((event) => this.tutorial.handleRoute((event as NavigationEnd).urlAfterRedirects));
+
+    window.setTimeout(() => this.tutorial.handleRoute(this.router.url), 0);
   }
 
   protected toggleMenu(): void {
@@ -32,5 +56,9 @@ export class Layout {
 
   protected closeMenu(): void {
     this.isMenuOpen.set(false);
+  }
+
+  protected startHelp(): void {
+    this.tutorial.startCurrentManually();
   }
 }

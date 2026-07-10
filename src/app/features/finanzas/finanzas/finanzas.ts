@@ -27,12 +27,15 @@ import {
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { HogaresApiService, MiembroResponse } from '../../household/hogares-api.service';
+import { PaywallService } from '../../../core/servicios/paywall';
 import { Avatar } from '../../../shared/ui/avatar/avatar';
 import {
   FinanzasApiService,
   GastoResponse,
   FacturaResponse,
   BalanceMiembroResponse,
+  BalanceResponse,
+  DeudaResponse,
   CreateGastoRequest,
   UpdateGastoRequest,
   CreateFacturaRequest,
@@ -56,6 +59,8 @@ interface NuevoGastoForm {
   categoria: string;
   fecha: string;
   pagadoPorId: string;
+  esCompartido: boolean;
+  participantesIds: string[]; // vacío = todos los miembros del hogar
 }
 
 interface NuevaFacturaForm {
@@ -106,7 +111,7 @@ const CATEGORIAS = ['Comida', 'Transporte', 'Servicios', 'Otros'];
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
 function emptyGastoForm(): NuevoGastoForm {
-  return { monto: null, descripcion: '', categoria: '', fecha: toIsoDate(new Date()), pagadoPorId: '' };
+  return { monto: null, descripcion: '', categoria: '', fecha: toIsoDate(new Date()), pagadoPorId: '', esCompartido: true, participantesIds: [] };
 }
 
 function emptyFacturaForm(): NuevaFacturaForm {
@@ -126,6 +131,7 @@ export class Finanzas {
   private readonly finanzasApi = inject(FinanzasApiService);
   private readonly destroyRef  = inject(DestroyRef);
   private readonly router      = inject(Router);
+  private readonly paywall     = inject(PaywallService);
 
   // ── Canvas refs ───────────────────────────────────────
   private readonly lineCanvasRef  = viewChild<ElementRef<HTMLCanvasElement>>('lineCanvas');
@@ -156,7 +162,7 @@ export class Finanzas {
   protected readonly gastosMesActual   = signal<GastoResponse[]>([]);
   protected readonly gastosMesAnterior = signal<GastoResponse[]>([]);
   protected readonly facturas          = signal<FacturaResponse[]>([]);
-  protected readonly balanceMiembros   = signal<BalanceMiembroResponse[]>([]);
+  protected readonly balance           = signal<BalanceResponse | null>(null);
   protected readonly miembros          = signal<MiembroResponse[]>([]);
   protected readonly modoAhorro              = signal(false);
   protected readonly modoAhorroLoading       = signal(false);
@@ -195,9 +201,11 @@ export class Finanzas {
     this.facturas().filter(f => !f.pagada)
   );
 
-  protected readonly otrosMiembros = computed(() =>
-    this.miembros().filter(m => m.usuarioId !== this.currentUserId)
-  );
+  protected readonly balanceMiembros = computed(() => this.balance()?.miembros ?? []);
+  protected readonly deudas          = computed(() => this.balance()?.deudas ?? []);
+  protected readonly totalPersonal   = computed(() => this.balance()?.totalPersonal ?? 0);
+
+  protected readonly todosMiembros = computed(() => this.miembros());
 
   protected readonly gastoFormValid = computed(() =>
     (this.gastoForm.monto ?? 0) > 0 && !!this.gastoForm.fecha
@@ -271,7 +279,7 @@ export class Finanzas {
           this.totalMesActual.set(gastosMes.totalPeriodo);
           this.gastosMesAnterior.set(gastosPrev.gastos);
           this.totalMesAnterior.set(gastosPrev.totalPeriodo);
-          this.balanceMiembros.set(balance.miembros);
+          this.balance.set(balance);
           this.modoAhorro.set(modoAhorro.activo);
           this.miembros.set(miembros);
           this.facturas.set(facturas);
@@ -352,12 +360,16 @@ export class Finanzas {
   private refreshBalance(ref: Date): void {
     this.finanzasApi.getBalance(firstDayOfMonth(ref), lastDayOfMonth(ref))
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({ next: b => this.balanceMiembros.set(b.miembros) });
+      .subscribe({ next: b => this.balance.set(b) });
   }
 
   // ── Modo ahorro ───────────────────────────────────────
 
   protected toggleModoAhorro(): void {
+    if (!this.authService.isPremium()) {
+      this.paywall.open();
+      return;
+    }
     const nuevo = !this.modoAhorro();
     this.finanzasApi.setModoAhorro(nuevo)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -420,11 +432,15 @@ export class Finanzas {
 
     if (editing) {
       const req: UpdateGastoRequest = {
-        monto:       this.gastoForm.monto!,
-        descripcion: this.gastoForm.descripcion || null,
-        categoria:   this.gastoForm.categoria || null,
-        fecha:       this.gastoForm.fecha,
-        pagadoPorId: this.gastoForm.pagadoPorId || null,
+        monto:            this.gastoForm.monto!,
+        descripcion:      this.gastoForm.descripcion || null,
+        categoria:        this.gastoForm.categoria || null,
+        fecha:            this.gastoForm.fecha,
+        pagadoPorId:      this.gastoForm.pagadoPorId || null,
+        esCompartido:     this.gastoForm.esCompartido,
+        participantesIds: this.gastoForm.esCompartido && this.gastoForm.participantesIds.length > 0
+          ? this.gastoForm.participantesIds
+          : null,
       };
 
       this.finanzasApi.updateGasto(editing.id, req)
@@ -458,11 +474,15 @@ export class Finanzas {
         });
     } else {
       const req: CreateGastoRequest = {
-        monto:       this.gastoForm.monto!,
-        descripcion: this.gastoForm.descripcion || null,
-        categoria:   this.gastoForm.categoria || null,
-        fecha:       this.gastoForm.fecha,
-        pagadoPorId: this.gastoForm.pagadoPorId || null,
+        monto:            this.gastoForm.monto!,
+        descripcion:      this.gastoForm.descripcion || null,
+        categoria:        this.gastoForm.categoria || null,
+        fecha:            this.gastoForm.fecha,
+        pagadoPorId:      this.gastoForm.pagadoPorId || null,
+        esCompartido:     this.gastoForm.esCompartido,
+        participantesIds: this.gastoForm.esCompartido && this.gastoForm.participantesIds.length > 0
+          ? this.gastoForm.participantesIds
+          : null,
       };
 
       this.finanzasApi.createGasto(req)
@@ -496,11 +516,13 @@ export class Finanzas {
   protected openEditGastoModal(gasto: GastoResponse): void {
     this.editingGasto.set(gasto);
     this.gastoForm = {
-      monto:       gasto.monto,
-      descripcion: gasto.descripcion ?? '',
-      categoria:   gasto.categoria ?? '',
-      fecha:       gasto.fecha,
-      pagadoPorId: gasto.pagadoPorId,
+      monto:            gasto.monto,
+      descripcion:      gasto.descripcion ?? '',
+      categoria:        gasto.categoria ?? '',
+      fecha:            gasto.fecha,
+      pagadoPorId:      gasto.pagadoPorId,
+      esCompartido:     gasto.esCompartido,
+      participantesIds: gasto.participantesIds ?? [],
     };
     this.gastoError.set(null);
     this.gastoSubmitted.set(false);
@@ -645,6 +667,59 @@ export class Finanzas {
           this.isSavingPresupuesto.set(false);
         },
       });
+  }
+
+  // ── Participantes del gasto ───────────────────────────
+
+  protected isParticipante(usuarioId: string): boolean {
+    // Lista vacía = todos participan
+    return this.gastoForm.participantesIds.length === 0
+      || this.gastoForm.participantesIds.includes(usuarioId);
+  }
+
+  protected toggleParticipante(usuarioId: string): void {
+    const ids = this.gastoForm.participantesIds;
+    const todos = this.todosMiembros().map(m => m.usuarioId);
+
+    // Si está vacío (todos), expandir a todos menos este
+    if (ids.length === 0) {
+      this.gastoForm = { ...this.gastoForm, participantesIds: todos.filter(id => id !== usuarioId) };
+      return;
+    }
+
+    const yaTiene = ids.includes(usuarioId);
+    let nuevos = yaTiene ? ids.filter(id => id !== usuarioId) : [...ids, usuarioId];
+
+    // Si quedan todos seleccionados → colapsar a lista vacía (= todos)
+    if (nuevos.length === todos.length) nuevos = [];
+
+    this.gastoForm = { ...this.gastoForm, participantesIds: nuevos };
+  }
+
+  protected get participantesLabel(): string {
+    const ids = this.gastoForm.participantesIds;
+    if (ids.length === 0) return 'Todo el hogar';
+    const nombres = this.todosMiembros()
+      .filter(m => ids.includes(m.usuarioId))
+      .map(m => m.nombre.split(' ')[0]);
+    return nombres.join(', ');
+  }
+
+  // ── Balance helpers ───────────────────────────────────
+
+  protected balanceEstado(): 'vacio' | 'equilibrado' | 'deudas' {
+    const b = this.balance();
+    if (!b || b.totalPeriodo === 0) return 'vacio';
+    if (b.deudas.length === 0) return 'equilibrado';
+    return 'deudas';
+  }
+
+  protected esMiDeuda(deuda: DeudaResponse): boolean {
+    return deuda.deudorId === this.currentUserId;
+  }
+
+  protected esMiAcreencia(deuda: DeudaResponse): boolean {
+    return deuda.acreedorId === this.currentUserId;
   }
 
   // ── Display helpers ───────────────────────────────────

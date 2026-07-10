@@ -1,0 +1,310 @@
+.paywall-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  backdrop-filter: blur(1.5px);
+}
+
+.paywall-modal {
+  position: relative;
+  width: 100%;
+  max-width: 540px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 40px rgba(38, 63, 48, 0.18);
+  overflow: hidden;
+}
+
+.paywall-header {
+  position: relative;
+  overflow: hidden;
+  min-height: 86px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background:
+    radial-gradient(circle at 82% 15%, rgba(180, 139, 106, 0.25) 0%, rgba(180, 139, 106, 0) 48%),
+    linear-gradient(145deg, #243f3f 0%, #1f3a3a 55%, #1a3131 100%);
+}
+
+.paywall-header-glow {
+  position: absolute;
+  inset: -10% auto auto 50%;
+  width: 220px;
+  height: 140px;
+  background: radial-gradient(circle, rgba(247, 241, 230, 0.12) 0%, rgba(247, 241, 230, 0) 75%);
+  transform: translateX(-20%);
+  pointer-events: none;
+}
+
+.paywall-header-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding-right: 0.5rem;
+}
+
+.paywall-header-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--color-nido-cream);
+  background: rgba(247, 241, 230, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(247, 241, 230, 0.22);
+}
+
+.paywall-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+}
+
+.paywall-title {
+  margin: 0;
+  color: var(--color-nido-cream);
+  font-size: 1.15rem;
+  line-height: 1.2;
+  font-weight: 700;
+  font-family: var(--font-family-sans);
+}
+
+.paywall-subtitle {
+  margin: 0;
+  color: color-mix(in srgb, var(--color-nido-cream) 74%, transparent);
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+.paywall-close {
+  position: absolute;
+  top: 0.95rem;
+  right: 1rem;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 8px;
+  color: color-mix(in srgb, var(--color-nido-cream) 70%, transparent);
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    color: var(--color-nido-cream);
+    background: rgba(247, 241, 230, 0.16);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-nido-gold);
+    outline-offset: 2px;
+  }
+}
+
+.paywall-body {
+  padding: 1rem 1.35rem 1.2rem;
+  background: #fff;
+}
+
+.paywall-badge-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
+.paywall-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.28rem 0.72rem;
+  border: 1px solid color-mix(in srgb, var(--color-nido-gold) 45%, #fff);
+  background: color-mix(in srgb, var(--color-nido-cream) 55%, #fff);
+  color: var(--color-nido-brown);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.paywall-description {
+  margin: 0 auto 1.15rem;
+  max-width: 420px;
+  text-align: center;
+  color: var(--color-nido-brown);
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.paywall-benefits {
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+  margin-bottom: 1.3rem;
+}
+
+.paywall-checkout-error {
+  margin: -0.35rem 0 1rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--color-nido-red) 28%, #fff);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-nido-red) 7%, #fff);
+  color: var(--color-nido-red);
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.benefit-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+
+  h4 {
+    margin: 0;
+    color: var(--color-nido-green-dark);
+    font-size: 0.83rem;
+    line-height: 1.2;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0.2rem 0 0;
+    color: var(--color-nido-brown);
+    font-size: 0.79rem;
+    line-height: 1.3;
+  }
+}
+
+.benefit-icon {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  color: #0f9f73;
+}
+
+.paywall-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding-top: 0.8rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-nido-border) 80%, #fff);
+}
+
+.btn-subscribe,
+.btn-later {
+  border-radius: 999px;
+  border: 1px solid transparent;
+  min-height: 42px;
+  padding: 0 1.3rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-nido-gold);
+    outline-offset: 2px;
+  }
+}
+
+.btn-subscribe {
+  flex: 1;
+  background: var(--color-nido-green-dark);
+  color: var(--color-nido-cream);
+  box-shadow: 0 7px 16px rgba(31, 58, 58, 0.22);
+
+  &:hover {
+    background: var(--color-nido-green);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(31, 58, 58, 0.28);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 6px 14px rgba(31, 58, 58, 0.22);
+  }
+
+  &:disabled {
+    opacity: 0.68;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 7px 16px rgba(31, 58, 58, 0.18);
+  }
+}
+
+.btn-later {
+  min-width: 154px;
+  background: transparent;
+  color: var(--color-nido-brown);
+  border-color: var(--color-nido-border);
+
+  &:hover {
+    background: var(--color-nido-cream);
+    color: var(--color-nido-green-dark);
+  }
+
+  &:active {
+    background: color-mix(in srgb, var(--color-nido-cream) 90%, #fff);
+  }
+}
+
+@media (max-width: 640px) {
+  .paywall-modal {
+    border-radius: 14px;
+  }
+
+  .paywall-header {
+    min-height: 80px;
+    padding: 0.85rem 0.95rem;
+  }
+
+  .paywall-body {
+    padding: 0.9rem 1rem 1rem;
+  }
+
+  .paywall-title {
+    font-size: 1.04rem;
+  }
+
+  .paywall-subtitle {
+    font-size: 0.72rem;
+  }
+
+  .paywall-description {
+    font-size: 0.84rem;
+    margin-bottom: 1rem;
+  }
+
+  .benefit-item h4 {
+    font-size: 0.8rem;
+  }
+
+  .benefit-item p {
+    font-size: 0.75rem;
+  }
+
+  .paywall-actions {
+    flex-direction: column-reverse;
+    gap: 0.55rem;
+  }
+
+  .btn-later,
+  .btn-subscribe {
+    width: 100%;
+  }
+}
