@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authChildGuard, authGuard, guestGuard } from './core/guards/auth';
+import { premiumGuard } from './core/guards/premium';
 import { Layout } from './core/layout/layout';
 import { Home } from './features/home/home/home';
 import { Recipes } from './features/recipes/recipes/recipes';
@@ -48,8 +49,8 @@ export const routes: Routes = [
       { path: 'recetas', component: Recipes },
       { path: 'recetas/:id',    component: RecipeDetail  },
       { path: 'alacena',        component: Alacena       },
-      { path: 'alacena/escanear-ticket', component: TicketScan },
-      { path: 'alacena/:id/informacion-nutricional', component: NutritionScan },
+      { path: 'alacena/escanear-ticket', component: TicketScan, canActivate: [premiumGuard] },
+      { path: 'alacena/:id/informacion-nutricional', component: NutritionScan, canActivate: [premiumGuard] },
       { path: 'alacena/:id',    component: ProductDetail },
       { path: 'lista-compras',  component: ListaCompras  },
       { path: 'electrodomesticos', component: Electrodomesticos },

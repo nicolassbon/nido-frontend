@@ -558,16 +558,16 @@ h1 {
   .tip-card {
     justify-content: flex-start;
   }
+
+  .hero-card {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
 }
 
 @media (max-width: 760px) {
   .recipe-page {
     padding: 12px;
-  }
-
-  .hero-card {
-    grid-template-columns: 1fr;
-    min-height: 0;
   }
 
   .recipe-photo,

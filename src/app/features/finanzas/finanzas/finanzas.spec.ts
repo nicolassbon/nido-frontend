@@ -4,18 +4,47 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { appConfig } from '../../../app.config';
 import { Finanzas } from './finanzas';
 import { GastoResponse, FacturaResponse } from '../finanzas-api.service';
+import { of } from 'rxjs';
+import { signal } from '@angular/core';
+import { AuthService } from '../../../core/auth/auth.service';
+import { PaywallService } from '../../../core/servicios/paywall';
+import { vi } from 'vitest';
 
 describe('Finanzas', () => {
   let component: Finanzas;
+  let authService: any;
+  let paywallService: any;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Finanzas],
-      providers: [...appConfig.providers, provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        ...appConfig.providers,
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        {
+          provide: AuthService,
+          useValue: {
+            getNombre: () => 'Nico',
+            getUserId: () => 'u1',
+            isPremium: vi.fn(() => true),
+          },
+        },
+        {
+          provide: PaywallService,
+          useValue: {
+            open: vi.fn(),
+            close: vi.fn(),
+            isOpen: signal(false),
+          },
+        },
+      ],
     }).compileComponents();
 
     const fixture = TestBed.createComponent(Finanzas);
     component = fixture.componentInstance;
+    authService = TestBed.inject(AuthService);
+    paywallService = TestBed.inject(PaywallService);
   });
 
   it('se crea correctamente', () => {
@@ -299,6 +328,28 @@ describe('Finanzas', () => {
     component['closePresupuestoModal']();
 
     expect(component['showPresupuestoModal']()).toBe(false);
+  });
+
+  // ── toggleModoAhorro Gating ───────────────────────────────────────────────
+
+  it('no ejecuta setModoAhorro y abre paywall si el usuario no es premium', () => {
+    authService.isPremium.mockReturnValue(false);
+    const setModoAhorroSpy = vi.spyOn(component['finanzasApi'], 'setModoAhorro');
+
+    component['toggleModoAhorro']();
+
+    expect(setModoAhorroSpy).not.toHaveBeenCalled();
+    expect(paywallService.open).toHaveBeenCalled();
+  });
+
+  it('ejecuta setModoAhorro si el usuario es premium', () => {
+    authService.isPremium.mockReturnValue(true);
+    const setModoAhorroSpy = vi.spyOn(component['finanzasApi'], 'setModoAhorro').mockReturnValue(of({ activo: true }));
+
+    component['toggleModoAhorro']();
+
+    expect(setModoAhorroSpy).toHaveBeenCalled();
+    expect(paywallService.open).not.toHaveBeenCalled();
   });
 });
 

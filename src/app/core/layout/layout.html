@@ -14,6 +14,18 @@
   <!-- Contenido principal -->
   <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
 
+    @if (isExpired()) {
+      <div class="alert-expired bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center justify-between text-amber-800 text-[0.75rem] font-medium z-40 select-none shrink-0 shadow-sm">
+        <div class="flex items-center gap-2">
+          <lucide-icon name="alert-triangle" class="w-4 h-4 text-amber-600 shrink-0"></lucide-icon>
+          <span>Tu suscripción o período de prueba premium ha expirado. Pasate al Plan Hogar para recuperar el acceso a todas las funciones premium.</span>
+        </div>
+        <button (click)="openPaywall()" class="bg-amber-600 hover:bg-amber-700 text-white text-[0.7rem] px-3 py-1 rounded-full border-none cursor-pointer font-semibold transition whitespace-nowrap ml-4">
+          Ver Planes
+        </button>
+      </div>
+    }
+
     <!-- Header mobile -->
     <header
       class="relative flex items-center justify-center bg-nido-green-dark px-2 pb-2.5 shadow-[0_2px_10px_rgba(31,58,58,0.25)] md:hidden"
@@ -46,5 +58,7 @@
     }
 
   </div>
+
+  <app-paywall-modal />
 
 </div>
