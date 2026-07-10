@@ -59,6 +59,9 @@ export class ListaCompras implements OnInit, OnDestroy {
   protected compareError: string | null = null;
   protected compareSuccessMessage: string | null = null;
   protected compareSearched = false;
+  protected showAddToListModal = false;
+  protected selectedComparedProduct: string | null = null;
+  protected selectedAddToListTargetId: string | null = null;
 
   private sub = new Subscription();
   private readonly categoriaIdByName = new Map<string, string>();
@@ -624,20 +627,34 @@ export class ListaCompras implements OnInit, OnDestroy {
   }
 
   protected addComparedProduct(productName: string): void {
-    let targetListId = this.activeListId;
-    if (!targetListId || targetListId === VIEW_ALL_LIST_ID) {
-      const firstList = this.listas[0];
-      if (!firstList) {
-        this.compareError = 'No tenés ninguna lista de compras creada.';
-        this.cdr.markForCheck();
-        return;
-      }
-      targetListId = firstList.id;
+    if (this.listas.length === 0) {
+      this.compareError = 'No tenés ninguna lista de compras creada.';
+      this.cdr.markForCheck();
+      return;
     }
 
-    this.service.addItem(targetListId, productName, 1, 'unidad').subscribe({
+    this.selectedComparedProduct = productName;
+    this.selectedAddToListTargetId = (this.activeListId && this.activeListId !== VIEW_ALL_LIST_ID)
+      ? this.activeListId
+      : this.listas[0].id;
+    this.showCompareModal = false;
+    this.showAddToListModal = true;
+    this.cdr.markForCheck();
+  }
+
+  protected confirmAddComparedProduct(): void {
+    if (!this.selectedAddToListTargetId || !this.selectedComparedProduct) {
+      return;
+    }
+
+    const prodName = this.selectedComparedProduct;
+    this.service.addItem(this.selectedAddToListTargetId, prodName, 1, 'unidad').subscribe({
       next: () => {
-        this.compareSuccessMessage = `"${productName}" agregado con éxito a la lista.`;
+        this.compareSuccessMessage = `"${prodName}" agregado con éxito a la lista.`;
+        this.showAddToListModal = false;
+        this.showCompareModal = true;
+        this.selectedComparedProduct = null;
+        this.selectedAddToListTargetId = null;
         this.cdr.markForCheck();
         setTimeout(() => {
           this.compareSuccessMessage = null;
@@ -646,9 +663,21 @@ export class ListaCompras implements OnInit, OnDestroy {
       },
       error: () => {
         this.compareError = 'No se pudo agregar el producto a la lista.';
+        this.showAddToListModal = false;
+        this.showCompareModal = true;
+        this.selectedComparedProduct = null;
+        this.selectedAddToListTargetId = null;
         this.cdr.markForCheck();
       }
     });
+  }
+
+  protected closeAddToListModal(): void {
+    this.showAddToListModal = false;
+    this.showCompareModal = true;
+    this.selectedComparedProduct = null;
+    this.selectedAddToListTargetId = null;
+    this.cdr.markForCheck();
   }
 
   protected formatPrice(value: number): string {
