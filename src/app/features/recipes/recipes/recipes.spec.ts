@@ -32,6 +32,7 @@ import { Recipes } from './recipes';
 import { RecipesApiService, ApiReceta } from './services/recipes-api.service';
 import { ProductService, ProductManualResponse } from '../../../core/servicios/agregar-producto.service';
 import { AuthService } from '../../../core/auth/auth.service';
+import { PaywallService } from '../../../core/servicios/paywall';
 import { ElectrodomesticosService } from '../../electrodomesticos/services/electrodomesticos.service';
 import { HogaresApiService, MiembroResponse } from '../../household/hogares-api.service';
 import { PerfilApiService } from '../../perfil/perfil-api.service';
@@ -81,9 +82,10 @@ describe('Recipes', () => {
   let fixture:   ComponentFixture<Recipes>;
   let component: Recipes;
 
-  const recipesApiMock          = { getAll:           vi.fn() };
+  const recipesApiMock          = { getAll: vi.fn(), recomendarPorIa: vi.fn() };
   const productSvcMock          = { getProductManual: vi.fn(), createStockHome: vi.fn() };
-  const authServiceMock         = { getHogarId:       vi.fn(), getUserId: vi.fn() };
+  const authServiceMock         = { getHogarId: vi.fn(), getUserId: vi.fn(), isPremium: vi.fn() };
+  const paywallServiceMock      = { open: vi.fn() };
   const electrodomesticosMock   = { getAll:           vi.fn() };
   const hogaresApiMock          = { getMiembros:      vi.fn() };
   const perfilApiMock           = { getProfile:       vi.fn() };
@@ -96,11 +98,14 @@ describe('Recipes', () => {
     electrodomesticos: unknown[]     = [],
     profileAllergies: string[]       = [],
     profileFoodRestrictions: string[] = [],
+    isPremium = true,
   ): Promise<void> {
     recipesApiMock.getAll.mockReturnValue(of(recetas));
+    recipesApiMock.recomendarPorIa.mockReturnValue(of(recetas));
     productSvcMock.getProductManual.mockReturnValue(of(pantry));
     authServiceMock.getHogarId.mockReturnValue(hogarId);
     authServiceMock.getUserId.mockReturnValue('u1');
+    authServiceMock.isPremium.mockReturnValue(isPremium);
     hogaresApiMock.getMiembros.mockReturnValue(of(miembros));
     electrodomesticosMock.getAll.mockReturnValue(of(electrodomesticos));
     perfilApiMock.getProfile.mockReturnValue(of({
@@ -117,6 +122,7 @@ describe('Recipes', () => {
         { provide: RecipesApiService,       useValue: recipesApiMock        },
         { provide: ProductService,          useValue: productSvcMock        },
         { provide: AuthService,             useValue: authServiceMock       },
+        { provide: PaywallService,          useValue: paywallServiceMock    },
         { provide: ElectrodomesticosService, useValue: electrodomesticosMock },
         { provide: HogaresApiService,       useValue: hogaresApiMock        },
         { provide: PerfilApiService,        useValue: perfilApiMock         },
@@ -153,6 +159,10 @@ describe('Recipes', () => {
     component = fixture.componentInstance;
 
     component.ngOnInit();
+  }
+
+  function getFloatingAssistantButton(): HTMLButtonElement | null {
+    return fixture.nativeElement.querySelector('[data-tour="recipes-assistant"] button[aria-label]');
   }
 
   afterEach(() => {
@@ -291,6 +301,19 @@ describe('Recipes', () => {
     });
   });
 
+  it('deberia abrir el paywall y no abrir el asistente si el usuario es free', async () => {
+    await setup([mockRecetaArroz], [arrozPantry]);
+    authServiceMock.isPremium.mockReturnValue(false);
+    const stopPropagation = vi.fn();
+    const recipe = component['filteredRecipes']()[0];
+
+    component['abrirAsistenteConReceta'](recipe, { stopPropagation } as unknown as Event);
+
+    expect(stopPropagation).toHaveBeenCalled();
+    expect(paywallServiceMock.open).toHaveBeenCalled();
+    expect(component['asistenteAbierto']()).toBe(false);
+  });
+
   it('deberia abrir la burbuja del asistente en modo general sin receta seleccionada', async () => {
     await setup([mockRecetaArroz], [arrozPantry]);
     const recipe = component['filteredRecipes']()[0];
@@ -301,6 +324,69 @@ describe('Recipes', () => {
 
     expect(component['asistenteAbierto']()).toBe(true);
     expect(component['recetaSeleccionadaAsistente']()).toBeNull();
+  });
+
+  it('deberia abrir el asistente desde el boton flotante renderizado para premium', async () => {
+    await setup([mockRecetaArroz], [arrozPantry], HOGAR_ID, [], [], [], [], true);
+
+    fixture.detectChanges();
+
+    const floatingButton = getFloatingAssistantButton();
+    expect(floatingButton).not.toBeNull();
+    expect(floatingButton?.getAttribute('aria-label')).toBe('Abrir asistente IA');
+
+    floatingButton?.click();
+    fixture.detectChanges();
+
+    expect(component['asistenteAbierto']()).toBe(true);
+    expect(component['recetaSeleccionadaAsistente']()).toBeNull();
+    expect(fixture.nativeElement.querySelector('app-receta-asistente')).not.toBeNull();
+  });
+
+  it('deberia abrir el paywall desde el boton flotante renderizado para free', async () => {
+    await setup([mockRecetaArroz], [arrozPantry], HOGAR_ID, [], [], [], [], false);
+
+    fixture.detectChanges();
+
+    const floatingButton = getFloatingAssistantButton();
+    expect(floatingButton).not.toBeNull();
+    expect(floatingButton?.getAttribute('aria-label')).toBe('Ver Premium para usar el asistente IA');
+
+    floatingButton?.click();
+    fixture.detectChanges();
+
+    expect(paywallServiceMock.open).toHaveBeenCalledTimes(1);
+    expect(component['asistenteAbierto']()).toBe(false);
+    expect(fixture.nativeElement.querySelector('app-receta-asistente')).toBeNull();
+  });
+
+  it('deberia usar busqueda local y no llamar IA si el usuario es free', async () => {
+    await setup([mockRecetaArroz, mockRecetaPasta], [arrozPantry]);
+    authServiceMock.isPremium.mockReturnValue(false);
+
+    component['onSearchSubmit']('arroz con leche', 'alta-proteina');
+
+    expect(recipesApiMock.recomendarPorIa).not.toHaveBeenCalled();
+    expect(component['isLoadingIa']()).toBe(false);
+  });
+
+  it('deberia consultar recomendaciones IA si el usuario es premium', async () => {
+    await setup([mockRecetaArroz, mockRecetaPasta], [arrozPantry]);
+
+    component['onSearchSubmit']('quiero una receta con arroz', 'alta-proteina');
+
+    expect(recipesApiMock.recomendarPorIa).toHaveBeenCalledWith('quiero una receta con arroz', 'alta-proteina', []);
+  });
+
+  it('deberia mostrar CTA premium y ocultar acciones IA cuando el usuario es free', async () => {
+    await setup([mockRecetaArroz], [arrozPantry], HOGAR_ID, [], [], [], [], false);
+
+    fixture.detectChanges();
+
+    const text = fixture.nativeElement.textContent.replace(/\s+/g, ' ');
+    expect(text).toContain('Las funciones de IA están disponibles en Plan Premium');
+    expect(text).toContain('IA en Premium');
+    expect(getFloatingAssistantButton()).not.toBeNull();
   });
 
   it('debería ocultar recetas sin coincidencias cuando el filtro está activo', async () => {
