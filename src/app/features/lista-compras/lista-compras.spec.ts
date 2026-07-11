@@ -8,10 +8,12 @@ import { PaywallService } from '../../core/servicios/paywall';
 import {
   AlertCircle,
   Check,
+  ChevronRight,
   Eye,
   History,
   ChevronDown,
   ImageOff,
+  Lightbulb,
   ListCollapse,
   Loader,
   LUCIDE_ICONS,
@@ -28,7 +30,7 @@ import {
   X,
 } from 'lucide-angular';
 import { ListaCompras } from './lista-compras';
-import { ListaComprasService, RecipeShoppingList, ShoppingHistoryItem } from './lista-compras.service';
+import { ListaComprasService, RecipeShoppingList, ShoppingHistoryItem, SugerenciaNido } from './lista-compras.service';
 import { CatalogoService } from '../../core/servicios/catalogo.service';
 import { AlacenaApiService } from '../alacena/alacena-api.service';
 import { ComparadorApiService } from './comparador-api.service';
@@ -81,10 +83,12 @@ describe('ListaCompras', () => {
           useValue: new LucideIconProvider({
             AlertCircle,
             Check,
+            ChevronRight,
             Eye,
             History,
             ChevronDown,
             ImageOff,
+            Lightbulb,
             ListCollapse,
             Loader,
             Pencil,
@@ -475,13 +479,16 @@ describe('ListaCompras', () => {
 class FakeListaComprasService {
   private readonly listas = new BehaviorSubject<RecipeShoppingList[]>([]);
   private readonly historial = new BehaviorSubject<ShoppingHistoryItem[]>([]);
+  private readonly sugerencias = new BehaviorSubject<SugerenciaNido[]>([]);
 
   readonly listas$ = this.listas.asObservable();
   readonly historial$ = this.historial.asObservable();
+  readonly sugerencias$ = this.sugerencias.asObservable();
   readonly totalPendiente$ = of(0);
 
   refresh = vi.fn(() => of([]));
   refreshHistory = vi.fn(() => of([]));
+  refreshSugerencias = vi.fn(() => of([]));
   addToLista = vi.fn();
   createList = vi.fn(() => of([]));
   updateList = vi.fn(() => of([]));
@@ -492,9 +499,14 @@ class FakeListaComprasService {
   removeItem = vi.fn(() => of([]));
   markAddedToInventory = vi.fn(() => of([]));
   sendToTelegram = vi.fn(() => of({ status: 'enqueued', itemCount: 1, chatId: 1, listaId: null }));
+  addManualItem = vi.fn(() => of([]));
 
   emitLists(listas: RecipeShoppingList[]): void {
     this.listas.next(listas);
+  }
+
+  emitSugerencias(sugerencias: SugerenciaNido[]): void {
+    this.sugerencias.next(sugerencias);
   }
 }
 

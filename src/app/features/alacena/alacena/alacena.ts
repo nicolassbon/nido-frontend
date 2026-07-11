@@ -987,7 +987,8 @@ protected reloadProducts(): void { this.loadProducts(); }
   }
 
   protected addManually(): void {
-    this.scannerStep.set('confirm');
+    this.closeScanner();
+    this.showManualForm.set(true);
   }
 
   protected requestDeleteExpired(event: Event, product: Product): void {

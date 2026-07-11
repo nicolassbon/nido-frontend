@@ -208,7 +208,6 @@ export class Recipes implements OnInit {
   protected readonly showSortDropdown         = signal(false);
   protected readonly showRoulettePopup        = signal(false);
   protected readonly rouletteRecipe           = signal<RecipeWithAvailability | null>(null);
-  protected readonly excludeAllergens         = signal(false);
   protected readonly respectActiveRestrictions = signal(true);
   protected readonly excludeMissingAppliances = signal(false);
   protected readonly filterByIngredients      = signal(false);
@@ -224,9 +223,10 @@ export class Recipes implements OnInit {
     { value: 'bajo-calorias', label: 'Bajo en calorias' },
     { value: 'vegetariano', label: 'Vegetariano' },
   ]);
-
   protected readonly householdMembers = signal<HouseholdMember[]>([]);
   protected readonly eatingToday = signal<Set<string>>(new Set());
+  protected readonly currentUserId = computed(() => this.authService.getUserId());
+
   protected readonly asistenteAbierto         = signal<boolean>(false);
   protected readonly recetaSeleccionadaAsistente = signal<AssistantRecipeContext | null>(null);
   private readonly profileAllergies = signal<string[]>([]);
@@ -243,16 +243,33 @@ export class Recipes implements OnInit {
     return currentUserIsEating ? this.profileAllergies() : [];
   });
 
-  private readonly activeAllergens = computed(() =>
-    this.expandRestrictions(this.activeRestrictionValues())
-  );
+  protected readonly showRestrictionsDropdown = signal(false);
+  protected readonly ignoredRestrictions = signal<Set<string>>(new Set());
 
-  protected readonly activeRestrictionLabels = computed(() =>
+  protected readonly allRestrictionLabels = computed(() =>
     this.toRestrictionLabels(this.activeRestrictionValues())
   );
 
+  private readonly activeRestrictionValuesFiltered = computed(() => {
+    const rawValues = this.activeRestrictionValues();
+    const ignored = this.ignoredRestrictions();
+    return rawValues.filter(val => {
+      const label = this.toRestrictionLabels([val])[0] ?? val;
+      return !ignored.has(this.normalizeText(label));
+    });
+  });
+
+  private readonly activeAllergens = computed(() =>
+    this.expandRestrictions(this.activeRestrictionValuesFiltered())
+  );
+
+  protected readonly activeRestrictionLabels = computed(() => {
+    const ignored = this.ignoredRestrictions();
+    return this.allRestrictionLabels().filter(label => !ignored.has(this.normalizeText(label)));
+  });
+
   protected readonly restrictionsFilterEnabled = computed(() =>
-    this.excludeAllergens() || (this.respectActiveRestrictions() && this.activeRestrictionLabels().length > 0)
+    this.respectActiveRestrictions() && this.activeRestrictionLabels().length > 0
   );
 
   protected readonly pantryIngredients = signal<PantryIngredient[]>([]);
@@ -456,15 +473,13 @@ export class Recipes implements OnInit {
     if (this.showSortDropdown() && !target.closest('.sort-dropdown-container')) {
       this.showSortDropdown.set(false);
     }
+    if (this.showRestrictionsDropdown() && !target.closest('.restrictions-dropdown-container')) {
+      this.showRestrictionsDropdown.set(false);
+    }
   }
 
   protected toggleAllergens(): void {
-    if (this.activeRestrictionLabels().length > 0) {
-      this.respectActiveRestrictions.update(value => !value);
-      return;
-    }
-
-    this.excludeAllergens.update(value => !value);
+    this.respectActiveRestrictions.update(value => !value);
   }
 
   protected toggleMissingAppliances(): void {
@@ -477,6 +492,20 @@ export class Recipes implements OnInit {
       next.has(memberId) ? next.delete(memberId) : next.add(memberId);
       return next;
     });
+    this.ignoredRestrictions.set(new Set());
+  }
+
+  protected toggleIgnoreRestriction(label: string): void {
+    const normalized = this.normalizeText(label);
+    this.ignoredRestrictions.update(set => {
+      const next = new Set(set);
+      next.has(normalized) ? next.delete(normalized) : next.add(normalized);
+      return next;
+    });
+  }
+
+  protected isRestrictionIgnored(label: string): boolean {
+    return this.ignoredRestrictions().has(this.normalizeText(label));
   }
 
   protected isEatingToday(memberId: string): boolean {
@@ -588,12 +617,18 @@ export class Recipes implements OnInit {
       ? `${base} bg-nido-green-dark border-nido-green-dark text-nido-cream`
       : `${base} bg-white border-nido-border text-nido-brown hover:border-nido-green hover:text-nido-green`;
   }
-
   protected allergenChipClass(): string {
     const base = 'px-4 py-[0.4rem] rounded-[20px] border-[1.5px] border-solid font-medium text-[0.8125rem] cursor-pointer transition-all duration-150 inline-flex items-center gap-1.5';
     return this.restrictionsFilterEnabled()
       ? `${base} bg-nido-red border-nido-red text-white`
       : `${base} bg-white border-nido-border text-nido-brown hover:border-nido-green hover:text-nido-green`;
+  }
+
+  protected restrictionsChipClass(): string {
+    const base = 'px-3.5 py-[0.4rem] rounded-[20px] border-[1.5px] border-solid font-medium text-[0.8125rem] cursor-pointer transition-all duration-150 inline-flex items-center gap-1.5 whitespace-nowrap';
+    return this.restrictionsFilterEnabled()
+      ? `${base} bg-nido-red border-nido-red text-white hover:bg-nido-red/90`
+      : `${base} bg-white border-nido-border text-nido-muted opacity-60 hover:opacity-100 hover:border-nido-green hover:text-nido-green`;
   }
 
   protected applianceChipClass(): string {

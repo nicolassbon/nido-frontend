@@ -218,9 +218,39 @@ describe('ListaComprasService', () => {
     expect(latestHistory[0].agregadoAlInventario).toBe(true);
   });
 
+  it('refreshSugerencias deberia cargar las sugerencias desde la API', () => {
+    service.refreshSugerencias().subscribe();
+
+    http.expectOne(`${legacyUrl}/sugerencias`).flush([
+      sugerencia({ stockHogarId: 'stock-1', productoNombre: 'Manteca', icono: 'milk' }),
+    ]);
+
+    let latest: any[] = [];
+    service.sugerencias$.subscribe(items => {
+      latest = items;
+    });
+
+    expect(latest[0].productoNombre).toBe('Manteca');
+    expect(latest[0].icono).toBe('milk');
+  });
+
+  it('refreshSugerencias deja la lista vacia si la API falla', () => {
+    service.refreshSugerencias().subscribe();
+
+    http.expectOne(`${legacyUrl}/sugerencias`).error(new ProgressEvent('error'));
+
+    let latest: any[] = [];
+    service.sugerencias$.subscribe(items => {
+      latest = items;
+    });
+
+    expect(latest).toEqual([]);
+  });
+
   function flushInitialRequests(): void {
     http.expectOne(baseUrl).flush([]);
     http.expectOne(`${baseUrl}/historial`).flush([]);
+    http.expectOne(`${legacyUrl}/sugerencias`).flush([]);
   }
 });
 
@@ -238,6 +268,18 @@ function item(overrides: Partial<Record<string, unknown>> = {}) {
     comprado: false,
     compradoEn: null,
     orden: 0,
+    ...overrides,
+  };
+}
+
+function sugerencia(overrides: Partial<Record<string, unknown>> = {}) {
+  return {
+    stockHogarId: 'stock-1',
+    productoId: 'producto-1',
+    productoNombre: 'Producto',
+    stockActual: 1,
+    unidadMedida: 'unidad',
+    icono: 'package',
     ...overrides,
   };
 }
