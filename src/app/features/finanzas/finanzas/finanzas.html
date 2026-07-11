@@ -135,7 +135,7 @@
 
       <!-- Estado: deudas -->
       @if (balanceEstado() === 'deudas') {
-        <div class="flex flex-col gap-2">
+        <div class="nido-scrollable-container flex flex-col gap-2 pr-1" style="max-height: 108px;">
           @for (d of deudas(); track d.deudorId + d.acreedorId) {
             <div class="rounded-xl border px-3 py-2.5 flex items-center gap-2.5"
                  [class]="esMiDeuda(d)

@@ -141,6 +141,42 @@ html.nido-tutorial-scroll-locked main {
   }
 }
 
+/* Contenedor con scrollbar minimalista para listas limitadas */
+.nido-scrollable-container {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(154, 128, 108, 0.3) transparent;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(154, 128, 108, 0.3);
+    border-radius: 999px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(154, 128, 108, 0.5);
+  }
+
+  .dark & {
+    scrollbar-color: rgba(234, 227, 217, 0.2) transparent;
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(234, 227, 217, 0.2);
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: rgba(234, 227, 217, 0.35);
+    }
+  }
+}
+
 lucide-icon {
   display: inline-block;
   vertical-align: middle;
@@ -771,7 +807,8 @@ lucide-icon svg {
     }
 
     .motivo-options {
-      .motivo-btn {
+      button,
+      .motivo-option {
         background: rgba(28, 36, 32, 0.65) !important;
         border-color: rgba(216, 198, 178, 0.12) !important;
         color: #EAE3D9 !important;
@@ -786,12 +823,23 @@ lucide-icon svg {
 
         &:hover {
           background: rgba(247, 241, 230, 0.08) !important;
+          border-color: rgba(216, 198, 178, 0.25) !important;
         }
 
-        &--active {
+        &--active,
+        &.border-nido-green-dark,
+        &[class*="border-nido-green-dark"] {
           border-color: #B48B6A !important;
           background: rgba(180, 139, 106, 0.15) !important;
           color: #B48B6A !important;
+
+          strong {
+            color: #B48B6A !important;
+          }
+
+          small {
+            color: rgba(180, 139, 106, 0.8) !important;
+          }
         }
       }
     }
@@ -2239,6 +2287,41 @@ lucide-icon svg {
       path {
         color: #EAE3D9 !important;
         stroke: #EAE3D9 !important;
+      }
+    }
+  }
+
+  /* Botones primarios en las pantallas de Auth (Login, Registro, Recuperar contraseña) en modo oscuro */
+  app-login,
+  app-forgot-password,
+  app-register,
+  app-reset-password {
+    button.bg-nido-green-dark {
+      background-color: #1c3636 !important;
+      color: #EAE3D9 !important;
+      border: none !important;
+
+      &:hover {
+        background-color: #2b4a47 !important;
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  /* Botón "Ver inventario completo" en la lista de compras en modo oscuro */
+  app-lista-compras {
+    aside button.border-nido-green-dark\/30,
+    aside button:has(lucide-icon[name="chevron-right"]) {
+      border-color: rgba(216, 198, 178, 0.25) !important;
+      color: #EAE3D9 !important;
+
+      &:hover {
+        background-color: rgba(247, 241, 230, 0.06) !important;
+        border-color: rgba(216, 198, 178, 0.4) !important;
       }
     }
   }
