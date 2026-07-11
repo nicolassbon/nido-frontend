@@ -12,6 +12,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { AuthService, type GoogleLoginResponse } from '../../../core/auth/auth.service';
 import { GoogleIdentityService } from '../../../core/auth/google-identity.service';
+import { getSafeApprovedPaymentReturnUrl } from '../../../core/payment-return';
 
 @Component({
   selector: 'app-login',
@@ -31,6 +32,12 @@ export class Login {
   readonly loading = signal(false);
   readonly globalError = signal<string | null>(null);
   readonly submitted = signal(false);
+  readonly paymentContinuationFailed = signal(false);
+  protected readonly paymentReturnUrl = getSafeApprovedPaymentReturnUrl(
+    this.router,
+    this.route.snapshot.queryParamMap.get('returnUrl'),
+  );
+  protected readonly hasApprovedPaymentReturn = this.paymentReturnUrl !== null;
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -50,6 +57,7 @@ export class Login {
   onSubmit(): void {
     this.submitted.set(true);
     this.globalError.set(null);
+    this.paymentContinuationFailed.set(false);
 
     if (this.form.invalid) {
       return;
@@ -61,8 +69,7 @@ export class Login {
     this.auth.login(email, password).subscribe({
       next: () => {
         this.loading.set(false);
-        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-        returnUrl ? this.router.navigateByUrl(returnUrl) : this.router.navigate(['/']);
+        this.navigateAfterAuthentication(['/']);
       },
       error: (err) => {
         this.loading.set(false);
@@ -102,24 +109,35 @@ export class Login {
   private handleGoogleCredential(idToken: string): void {
     this.submitted.set(false);
     this.globalError.set(null);
+    this.paymentContinuationFailed.set(false);
     this.loading.set(true);
 
     this.auth.googleLogin(idToken).subscribe({
       next: (response: GoogleLoginResponse) => {
         this.loading.set(false);
-        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-        if (returnUrl) {
-          this.router.navigateByUrl(returnUrl);
-        } else if (response.isNewUser) {
-          this.router.navigate(['/crear-hogar']);
-        } else {
-          this.router.navigate(['/']);
-        }
+        this.navigateAfterAuthentication(response.isNewUser ? ['/crear-hogar'] : ['/']);
       },
       error: () => {
         this.loading.set(false);
         this.globalError.set('Error al iniciar sesión con Google.');
       },
     });
+  }
+
+  private navigateAfterAuthentication(fallbackCommands: string[]): void {
+    if (!this.paymentReturnUrl) {
+      void this.router.navigate(fallbackCommands);
+      return;
+    }
+
+    void this.router.navigateByUrl(this.paymentReturnUrl)
+      .then(navigated => {
+        if (!navigated) {
+          this.paymentContinuationFailed.set(true);
+        }
+      })
+      .catch(() => {
+        this.paymentContinuationFailed.set(true);
+      });
   }
 }

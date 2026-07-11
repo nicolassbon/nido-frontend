@@ -1,7 +1,7 @@
 import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { Router, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import {
@@ -46,8 +46,12 @@ describe('Login Component', () => {
   let mockAuthService: MockAuthService;
   let mockGoogleIdentityService: MockGoogleIdentityService;
   let router: Router;
+  const routeSnapshot = {
+    queryParamMap: convertToParamMap({}),
+  };
 
   beforeEach(async () => {
+    routeSnapshot.queryParamMap = convertToParamMap({});
     mockAuthService = new MockAuthService();
     mockGoogleIdentityService = new MockGoogleIdentityService();
 
@@ -57,6 +61,7 @@ describe('Login Component', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
+        { provide: ActivatedRoute, useValue: { snapshot: routeSnapshot } },
         { provide: AuthService, useValue: mockAuthService },
         { provide: GoogleIdentityService, useValue: mockGoogleIdentityService },
         {
@@ -134,6 +139,117 @@ describe('Login Component', () => {
     expect(component.loading()).toBe(false);
     expect(mockAuthService.login).toHaveBeenCalledWith('test@example.com', 'mypassword');
     expect(router.navigate).toHaveBeenCalledWith(['/']);
+  });
+
+  it('explains an approved payment return and resumes reconciliation after login', () => {
+    const returnUrl = '/perfil?status=%20SuCcEsS%20&status=APPROVED&payment_id=123';
+    routeSnapshot.queryParamMap = convertToParamMap({
+      returnUrl,
+    });
+    const navigateByUrl = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    mockAuthService.login.mockReturnValue(
+      of({
+        usuarioId: 'u-1',
+        hogarId: 'h-1',
+        accessToken: 'token-jwt',
+      }),
+    );
+
+    const paymentFixture = TestBed.createComponent(Login);
+    const paymentComponent = paymentFixture.componentInstance;
+    paymentFixture.detectChanges();
+    paymentComponent.form.setValue({
+      email: 'test@example.com',
+      password: 'mypassword',
+    });
+
+    const pageText = paymentFixture.nativeElement.textContent.replace(/\s+/g, ' ');
+    expect(pageText).toContain('Iniciá sesión para que Nido verifique la activación');
+    expect(pageText).not.toContain('Plan Premium Activo');
+
+    paymentComponent.onSubmit();
+
+    expect(navigateByUrl).toHaveBeenCalledWith('/perfil?status=approved');
+    paymentFixture.destroy();
+  });
+
+  it('shows a safe recovery link when password-login payment continuation returns false', async () => {
+    routeSnapshot.queryParamMap = convertToParamMap({
+      returnUrl: '/perfil?status=approved',
+    });
+    vi.spyOn(router, 'navigateByUrl').mockResolvedValue(false);
+    mockAuthService.login.mockReturnValue(
+      of({ usuarioId: 'u-1', hogarId: 'h-1', accessToken: 'token-jwt' }),
+    );
+    const paymentFixture = TestBed.createComponent(Login);
+    const paymentComponent = paymentFixture.componentInstance;
+    paymentFixture.detectChanges();
+    paymentComponent.form.setValue({ email: 'test@example.com', password: 'mypassword' });
+
+    paymentComponent.onSubmit();
+    await Promise.resolve();
+    paymentFixture.detectChanges();
+
+    expect(paymentFixture.nativeElement.textContent).toContain(
+      'Iniciaste sesión correctamente, pero no pudimos volver a verificar tu pago',
+    );
+    expect(
+      paymentFixture.nativeElement.querySelector('[data-payment-recovery]')?.getAttribute('href'),
+    ).toBe('/perfil?status=approved');
+    paymentFixture.destroy();
+  });
+
+  it('shows the same recovery when Google-login payment continuation rejects', async () => {
+    routeSnapshot.queryParamMap = convertToParamMap({
+      returnUrl: '/perfil?status=approved',
+    });
+    vi.spyOn(router, 'navigateByUrl').mockRejectedValue(new Error('Navigation failed'));
+    mockAuthService.googleLogin.mockReturnValue(
+      of({
+        usuarioId: 'u-google',
+        hogarId: 'h-google',
+        accessToken: 'google-token-jwt',
+        isNewUser: false,
+      }),
+    );
+    const paymentFixture = TestBed.createComponent(Login);
+    paymentFixture.detectChanges();
+    await paymentFixture.whenStable();
+
+    mockGoogleIdentityService.emitCredential('real-google-id-token');
+    await Promise.resolve();
+    await Promise.resolve();
+    paymentFixture.detectChanges();
+
+    expect(paymentFixture.nativeElement.textContent).toContain(
+      'Iniciaste sesión correctamente, pero no pudimos volver a verificar tu pago',
+    );
+    expect(
+      paymentFixture.nativeElement.querySelector('[data-payment-recovery]')?.getAttribute('href'),
+    ).toBe('/perfil?status=approved');
+    paymentFixture.destroy();
+  });
+
+  it('does not follow an external payment return URL after login', () => {
+    routeSnapshot.queryParamMap = convertToParamMap({
+      returnUrl: 'https://evil.example/perfil?status=approved',
+    });
+    const navigateByUrl = vi.spyOn(router, 'navigateByUrl');
+    mockAuthService.login.mockReturnValue(
+      of({ usuarioId: 'u-1', hogarId: 'h-1', accessToken: 'token-jwt' }),
+    );
+    const unsafeFixture = TestBed.createComponent(Login);
+    const unsafeComponent = unsafeFixture.componentInstance;
+    unsafeFixture.detectChanges();
+    unsafeComponent.form.setValue({ email: 'test@example.com', password: 'mypassword' });
+
+    unsafeComponent.onSubmit();
+
+    expect(navigateByUrl).not.toHaveBeenCalledWith(
+      'https://evil.example/perfil?status=approved',
+    );
+    expect(router.navigate).toHaveBeenCalledWith(['/']);
+    unsafeFixture.destroy();
   });
 
   it('should handle login unauthorized error (401/403)', () => {

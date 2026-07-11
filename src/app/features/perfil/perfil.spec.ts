@@ -232,6 +232,29 @@ describe('PerfilComponent - Behavior and Gamification', () => {
   });
 
   describe('checkout success handling', () => {
+    it.each([
+      ['a case-folded approved status with whitespace', '  ApPrOvEd  '],
+      ['duplicate case-folded success and approved statuses', [' success ', ' APPROVED ']],
+    ])('reconciles %s and shows success only after the refreshed JWT is premium', (_, status) => {
+      const refreshResponse = new Subject<{ accessToken: string }>();
+      mockAuthService.isAuthenticated.mockReturnValue(true);
+      mockAuthService.refresh.mockReturnValue(refreshResponse.asObservable());
+      fixture.detectChanges();
+
+      queryParamsSubject.next({ status });
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.textContent).toContain('Recibimos tu pago');
+      expect(fixture.nativeElement.textContent).not.toContain('Tu suscripción ya está activa');
+
+      isPremiumSignal.set(true);
+      refreshResponse.next({ accessToken: 'premium-token' });
+      refreshResponse.complete();
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.textContent).toContain('Tu suscripción ya está activa');
+    });
+
     it('shows payment received guidance until refresh confirms the premium entitlement', () => {
       const refreshResponse = new Subject<{ accessToken: string }>();
       mockAuthService.refresh.mockReturnValue(refreshResponse.asObservable());
@@ -356,6 +379,7 @@ describe('PerfilComponent - Behavior and Gamification', () => {
     });
 
     it('shows retry guidance after bounded refresh attempts are exhausted', () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockAuthService.refresh.mockReturnValue(NEVER);
 
       fixture.detectChanges();
@@ -366,10 +390,36 @@ describe('PerfilComponent - Behavior and Gamification', () => {
       fixture.detectChanges();
 
       expect(mockAuthService.refresh).toHaveBeenCalledTimes(6);
-      expect(fixture.nativeElement.textContent).toContain('todavía no pudimos confirmar la activación');
+      expect(fixture.nativeElement.textContent).toContain(
+        'no pudimos verificar la activación por un problema de conexión',
+      );
+      expect(errorSpy).toHaveBeenCalledWith('[PerfilComponent.paymentRefresh Error]', {
+        reason: 'timeout',
+      });
+
+      errorSpy.mockRestore();
+    });
+
+    it('keeps pending activation guidance when refresh succeeds without a premium JWT', () => {
+      mockAuthService.refresh.mockReturnValue(of({ accessToken: 'basic-token' }));
+
+      fixture.detectChanges();
+      queryParamsSubject.next({ status: 'success' });
+      fixture.detectChanges();
+
+      vi.advanceTimersByTime(10_000);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.textContent).toContain(
+        'todavía no pudimos confirmar la activación',
+      );
+      expect(fixture.nativeElement.textContent).not.toContain(
+        'no pudimos verificar la activación por un problema de conexión',
+      );
     });
 
     it('keeps polling when individual refresh requests fail', () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockAuthService.refresh
         .mockImplementationOnce(() => throwError(() => new Error('network error')))
         .mockImplementationOnce(() => throwError(() => new Error('network error')))
@@ -391,6 +441,11 @@ describe('PerfilComponent - Behavior and Gamification', () => {
       vi.advanceTimersByTime(1500);
       expect(mockAuthService.refresh).toHaveBeenCalledTimes(3);
       expect(mockAuthService.isPremium()).toBe(true);
+      expect(errorSpy).toHaveBeenCalledWith('[PerfilComponent.paymentRefresh Error]', {
+        reason: 'request-failed',
+      });
+
+      errorSpy.mockRestore();
     });
 
     it('does not repeat an announcement after a consumed payment status on a new profile instance', () => {

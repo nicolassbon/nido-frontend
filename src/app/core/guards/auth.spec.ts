@@ -3,7 +3,7 @@ import { provideRouter, Router, UrlTree } from '@angular/router';
 import { describe, beforeEach, it, expect, vi } from 'vitest';
 import { AuthService } from '../auth/auth.service';
 import { authChildGuard, authGuard } from './auth';
-import { Observable, of, throwError } from 'rxjs';
+import { firstValueFrom, Observable, of, throwError } from 'rxjs';
 
 describe('authGuard', () => {
   const authService = {
@@ -44,16 +44,22 @@ describe('authGuard', () => {
     expect(authService.refresh).toHaveBeenCalled();
   });
 
-  it('redirects to /login when the user is not authenticated and refresh fails', () => {
+  it('preserves an approved payment return through login when refresh fails', async () => {
     authService.isAuthenticated.mockReturnValue(false);
     authService.refresh.mockReturnValue(throwError(() => new Error('Refresh failed')));
 
-    const result = TestBed.runInInjectionContext(() => authGuard({} as never, {} as never)) as Observable<boolean | UrlTree>;
+    const result = TestBed.runInInjectionContext(() =>
+      authGuard(
+        {} as never,
+        { url: '/perfil?status=%20SuCcEsS%20&status=%20approved%20&payment_id=123' } as never,
+      ),
+    ) as Observable<boolean | UrlTree>;
     const router = TestBed.inject(Router);
+    const redirect = await firstValueFrom(result);
 
-    result.subscribe((val) => {
-      expect(router.serializeUrl(val as UrlTree)).toBe('/login');
-    });
+    expect(router.serializeUrl(redirect as UrlTree)).toBe(
+      '/login?returnUrl=%2Fperfil%3Fstatus%3Dapproved',
+    );
     expect(authService.refresh).toHaveBeenCalled();
   });
 });
@@ -76,15 +82,16 @@ describe('authChildGuard', () => {
     });
   });
 
-  it('reuses the auth guard logic for child routes', () => {
+  it('reuses the auth guard logic for child routes', async () => {
     authService.isAuthenticated.mockReturnValue(false);
     authService.refresh.mockReturnValue(throwError(() => new Error('Refresh failed')));
 
-    const result = TestBed.runInInjectionContext(() => authChildGuard({} as never, {} as never)) as Observable<boolean | UrlTree>;
+    const result = TestBed.runInInjectionContext(() =>
+      authChildGuard({} as never, { url: '/perfil' } as never),
+    ) as Observable<boolean | UrlTree>;
     const router = TestBed.inject(Router);
+    const redirect = await firstValueFrom(result);
 
-    result.subscribe((val) => {
-      expect(router.serializeUrl(val as UrlTree)).toBe('/login');
-    });
+    expect(router.serializeUrl(redirect as UrlTree)).toBe('/login');
   });
 });

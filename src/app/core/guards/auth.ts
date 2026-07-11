@@ -2,8 +2,9 @@ import { inject } from '@angular/core';
 import { CanActivateChildFn, CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { catchError, map, of } from 'rxjs';
+import { getSafeApprovedPaymentReturnUrl } from '../payment-return';
 
-export const authGuard: CanActivateFn = () => {
+export const authGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
@@ -13,7 +14,14 @@ export const authGuard: CanActivateFn = () => {
 
   return auth.refresh().pipe(
     map(() => true),
-    catchError(() => of(router.createUrlTree(['/login'])))
+    catchError(() => {
+      const paymentReturnUrl = getSafeApprovedPaymentReturnUrl(router, state.url);
+      const queryParams = paymentReturnUrl
+        ? { returnUrl: paymentReturnUrl }
+        : undefined;
+
+      return of(router.createUrlTree(['/login'], { queryParams }));
+    }),
   );
 };
 
