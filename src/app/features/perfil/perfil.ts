@@ -1,8 +1,8 @@
 import { Component, inject, OnInit, signal, computed, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { timer, EMPTY, concat, of, Subscription } from 'rxjs';
-import { concatMap, take, takeWhile, catchError, timeout } from 'rxjs/operators';
+import { timer, EMPTY, concat, of, Subscription, TimeoutError } from 'rxjs';
+import { concatMap, take, takeWhile, catchError, timeout, tap } from 'rxjs/operators';
 import { StatCard } from '../../shared/ui/stat-card/stat-card';
 import { PreferenceCard } from '../../shared/ui/preference-card/preference-card';
 import { CommonModule } from '@angular/common';
@@ -16,6 +16,7 @@ import { Avatar } from '../../shared/ui/avatar/avatar';
 import { TareasApiService } from '../tareas/services/tareas-api.service';
 import { getCompanionInfo } from '../../shared/constants/companion-metadata';
 import { PaywallService } from '../../core/servicios/paywall';
+import { normalizePaymentReturnStatus } from '../../core/payment-return';
 
 const PAYMENT_NOTICE_KIND = {
   INFO: 'info',
@@ -76,6 +77,7 @@ export class PerfilComponent implements OnInit {
   private handledPaymentStatus: string | null = null;
   private paymentRefreshSubscription: Subscription | null = null;
   private paymentRefreshSequence = 0;
+  private paymentRefreshSucceeded = false;
 
   protected readonly premiumExpirationText = computed(() => {
     const subscriptionEndsAt = this.authService.getSubscriptionEndsAt();
@@ -344,9 +346,8 @@ export class PerfilComponent implements OnInit {
   }
 
   private handlePaymentStatus(status: unknown): void {
-    if (typeof status !== 'string') return;
+    const normalizedStatus = normalizePaymentReturnStatus(status);
 
-    const normalizedStatus = status.trim().toLowerCase();
     if (!normalizedStatus || normalizedStatus === this.handledPaymentStatus) return;
 
     this.handledPaymentStatus = normalizedStatus;
@@ -392,6 +393,7 @@ export class PerfilComponent implements OnInit {
   private reconcilePaymentStatus(): void {
     this.paymentRefreshSubscription?.unsubscribe();
     const refreshSequence = ++this.paymentRefreshSequence;
+    this.paymentRefreshSucceeded = false;
     this.isReconcilingPayment.set(true);
     this.paymentNotice.set({
       kind: PAYMENT_NOTICE_KIND.INFO,
@@ -422,7 +424,15 @@ export class PerfilComponent implements OnInit {
   private refreshPremiumState() {
     return this.authService.refresh().pipe(
       timeout(AUTH_REFRESH_TIMEOUT_MS),
-      catchError(() => of(null)),
+      tap(() => {
+        this.paymentRefreshSucceeded = true;
+      }),
+      catchError(error => {
+        console.error('[PerfilComponent.paymentRefresh Error]', {
+          reason: error instanceof TimeoutError ? 'timeout' : 'request-failed',
+        });
+        return of(null);
+      }),
     );
   }
 
@@ -436,6 +446,15 @@ export class PerfilComponent implements OnInit {
       this.paymentNotice.set({
         kind: PAYMENT_NOTICE_KIND.SUCCESS,
         message: 'Tu suscripción ya está activa. Ya podés disfrutar de todas las funcionalidades premium.',
+      });
+      return;
+    }
+
+    if (!this.paymentRefreshSucceeded) {
+      this.paymentNotice.set({
+        kind: PAYMENT_NOTICE_KIND.WARNING,
+        message: 'El pago fue informado como aprobado, pero no pudimos verificar la activación por un problema de conexión. Reintentá la verificación antes de usar las funciones premium.',
+        action: PAYMENT_NOTICE_ACTION.RETRY,
       });
       return;
     }

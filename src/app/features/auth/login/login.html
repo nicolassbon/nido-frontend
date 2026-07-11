@@ -55,6 +55,15 @@
             </p>
           </div>
         </div>
+        @if (hasApprovedPaymentReturn) {
+          <div
+            class="w-full rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-[0.8375rem] leading-relaxed text-emerald-900"
+            role="status"
+          >
+            Volviste de Mercado Pago con un pago informado como aprobado. Iniciá sesión para que
+            Nido verifique la activación de tu Plan Premium.
+          </div>
+        }
         <div class="flex flex-col gap-3.5 w-full">
           <div class="flex flex-col gap-1 w-full">
             <label for="email" class="text-[0.8125rem] font-semibold text-nido-green-dark pl-1"
@@ -127,6 +136,23 @@
           <span class="text-nido-red text-[0.875rem] text-center w-full font-medium">{{
             globalError()
           }}</span>
+        }
+        @if (paymentContinuationFailed()) {
+          <div
+            class="w-full rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-center text-[0.8375rem] leading-relaxed text-amber-900"
+            role="alert"
+          >
+            <p class="m-0">
+              Iniciaste sesión correctamente, pero no pudimos volver a verificar tu pago.
+            </p>
+            <a
+              data-payment-recovery
+              [attr.href]="paymentReturnUrl"
+              class="mt-2 inline-block font-semibold underline"
+            >
+              Ir a Mi perfil y reintentar la verificación
+            </a>
+          </div>
         }
         <button
           type="submit"
