@@ -308,3 +308,70 @@
     width: 100%;
   }
 }
+
+/* ── Modo Oscuro ────────────────────────────────────────── */
+:host-context(.dark) {
+  .paywall-modal {
+    background: #1c2320;
+    border: 1px solid rgba(216, 198, 178, 0.15);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+  }
+
+  .paywall-body {
+    background: #1c2320;
+  }
+
+  .paywall-badge {
+    border-color: rgba(180, 139, 106, 0.3);
+    background: rgba(180, 139, 106, 0.1);
+    color: var(--color-nido-gold);
+  }
+
+  .paywall-checkout-error {
+    border-color: rgba(180, 76, 60, 0.35);
+    background: rgba(180, 76, 60, 0.08);
+    color: #f48c7c;
+  }
+
+  .benefit-item h4 {
+    color: var(--color-nido-cream);
+  }
+
+  .paywall-actions {
+    border-top-color: rgba(216, 198, 178, 0.15);
+  }
+
+  .btn-subscribe {
+    background: #7A5A45;
+    border-color: #7A5A45;
+    color: #EAE3D9;
+    box-shadow: 0 7px 16px rgba(122, 90, 69, 0.2);
+
+    &:hover {
+      background: #927357;
+      box-shadow: 0 12px 24px rgba(122, 90, 69, 0.28);
+    }
+
+    &:active {
+      box-shadow: 0 6px 14px rgba(122, 90, 69, 0.2);
+    }
+
+    &:disabled {
+      box-shadow: 0 7px 16px rgba(122, 90, 69, 0.16);
+    }
+  }
+
+  .btn-later {
+    color: var(--color-nido-cream);
+    border-color: rgba(216, 198, 178, 0.2);
+
+    &:hover {
+      background: rgba(234, 227, 217, 0.08);
+      color: var(--color-nido-cream);
+    }
+
+    &:active {
+      background: rgba(234, 227, 217, 0.12);
+    }
+  }
+}

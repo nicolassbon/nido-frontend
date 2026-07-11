@@ -250,13 +250,13 @@
             (ngSubmit)="onAddPasswordSubmit()"
             class="flex flex-col gap-4.5"
           >
-            <div class="flex items-start gap-3 bg-[rgba(66,133,244,0.06)] border border-blue-200/60 rounded-xl p-4">
-              <div class="text-blue-500 shrink-0 mt-0.5">
+            <div class="flex items-start gap-3 bg-[rgba(66,133,244,0.06)] dark:bg-[rgba(66,133,244,0.09)] border border-blue-200/60 dark:border-blue-500/30 rounded-xl p-4">
+              <div class="text-blue-500 dark:text-blue-400 shrink-0 mt-0.5">
                 <lucide-icon name="info" [size]="18" />
               </div>
               <div class="flex flex-col gap-0.5">
-                <h4 class="text-xs font-bold text-blue-900 uppercase tracking-wide m-0">Cuenta vinculada con Google</h4>
-                <p class="text-blue-800 text-[0.775rem] leading-relaxed m-0 mt-1">
+                <h4 class="text-xs font-bold text-blue-900 dark:text-blue-200 uppercase tracking-wide m-0">Cuenta vinculada con Google</h4>
+                <p class="text-blue-800 dark:text-blue-300 text-[0.775rem] leading-relaxed m-0 mt-1">
                   Iniciás sesión con Google. Si creás una contraseña, también podrás ingresar con tu email y esta clave. Seguirás teniendo Google disponible.
                 </p>
               </div>
@@ -553,27 +553,29 @@
             <span class="text-xs text-nido-brown">Cargando miembros...</span>
           </div>
         } @else {
-          <ul class="list-none flex flex-col gap-2.5 mb-6">
-            @for (miembro of members(); track miembro.usuarioId; let i = $index) {
-              <li class="flex items-center gap-3.5 py-2.5 border-b border-nido-border/30 last:border-0">
-                <app-avatar
-                  [nombre]="miembro.nombre"
-                  [fotoUrl]="miembro.fotoUrl"
-                  sizeClass="w-10 h-10"
-                  fontSizeClass="text-sm"
-                />
-                <div class="flex-1 min-w-0">
-                  <p class="text-[0.875rem] font-semibold text-nido-green-dark truncate m-0 flex items-center gap-1.5">
-                    {{ miembro.nombre }}
-                    @if (isCurrentUser(miembro)) {
-                      <span class="text-[0.7rem] bg-[rgba(62,94,74,0.07)] text-nido-green-dark px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">(vos)</span>
-                    }
-                  </p>
-                  <p class="text-[0.775rem] text-nido-brown capitalize m-0 mt-0.5 opacity-90">{{ miembro.rol }}</p>
-                </div>
-              </li>
-            }
-          </ul>
+          <div class="nido-scrollable-container mb-6" style="max-height: 200px;">
+            <ul class="list-none flex flex-col gap-2.5">
+              @for (miembro of members(); track miembro.usuarioId; let i = $index) {
+                <li class="flex items-center gap-3.5 py-2.5 border-b border-nido-border/30 last:border-0">
+                  <app-avatar
+                    [nombre]="miembro.nombre"
+                    [fotoUrl]="miembro.fotoUrl"
+                    sizeClass="w-10 h-10"
+                    fontSizeClass="text-sm"
+                  />
+                  <div class="flex-1 min-w-0">
+                    <p class="text-[0.875rem] font-semibold text-nido-green-dark truncate m-0 flex items-center gap-1.5">
+                      {{ miembro.nombre }}
+                      @if (isCurrentUser(miembro)) {
+                        <span class="text-[0.7rem] bg-[rgba(62,94,74,0.07)] text-nido-green-dark px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">(vos)</span>
+                      }
+                    </p>
+                    <p class="text-[0.775rem] text-nido-brown capitalize m-0 mt-0.5 opacity-90">{{ miembro.rol }}</p>
+                  </div>
+                </li>
+              }
+            </ul>
+          </div>
         }
 
         <div class="flex items-center gap-2 mb-3.5 pt-2 border-t border-nido-border/20">
@@ -609,93 +611,95 @@
             <span class="text-xs text-nido-brown">Cargando hogares...</span>
           </div>
         } @else {
-          <ul class="list-none flex flex-col gap-2">
-            @for (hogar of hogares(); track hogar.id) {
-              <li class="flex flex-col gap-2 py-2.5 px-1 border-b border-nido-border/30 last:border-0">
+          <div class="nido-scrollable-container" style="max-height: 182px;">
+            <ul class="list-none flex flex-col gap-2">
+              @for (hogar of hogares(); track hogar.id) {
+                <li class="flex flex-col gap-2 py-2.5 px-1 border-b border-nido-border/30 last:border-0">
 
-                @if (editingHogarId() === hogar.id) {
-                  <div class="flex items-center gap-2">
-                    <input
-                      type="text"
-                      [value]="editHogarNombre()"
-                      (input)="editHogarNombre.set($any($event.target).value)"
-                      (keydown.enter)="saveEditHogar()"
-                      (keydown.escape)="cancelEditHogar()"
-                      [disabled]="savingHogarRename()"
-                      class="flex-1 border border-nido-green rounded-xl px-3 py-1.5 text-[0.875rem] text-nido-green-dark outline-none focus:ring-2 focus:ring-nido-green/20 transition-all duration-150 disabled:opacity-50"
-                    />
-                    <button
-                      (click)="saveEditHogar()"
-                      [disabled]="!editHogarNombre().trim() || savingHogarRename()"
-                      class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-nido-green-dark text-nido-cream text-[0.8rem] font-medium border-none cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
-                      @if (savingHogarRename()) {
-                        <div class="w-3.5 h-3.5 rounded-full border-2 border-solid border-nido-cream/40 border-t-nido-cream animate-spin"></div>
-                      } @else {
-                        <lucide-icon name="check" [size]="14" />
-                      }
-                      Guardar
-                    </button>
-                    <button
-                      (click)="cancelEditHogar()"
-                      [disabled]="savingHogarRename()"
-                      class="flex items-center justify-center w-8 h-8 rounded-lg border border-nido-border text-nido-brown bg-transparent cursor-pointer hover:bg-nido-cream transition-colors duration-150 disabled:opacity-50">
-                      <lucide-icon name="x" [size]="14" />
-                    </button>
-                  </div>
-                  @if (renameHogarError()) {
-                    <span class="text-nido-red text-[0.775rem] pl-1">{{ renameHogarError() }}</span>
-                  }
-                } @else {
-                  <div class="flex items-center gap-3.5">
-                    <div class="w-9 h-9 rounded-xl bg-[rgba(62,94,74,0.08)] flex items-center justify-center shrink-0">
-                      <lucide-icon name="house" [size]="16" class="text-nido-green-dark" />
-                    </div>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-[0.875rem] font-semibold text-nido-green-dark truncate m-0 flex items-center gap-2">
-                        {{ hogar.nombre }}
-                        @if (hogar.id === hogarActivoId()) {
-                          <span class="text-[0.7rem] bg-[rgba(62,94,74,0.10)] text-nido-green-dark px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Activo</span>
+                  @if (editingHogarId() === hogar.id) {
+                    <div class="flex items-center gap-2">
+                      <input
+                        type="text"
+                        [value]="editHogarNombre()"
+                        (input)="editHogarNombre.set($any($event.target).value)"
+                        (keydown.enter)="saveEditHogar()"
+                        (keydown.escape)="cancelEditHogar()"
+                        [disabled]="savingHogarRename()"
+                        class="flex-1 border border-nido-green rounded-xl px-3 py-1.5 text-[0.875rem] text-nido-green-dark outline-none focus:ring-2 focus:ring-nido-green/20 transition-all duration-150 disabled:opacity-50"
+                      />
+                      <button
+                        (click)="saveEditHogar()"
+                        [disabled]="!editHogarNombre().trim() || savingHogarRename()"
+                        class="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-nido-green-dark text-nido-cream text-[0.8rem] font-medium border-none cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed">
+                        @if (savingHogarRename()) {
+                          <div class="w-3.5 h-3.5 rounded-full border-2 border-solid border-nido-cream/40 border-t-nido-cream animate-spin"></div>
+                        } @else {
+                          <lucide-icon name="check" [size]="14" />
                         }
-                      </p>
-                      <p class="text-[0.775rem] text-nido-brown capitalize m-0 mt-0.5 opacity-90">{{ hogar.rol }}</p>
+                        Guardar
+                      </button>
+                      <button
+                        (click)="cancelEditHogar()"
+                        [disabled]="savingHogarRename()"
+                        class="flex items-center justify-center w-8 h-8 rounded-lg border border-nido-border text-nido-brown bg-transparent cursor-pointer hover:bg-nido-cream transition-colors duration-150 disabled:opacity-50">
+                        <lucide-icon name="x" [size]="14" />
+                      </button>
                     </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                      @if (hogar.rol === 'owner') {
-                        <button
-                          (click)="openEditHogar(hogar)"
-                          [disabled]="switchingHogarId() !== null || deletingHogar()"
-                          class="flex items-center justify-center w-8 h-8 rounded-lg border border-nido-border text-nido-brown bg-transparent cursor-pointer transition-all duration-150 hover:border-nido-green hover:text-nido-green-dark disabled:opacity-40 disabled:cursor-not-allowed">
-                          <lucide-icon name="pencil" [size]="13" />
-                        </button>
-                      }
-                      @if (hogar.id !== hogarActivoId()) {
-                        <button
-                          (click)="activarHogar(hogar.id)"
-                          [disabled]="switchingHogarId() !== null || deletingHogar()"
-                          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-nido-border text-[0.8rem] text-nido-brown bg-transparent font-medium cursor-pointer transition-all duration-150 hover:border-nido-green hover:text-nido-green-dark disabled:opacity-50 disabled:cursor-not-allowed">
-                          @if (switchingHogarId() === hogar.id) {
-                            <div class="w-3.5 h-3.5 rounded-full border-2 border-solid border-nido-border border-t-nido-green-dark animate-spin"></div>
-                            Activando...
-                          } @else {
-                            Activar
+                    @if (renameHogarError()) {
+                      <span class="text-nido-red text-[0.775rem] pl-1">{{ renameHogarError() }}</span>
+                    }
+                  } @else {
+                    <div class="flex items-center gap-3.5">
+                      <div class="w-9 h-9 rounded-xl bg-[rgba(62,94,74,0.08)] flex items-center justify-center shrink-0">
+                        <lucide-icon name="house" [size]="16" class="text-nido-green-dark" />
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-[0.875rem] font-semibold text-nido-green-dark truncate m-0 flex items-center gap-2">
+                          {{ hogar.nombre }}
+                          @if (hogar.id === hogarActivoId()) {
+                            <span class="text-[0.7rem] bg-[rgba(62,94,74,0.10)] text-nido-green-dark px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Activo</span>
                           }
-                        </button>
+                        </p>
+                        <p class="text-[0.775rem] text-nido-brown capitalize m-0 mt-0.5 opacity-90">{{ hogar.rol }}</p>
+                      </div>
+                      <div class="flex items-center gap-2 shrink-0">
                         @if (hogar.rol === 'owner') {
                           <button
-                            (click)="openEliminarHogarConfirm(hogar)"
+                            (click)="openEditHogar(hogar)"
                             [disabled]="switchingHogarId() !== null || deletingHogar()"
-                            class="flex items-center justify-center w-8 h-8 rounded-lg border border-nido-red/30 text-nido-red bg-transparent cursor-pointer transition-all duration-150 hover:bg-nido-red/5 hover:border-nido-red/60 disabled:opacity-40 disabled:cursor-not-allowed">
-                            <lucide-icon name="trash-2" [size]="14" />
+                            class="flex items-center justify-center w-8 h-8 rounded-lg border border-nido-border text-nido-brown bg-transparent cursor-pointer transition-all duration-150 hover:border-nido-green hover:text-nido-green-dark disabled:opacity-40 disabled:cursor-not-allowed">
+                            <lucide-icon name="pencil" [size]="13" />
                           </button>
                         }
-                      }
+                        @if (hogar.id !== hogarActivoId()) {
+                          <button
+                            (click)="activarHogar(hogar.id)"
+                            [disabled]="switchingHogarId() !== null || deletingHogar()"
+                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-nido-border text-[0.8rem] text-nido-brown bg-transparent font-medium cursor-pointer transition-all duration-150 hover:border-nido-green hover:text-nido-green-dark disabled:opacity-50 disabled:cursor-not-allowed">
+                            @if (switchingHogarId() === hogar.id) {
+                              <div class="w-3.5 h-3.5 rounded-full border-2 border-solid border-nido-border border-t-nido-green-dark animate-spin"></div>
+                              Activando...
+                            } @else {
+                              Activar
+                            }
+                          </button>
+                          @if (hogar.rol === 'owner') {
+                            <button
+                              (click)="openEliminarHogarConfirm(hogar)"
+                              [disabled]="switchingHogarId() !== null || deletingHogar()"
+                              class="flex items-center justify-center w-8 h-8 rounded-lg border border-nido-red/30 text-nido-red bg-transparent cursor-pointer transition-all duration-150 hover:bg-nido-red/5 hover:border-nido-red/60 disabled:opacity-40 disabled:cursor-not-allowed">
+                              <lucide-icon name="trash-2" [size]="14" />
+                            </button>
+                          }
+                        }
+                      </div>
                     </div>
-                  </div>
-                }
+                  }
 
-              </li>
-            }
-          </ul>
+                </li>
+              }
+            </ul>
+          </div>
         }
       </section>
 

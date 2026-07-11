@@ -205,12 +205,22 @@
             autocomplete="off">
         </label>
 
-        <button
-          class="h-10 rounded-[20px] bg-nido-green-dark px-4 text-[0.8rem] font-semibold text-nido-cream cursor-pointer transition-colors duration-150 hover:bg-nido-green disabled:cursor-not-allowed disabled:opacity-50"
-          [disabled]="!listName.trim() || isSaving"
-          (click)="saveList()">
-          {{ editingListId ? 'Guardar' : 'Crear' }}
-        </button>
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            class="h-10 rounded-[20px] border border-nido-border bg-transparent px-4 text-[0.8rem] font-semibold text-nido-brown cursor-pointer transition-colors duration-150 hover:bg-nido-cream hover:text-nido-green-dark disabled:opacity-50"
+            [disabled]="isSaving"
+            (click)="cancelListForm()">
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="h-10 rounded-[20px] bg-nido-green-dark px-4 text-[0.8rem] font-semibold text-nido-cream cursor-pointer transition-colors duration-150 hover:bg-nido-green disabled:cursor-not-allowed disabled:opacity-50"
+            [disabled]="!listName.trim() || isSaving"
+            (click)="saveList()">
+            {{ editingListId ? 'Guardar' : 'Crear' }}
+          </button>
+        </div>
       </div>
     </section>
   }

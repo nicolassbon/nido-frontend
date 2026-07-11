@@ -139,6 +139,13 @@ export class ListaCompras implements OnInit, OnDestroy {
     this.errorMessage = null;
   }
 
+  protected cancelListForm(): void {
+    this.showListForm = false;
+    this.editingListId = null;
+    this.listName = '';
+    this.errorMessage = null;
+  }
+
   protected saveList(): void {
     const nombre = this.listName.trim();
     if (!nombre || this.isSaving) return;

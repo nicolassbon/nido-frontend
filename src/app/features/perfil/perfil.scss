@@ -1,0 +1,70 @@
+:host-context(.dark) {
+  /* Tarjeta de Suscripción Premium Activo */
+  .card-premium {
+    background: linear-gradient(135deg, rgba(180, 139, 106, 0.12), rgba(28, 35, 32, 0.95)) !important;
+    border-color: rgba(180, 139, 106, 0.3) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+
+    h3 {
+      color: #EAE3D9 !important;
+    }
+
+    p.text-nido-brown {
+      color: #a8b9b0 !important;
+    }
+
+    /* Texto de fecha de vencimiento */
+    p.text-amber-700 {
+      color: #B48B6A !important;
+    }
+
+    /* Badge de Premium */
+    .bg-amber-100 {
+      background-color: rgba(180, 139, 106, 0.2) !important;
+      color: #EAE3D9 !important;
+      border: 1px solid rgba(180, 139, 106, 0.3) !important;
+    }
+  }
+
+  /* Tarjeta de Upgrade a Premium (Plan Gratuito) */
+  .card-upgrade {
+    background: rgba(28, 36, 32, 0.65) !important;
+    border-color: rgba(216, 198, 178, 0.15) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2) !important;
+
+    h3 {
+      color: #EAE3D9 !important;
+    }
+
+    p.text-nido-brown {
+      color: #a8b9b0 !important;
+    }
+
+    /* Contenedor del icono */
+    .bg-nido-green-dark\/10 {
+      background-color: rgba(247, 241, 230, 0.08) !important;
+
+      lucide-icon,
+      svg,
+      path {
+        color: #B48B6A !important;
+        stroke: #B48B6A !important;
+      }
+    }
+
+    /* Botón "Subir a Plan Premium" */
+    button.bg-nido-green-dark {
+      background-color: #7A5A45 !important;
+      color: #EAE3D9 !important;
+      border: none !important;
+
+      &:hover {
+        background-color: #654937 !important;
+      }
+
+      &:active {
+        background-color: #533b2c !important;
+      }
+    }
+  }
+}

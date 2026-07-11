@@ -35,7 +35,7 @@
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" data-tour="finance-summary-cards">
 
     <!-- Gasto total del mes -->
-    <div class="bg-white/[0.51] rounded-[18px] border border-nido-border/50 p-5 flex items-start gap-4">
+    <div class="bg-white/[0.51] rounded-[18px] border border-nido-border/50 p-5 flex items-center gap-4">
       <div class="w-11 h-11 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0">
         <lucide-icon name="wallet" [size]="18" class="text-nido-cream"></lucide-icon>
       </div>
@@ -52,7 +52,7 @@
     </div>
 
     <!-- Presupuesto mensual -->
-    <div class="bg-white/[0.51] rounded-[18px] border border-nido-border/50 p-5 flex items-start gap-4 cursor-pointer hover:border-nido-green/40 transition-colors duration-150"
+    <div class="bg-white/[0.51] rounded-[18px] border border-nido-border/50 p-5 flex items-center gap-4 cursor-pointer hover:border-nido-green/40 transition-colors duration-150"
          (click)="openPresupuestoModal()">
       <div class="w-11 h-11 rounded-full bg-nido-green-dark flex items-center justify-center shrink-0">
         <lucide-icon name="target" [size]="18" class="text-nido-cream"></lucide-icon>
@@ -135,7 +135,7 @@
 
       <!-- Estado: deudas -->
       @if (balanceEstado() === 'deudas') {
-        <div class="flex flex-col gap-2">
+        <div class="nido-scrollable-container flex flex-col gap-2 pr-1" style="max-height: 108px;">
           @for (d of deudas(); track d.deudorId + d.acreedorId) {
             <div class="rounded-xl border px-3 py-2.5 flex items-center gap-2.5"
                  [class]="esMiDeuda(d)
