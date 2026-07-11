@@ -18,7 +18,7 @@ export class Home implements OnInit {
 
   protected readonly greeting = signal(this.buildGreeting());
   protected readonly userName = signal(this.authService.getNombre() ?? 'vos');
-  protected readonly today = signal(this.toTitleCase(
+  protected readonly today = signal(this.capitalizeFirst(
     new Date().toLocaleDateString('es-AR', {
       weekday: 'long',
       day: 'numeric',
@@ -54,9 +54,9 @@ export class Home implements OnInit {
 
   private buildGreeting(): string {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Buenos Dias';
-    if (hour < 19) return 'Buenas Tardes';
-    return 'Buenas Noches';
+    if (hour < 12) return 'Buenos días';
+    if (hour < 19) return 'Buenas tardes';
+    return 'Buenas noches';
   }
 
   protected formatMoney(value: number): string {
@@ -96,9 +96,8 @@ export class Home implements OnInit {
     return `${baseUrl}${path}`;
   }
 
-  private toTitleCase(value: string): string {
-    return value.replace(/\p{L}+/gu, word =>
-      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-    );
+  private capitalizeFirst(value: string): string {
+    if (!value) return '';
+    return value.charAt(0).toUpperCase() + value.slice(1);
   }
 }
