@@ -359,7 +359,7 @@ export class PerfilComponent implements OnInit {
       case 'pending':
         this.paymentNotice.set({
           kind: PAYMENT_NOTICE_KIND.INFO,
-          message: 'Todavía no confirmamos el pago. Esperá unos minutos y volvé a verificar el estado antes de usar las funciones premium.',
+          message: 'Todavía no confirmamos el pago. Esperá unos minutos y volvé a verificar el estado antes de usar las funciones del Plan Hogar.',
           action: PAYMENT_NOTICE_ACTION.RETRY,
         });
         return;
@@ -374,7 +374,7 @@ export class PerfilComponent implements OnInit {
       default:
         this.paymentNotice.set({
           kind: PAYMENT_NOTICE_KIND.WARNING,
-          message: 'No pudimos confirmar el estado del pago. Verificá tu plan antes de usar las funciones premium.',
+          message: 'No pudimos confirmar el estado del pago. Verificá tu plan antes de usar las funciones del Plan Hogar.',
           action: PAYMENT_NOTICE_ACTION.RETRY,
         });
     }
@@ -435,7 +435,7 @@ export class PerfilComponent implements OnInit {
     if (this.authService.isPremium()) {
       this.paymentNotice.set({
         kind: PAYMENT_NOTICE_KIND.SUCCESS,
-        message: 'Tu suscripción ya está activa. Ya podés disfrutar de todas las funcionalidades premium.',
+        message: 'Tu suscripción ya está activa. Ya podés disfrutar de todas las funciones del Plan Hogar.',
       });
       return;
     }

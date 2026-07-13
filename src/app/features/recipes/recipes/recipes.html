@@ -57,7 +57,7 @@
         class="min-w-[210px] max-sm:w-full flex items-center justify-center gap-2 px-4 py-3 rounded-[10px] border border-nido-border bg-white text-nido-green-dark text-[0.8125rem] font-semibold cursor-pointer hover:bg-nido-cream transition-colors duration-150"
         (click)="openAiPaywall()">
         <lucide-icon [img]="icons.Sparkles" [size]="14" class="text-nido-gold" />
-        Objetivos IA en Premium
+        Objetivos IA en el Plan Hogar
       </button>
     }
   </div>
@@ -65,7 +65,7 @@
   @if (!isPremium()) {
     <div class="flex items-center justify-between gap-3 flex-wrap rounded-[12px] border border-nido-border bg-white/[0.7] px-4 py-3">
       <div>
-        <p class="m-0 text-[0.875rem] font-semibold text-nido-green-dark">Las funciones de IA están disponibles en Plan Premium</p>
+        <p class="m-0 text-[0.875rem] font-semibold text-nido-green-dark">Las funciones de IA están disponibles en el Plan Hogar</p>
         <p class="m-0 mt-1 text-[0.775rem] text-nido-brown">Desbloqueá recomendaciones inteligentes y el asistente culinario de Nido.</p>
       </div>
       <button
@@ -322,7 +322,7 @@
                       (click)="openAiPaywall($event)"
                       class="inline-flex flex-1 basis-[120px] items-center justify-center gap-1.5 py-2 px-3 border border-nido-border bg-nido-cream text-nido-brown rounded-[8px] text-[0.8rem] font-semibold whitespace-nowrap cursor-pointer transition-colors duration-150 hover:bg-white">
                       <lucide-icon name="sparkles" [size]="13" class="text-nido-gold" />
-                      IA en Premium
+                      IA en el Plan Hogar
                     </button>
                   }
                 </div>
@@ -540,7 +540,7 @@
       <button
         type="button"
         (click)="toggleAsistenteGeneral()"
-        [attr.aria-label]="asistenteAbierto() ? 'Cerrar asistente IA' : (isPremium() ? 'Abrir asistente IA' : 'Ver Premium para usar el asistente IA')"
+        [attr.aria-label]="asistenteAbierto() ? 'Cerrar asistente IA' : (isPremium() ? 'Abrir asistente IA' : 'Ver Plan Hogar para usar el asistente IA')"
         class="pointer-events-auto h-12 w-12 rounded-full bg-nido-green-dark hover:bg-nido-green text-nido-cream flex items-center justify-center shadow-[0_4px_16px_rgba(38,63,48,0.22)] cursor-pointer transition-transform duration-150 hover:scale-105 border-0">
         @if (asistenteAbierto()) {
           <lucide-icon [img]="icons.X" [size]="20" />

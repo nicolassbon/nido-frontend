@@ -350,7 +350,7 @@ describe('Recipes', () => {
 
     const floatingButton = getFloatingAssistantButton();
     expect(floatingButton).not.toBeNull();
-    expect(floatingButton?.getAttribute('aria-label')).toBe('Ver Premium para usar el asistente IA');
+    expect(floatingButton?.getAttribute('aria-label')).toBe('Ver Plan Hogar para usar el asistente IA');
 
     floatingButton?.click();
     fixture.detectChanges();
@@ -384,8 +384,8 @@ describe('Recipes', () => {
     fixture.detectChanges();
 
     const text = fixture.nativeElement.textContent.replace(/\s+/g, ' ');
-    expect(text).toContain('Las funciones de IA están disponibles en Plan Premium');
-    expect(text).toContain('IA en Premium');
+    expect(text).toContain('Las funciones de IA están disponibles en el Plan Hogar');
+    expect(text).toContain('IA en el Plan Hogar');
     expect(getFloatingAssistantButton()).not.toBeNull();
   });
 

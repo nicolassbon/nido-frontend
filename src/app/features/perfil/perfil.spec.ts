@@ -16,6 +16,7 @@ const progress = (overrides: Partial<GamificacionProgresoResponse> = {}): Gamifi
   usuarioId: 'u-1',
   currentXp: 120,
   currentLevel: 2,
+  currentLevelThresholdXp: 100,
   currentLevelNombre: 'Aprendiz',
   nextLevel: 3,
   nextLevelNombre: 'Ayudante',
@@ -309,7 +310,7 @@ describe('PerfilComponent - Behavior and Gamification', () => {
 
       let upgradeCard = fixture.nativeElement.querySelector('.card-upgrade');
       expect(upgradeCard).toBeTruthy();
-      expect(upgradeCard.textContent).toContain('Subir a Plan Premium');
+      expect(upgradeCard.textContent).toContain('Subir al Plan Hogar');
 
       // Premium now
       (mockAuthService.isPremium as any).set(true);
@@ -320,7 +321,7 @@ describe('PerfilComponent - Behavior and Gamification', () => {
 
       const premiumCard = fixture.nativeElement.querySelector('.card-premium');
       expect(premiumCard).toBeTruthy();
-      expect(premiumCard.textContent).toContain('Plan Premium Activo');
+      expect(premiumCard.textContent).toContain('Plan Hogar activo');
     });
   });
 

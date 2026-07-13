@@ -67,7 +67,7 @@ describe('Layout', () => {
 
     const banner = fixture.nativeElement.querySelector('.alert-expired');
     expect(banner).toBeTruthy();
-    expect(banner.textContent).toContain('suscripción o período de prueba premium ha expirado');
+    expect(banner.textContent).toContain('suscripción o período de prueba del Plan Hogar ha expirado');
   });
 
   it('should trigger paywall.open() when clicking "Ver Planes"', () => {
