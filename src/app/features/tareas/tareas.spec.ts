@@ -11,6 +11,7 @@ const progress = (overrides: Partial<GamificacionProgresoResponse> = {}): Gamifi
   usuarioId: 'user-1',
   currentXp: 120,
   currentLevel: 2,
+  currentLevelThresholdXp: 100,
   currentLevelNombre: 'Aprendiz',
   nextLevel: 3,
   nextLevelNombre: 'Ayudante',
@@ -113,26 +114,62 @@ describe('Tareas', () => {
   });
 
   describe('backend-driven progress', () => {
-    it('calculates progress percentage from backend current XP and next threshold', () => {
-      mockTareasApi.getProgreso.mockReturnValue(of(progress({ currentXp: 120, nextThresholdXp: 240, xpToNextLevel: 120 })));
+    it('renders an empty progress bar when the current-level threshold is reached', () => {
+      mockTareasApi.getProgreso.mockReturnValue(of(progress({
+        currentXp: 180,
+        currentLevel: 3,
+        currentLevelThresholdXp: 180,
+        nextLevel: 4,
+        nextThresholdXp: 260,
+        xpToNextLevel: 80,
+      })));
 
       component['cargarDatos']();
+      fixture.detectChanges();
 
-      expect(component['nivel']()).toBe(2);
-      expect(component['xp']()).toBe(120);
-      expect(component['xpEnNivelActual']()).toBe(120);
-      expect(component['xpNecesariaParaSiguienteNivel']()).toBe(240);
-      expect(component['xpSiguienteNivelTotal']()).toBe(240);
-      expect(component['porcentajeXp']()).toBe(50);
+      expect(component['nivel']()).toBe(3);
+      expect(component['xpNecesariaParaSiguienteNivel']()).toBe(80);
+      expect(component['porcentajeXp']()).toBe(0);
+      expect(fixture.nativeElement.querySelector('.xp-bar-inner').style.width).toBe('0%');
     });
 
-    it('does not use frontend hardcoded thresholds when backend sends different values', () => {
-      mockTareasApi.getProgreso.mockReturnValue(of(progress({ currentLevel: 2, currentXp: 30, nextThresholdXp: 60, xpToNextLevel: 30 })));
+    it('renders progress from the backend thresholds', () => {
+      mockTareasApi.getProgreso.mockReturnValue(of(progress({
+        currentXp: 220,
+        currentLevel: 3,
+        currentLevelThresholdXp: 180,
+        nextLevel: 4,
+        nextThresholdXp: 260,
+        xpToNextLevel: 40,
+      })));
 
       component['cargarDatos']();
+      fixture.detectChanges();
 
-      expect(component['xpSiguienteNivelTotal']()).toBe(60);
+      expect(component['xpNecesariaParaSiguienteNivel']()).toBe(80);
+      expect(component['xpSiguienteNivelTotal']()).toBe(260);
+      expect(component['xpRestanteParaSiguienteNivel']()).toBe(40);
       expect(component['porcentajeXp']()).toBe(50);
+      expect(fixture.nativeElement.querySelector('.xp-bar-inner').style.width).toBe('50%');
+    });
+
+    it('stays below 100 percent immediately before the next threshold', () => {
+      mockTareasApi.getProgreso.mockReturnValue(of(progress({
+        currentXp: 259,
+        currentLevel: 3,
+        currentLevelThresholdXp: 180,
+        nextLevel: 4,
+        nextThresholdXp: 260,
+        xpToNextLevel: 1,
+      })));
+
+      component['cargarDatos']();
+      fixture.detectChanges();
+
+      expect(component['xpNecesariaParaSiguienteNivel']()).toBe(80);
+      expect(component['porcentajeXp']()).toBe(98.75);
+      expect(component['xpRestanteParaSiguienteNivel']()).toBe(1);
+      expect(fixture.nativeElement.querySelector('.xp-bar-inner').style.width).toBe('98.75%');
     });
 
     it('uses backend hasNextLevel to render max-level progress', () => {
@@ -151,6 +188,36 @@ describe('Tareas', () => {
       expect(component['nivel']()).toBe(5);
       expect(component['porcentajeXp']()).toBe(100);
       expect(component['xpNecesariaParaSiguienteNivel']()).toBe(0);
+    });
+
+    it('falls back to cumulative progress when an older backend omits the current-level threshold', () => {
+      const legacyProgress = progress({ currentXp: 220, currentLevel: 3, nextLevel: 4, nextThresholdXp: 260, xpToNextLevel: 40 });
+      delete legacyProgress.currentLevelThresholdXp;
+      mockTareasApi.getProgreso.mockReturnValue(of(legacyProgress));
+
+      component['cargarDatos']();
+
+      expect(component['porcentajeXp']()).toBeCloseTo((220 / 260) * 100);
+      expect(Number.isNaN(component['porcentajeXp']())).toBe(false);
+    });
+
+    it('keeps the bar valid when XP drops below the retained current-level threshold', () => {
+      mockTareasApi.getProgreso.mockReturnValue(of(progress({
+        currentXp: 100,
+        currentLevel: 3,
+        currentLevelThresholdXp: 180,
+        nextLevel: 3,
+        nextThresholdXp: 180,
+        xpToNextLevel: 80,
+      })));
+
+      component['cargarDatos']();
+
+      expect(component['xp']()).toBe(100);
+      expect(component['xpSiguienteNivelTotal']()).toBe(180);
+      expect(component['xpRestanteParaSiguienteNivel']()).toBe(80);
+      expect(component['porcentajeXp']()).toBe(0);
+      expect(Number.isNaN(component['porcentajeXp']())).toBe(false);
     });
 
     it('keeps level 0 as returned by backend while using local level-1 avatar asset', () => {
@@ -221,8 +288,15 @@ describe('Tareas', () => {
   });
 
   describe('DOM rendering of backend progress contract', () => {
-    it('renders backend progress without duplicating total XP above the bar', () => {
-      mockTareasApi.getProgreso.mockReturnValue(of(progress({ currentXp: 120, nextLevel: 3, nextThresholdXp: 240, xpToNextLevel: 120 })));
+    it('renders cumulative XP without duplicating it above the bar', () => {
+      mockTareasApi.getProgreso.mockReturnValue(of(progress({
+        currentXp: 220,
+        currentLevel: 3,
+        currentLevelThresholdXp: 180,
+        nextLevel: 4,
+        nextThresholdXp: 260,
+        xpToNextLevel: 40,
+      })));
       component['cargarDatos']();
       fixture.detectChanges();
 
@@ -231,8 +305,8 @@ describe('Tareas', () => {
       const normalizedText = element.textContent?.replace(/\s+/g, ' ') ?? '';
 
       expect(element.querySelector('.xp-total-text')).toBeNull();
-      expect(progressText).toBe('120 / 240 XP');
-      expect(normalizedText).toContain('Faltan 120 XP para nivel 3');
+      expect(progressText).toBe('220 / 260 XP');
+      expect(normalizedText).toContain('Faltan 40 XP para nivel 4');
     });
 
     it('does not render invented XP for completed tasks without xpOtorgado', () => {

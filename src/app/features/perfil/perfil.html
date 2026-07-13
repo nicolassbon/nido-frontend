@@ -98,7 +98,7 @@
             <lucide-icon name="sparkles" class="text-amber-600 w-5 h-5"></lucide-icon>
           </div>
           <div>
-            <h3 class="text-gray-900 font-bold text-[1.05rem] m-0">Plan Premium Activo</h3>
+            <h3 class="text-gray-900 font-bold text-[1.05rem] m-0">Plan Hogar activo</h3>
             <p class="text-nido-brown text-[0.825rem] m-0 mt-0.5">Tenés acceso ilimitado al comparador de listas, escáner de tickets e información nutricional.</p>
             @if (premiumExpirationText()) {
               <p class="text-amber-700 text-[0.8rem] m-0 mt-1 font-medium">{{ premiumExpirationText() }}</p>
@@ -106,7 +106,7 @@
           </div>
         </div>
         <div class="flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-[0.75rem] font-bold self-start sm:self-auto animate-pulse">
-          Premium
+          Plan Hogar
         </div>
       </div>
     } @else {
@@ -117,11 +117,11 @@
           </div>
           <div>
             <h3 class="text-gray-900 font-bold text-[1.05rem] m-0">Nido Plan Gratuito</h3>
-            <p class="text-nido-brown text-[0.825rem] m-0 mt-0.5">Pasate a Premium para comparar precios de supermercados en tiempo real y escanear tickets sin límites.</p>
+            <p class="text-nido-brown text-[0.825rem] m-0 mt-0.5">Pasate al Plan Hogar para comparar precios de supermercados en tiempo real y escanear tickets sin límites.</p>
           </div>
         </div>
         <button (click)="upgradeToPremium()" class="bg-nido-green-dark border-none text-nido-cream rounded-full px-5 py-2 text-[0.875rem] font-semibold hover:bg-nido-green transition cursor-pointer self-start sm:self-auto whitespace-nowrap">
-          Subir a Plan Premium
+          Subir al Plan Hogar
         </button>
       </div>
     }

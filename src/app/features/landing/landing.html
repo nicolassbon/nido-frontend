@@ -179,7 +179,7 @@
         <p class="stat-label">módulos conectados</p>
       </div>
       <div class="stat-item reveal-section text-center">
-        <p class="stat-number">3</p>
+        <p class="stat-number">2</p>
         <p class="stat-label">planes disponibles</p>
       </div>
     </div>
@@ -671,23 +671,23 @@
         </p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 max-w-5xl mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 max-w-4xl mx-auto">
 
-        <!-- Plan Básico -->
+        <!-- Plan Free -->
         <div class="pricing-card reveal-section flex flex-col">
           <div class="icon-circle bg-[rgba(62,94,74,0.08)] mb-5">
             <lucide-icon name="sprout" [size]="20" class="text-nido-green" />
           </div>
-          <h3 class="pricing-name text-nido-green-dark">Plan Básico</h3>
+          <h3 class="pricing-name text-nido-green-dark">Free</h3>
           <div class="flex items-baseline gap-1.5 mb-7">
             <span class="pricing-amount text-nido-green-dark">Gratis</span>
             <span class="text-nido-muted text-[0.8125rem]">para siempre</span>
           </div>
           <ul class="pricing-features flex-1">
-            <li><lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /><span>Inventario digital (hasta 30 items)</span></li>
-            <li><lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /><span>Recetas básicas (hasta 20)</span></li>
-            <li><lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /><span>1 usuario</span></li>
-            <li><lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /><span>Alertas de vencimiento</span></li>
+            <li><lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /><span>Organización del hogar</span></li>
+            <li><lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /><span>Alacena y recetas</span></li>
+            <li><lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /><span>Tareas, compras y finanzas</span></li>
+            <li><lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /><span>Invitá a integrantes</span></li>
           </ul>
           <a routerLink="/registro"
              class="mt-6 flex items-center justify-center py-2.5 px-5 rounded-full border-[1.5px] border-nido-border text-nido-green-dark text-[0.875rem] font-semibold no-underline transition-all duration-200 hover:border-nido-green hover:bg-nido-green/[0.04]">
@@ -703,43 +703,19 @@
           </div>
           <h3 class="pricing-name text-nido-cream">Plan Hogar</h3>
           <div class="flex items-baseline gap-1 mb-7">
-            <span class="text-nido-gold font-bold text-[1.25rem]">$</span>
-            <span class="pricing-amount text-nido-cream">9.99</span>
-            <span class="text-nido-cream/45 text-[0.8125rem]">/mes</span>
+            <span class="pricing-amount text-nido-cream">AR$ 15.000</span>
+            <span class="text-nido-cream/45 text-[0.8125rem]">/ mes</span>
           </div>
           <ul class="pricing-features pricing-features--featured flex-1">
-            <li><lucide-icon name="check" [size]="13" class="text-nido-gold shrink-0" /><span>Inventario ilimitado</span></li>
-            <li><lucide-icon name="check" [size]="13" class="text-nido-gold shrink-0" /><span>Todas las recetas (+120)</span></li>
-            <li><lucide-icon name="check" [size]="13" class="text-nido-gold shrink-0" /><span>Hasta 4 miembros del hogar</span></li>
-            <li><lucide-icon name="check" [size]="13" class="text-nido-gold shrink-0" /><span>Escáner de código de barras</span></li>
-            <li><lucide-icon name="check" [size]="13" class="text-nido-gold shrink-0" /><span>Electrodomésticos ilimitados</span></li>
+            <li><lucide-icon name="check" [size]="13" class="text-nido-gold shrink-0" /><span>Escaneo inteligente de tickets</span></li>
+            <li><lucide-icon name="check" [size]="13" class="text-nido-gold shrink-0" /><span>Escaneo de información nutricional</span></li>
+            <li><lucide-icon name="check" [size]="13" class="text-nido-gold shrink-0" /><span>Comparador de precios</span></li>
+            <li><lucide-icon name="check" [size]="13" class="text-nido-gold shrink-0" /><span>Modo ahorro en finanzas</span></li>
+            <li><lucide-icon name="check" [size]="13" class="text-nido-gold shrink-0" /><span>Funciones de IA y próximas novedades</span></li>
           </ul>
           <a routerLink="/registro"
              class="mt-6 flex items-center justify-center py-2.5 px-5 rounded-full bg-nido-gold text-white text-[0.875rem] font-semibold no-underline transition-opacity duration-200 hover:opacity-90 shadow-[0_4px_16px_rgba(199,143,90,0.4)]">
-            Elegir Hogar
-          </a>
-        </div>
-
-        <!-- Plan Familia -->
-        <div class="pricing-card reveal-section flex flex-col">
-          <div class="pricing-icon bg-[rgba(199,143,90,0.08)]">
-            <lucide-icon name="users" [size]="22" class="text-nido-gold" />
-          </div>
-          <h3 class="pricing-name text-nido-green-dark">Plan Familia</h3>
-          <div class="flex items-baseline gap-1 mb-7">
-            <span class="text-nido-gold font-bold text-[1.25rem]">$</span>
-            <span class="pricing-amount text-nido-green-dark">14.99</span>
-            <span class="text-nido-muted text-[0.8125rem]">/mes</span>
-          </div>
-          <ul class="pricing-features flex-1">
-            <li><lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /><span>Todo lo del Plan Hogar</span></li>
-            <li><lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /><span>Miembros ilimitados</span></li>
-            <li><lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /><span>Historial y estadísticas avanzadas</span></li>
-            <li><lucide-icon name="check" [size]="13" class="text-nido-green shrink-0" /><span>Soporte prioritario</span></li>
-          </ul>
-          <a routerLink="/registro"
-             class="mt-6 flex items-center justify-center py-2.5 px-5 rounded-full border-[1.5px] border-nido-border text-nido-green-dark text-[0.875rem] font-semibold no-underline transition-all duration-200 hover:border-nido-green hover:bg-nido-green/[0.04]">
-            Elegir Familia
+            Elegir Plan Hogar
           </a>
         </div>
 

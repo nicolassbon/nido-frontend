@@ -30,6 +30,7 @@ export interface GamificacionProgresoResponse {
   usuarioId: string;
   currentXp: number;
   currentLevel: number;
+  currentLevelThresholdXp?: number | null;
   currentLevelNombre: string | null;
   nextLevel: number | null;
   nextLevelNombre: string | null;

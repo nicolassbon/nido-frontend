@@ -31,6 +31,7 @@ import { ApiReceta, RecipesApiService } from './services/recipes-api.service';
 import { StarRatingComponent } from '../../../shared/ui/star-rating/star-rating';
 import { ProductService } from '../../../core/servicios/agregar-producto.service';
 import { AuthService } from '../../../core/auth/auth.service';
+import { PaywallService } from '../../../core/servicios/paywall';
 import { PerfilApiService } from '../../perfil/perfil-api.service';
 import { AssistantRecipeContext, RecetaAsistenteComponent } from './receta-asistente.component';
 import { NidoSelectComponent, NidoSelectOption } from '../../../shared/ui/form/nido-select/nido-select';
@@ -174,6 +175,7 @@ export class Recipes implements OnInit {
   private readonly router            = inject(Router);
   private readonly productService    = inject(ProductService);
   private readonly authService       = inject(AuthService);
+  private readonly paywall           = inject(PaywallService);
   private readonly electrodomesticos = inject(ElectrodomesticosService);
   private readonly hogaresApi        = inject(HogaresApiService);
   private readonly perfilApi         = inject(PerfilApiService);
@@ -226,6 +228,7 @@ export class Recipes implements OnInit {
   protected readonly householdMembers = signal<HouseholdMember[]>([]);
   protected readonly eatingToday = signal<Set<string>>(new Set());
   protected readonly currentUserId = computed(() => this.authService.getUserId());
+  protected readonly isPremium = this.authService.isPremium;
 
   protected readonly asistenteAbierto         = signal<boolean>(false);
   protected readonly recetaSeleccionadaAsistente = signal<AssistantRecipeContext | null>(null);
@@ -562,8 +565,18 @@ export class Recipes implements OnInit {
       .map(ingredient => ingredient.name);
   }
 
+  protected openAiPaywall(event?: Event): void {
+    event?.stopPropagation();
+    this.paywall.open();
+  }
+
   protected abrirAsistenteConReceta(recipe: RecipeWithAvailability, event: Event): void {
     event.stopPropagation();
+
+    if (!this.isPremium()) {
+      this.openAiPaywall();
+      return;
+    }
 
     this.recetaSeleccionadaAsistente.set({
       id: recipe.id,
@@ -575,6 +588,11 @@ export class Recipes implements OnInit {
   }
 
   protected toggleAsistenteGeneral(): void {
+    if (!this.isPremium()) {
+      this.openAiPaywall();
+      return;
+    }
+
     const nextOpenState = !this.asistenteAbierto();
     if (nextOpenState) {
       this.recetaSeleccionadaAsistente.set(null);
@@ -662,7 +680,7 @@ export class Recipes implements OnInit {
   protected onSearchSubmit(textoIngresado: string, objetivoNutricional: string): void {
     const textoUsuario = textoIngresado.trim();
     const objetivo = objetivoNutricional.trim();
-    const requiereIA = textoUsuario.split(/\s+/).filter(Boolean).length > 2 || objetivo.length > 0;
+    const requiereIA = this.isPremium() && (textoUsuario.split(/\s+/).filter(Boolean).length > 2 || objetivo.length > 0);
 
     this.searchQuery.set(textoUsuario);
     this.nutritionalObjective.set(objetivo);
