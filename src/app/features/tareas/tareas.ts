@@ -48,24 +48,32 @@ export class Tareas implements OnInit {
   protected readonly floatingXPs = signal<{ id: number; value: string }[]>([]);
   protected readonly hasNextLevel = signal<boolean>(false);
   protected readonly nextLevel = signal<number | null>(null);
+  protected readonly currentLevelThresholdXp = signal<number | null>(null);
   protected readonly nextThresholdXp = signal<number | null>(null);
   protected readonly xpToNextLevel = signal<number | null>(null);
 
   protected readonly porcentajeXp = computed(() => {
     if (!this.hasNextLevel()) return 100;
-    const threshold = this.nextThresholdXp() ?? this.xp() + (this.xpToNextLevel() ?? 0);
-    if (threshold <= 0) return 0;
-    return Math.min(100, Math.max(0, (this.xp() / threshold) * 100));
+    const nextThreshold = this.xpSiguienteNivelTotal();
+    const currentThreshold = this.currentLevelThresholdXp();
+    if (currentThreshold === null) {
+      return nextThreshold > 0 ? Math.min(100, Math.max(0, (this.xp() / nextThreshold) * 100)) : 0;
+    }
+    if (this.xp() <= currentThreshold || nextThreshold <= currentThreshold) return 0;
+    return Math.min(100, Math.max(0, ((this.xp() - currentThreshold) / (nextThreshold - currentThreshold)) * 100));
   });
-
-  protected readonly xpEnNivelActual = computed(() => this.xp());
 
   protected readonly xpNecesariaParaSiguienteNivel = computed(() => {
     if (!this.hasNextLevel()) return 0;
-    return this.nextThresholdXp() ?? this.xp() + (this.xpToNextLevel() ?? 0);
+    const currentThreshold = this.currentLevelThresholdXp();
+    if (currentThreshold === null) return 0;
+    return Math.max(0, this.xpSiguienteNivelTotal() - currentThreshold);
   });
 
-  protected readonly xpSiguienteNivelTotal = computed(() => this.xpNecesariaParaSiguienteNivel());
+  protected readonly xpSiguienteNivelTotal = computed(() => {
+    if (!this.hasNextLevel()) return 0;
+    return this.nextThresholdXp() ?? this.xp() + (this.xpToNextLevel() ?? 0);
+  });
 
   protected readonly xpRestanteParaSiguienteNivel = computed(() => {
     if (!this.hasNextLevel()) return 0;
@@ -144,6 +152,7 @@ export class Tareas implements OnInit {
     this.imagenNivel.set(Math.min(5, Math.max(1, level)));
     this.hasNextLevel.set(progress.hasNextLevel);
     this.nextLevel.set(progress.nextLevel);
+    this.currentLevelThresholdXp.set(progress.currentLevelThresholdXp ?? null);
     this.nextThresholdXp.set(progress.nextThresholdXp);
     this.xpToNextLevel.set(progress.xpToNextLevel);
   }
