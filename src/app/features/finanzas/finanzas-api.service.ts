@@ -179,7 +179,9 @@ export class FinanzasApiService {
   private readonly base = environment.apiBaseUrl;
 
   getModoAhorro(): Observable<ModoAhorroResponse> {
-    return this.http.get<ModoAhorroResponse>(`${this.base}/finanzas/modo-ahorro`);
+    return this.http
+      .get<ModoAhorroResponse>(`${this.base}/finanzas/modo-ahorro`)
+      .pipe(catchError(() => of({ activo: false })));
   }
 
   setModoAhorro(activo: boolean): Observable<ModoAhorroResponse> {

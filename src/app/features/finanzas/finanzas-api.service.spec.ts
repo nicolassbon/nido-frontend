@@ -119,6 +119,20 @@ describe('FinanzasApiService', () => {
 
   // ── modo ahorro endpoints ──────────────────────────────────────────────────
 
+  it('getModoAhorro() conserva la respuesta activa del endpoint', async () => {
+    const promise = firstValueFrom(service.getModoAhorro());
+    http.expectOne(`${base}/finanzas/modo-ahorro`).flush({ activo: true });
+
+    await expect(promise).resolves.toEqual({ activo: true });
+  });
+
+  it('getModoAhorro() devuelve inactivo cuando el endpoint Premium responde 403', async () => {
+    const promise = firstValueFrom(service.getModoAhorro());
+    http.expectOne(`${base}/finanzas/modo-ahorro`).flush(null, { status: 403, statusText: 'Forbidden' });
+
+    await expect(promise).resolves.toEqual({ activo: false });
+  });
+
   it('getSavingsPotencial() devuelve datos vacíos como fallback ante un error', async () => {
     const promise = firstValueFrom(service.getSavingsPotencial());
     http.expectOne(`${base}/finanzas/modo-ahorro/potencial`).error(new ProgressEvent('error'));
