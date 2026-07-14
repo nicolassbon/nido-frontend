@@ -81,8 +81,8 @@
 }
 
 .recipe-photo {
-  height: 100%;
-  min-height: clamp(190px, 24vw, 260px);
+  height: clamp(190px, 24vw, 260px);
+  min-height: 0;
   overflow: hidden;
   border-radius: 8px;
   background: #e5e5e5;
@@ -573,7 +573,8 @@ h1 {
   .recipe-photo,
   .recipe-photo img,
   .photo-empty {
-    min-height: clamp(220px, 58vw, 340px);
+    height: clamp(220px, 58vw, 340px);
+    min-height: 0;
   }
 
   .recipe-facts {
