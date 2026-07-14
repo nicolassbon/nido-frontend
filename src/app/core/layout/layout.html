@@ -26,6 +26,17 @@
       </div>
     }
 
+    @if (paymentSuccessFlash(); as paymentSuccessFlash) {
+      @if (currentRoute() === paymentSuccessFlash.origin) {
+        <div class="alert-payment-success bg-emerald-50 border-b border-emerald-200 px-4 py-2 flex items-center justify-between text-emerald-800 text-[0.75rem] font-medium z-40 shrink-0 shadow-sm" role="status">
+          <span>{{ paymentSuccessFlash.message }}</span>
+          <button type="button" class="ml-4 text-emerald-800 underline" (click)="dismissPaymentSuccessFlash()" aria-label="Cerrar mensaje de suscripción activa">
+            Cerrar
+          </button>
+        </div>
+      }
+    }
+
     <!-- Header mobile -->
     <header
       class="relative flex items-center justify-center bg-nido-green-dark px-2 pb-2.5 shadow-[0_2px_10px_rgba(31,58,58,0.25)] md:hidden"

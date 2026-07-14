@@ -1,10 +1,12 @@
 import { Component, inject, signal, DestroyRef } from '@angular/core';
+import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { finalize, Subscription, timeout, TimeoutError } from 'rxjs';
 import { PaywallService } from '../../../core/servicios/paywall';
 import { environment } from '../../../../environments/environment';
+import { PostPaymentReturnService } from '../../../core/post-payment-return';
 
 interface CheckoutResponse {
   preferenceId: string;
@@ -45,6 +47,8 @@ export class PaywallModalComponent {
   readonly paywallService = inject(PaywallService);
   private readonly http = inject(HttpClient);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly router = inject(Router);
+  private readonly postPaymentReturn = inject(PostPaymentReturnService);
 
   readonly isOpen = this.paywallService.isOpen;
   readonly isCreatingCheckout = signal(false);
@@ -67,6 +71,7 @@ export class PaywallModalComponent {
       return;
     }
 
+    this.postPaymentReturn.clearCheckoutOrigin();
     const requestId = ++this.checkoutRequestId;
     this.checkoutError.set(null);
     this.isCreatingCheckout.set(true);
@@ -93,8 +98,10 @@ export class PaywallModalComponent {
           }
 
           try {
+            this.postPaymentReturn.captureCheckoutOrigin(this.router.url);
             this.navigateToCheckout(response.initPoint);
           } catch {
+            this.postPaymentReturn.clearCheckoutOrigin();
             this.checkoutError.set('No pudimos abrir el checkout. Intentá de nuevo.');
           }
         },

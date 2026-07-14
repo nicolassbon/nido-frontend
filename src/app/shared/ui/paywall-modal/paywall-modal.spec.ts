@@ -3,6 +3,8 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import { PaywallModalComponent } from './paywall-modal';
 import { PaywallService } from '../../../core/servicios/paywall';
 import { environment } from '../../../../environments/environment';
+import { Router } from '@angular/router';
+import { PostPaymentReturnService } from '../../../core/post-payment-return';
 import { describe, beforeEach, it, expect, vi, afterEach } from 'vitest';
 
 interface CheckoutNavigationTarget {
@@ -19,8 +21,16 @@ describe('PaywallModalComponent', () => {
   let paywallService: PaywallService;
   let httpMock: HttpTestingController;
   let navigateSpy: ReturnType<typeof vi.spyOn>;
+  let mockPostPaymentReturn: { captureCheckoutOrigin: ReturnType<typeof vi.fn>; clearCheckoutOrigin: ReturnType<typeof vi.fn> };
+  let mockRouter: { url: string };
 
   beforeEach(() => {
+    mockPostPaymentReturn = {
+      captureCheckoutOrigin: vi.fn(),
+      clearCheckoutOrigin: vi.fn(),
+    };
+    mockRouter = { url: '/alacena?tab=stock#item-1' };
+
     TestBed.configureTestingModule({
       imports: [
         HttpClientTestingModule,
@@ -28,6 +38,8 @@ describe('PaywallModalComponent', () => {
       ],
       providers: [
         PaywallService,
+        { provide: Router, useValue: mockRouter },
+        { provide: PostPaymentReturnService, useValue: mockPostPaymentReturn },
       ],
     });
 
@@ -93,6 +105,26 @@ describe('PaywallModalComponent', () => {
     req.flush({ preferenceId: 'pref-123', initPoint: 'https://www.mercadopago.com/checkout/v1/redirect?pref_id=pref-123' });
 
     expect(navigateSpy).toHaveBeenCalledWith('https://www.mercadopago.com/checkout/v1/redirect?pref_id=pref-123');
+  });
+
+  it('stores the current internal router URL immediately before trusted checkout navigation', () => {
+    component.subscribe();
+    httpMock.expectOne(`${environment.apiBaseUrl}/payments/checkout`).flush({
+      preferenceId: 'pref-123',
+      initPoint: 'https://www.mercadopago.com/checkout/v1/redirect?pref_id=pref-123',
+    });
+
+    expect(mockPostPaymentReturn.captureCheckoutOrigin).toHaveBeenCalledWith('/alacena?tab=stock#item-1');
+    expect(mockPostPaymentReturn.captureCheckoutOrigin.mock.invocationCallOrder[0])
+      .toBeLessThan(navigateSpy.mock.invocationCallOrder[0]);
+  });
+
+  it('clears stale checkout context before a failed checkout request', () => {
+    component.subscribe();
+    httpMock.expectOne(`${environment.apiBaseUrl}/payments/checkout`).flush({}, { status: 500, statusText: 'Server Error' });
+
+    expect(mockPostPaymentReturn.clearCheckoutOrigin).toHaveBeenCalled();
+    expect(mockPostPaymentReturn.captureCheckoutOrigin).not.toHaveBeenCalled();
   });
 
   it('accepts an official Mercado Pago Sandbox checkout URL', () => {
