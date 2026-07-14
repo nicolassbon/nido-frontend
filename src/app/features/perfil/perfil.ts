@@ -17,6 +17,7 @@ import { TareasApiService } from '../tareas/services/tareas-api.service';
 import { getCompanionInfo } from '../../shared/constants/companion-metadata';
 import { PaywallService } from '../../core/servicios/paywall';
 import { normalizePaymentReturnStatus } from '../../core/payment-return';
+import { PostPaymentReturnService, PREMIUM_ACTIVATED_MESSAGE } from '../../core/post-payment-return';
 
 const PAYMENT_NOTICE_KIND = {
   INFO: 'info',
@@ -59,6 +60,7 @@ export class PerfilComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly paywall = inject(PaywallService);
+  private readonly postPaymentReturn = inject(PostPaymentReturnService);
 
   protected readonly usuario = signal<PerfilApiResponse | null>(null);
   protected readonly isLoading = signal(true);
@@ -78,6 +80,7 @@ export class PerfilComponent implements OnInit {
   private paymentRefreshSubscription: Subscription | null = null;
   private paymentRefreshSequence = 0;
   private paymentRefreshSucceeded = false;
+  private paymentRefreshConfirmedPremium = false;
 
   protected readonly premiumExpirationText = computed(() => {
     const subscriptionEndsAt = this.authService.getSubscriptionEndsAt();
@@ -358,6 +361,7 @@ export class PerfilComponent implements OnInit {
         this.reconcilePaymentStatus();
         return;
       case 'pending':
+        this.postPaymentReturn.clearCheckoutOrigin();
         this.paymentNotice.set({
           kind: PAYMENT_NOTICE_KIND.INFO,
           message: 'Todavía no confirmamos el pago. Esperá unos minutos y volvé a verificar el estado antes de usar las funciones del Plan Hogar.',
@@ -366,6 +370,7 @@ export class PerfilComponent implements OnInit {
         return;
       case 'failure':
       case 'cancelled':
+        this.postPaymentReturn.clearCheckoutOrigin();
         this.paymentNotice.set({
           kind: PAYMENT_NOTICE_KIND.ERROR,
           message: 'El pago no se completó. No se aplicaron cambios a tu plan. Podés intentarlo nuevamente cuando quieras.',
@@ -373,6 +378,7 @@ export class PerfilComponent implements OnInit {
         });
         return;
       default:
+        this.postPaymentReturn.clearCheckoutOrigin();
         this.paymentNotice.set({
           kind: PAYMENT_NOTICE_KIND.WARNING,
           message: 'No pudimos confirmar el estado del pago. Verificá tu plan antes de usar las funciones del Plan Hogar.',
@@ -394,16 +400,12 @@ export class PerfilComponent implements OnInit {
     this.paymentRefreshSubscription?.unsubscribe();
     const refreshSequence = ++this.paymentRefreshSequence;
     this.paymentRefreshSucceeded = false;
+    this.paymentRefreshConfirmedPremium = false;
     this.isReconcilingPayment.set(true);
     this.paymentNotice.set({
       kind: PAYMENT_NOTICE_KIND.INFO,
       message: 'Recibimos tu pago. Estamos activando tu Plan Hogar; esto puede demorar unos minutos.',
     });
-
-    if (this.authService.isPremium()) {
-      this.finishPaymentReconciliation(refreshSequence);
-      return;
-    }
 
     const immediateRefresh$ = this.refreshPremiumState();
     const delayedRefreshes$ = timer(PAYMENT_REFRESH_INTERVAL_MS, PAYMENT_REFRESH_INTERVAL_MS).pipe(
@@ -412,7 +414,7 @@ export class PerfilComponent implements OnInit {
     );
 
     const subscription = concat(immediateRefresh$, delayedRefreshes$).pipe(
-      takeWhile(() => !this.authService.isPremium(), true),
+      takeWhile(() => !this.paymentRefreshConfirmedPremium, true),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe({
       complete: () => this.finishPaymentReconciliation(refreshSequence),
@@ -426,6 +428,7 @@ export class PerfilComponent implements OnInit {
       timeout(AUTH_REFRESH_TIMEOUT_MS),
       tap(() => {
         this.paymentRefreshSucceeded = true;
+        this.paymentRefreshConfirmedPremium = this.authService.isPremium();
       }),
       catchError(error => {
         console.error('[PerfilComponent.paymentRefresh Error]', {
@@ -442,15 +445,25 @@ export class PerfilComponent implements OnInit {
     this.paymentRefreshSubscription = null;
     this.isReconcilingPayment.set(false);
 
-    if (this.authService.isPremium()) {
-      this.paymentNotice.set({
-        kind: PAYMENT_NOTICE_KIND.SUCCESS,
-        message: 'Tu suscripción ya está activa. Ya podés disfrutar de todas las funciones del Plan Hogar.',
-      });
+    if (this.paymentRefreshConfirmedPremium) {
+      const showInlineSuccess = () => {
+        if (refreshSequence !== this.paymentRefreshSequence) return;
+        this.paymentNotice.set({
+          kind: PAYMENT_NOTICE_KIND.SUCCESS,
+          message: PREMIUM_ACTIVATED_MESSAGE,
+        });
+      };
+
+      void this.postPaymentReturn.redirectAfterConfirmedPayment()
+        .then((redirected) => {
+          if (!redirected) showInlineSuccess();
+        })
+        .catch(showInlineSuccess);
       return;
     }
 
     if (!this.paymentRefreshSucceeded) {
+      this.postPaymentReturn.clearCheckoutOrigin();
       this.paymentNotice.set({
         kind: PAYMENT_NOTICE_KIND.WARNING,
         message: 'El pago fue informado como aprobado, pero no pudimos verificar la activación por un problema de conexión. Reintentá la verificación antes de usar las funciones premium.',
@@ -459,6 +472,7 @@ export class PerfilComponent implements OnInit {
       return;
     }
 
+    this.postPaymentReturn.clearCheckoutOrigin();
     this.paymentNotice.set({
       kind: PAYMENT_NOTICE_KIND.WARNING,
       message: 'El pago fue recibido, pero todavía no pudimos confirmar la activación. Esperá unos minutos y volvé a verificar el estado.',

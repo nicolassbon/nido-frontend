@@ -9,6 +9,7 @@ import { PaywallService } from '../servicios/paywall';
 import { CommonModule } from '@angular/common';
 import { ContextualTutorialService } from '../tutorial/contextual-tutorial.service';
 import { LucideAngularModule } from 'lucide-angular';
+import { PostPaymentReturnService } from '../post-payment-return';
 
 @Component({
   selector: 'app-layout',
@@ -21,10 +22,13 @@ export class Layout {
   private readonly authService = inject(AuthService);
   private readonly paywall = inject(PaywallService);
   protected readonly tutorial = inject(ContextualTutorialService);
+  private readonly postPaymentReturn = inject(PostPaymentReturnService);
 
   protected readonly isMenuOpen = signal(false);
+  protected readonly currentRoute = signal(this.router.url);
 
   protected readonly isExpired = this.authService.hasExpiredPremium;
+  protected readonly paymentSuccessFlash = this.postPaymentReturn.successFlash;
 
   protected openPaywall(): void {
     this.paywall.open();
@@ -47,6 +51,13 @@ export class Layout {
       )
       .subscribe((event) => this.tutorial.handleRoute((event as NavigationEnd).urlAfterRedirects));
 
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntilDestroyed(),
+      )
+      .subscribe((event) => this.handlePaymentFlashNavigation((event as NavigationEnd).urlAfterRedirects));
+
     window.setTimeout(() => this.tutorial.handleRoute(this.router.url), 0);
   }
 
@@ -60,5 +71,17 @@ export class Layout {
 
   protected startHelp(): void {
     this.tutorial.startCurrentManually();
+  }
+
+  protected dismissPaymentSuccessFlash(): void {
+    this.postPaymentReturn.dismissSuccessFlash();
+  }
+
+  protected handlePaymentFlashNavigation(url: string): void {
+    this.currentRoute.set(url);
+    const flash = this.paymentSuccessFlash();
+    if (flash && url !== flash.origin) {
+      this.dismissPaymentSuccessFlash();
+    }
   }
 }

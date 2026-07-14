@@ -68,7 +68,12 @@ export interface AddPasswordRequest {
 }
 
 const TOKEN_KEY = 'accessToken';
-const AUTH_TOKEN_CHANGED_EVENT = 'nido-auth-token-changed';
+export const AUTH_TOKEN_CHANGED_EVENT = 'nido-auth-token-changed';
+
+export interface AuthTokenChangeDetail {
+  previousUserId: string | null;
+  userId: string | null;
+}
 const PREMIUM_PLAN = 'Hogar';
 const MAX_TIMEOUT_DELAY = 2_147_483_647;
 
@@ -162,21 +167,29 @@ export class AuthService {
   }
 
   setToken(token: string): void {
+    const previousUserId = this.getUserId();
     this.tokenVersion += 1;
     localStorage.setItem(TOKEN_KEY, token);
     this.tokenSignal.set(token);
     this.entitlementClock.set(Date.now());
     this.rescheduleEntitlementClock();
-    window.dispatchEvent(new Event(AUTH_TOKEN_CHANGED_EVENT));
+    this.dispatchTokenChange(previousUserId, this.getUserId());
   }
 
   clearToken(): void {
+    const previousUserId = this.getUserId();
     this.tokenVersion += 1;
     localStorage.removeItem(TOKEN_KEY);
     this.tokenSignal.set(null);
     this.entitlementClock.set(Date.now());
     this.clearEntitlementTimer();
-    window.dispatchEvent(new Event(AUTH_TOKEN_CHANGED_EVENT));
+    this.dispatchTokenChange(previousUserId, null);
+  }
+
+  private dispatchTokenChange(previousUserId: string | null, userId: string | null): void {
+    window.dispatchEvent(new CustomEvent<AuthTokenChangeDetail>(AUTH_TOKEN_CHANGED_EVENT, {
+      detail: { previousUserId, userId },
+    }));
   }
 
   isAuthenticated(): boolean {

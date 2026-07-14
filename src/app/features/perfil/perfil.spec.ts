@@ -11,6 +11,7 @@ import { OnboardingApiService } from '../onboarding/onboarding-api.service';
 import { TareasApiService, type GamificacionProgresoResponse } from '../tareas/services/tareas-api.service';
 import { PerfilApiService } from './perfil-api.service';
 import { PerfilComponent } from './perfil';
+import { PostPaymentReturnService } from '../../core/post-payment-return';
 
 const progress = (overrides: Partial<GamificacionProgresoResponse> = {}): GamificacionProgresoResponse => ({
   usuarioId: 'u-1',
@@ -38,6 +39,10 @@ describe('PerfilComponent - Behavior and Gamification', () => {
   let refreshCallCount: number;
   let isPremiumSignal: ReturnType<typeof signal<boolean>>;
   let mockRouter: { navigate: ReturnType<typeof vi.fn> };
+  let mockPostPaymentReturn: {
+    clearCheckoutOrigin: ReturnType<typeof vi.fn>;
+    redirectAfterConfirmedPayment: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
     queryParamsSubject = new Subject();
@@ -77,6 +82,10 @@ describe('PerfilComponent - Behavior and Gamification', () => {
     mockRouter = {
       navigate: vi.fn().mockResolvedValue(true),
     };
+    mockPostPaymentReturn = {
+      clearCheckoutOrigin: vi.fn(),
+      redirectAfterConfirmedPayment: vi.fn().mockResolvedValue(false),
+    };
 
     await TestBed.configureTestingModule({
       imports: [PerfilComponent],
@@ -89,6 +98,7 @@ describe('PerfilComponent - Behavior and Gamification', () => {
           },
         },
         { provide: Router, useValue: mockRouter },
+        { provide: PostPaymentReturnService, useValue: mockPostPaymentReturn },
         {
           provide: AuthService,
           useValue: {
@@ -236,7 +246,7 @@ describe('PerfilComponent - Behavior and Gamification', () => {
     it.each([
       ['a case-folded approved status with whitespace', '  ApPrOvEd  '],
       ['duplicate case-folded success and approved statuses', [' success ', ' APPROVED ']],
-    ])('reconciles %s and shows success only after the refreshed JWT is premium', (_, status) => {
+    ])('reconciles %s and shows success only after the refreshed JWT is premium', async (_, status) => {
       const refreshResponse = new Subject<{ accessToken: string }>();
       mockAuthService.isAuthenticated.mockReturnValue(true);
       mockAuthService.refresh.mockReturnValue(refreshResponse.asObservable());
@@ -251,12 +261,14 @@ describe('PerfilComponent - Behavior and Gamification', () => {
       isPremiumSignal.set(true);
       refreshResponse.next({ accessToken: 'premium-token' });
       refreshResponse.complete();
+      await flushAsyncWork();
       fixture.detectChanges();
 
       expect(fixture.nativeElement.textContent).toContain('Tu suscripción ya está activa');
+      expect(mockPostPaymentReturn.redirectAfterConfirmedPayment).toHaveBeenCalled();
     });
 
-    it('shows payment received guidance until refresh confirms the premium entitlement', () => {
+    it('shows payment received guidance until refresh confirms the premium entitlement', async () => {
       const refreshResponse = new Subject<{ accessToken: string }>();
       mockAuthService.refresh.mockReturnValue(refreshResponse.asObservable());
       fixture.detectChanges();
@@ -271,6 +283,7 @@ describe('PerfilComponent - Behavior and Gamification', () => {
       isPremiumSignal.set(true);
       refreshResponse.next({ accessToken: 'premium-token' });
       refreshResponse.complete();
+      await flushAsyncWork();
       fixture.detectChanges();
 
       const alertEl = fixture.nativeElement.querySelector('.alert-success');
@@ -290,6 +303,7 @@ describe('PerfilComponent - Behavior and Gamification', () => {
         replaceUrl: true,
       }));
       expect(mockAuthService.refresh).not.toHaveBeenCalled();
+      expect(mockPostPaymentReturn.clearCheckoutOrigin).toHaveBeenCalled();
       expect(fixture.nativeElement.textContent).toContain('Todavía no confirmamos el pago');
     });
 
@@ -301,15 +315,49 @@ describe('PerfilComponent - Behavior and Gamification', () => {
 
       expect(fixture.nativeElement.textContent).toContain('El pago no se completó');
       expect(mockAuthService.refresh).not.toHaveBeenCalled();
+      expect(mockPostPaymentReturn.clearCheckoutOrigin).toHaveBeenCalled();
     });
 
-    it('shows safe retry guidance for an unknown checkout status', () => {
+    it('clears the stored origin and shows safe retry guidance for a rejected checkout status', () => {
       fixture.detectChanges();
 
-      queryParamsSubject.next({ status: 'unexpected-value' });
+      queryParamsSubject.next({ status: 'rejected' });
       fixture.detectChanges();
 
       expect(fixture.nativeElement.textContent).toContain('No pudimos confirmar el estado del pago');
+      expect(mockPostPaymentReturn.clearCheckoutOrigin).toHaveBeenCalled();
+    });
+
+    it('does not show Perfil success when a confirmed payment returns to a stored non-Perfil origin', async () => {
+      mockPostPaymentReturn.redirectAfterConfirmedPayment.mockResolvedValue(true);
+      mockAuthService.isAuthenticated.mockReturnValue(true);
+      fixture.detectChanges();
+
+      isPremiumSignal.set(true);
+      queryParamsSubject.next({ status: 'approved' });
+      fixture.detectChanges();
+      await flushAsyncWork();
+
+      expect(mockPostPaymentReturn.redirectAfterConfirmedPayment).toHaveBeenCalled();
+      expect(fixture.nativeElement.textContent).not.toContain('Tu suscripción ya está activa');
+    });
+
+    it.each([
+      ['no stored origin', () => mockPostPaymentReturn.redirectAfterConfirmedPayment.mockResolvedValue(false)],
+      ['a Perfil origin', () => mockPostPaymentReturn.redirectAfterConfirmedPayment.mockResolvedValue(false)],
+      ['a cancelled navigation', () => mockPostPaymentReturn.redirectAfterConfirmedPayment.mockResolvedValue(false)],
+      ['a rejected navigation', () => mockPostPaymentReturn.redirectAfterConfirmedPayment.mockRejectedValue(new Error('Navigation error'))],
+    ])('falls back to Perfil inline success after %s', async (_, configureRedirect) => {
+      configureRedirect();
+      isPremiumSignal.set(true);
+      fixture.detectChanges();
+
+      queryParamsSubject.next({ status: 'approved' });
+      await flushAsyncWork();
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.textContent).toContain('Tu suscripción ya está activa');
+      expect(mockPostPaymentReturn.redirectAfterConfirmedPayment).toHaveBeenCalled();
     });
 
     it('refreshes auth state on init when the user is already authenticated', () => {
@@ -357,7 +405,7 @@ describe('PerfilComponent - Behavior and Gamification', () => {
       vi.useRealTimers();
     });
 
-    it('polls refresh until JWT reflects premium subscription', () => {
+    it('polls refresh until JWT reflects premium subscription', async () => {
       fixture.detectChanges();
       queryParamsSubject.next({ status: 'success' });
       fixture.detectChanges();
@@ -371,6 +419,7 @@ describe('PerfilComponent - Behavior and Gamification', () => {
       vi.advanceTimersByTime(1500);
       expect(mockAuthService.refresh).toHaveBeenCalledTimes(3);
       expect(mockAuthService.isPremium()).toBe(true);
+      await flushAsyncWork();
       fixture.detectChanges();
       expect(fixture.nativeElement.textContent).toContain('Tu suscripción ya está activa');
 
@@ -394,6 +443,7 @@ describe('PerfilComponent - Behavior and Gamification', () => {
       expect(fixture.nativeElement.textContent).toContain(
         'no pudimos verificar la activación por un problema de conexión',
       );
+      expect(mockPostPaymentReturn.clearCheckoutOrigin).toHaveBeenCalled();
       expect(errorSpy).toHaveBeenCalledWith('[PerfilComponent.paymentRefresh Error]', {
         reason: 'timeout',
       });
@@ -414,9 +464,48 @@ describe('PerfilComponent - Behavior and Gamification', () => {
       expect(fixture.nativeElement.textContent).toContain(
         'todavía no pudimos confirmar la activación',
       );
+      expect(fixture.nativeElement.textContent).not.toContain('Tu suscripción ya está activa');
+      expect(mockPostPaymentReturn.clearCheckoutOrigin).toHaveBeenCalled();
       expect(fixture.nativeElement.textContent).not.toContain(
         'no pudimos verificar la activación por un problema de conexión',
       );
+    });
+
+    it('does not trust an initially Premium local token when callback refreshes fail', () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      isPremiumSignal.set(true);
+      mockAuthService.refresh.mockReturnValue(throwError(() => new Error('refresh unavailable')));
+
+      fixture.detectChanges();
+      queryParamsSubject.next({ status: 'approved' });
+      vi.advanceTimersByTime(10_000);
+      fixture.detectChanges();
+
+      expect(mockAuthService.refresh).toHaveBeenCalledTimes(6);
+      expect(mockPostPaymentReturn.redirectAfterConfirmedPayment).not.toHaveBeenCalled();
+      expect(fixture.nativeElement.textContent).not.toContain('Tu suscripción ya está activa');
+      expect(fixture.nativeElement.textContent).toContain(
+        'no pudimos verificar la activación por un problema de conexión',
+      );
+      errorSpy.mockRestore();
+    });
+
+    it('does not trust an initially Premium local token when refreshed auth returns Basic', () => {
+      isPremiumSignal.set(true);
+      mockAuthService.refresh.mockImplementation(() => {
+        isPremiumSignal.set(false);
+        return of({ accessToken: 'basic-token' });
+      });
+
+      fixture.detectChanges();
+      queryParamsSubject.next({ status: 'approved' });
+      vi.advanceTimersByTime(10_000);
+      fixture.detectChanges();
+
+      expect(mockAuthService.refresh).toHaveBeenCalledTimes(6);
+      expect(mockPostPaymentReturn.redirectAfterConfirmedPayment).not.toHaveBeenCalled();
+      expect(fixture.nativeElement.textContent).not.toContain('Tu suscripción ya está activa');
+      expect(fixture.nativeElement.textContent).toContain('todavía no pudimos confirmar la activación');
     });
 
     it('keeps polling when individual refresh requests fail', () => {
@@ -463,3 +552,8 @@ describe('PerfilComponent - Behavior and Gamification', () => {
     });
   });
 });
+
+async function flushAsyncWork(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+}
